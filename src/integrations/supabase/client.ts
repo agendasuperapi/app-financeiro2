@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 // Obter valores das variáveis de ambiente
-const ENV_URL = import.meta.env.VITE_SUPABASE_URL;
+const ENV_URL = 'https://gpttodmpflpzhbgzagcc.supabase.co';
 const ENV_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Valores padrão válidos para demonstração quando as variáveis não estão configuradas

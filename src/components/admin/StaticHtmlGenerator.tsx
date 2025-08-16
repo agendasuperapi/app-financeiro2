@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { supabase } from '@/integrations/supabase/client'
+import { supabase, SUPABASE_URL } from '@/integrations/supabase/client'
 
 interface GenerationResult {
   success: boolean
@@ -36,7 +36,7 @@ export const StaticHtmlGenerator = () => {
 
       // Chamar a Edge Function (sem autenticação)
       const response = await fetch(
-        `${supabase.supabaseUrl}/functions/v1/generate-html`,
+        `${SUPABASE_URL}/functions/v1/generate-html`,
         {
           method: 'GET',
           headers: {

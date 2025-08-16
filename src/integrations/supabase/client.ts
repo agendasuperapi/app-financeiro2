@@ -4,12 +4,12 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 // Obter valores das variáveis de ambiente
-const ENV_URL = import.meta.env.VITE_SUPABASE_URL;
-const ENV_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const ENV_URL = 'https://gpttodmpflpzhbgzagcc.supabase.co';
+const ENV_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwdHRvZG1wZmxwemhiZ3phZ2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNzU2MTcsImV4cCI6MjA3MDg1MTYxN30.Ro2k_slVwV7hsGDM1YNcNP3csi876LPuAwFSBpxJN2I';
 
 // Valores padrão válidos para demonstração quando as variáveis não estão configuradas
-const FALLBACK_URL = 'https://demo.supabase.co';
-const FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
+//const FALLBACK_URL = 'https://demo.supabase.co';
+//const FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
 
 // Função para obter configurações
 const getSupabaseConfig = () => {

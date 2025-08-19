@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminProfileConfig from '@/components/admin/AdminProfileConfig';
 import AdminSectionTabs from '@/components/admin/AdminSectionTabs';
+import UserDataTable from '@/components/admin/UserDataTable';
 import Sidebar from '@/components/layout/Sidebar';
 import MobileNavBar from '@/components/layout/MobileNavBar';
 import MobileHeader from '@/components/layout/MobileHeader';
@@ -127,6 +128,11 @@ const AdminDashboard: React.FC = () => {
                     </CardContent>
                   </Card>
 
+                  {/* Dashboard de Usuários */}
+                  <div className="mb-6">
+                    <UserDataTable />
+                  </div>
+
                   {/* Navegação por Abas */}
                   <AdminSectionTabs />
                 </div>
@@ -190,6 +196,11 @@ const AdminDashboard: React.FC = () => {
                       </p>
                     </CardContent>
                   </Card>
+
+                  {/* Dashboard de Usuários */}
+                  <div className="mb-6">
+                    <UserDataTable />
+                  </div>
 
                   {/* Navegação por Abas */}
                   <AdminSectionTabs />

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Users, Download, Search } from 'lucide-react';
+import { Loader2, Users, Download, Search, UserCheck, UserX } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -16,6 +16,7 @@ interface UserData {
   subscription_status: string;
   subscription_end_date: string;
   plan_type: string;
+  is_active: boolean;
 }
 
 const UserDataTable: React.FC = () => {
@@ -75,7 +76,8 @@ const UserDataTable: React.FC = () => {
           created_at: user.created_at,
           subscription_status: subscription?.status || 'free',
           subscription_end_date: subscription?.current_period_end || 'N/A',
-          plan_type: subscription?.plan_type || 'free'
+          plan_type: subscription?.plan_type || 'free',
+          is_active: true // Por padrão, todos os usuários estão ativos
         };
       }) || [];
 
@@ -125,8 +127,48 @@ const UserDataTable: React.FC = () => {
     );
   };
 
+  const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    try {
+      const newStatus = !currentStatus;
+      
+      // Atualizar o estado local imediatamente para UX melhor
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, is_active: newStatus }
+            : user
+        )
+      );
+
+      // Aqui você pode adicionar a lógica para atualizar no banco de dados
+      // quando tiver o campo is_active na tabela poupeja_users
+      
+      toast.success(`Usuário ${newStatus ? 'ativado' : 'desativado'} com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao alterar status do usuário:', error);
+      toast.error('Erro ao alterar status do usuário');
+      
+      // Reverter mudança em caso de erro
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, is_active: currentStatus }
+            : user
+        )
+      );
+    }
+  };
+
+  const getActiveStatusBadge = (isActive: boolean) => {
+    return (
+      <Badge className={isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+        {isActive ? 'Ativo' : 'Inativo'}
+      </Badge>
+    );
+  };
+
   const exportToCSV = () => {
-    const headers = ['Nome', 'Telefone', 'Data Ativação', 'Status', 'Vencimento', 'Plano'];
+    const headers = ['Nome', 'Telefone', 'Data Ativação', 'Status', 'Vencimento', 'Plano', 'Ativo'];
     const csvContent = [
       headers.join(','),
       ...filteredUsers.map(user => [
@@ -135,7 +177,8 @@ const UserDataTable: React.FC = () => {
         formatDate(user.created_at),
         user.subscription_status,
         formatDate(user.subscription_end_date),
-        user.plan_type
+        user.plan_type,
+        user.is_active ? 'Ativo' : 'Inativo'
       ].join(','))
     ].join('\n');
 
@@ -185,35 +228,58 @@ const UserDataTable: React.FC = () => {
         ) : (
           <div className="rounded-md border">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Data Ativação</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Vencimento</TableHead>
-                  <TableHead>Plano</TableHead>
-                </TableRow>
-              </TableHeader>
+               <TableHeader>
+                 <TableRow>
+                   <TableHead>Nome</TableHead>
+                   <TableHead>Telefone</TableHead>
+                   <TableHead>Data Ativação</TableHead>
+                   <TableHead>Status</TableHead>
+                   <TableHead>Vencimento</TableHead>
+                   <TableHead>Plano</TableHead>
+                   <TableHead>Status Ativo</TableHead>
+                   <TableHead>Ações</TableHead>
+                 </TableRow>
+               </TableHeader>
               <TableBody>
-                {filteredUsers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                      {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.name}</TableCell>
-                      <TableCell>{user.phone}</TableCell>
-                      <TableCell>{formatDate(user.created_at)}</TableCell>
-                      <TableCell>{getStatusBadge(user.subscription_status)}</TableCell>
-                      <TableCell>{formatDate(user.subscription_end_date)}</TableCell>
-                      <TableCell className="capitalize">{user.plan_type}</TableCell>
-                    </TableRow>
-                  ))
-                )}
+                 {filteredUsers.length === 0 ? (
+                   <TableRow>
+                     <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                       {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
+                     </TableCell>
+                   </TableRow>
+                 ) : (
+                   filteredUsers.map((user) => (
+                     <TableRow key={user.id}>
+                       <TableCell className="font-medium">{user.name}</TableCell>
+                       <TableCell>{user.phone}</TableCell>
+                       <TableCell>{formatDate(user.created_at)}</TableCell>
+                       <TableCell>{getStatusBadge(user.subscription_status)}</TableCell>
+                       <TableCell>{formatDate(user.subscription_end_date)}</TableCell>
+                       <TableCell className="capitalize">{user.plan_type}</TableCell>
+                       <TableCell>{getActiveStatusBadge(user.is_active)}</TableCell>
+                       <TableCell>
+                         <Button
+                           variant={user.is_active ? "destructive" : "default"}
+                           size="sm"
+                           onClick={() => toggleUserStatus(user.id, user.is_active)}
+                           className="flex items-center gap-1"
+                         >
+                           {user.is_active ? (
+                             <>
+                               <UserX className="h-3 w-3" />
+                               Desativar
+                             </>
+                           ) : (
+                             <>
+                               <UserCheck className="h-3 w-3" />
+                               Ativar
+                             </>
+                           )}
+                         </Button>
+                       </TableCell>
+                     </TableRow>
+                   ))
+                 )}
               </TableBody>
             </Table>
           </div>

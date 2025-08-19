@@ -11,7 +11,6 @@ import { toast } from 'sonner';
 interface UserData {
   id: string;
   name: string;
-  email: string;
   phone: string;
   created_at: string;
   subscription_status: string;
@@ -35,7 +34,7 @@ const UserDataTable: React.FC = () => {
       // Buscar usuários da tabela poupeja_users
       const { data: usersData, error: usersError } = await supabase
         .from('poupeja_users')
-        .select('id, name, email, phone, created_at')
+        .select('id, name, phone, created_at')
         .order('created_at', { ascending: false });
 
       if (usersError) {
@@ -58,7 +57,6 @@ const UserDataTable: React.FC = () => {
         return {
           id: user.id,
           name: user.name || 'N/A',
-          email: user.email || 'N/A',
           phone: user.phone || 'N/A',
           created_at: user.created_at,
           subscription_status: subscription?.status || 'free',
@@ -78,7 +76,6 @@ const UserDataTable: React.FC = () => {
 
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.phone.includes(searchTerm)
   );
 
@@ -110,12 +107,11 @@ const UserDataTable: React.FC = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['Nome', 'Email', 'Telefone', 'Data Ativação', 'Status', 'Vencimento', 'Plano'];
+    const headers = ['Nome', 'Telefone', 'Data Ativação', 'Status', 'Vencimento', 'Plano'];
     const csvContent = [
       headers.join(','),
       ...filteredUsers.map(user => [
         user.name,
-        user.email,
         user.phone,
         formatDate(user.created_at),
         user.subscription_status,
@@ -154,7 +150,7 @@ const UserDataTable: React.FC = () => {
         <div className="flex items-center gap-2 mt-4">
           <Search className="h-4 w-4 text-gray-500" />
           <Input
-            placeholder="Buscar por nome, email ou telefone..."
+            placeholder="Buscar por nome ou telefone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
@@ -173,7 +169,6 @@ const UserDataTable: React.FC = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
                   <TableHead>Telefone</TableHead>
                   <TableHead>Data Ativação</TableHead>
                   <TableHead>Status</TableHead>
@@ -184,7 +179,7 @@ const UserDataTable: React.FC = () => {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                       {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
                     </TableCell>
                   </TableRow>
@@ -192,7 +187,6 @@ const UserDataTable: React.FC = () => {
                   filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
                       <TableCell>{user.phone}</TableCell>
                       <TableCell>{formatDate(user.created_at)}</TableCell>
                       <TableCell>{getStatusBadge(user.subscription_status)}</TableCell>

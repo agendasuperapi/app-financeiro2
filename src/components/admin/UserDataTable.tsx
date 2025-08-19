@@ -32,37 +32,40 @@ const UserDataTable: React.FC = () => {
     try {
       setLoading(true);
       
-      // Buscar usuários com dados de assinatura
+      // Buscar usuários da tabela poupeja_users
       const { data: usersData, error: usersError } = await supabase
         .from('poupeja_users')
-        .select(`
-          id,
-          name,
-          email,
-          phone,
-          created_at,
-          subscriptions (
-            status,
-            current_period_end,
-            plan_type
-          )
-        `)
+        .select('id, name, email, phone, created_at')
         .order('created_at', { ascending: false });
 
       if (usersError) {
         throw usersError;
       }
 
-      const formattedUsers = usersData?.map(user => ({
-        id: user.id,
-        name: user.name || 'N/A',
-        email: user.email || 'N/A',
-        phone: user.phone || 'N/A',
-        created_at: user.created_at,
-        subscription_status: (user.subscriptions as any)?.[0]?.status || 'free',
-        subscription_end_date: (user.subscriptions as any)?.[0]?.current_period_end || 'N/A',
-        plan_type: (user.subscriptions as any)?.[0]?.plan_type || 'free'
-      })) || [];
+      // Buscar assinaturas separadamente da tabela correta
+      const { data: subscriptionsData, error: subscriptionsError } = await supabase
+        .from('poupeja_subscriptions')
+        .select('user_id, status, current_period_end, plan_type');
+
+      if (subscriptionsError) {
+        console.error('Erro ao buscar assinaturas:', subscriptionsError);
+      }
+
+      // Combinar dados de usuários com assinaturas
+      const formattedUsers = usersData?.map(user => {
+        const subscription = subscriptionsData?.find((sub: any) => sub.user_id === user.id);
+        
+        return {
+          id: user.id,
+          name: user.name || 'N/A',
+          email: user.email || 'N/A',
+          phone: user.phone || 'N/A',
+          created_at: user.created_at,
+          subscription_status: subscription?.status || 'free',
+          subscription_end_date: subscription?.current_period_end || 'N/A',
+          plan_type: subscription?.plan_type || 'free'
+        };
+      }) || [];
 
       setUsers(formattedUsers);
     } catch (error) {

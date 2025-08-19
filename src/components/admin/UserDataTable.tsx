@@ -58,7 +58,8 @@ const UserDataTable: React.FC = () => {
       console.log('📊 Resultado da consulta assinaturas:', { 
         subscriptionsData, 
         subscriptionsError,
-        length: subscriptionsData?.length 
+        length: subscriptionsData?.length,
+        sampleData: subscriptionsData?.[0] // Log do primeiro item para debug
       });
 
       if (subscriptionsError) {
@@ -69,13 +70,26 @@ const UserDataTable: React.FC = () => {
       const formattedUsers = usersData?.map(user => {
         const subscription = subscriptionsData?.find((sub: any) => sub.user_id === user.id);
         
+        // Verificar se current_period_end é válido
+        let subscriptionEndDate = 'N/A';
+        if (subscription?.current_period_end && subscription.current_period_end !== null) {
+          subscriptionEndDate = subscription.current_period_end;
+        }
+        
+        console.log(`🔍 Usuário ${user.name} - subscription data:`, {
+          userId: user.id,
+          subscription,
+          current_period_end: subscription?.current_period_end,
+          subscriptionEndDate
+        });
+        
         return {
           id: user.id,
           name: user.name || 'N/A',
           phone: user.phone || 'N/A',
           created_at: user.created_at,
           subscription_status: subscription?.status || 'free',
-          subscription_end_date: subscription?.current_period_end || 'N/A',
+          subscription_end_date: subscriptionEndDate,
           plan_type: subscription?.plan_type || 'free',
           is_active: true // Por padrão, todos os usuários estão ativos
         };

@@ -30,14 +30,22 @@ const UserDataTable: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      console.log('🔍 Iniciando busca de usuários...');
       
-      // Buscar usuários da tabela poupeja_users
-      const { data: usersData, error: usersError } = await supabase
+      // Primeiro, tentar buscar todos os usuários sem filtro
+      const { data: usersData, error: usersError, count } = await supabase
         .from('poupeja_users')
-        .select('id, name, phone, created_at')
-        .order('created_at', { ascending: false });
+        .select('id, name, phone, created_at', { count: 'exact' });
+
+      console.log('📊 Resultado da consulta usuários:', { 
+        usersData, 
+        usersError, 
+        count,
+        length: usersData?.length 
+      });
 
       if (usersError) {
+        console.error('❌ Erro na consulta usuários:', usersError);
         throw usersError;
       }
 
@@ -46,8 +54,14 @@ const UserDataTable: React.FC = () => {
         .from('poupeja_subscriptions')
         .select('user_id, status, current_period_end, plan_type');
 
+      console.log('📊 Resultado da consulta assinaturas:', { 
+        subscriptionsData, 
+        subscriptionsError,
+        length: subscriptionsData?.length 
+      });
+
       if (subscriptionsError) {
-        console.error('Erro ao buscar assinaturas:', subscriptionsError);
+        console.error('⚠️ Erro ao buscar assinaturas (não crítico):', subscriptionsError);
       }
 
       // Combinar dados de usuários com assinaturas
@@ -65,9 +79,14 @@ const UserDataTable: React.FC = () => {
         };
       }) || [];
 
+      console.log('✅ Usuários formatados:', { 
+        formattedUsers, 
+        length: formattedUsers.length 
+      });
+
       setUsers(formattedUsers);
     } catch (error) {
-      console.error('Erro ao buscar usuários:', error);
+      console.error('💥 Erro geral ao buscar usuários:', error);
       toast.error('Erro ao carregar dados dos usuários');
     } finally {
       setLoading(false);

@@ -758,8 +758,11 @@ export const EnhancedGestaoComponent = () => {
                     Cancelar
                   </Button>
                   <Button
-                    onClick={handleAddClient}
-                    disabled={!newClientName.trim() || !newClientPhone.trim()}
+                    onClick={() => {
+                      console.log('🔘 Botão Adicionar Cliente clicado!');
+                      handleAddClient();
+                    }}
+                    className="w-full"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Adicionar Cliente

@@ -123,7 +123,7 @@ const AdminDashboard: React.FC = () => {
                   <div className="mb-8">
                     <div className="flex items-center gap-3 mb-2">
                       <Shield className="h-8 w-8 text-blue-600" />
-                      <h1 className="text-3xl font-bold text-gray-900">
+                      <h1 className="text-xl md:text-2xl font-bold text-gray-900">
                         Gestão de Usuários
                       </h1>
                       <button 
@@ -234,9 +234,9 @@ const AdminDashboard: React.FC = () => {
                   <div className="mb-8">
                     <div className="flex items-center gap-3 mb-2">
                       <Shield className="h-8 w-8 text-blue-600" />
-                      <h1 className="text-3xl font-bold text-gray-900">
-                        Gestão de Usuários
-                      </h1>
+                       <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                         Gestão de Usuários
+                       </h1>
                       <button 
                         onClick={handleConfigClick}
                         className="ml-auto text-blue-600 hover:text-blue-800"

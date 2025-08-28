@@ -30,6 +30,7 @@ import CheckoutPage from "./pages/CheckoutPage";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import ThankYouPage from "./pages/ThankYouPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import UserManagementPage from "./pages/UserManagementPage";
 import AchievementsPage from "./pages/AchievementsPage";
 import NotFound from "./pages/NotFound";
 import AdminRoute from "./components/admin/AdminRoute";
@@ -75,6 +76,14 @@ function App() {
                           element={
                             <AdminRoute>
                               <AdminDashboard />
+                            </AdminRoute>
+                          } 
+                        />
+                        <Route 
+                          path="/management" 
+                          element={
+                            <AdminRoute>
+                              <UserManagementPage />
                             </AdminRoute>
                           } 
                         />

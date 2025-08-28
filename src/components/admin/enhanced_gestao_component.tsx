@@ -606,7 +606,7 @@ export const EnhancedGestaoComponent = () => {
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Editar Data de Vencimento</DialogTitle>
+                <DialogTitle>Editar Cliente</DialogTitle>
               </DialogHeader>
               {selectedUser && (
                 <div className="space-y-4 py-4">

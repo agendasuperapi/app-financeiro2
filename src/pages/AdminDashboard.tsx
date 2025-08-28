@@ -120,7 +120,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               ) : showGestao ? (
                 <div className="w-full">
-                  <div className="mb-8 mt-4">
+                  <div className="mb-8 mt-8">
                     <div className="flex items-center gap-3 mb-2">
                       <Shield className="h-8 w-8 text-blue-600" />
                       <h1 className="text-base md:text-2xl font-bold text-gray-900">

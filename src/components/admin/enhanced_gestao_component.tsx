@@ -679,7 +679,7 @@ export const EnhancedGestaoComponent = () => {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
-                    Data de Registro
+                    Data de Vencimento
                   </label>
                   <Popover>
                     <PopoverTrigger asChild>

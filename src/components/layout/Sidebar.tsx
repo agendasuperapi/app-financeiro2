@@ -13,10 +13,9 @@ import { LayoutDashboard, Receipt, BarChart3, Target, User, Settings, FolderOpen
 interface SidebarProps {
   onProfileClick?: () => void;
   onConfigClick?: () => void;
-  onGestaoClick?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGestaoClick }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick }) => {
   const { user, logout } = useAppContext();
   const { t } = usePreferences();
   const { isAdmin } = useUserRole();
@@ -46,9 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
         icon: Users,
         label: 'Gestão',
         action: () => {
-          if (onGestaoClick) {
-            onGestaoClick();
-          }
+          navigate('/gestao');
         }
       },
       {

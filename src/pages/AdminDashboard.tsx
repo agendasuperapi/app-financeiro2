@@ -10,7 +10,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppContext } from '@/contexts/AppContext';
 import { Shield, AlertTriangle } from 'lucide-react';
 import { AdminOptimizedProvider } from '@/contexts/AdminOptimizedContext';
-import { EnhancedGestaoComponent } from '@/components/admin/enhanced_gestao_component';
 
 const AdminDashboard: React.FC = () => {
   const [showProfile, setShowProfile] = useState(false);
@@ -23,14 +22,6 @@ const AdminDashboard: React.FC = () => {
 
   const handleConfigClick = () => {
     setShowProfile(false);
-  };
-
-  const handleGestaoClick = () => {
-    // Rolar para o componente de gestão
-    const gestaoElement = document.getElementById('gestao-component');
-    if (gestaoElement) {
-      gestaoElement.scrollIntoView({ behavior: 'smooth' });
-    }
   };
 
   const handleAddTransaction = (type: 'income' | 'expense') => {
@@ -138,11 +129,6 @@ const AdminDashboard: React.FC = () => {
 
                   {/* Navegação por Abas */}
                   <AdminSectionTabs />
-                  
-                  {/* Componente de Gestão de Usuários */}
-                  <div className="mt-8" id="gestao-component">
-                    <EnhancedGestaoComponent />
-                  </div>
                 </div>
               )}
             </div>
@@ -151,7 +137,7 @@ const AdminDashboard: React.FC = () => {
         </div>
       ) : (
         <div className="flex h-screen w-full">
-          <Sidebar onProfileClick={handleProfileClick} onConfigClick={handleConfigClick} onGestaoClick={handleGestaoClick} />
+          <Sidebar onProfileClick={handleProfileClick} onConfigClick={handleConfigClick} />
           <main className="flex-1 overflow-auto w-full">
             <div className="w-full p-6">
               {showProfile ? (
@@ -207,11 +193,6 @@ const AdminDashboard: React.FC = () => {
 
                   {/* Navegação por Abas */}
                   <AdminSectionTabs />
-                  
-                  {/* Componente de Gestão de Usuários */}
-                  <div className="mt-8" id="gestao-component">
-                    <EnhancedGestaoComponent />
-                  </div>
                 </div>
               )}
             </div>

@@ -42,6 +42,7 @@ export const EnhancedGestaoComponent = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [expirationDate, setExpirationDate] = useState<Date | undefined>();
   const [editingEmail, setEditingEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
   const [newClientName, setNewClientName] = useState('');
   const [newClientPhone, setNewClientPhone] = useState('');
@@ -188,6 +189,7 @@ export const EnhancedGestaoComponent = () => {
     setSelectedUser(user);
     setExpirationDate(user.current_period_end ? new Date(user.current_period_end) : undefined);
     setEditingEmail(user.email || '');
+    setNewPassword('');
     setIsEditDialogOpen(true);
   };
 
@@ -198,7 +200,8 @@ export const EnhancedGestaoComponent = () => {
         console.log('Salvando alterações:', {
           userId: selectedUser.id,
           newExpirationDate: expirationDate,
-          newEmail: editingEmail
+          newEmail: editingEmail,
+          hasNewPassword: !!newPassword
         });
 
         // Atualizar a data de vencimento no Supabase
@@ -217,6 +220,19 @@ export const EnhancedGestaoComponent = () => {
           }
         }
         
+        // Atualizar a senha se foi informada
+        if (newPassword && newPassword.trim() !== '') {
+          const { error: passwordError } = await supabase.auth.admin.updateUserById(
+            selectedUser.id,
+            { password: newPassword }
+          );
+            
+          if (passwordError) {
+            console.error('Erro ao atualizar senha:', passwordError);
+            alert('Outras alterações salvas, mas erro ao atualizar senha: ' + passwordError.message);
+          }
+        }
+        
         // Recarregar os dados para refletir as mudanças
         await fetchUserData();
         
@@ -225,6 +241,7 @@ export const EnhancedGestaoComponent = () => {
         setSelectedUser(null);
         setExpirationDate(undefined);
         setEditingEmail('');
+        setNewPassword('');
 
         console.log('✅ Alterações salvas com sucesso');
       } catch (error) {
@@ -615,6 +632,20 @@ export const EnhancedGestaoComponent = () => {
                       className="w-full"
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Nova Senha:</h4>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Por segurança, a senha atual não é exibida. Deixe em branco para manter a senha atual.
+                    </p>
+                    <Input
+                      type="password"
+                      placeholder="Digite a nova senha (opcional)"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
                   
                   <div className="space-y-2">
                     <h4 className="font-medium">Data de Vencimento Atual:</h4>
@@ -661,6 +692,7 @@ export const EnhancedGestaoComponent = () => {
                         setSelectedUser(null);
                         setExpirationDate(undefined);
                         setEditingEmail('');
+                        setNewPassword('');
                       }}
                     >
                       Cancelar

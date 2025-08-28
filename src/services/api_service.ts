@@ -193,6 +193,9 @@ static async getAllUsersWithSubscriptions(): Promise<UserData[]> {
       case 'active':
       case 'ativo':
         return 'text-green-700 bg-green-100 border-green-200';
+      case 'disabled':
+      case 'desativado':
+        return 'text-red-700 bg-red-50 border-red-300';
       case 'canceled':
       case 'cancelado':
         return 'text-gray-700 bg-gray-100 border-gray-200';

@@ -236,20 +236,8 @@ export const EnhancedGestaoComponent = () => {
 
   // Função para adicionar novo cliente
   const handleAddClient = async () => {
-    console.log('🔄 Iniciando handleAddClient...');
-    console.log('📝 Valores atuais do estado:', {
-      newClientName: `"${newClientName}"`,
-      newClientPhone: `"${newClientPhone}"`,
-      newClientDate,
-      newClientStatus
-    });
-    
     if (!newClientName.trim() || !newClientPhone.trim()) {
-      console.error('❌ Nome e telefone são obrigatórios');
-      console.error('❌ Valores recebidos:', {
-        name: `"${newClientName}"`,
-        phone: `"${newClientPhone}"`
-      });
+      alert('Nome e telefone são obrigatórios');
       return;
     }
 

@@ -40,6 +40,16 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       bgColor: 'bg-blue-50 hover:bg-blue-100'
     },
     {
+      icon: FileText,
+      label: 'Notas',
+      action: () => {
+        navigate('/notes');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-green-600',
+      bgColor: 'bg-green-50 hover:bg-green-100'
+    },
+    {
       icon: Target,
       label: t('nav.goals') || 'Metas',
       action: () => {
@@ -172,11 +182,6 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       icon: Plus,
       label: '',
       href: '#'
-    },
-    {
-      icon: FileText,
-      label: 'Notas',
-      href: '/notes'
     },
     {
       icon: Crown,

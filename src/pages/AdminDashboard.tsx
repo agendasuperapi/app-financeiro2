@@ -10,6 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppContext } from '@/contexts/AppContext';
 import { Shield, AlertTriangle } from 'lucide-react';
 import { AdminOptimizedProvider } from '@/contexts/AdminOptimizedContext';
+import { EnhancedGestaoComponent } from '@/components/admin/enhanced_gestao_component';
 
 const AdminDashboard: React.FC = () => {
   const [showProfile, setShowProfile] = useState(false);
@@ -129,6 +130,11 @@ const AdminDashboard: React.FC = () => {
 
                   {/* Navegação por Abas */}
                   <AdminSectionTabs />
+                  
+                  {/* Componente de Gestão de Usuários */}
+                  <div className="mt-8">
+                    <EnhancedGestaoComponent />
+                  </div>
                 </div>
               )}
             </div>
@@ -193,6 +199,11 @@ const AdminDashboard: React.FC = () => {
 
                   {/* Navegação por Abas */}
                   <AdminSectionTabs />
+                  
+                  {/* Componente de Gestão de Usuários */}
+                  <div className="mt-8">
+                    <EnhancedGestaoComponent />
+                  </div>
                 </div>
               )}
             </div>

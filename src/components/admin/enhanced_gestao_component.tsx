@@ -41,6 +41,7 @@ export const EnhancedGestaoComponent = () => {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [expirationDate, setExpirationDate] = useState<Date | undefined>();
+  const [editingEmail, setEditingEmail] = useState('');
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
   const [newClientName, setNewClientName] = useState('');
   const [newClientPhone, setNewClientPhone] = useState('');
@@ -186,6 +187,7 @@ export const EnhancedGestaoComponent = () => {
   const handleEditUser = (user: UserData) => {
     setSelectedUser(user);
     setExpirationDate(user.current_period_end ? new Date(user.current_period_end) : undefined);
+    setEditingEmail(user.email || '');
     setIsEditDialogOpen(true);
   };
 
@@ -195,11 +197,25 @@ export const EnhancedGestaoComponent = () => {
       try {
         console.log('Salvando alterações:', {
           userId: selectedUser.id,
-          newExpirationDate: expirationDate
+          newExpirationDate: expirationDate,
+          newEmail: editingEmail
         });
 
         // Atualizar a data de vencimento no Supabase
         await UserManagementService.updateSubscriptionExpirationDate(selectedUser.id, expirationDate);
+        
+        // Atualizar o email se foi alterado
+        if (editingEmail && editingEmail !== selectedUser.email) {
+          const { error: emailError } = await supabase
+            .from('poupeja_users')
+            .update({ email: editingEmail })
+            .eq('id', selectedUser.id);
+            
+          if (emailError) {
+            console.error('Erro ao atualizar email:', emailError);
+            alert('Data de vencimento atualizada, mas erro ao atualizar email: ' + emailError.message);
+          }
+        }
         
         // Recarregar os dados para refletir as mudanças
         await fetchUserData();
@@ -208,11 +224,12 @@ export const EnhancedGestaoComponent = () => {
         setIsEditDialogOpen(false);
         setSelectedUser(null);
         setExpirationDate(undefined);
+        setEditingEmail('');
 
-        console.log('✅ Data de vencimento atualizada com sucesso');
+        console.log('✅ Alterações salvas com sucesso');
       } catch (error) {
         console.error('❌ Erro ao salvar alterações:', error);
-        // Aqui você pode adicionar uma notificação de erro para o usuário
+        alert('Erro ao salvar alterações: ' + (error as Error).message);
       }
     }
   };
@@ -582,6 +599,24 @@ export const EnhancedGestaoComponent = () => {
                   </div>
                   
                   <div className="space-y-2">
+                    <h4 className="font-medium">Email Atual:</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedUser.email || 'Sem email definido'}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Novo Email:</h4>
+                    <Input
+                      type="email"
+                      placeholder="Digite o novo email"
+                      value={editingEmail}
+                      onChange={(e) => setEditingEmail(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
                     <h4 className="font-medium">Data de Vencimento Atual:</h4>
                     <p className="text-sm text-muted-foreground">
                       {selectedUser.current_period_end 
@@ -621,13 +656,18 @@ export const EnhancedGestaoComponent = () => {
                   <div className="flex justify-end gap-2 pt-4">
                     <Button
                       variant="outline"
-                      onClick={() => setIsEditDialogOpen(false)}
+                      onClick={() => {
+                        setIsEditDialogOpen(false);
+                        setSelectedUser(null);
+                        setExpirationDate(undefined);
+                        setEditingEmail('');
+                      }}
                     >
                       Cancelar
                     </Button>
                     <Button
                       onClick={handleSaveChanges}
-                      disabled={!expirationDate}
+                      disabled={!expirationDate || !editingEmail.trim()}
                     >
                       Salvar
                     </Button>

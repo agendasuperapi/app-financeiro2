@@ -34,7 +34,7 @@ export const EnhancedGestaoComponent = () => {
   const fetchUserData = async () => {
     setLoading(true);
     try {
-      console.log('Buscando dados reais das tabelas poupeja_users e poupeja_subscriptions...');
+      console.log('🔄 Iniciando busca de dados com permissões configuradas...');
       
       const [users, userStats] = await Promise.all([
         UserManagementService.getAllUsersWithSubscriptions(),
@@ -46,63 +46,26 @@ export const EnhancedGestaoComponent = () => {
       setStats(userStats);
       setShowTable(true);
       
-      console.log('Dados reais carregados com sucesso:', {
+      console.log('✅ Dados carregados:', {
         totalUsers: users.length,
+        hasSubscriptions: users.filter(u => u.status !== 'Sem assinatura').length,
         stats: userStats
       });
       
     } catch (error) {
-      console.error('Erro ao buscar dados das tabelas:', error);
+      console.error('❌ Erro ao buscar dados:', error);
       
-      // Se há erro de RLS, tentar buscar apenas usuários primeiro
-      try {
-        console.log('Tentando buscar apenas usuários...');
-        const { data: users, error: usersError } = await supabase
-          .from('poupeja_users')
-          .select('*');
-          
-        if (usersError) {
-          console.error('Erro ao buscar tabela poupeja_users:', usersError);
-          throw usersError;
-        }
-        
-        console.log('Usuários encontrados na tabela:', users?.length || 0);
-        
-        // Transformar dados para o formato esperado
-        const userData: UserData[] = users?.map(user => ({
-          id: user.id,
-          name: user.name,
-          phone: user.phone,
-          created_at: user.created_at,
-          email: user.email,
-          current_period_end: null,
-          status: 'Sem assinatura'
-        })) || [];
-        
-        setUserData(userData);
-        setFilteredData(userData);
-        setStats({
-          totalUsers: userData.length,
-          activeSubscriptions: 0,
-          expiredSubscriptions: 0,
-          noSubscriptions: userData.length
-        });
-        setShowTable(true);
-        
-      } catch (fallbackError) {
-        console.error('Erro no fallback para buscar usuários:', fallbackError);
-        
-        // Mostrar erro para o usuário
-        setUserData([]);
-        setFilteredData([]);
-        setStats({
-          totalUsers: 0,
-          activeSubscriptions: 0,
-          expiredSubscriptions: 0,
-          noSubscriptions: 0
-        });
-        setShowTable(true);
-      }
+      // Mostrar erro para o usuário mas ainda exibir a interface
+      setUserData([]);
+      setFilteredData([]);
+      setStats({
+        totalUsers: 0,
+        activeSubscriptions: 0,
+        expiredSubscriptions: 0,
+        noSubscriptions: 0
+      });
+      setShowTable(true);
+      
     } finally {
       setLoading(false);
     }

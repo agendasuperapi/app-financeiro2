@@ -105,12 +105,6 @@ const AdminDashboard: React.FC = () => {
                       <h1 className="text-3xl font-bold text-gray-900">
                         Configurações do Perfil
                       </h1>
-                      <button 
-                        onClick={handleConfigClick}
-                        className="ml-auto text-blue-600 hover:text-blue-800"
-                      >
-                        ← Voltar ao Painel
-                      </button>
                     </div>
                     <p className="text-gray-600">
                       Gerencie suas informações de administrador
@@ -126,12 +120,6 @@ const AdminDashboard: React.FC = () => {
                       <h1 className="text-base md:text-2xl font-bold text-gray-900">
                         Gestão de Usuários
                       </h1>
-                      <button 
-                        onClick={handleConfigClick}
-                        className="ml-auto text-blue-600 hover:text-blue-800"
-                      >
-                        ← Voltar ao Painel
-                      </button>
                     </div>
                     <p className="text-gray-600">
                       Gerencie usuários, assinaturas e dados do sistema
@@ -211,18 +199,12 @@ const AdminDashboard: React.FC = () => {
               {showProfile ? (
                 <div className="w-full max-w-6xl mx-auto">
                   <div className="mb-8">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Shield className="h-8 w-8 text-blue-600" />
-                      <h1 className="text-3xl font-bold text-gray-900">
-                        Configurações do Perfil
-                      </h1>
-                      <button 
-                        onClick={handleConfigClick}
-                        className="ml-auto text-blue-600 hover:text-blue-800"
-                      >
-                        ← Voltar ao Painel
-                      </button>
-                    </div>
+                     <div className="flex items-center gap-3 mb-2">
+                       <Shield className="h-8 w-8 text-blue-600" />
+                       <h1 className="text-3xl font-bold text-gray-900">
+                         Configurações do Perfil
+                       </h1>
+                     </div>
                     <p className="text-gray-600">
                       Gerencie suas informações de administrador
                     </p>
@@ -232,18 +214,12 @@ const AdminDashboard: React.FC = () => {
               ) : showGestao ? (
                 <div className="w-full max-w-6xl mx-auto">
                   <div className="mb-8">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Shield className="h-8 w-8 text-blue-600" />
-                       <h1 className="text-base md:text-2xl font-bold text-gray-900">
-                         Gestão de Usuários
-                       </h1>
-                      <button 
-                        onClick={handleConfigClick}
-                        className="ml-auto text-blue-600 hover:text-blue-800"
-                      >
-                        ← Voltar ao Painel
-                      </button>
-                    </div>
+                     <div className="flex items-center gap-3 mb-2">
+                       <Shield className="h-8 w-8 text-blue-600" />
+                        <h1 className="text-base md:text-2xl font-bold text-gray-900">
+                          Gestão de Usuários
+                        </h1>
+                     </div>
                     <p className="text-gray-600">
                       Gerencie usuários, assinaturas e dados do sistema
                     </p>

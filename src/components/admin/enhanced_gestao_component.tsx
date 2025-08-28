@@ -10,6 +10,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { v4 as uuidv4 } from 'uuid';
 import { 
   Users, 
   Calendar as CalendarIcon, 
@@ -40,6 +41,9 @@ export const EnhancedGestaoComponent = () => {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [expirationDate, setExpirationDate] = useState<Date | undefined>();
+  const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientPhone, setNewClientPhone] = useState('');
 
   const fetchUserData = async () => {
     setLoading(true);
@@ -228,6 +232,54 @@ export const EnhancedGestaoComponent = () => {
     }
   };
 
+  // Função para adicionar novo cliente
+  const handleAddClient = async () => {
+    if (!newClientName.trim() || !newClientPhone.trim()) {
+      console.error('Nome e telefone são obrigatórios');
+      return;
+    }
+
+    try {
+      console.log('Adicionando novo cliente:', {
+        name: newClientName,
+        phone: newClientPhone
+      });
+
+      // Gerar um email temporário único para o cliente
+      const tempEmail = `cliente_${Date.now()}@temp.local`;
+      const clientId = uuidv4();
+      
+      // Inserir novo usuário na tabela poupeja_users
+      const { data, error } = await supabase
+        .from('poupeja_users')
+        .insert({
+          id: clientId,
+          name: newClientName.trim(),
+          phone: newClientPhone.trim(),
+          email: tempEmail,
+          created_at: new Date().toISOString()
+        })
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('✅ Cliente adicionado com sucesso:', data);
+      
+      // Limpar formulário e fechar dialog
+      setNewClientName('');
+      setNewClientPhone('');
+      setIsAddClientDialogOpen(false);
+      
+      // Recarregar dados para mostrar o novo cliente
+      await fetchUserData();
+      
+    } catch (error) {
+      console.error('❌ Erro ao adicionar cliente:', error);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {loading ? (
@@ -302,7 +354,7 @@ export const EnhancedGestaoComponent = () => {
                 </span>
                 <div className="flex gap-1 lg:gap-2">
                   <Button
-                    onClick={() => {/* TODO: Implementar função de adicionar cliente */}}
+                    onClick={() => setIsAddClientDialogOpen(true)}
                     variant="default"
                     size="sm"
                     className="h-7 w-7 lg:h-9 lg:w-auto lg:px-3"
@@ -561,6 +613,64 @@ export const EnhancedGestaoComponent = () => {
                   </div>
                 </div>
               )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Dialog para adicionar novo cliente */}
+          <Dialog open={isAddClientDialogOpen} onOpenChange={setIsAddClientDialogOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Adicionar Novo Cliente</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label htmlFor="clientName" className="text-sm font-medium">
+                    Nome do Cliente *
+                  </label>
+                  <Input
+                    id="clientName"
+                    type="text"
+                    placeholder="Digite o nome completo"
+                    value={newClientName}
+                    onChange={(e) => setNewClientName(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="clientPhone" className="text-sm font-medium">
+                    Telefone *
+                  </label>
+                  <Input
+                    id="clientPhone"
+                    type="tel"
+                    placeholder="(00) 00000-0000"
+                    value={newClientPhone}
+                    onChange={(e) => setNewClientPhone(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsAddClientDialogOpen(false);
+                      setNewClientName('');
+                      setNewClientPhone('');
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleAddClient}
+                    disabled={!newClientName.trim() || !newClientPhone.trim()}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar Cliente
+                  </Button>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
         </div>

@@ -269,8 +269,8 @@ export const EnhancedGestaoComponent = () => {
         throw error;
       }
 
-      // Se um status diferente de "sem_assinatura" foi selecionado, criar entrada na tabela de assinaturas
-      if (newClientStatus !== 'sem_assinatura' && data && data[0]) {
+      // Criar entrada na tabela de assinaturas para todos os clientes
+      if (data && data[0]) {
         const subscriptionData = {
           user_id: data[0].id,
           status: newClientStatus,

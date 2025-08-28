@@ -10,6 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppContext } from '@/contexts/AppContext';
 import { Shield, AlertTriangle } from 'lucide-react';
 import { AdminOptimizedProvider } from '@/contexts/AdminOptimizedContext';
+import UserDashboard from '@/components/admin/UserDashboard';
 
 const AdminDashboard: React.FC = () => {
   const [showProfile, setShowProfile] = useState(false);
@@ -127,6 +128,9 @@ const AdminDashboard: React.FC = () => {
                     </CardContent>
                   </Card>
 
+                  {/* Dashboard de Usuários */}
+                  <UserDashboard />
+
                   {/* Navegação por Abas */}
                   <AdminSectionTabs />
                 </div>
@@ -190,6 +194,9 @@ const AdminDashboard: React.FC = () => {
                       </p>
                     </CardContent>
                   </Card>
+
+                  {/* Dashboard de Usuários */}
+                  <UserDashboard />
 
                   {/* Navegação por Abas */}
                   <AdminSectionTabs />

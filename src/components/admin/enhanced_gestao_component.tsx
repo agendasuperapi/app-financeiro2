@@ -244,40 +244,21 @@ export const EnhancedGestaoComponent = () => {
     try {
       // Gerar um email temporário único para o cliente
       const tempEmail = `cliente_${Date.now()}@temp.local`;
-      const tempPassword = 'temp123456'; // Senha temporária
       
-      // Primeiro, criar o usuário no sistema de autenticação
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: tempEmail,
-        password: tempPassword,
-        user_metadata: {
-          name: newClientName.trim(),
-          phone: newClientPhone.trim()
-        }
-      });
-
-      if (authError) {
-        console.error('❌ Erro ao criar usuário de autenticação:', authError);
-        alert('Erro ao criar cliente: ' + authError.message);
-        return;
-      }
-
-      if (!authData.user) {
-        alert('Erro: Não foi possível criar o usuário');
-        return;
-      }
-
-      // Agora inserir na tabela poupeja_users com o ID do auth
+      // Inserir diretamente na tabela poupeja_users com ID gerado
+      const clientId = uuidv4();
       const { data, error } = await supabase
         .from('poupeja_users')
         .insert({
-          id: authData.user.id,
+          id: clientId,
           name: newClientName.trim(),
           phone: newClientPhone.trim(),
           email: tempEmail,
           created_at: newClientDate ? newClientDate.toISOString() : new Date().toISOString()
         })
         .select();
+
+      console.log('Resultado da inserção:', { data, error });
 
       if (error) {
         console.error('❌ Erro ao inserir em poupeja_users:', error);
@@ -292,7 +273,9 @@ export const EnhancedGestaoComponent = () => {
           status: newClientStatus,
           plan_type: 'basic',
           current_period_start: newClientDate ? newClientDate.toISOString() : new Date().toISOString(),
-          current_period_end: newClientDate ? new Date(newClientDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString() : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          current_period_end: newClientDate ? 
+            new Date(newClientDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString() : 
+            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           created_at: new Date().toISOString()
         };
 
@@ -302,6 +285,7 @@ export const EnhancedGestaoComponent = () => {
 
         if (subError) {
           console.error('❌ Erro ao criar assinatura:', subError);
+          alert('Cliente criado, mas erro ao criar assinatura: ' + subError.message);
         }
       }
 

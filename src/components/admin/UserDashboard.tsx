@@ -24,12 +24,15 @@ const UserDashboard: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setRefreshing(true);
+      console.log('Buscando usuários...');
       
       // Buscar usuários da tabela poupeja_users
       const { data: users, error: usersError } = await supabase
         .from('poupeja_users')
         .select('*')
         .order('created_at', { ascending: false });
+
+      console.log('Resposta usuários:', { users, usersError });
 
       if (usersError) {
         console.error('Erro ao buscar usuários:', usersError);
@@ -40,6 +43,8 @@ const UserDashboard: React.FC = () => {
       const { data: subscriptions, error: subscriptionsError } = await supabase
         .from('poupeja_subscriptions')
         .select('user_id, current_period_end, status');
+
+      console.log('Resposta assinaturas:', { subscriptions, subscriptionsError });
 
       if (subscriptionsError) {
         console.error('Erro ao buscar assinaturas:', subscriptionsError);
@@ -60,6 +65,7 @@ const UserDashboard: React.FC = () => {
         };
       }) || [];
 
+      console.log('Usuários processados:', usersWithSubscriptions);
       setUsers(usersWithSubscriptions);
     } catch (error) {
       console.error('Erro ao buscar dados dos usuários:', error);

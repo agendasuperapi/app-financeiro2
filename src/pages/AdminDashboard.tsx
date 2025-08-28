@@ -163,7 +163,7 @@ const AdminDashboard: React.FC = () => {
               )}
             </div>
           </main>
-          <MobileNavBar onAddTransaction={handleAddTransaction} />
+          <MobileNavBar onAddTransaction={handleAddTransaction} onGestaoClick={handleGestaoClick} />
         </div>
       ) : (
         <div className="flex h-screen w-full">

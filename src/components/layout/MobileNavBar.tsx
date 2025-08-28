@@ -4,17 +4,19 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useUserRole } from '@/hooks/useUserRole';
-import { LayoutDashboard, Receipt, Settings, Crown, Plus, Target, Calendar, Shield, User, FileText, Tag } from 'lucide-react';
+import { LayoutDashboard, Receipt, Settings, Crown, Plus, Target, Calendar, Shield, User, FileText, Tag, Users } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface MobileNavBarProps {
   onAddTransaction?: (type: 'income' | 'expense') => void;
+  onGestaoClick?: () => void;
 }
 
 const MobileNavBar: React.FC<MobileNavBarProps> = ({
-  onAddTransaction
+  onAddTransaction,
+  onGestaoClick
 }) => {
   const { t } = usePreferences();
   const navigate = useNavigate();
@@ -87,6 +89,15 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
         href: '/admin'
       },
       {
+        icon: Users,
+        label: 'Gestão',
+        action: () => {
+          if (onGestaoClick) {
+            onGestaoClick();
+          }
+        }
+      },
+      {
         icon: User,
         label: t('nav.profile'),
         href: '/profile'
@@ -96,22 +107,42 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
     return (
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t md:hidden">
         <nav className="flex items-center justify-around py-2">
-          {adminMenuItems.map((item) => (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              className={({ isActive }) =>
-                cn(
-                  "flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
-                  "hover:bg-accent hover:text-accent-foreground min-w-0",
-                  isActive ? "text-primary bg-primary/10" : "text-muted-foreground"
-                )
-              }
-            >
-              <item.icon className="h-5 w-5 flex-shrink-0" />
-              <span className="truncate">{item.label}</span>
-            </NavLink>
-          ))}
+          {adminMenuItems.map((item, index) => {
+            // Se o item tem uma ação (como Gestão), renderizar como button
+            if (item.action) {
+              return (
+                <button
+                  key={`action-${index}`}
+                  onClick={item.action}
+                  className={cn(
+                    "flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+                    "hover:bg-accent hover:text-accent-foreground min-w-0 text-muted-foreground"
+                  )}
+                >
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            }
+            
+            // Se o item tem href, renderizar como NavLink
+            return (
+              <NavLink
+                key={item.href}
+                to={item.href!}
+                className={({ isActive }) =>
+                  cn(
+                    "flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+                    "hover:bg-accent hover:text-accent-foreground min-w-0",
+                    isActive ? "text-primary bg-primary/10" : "text-muted-foreground"
+                  )
+                }
+              >
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                <span className="truncate">{item.label}</span>
+              </NavLink>
+            );
+          })}
         </nav>
       </div>
     );

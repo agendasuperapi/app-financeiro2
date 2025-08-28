@@ -85,12 +85,6 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
   if (isAdmin && isAdminPage) {
     const adminMenuItems = [
       {
-        id: 'admin',
-        icon: Shield,
-        label: 'Admin',
-        href: '/admin'
-      },
-      {
         id: 'gestao',
         icon: Users,
         label: 'Gestão',
@@ -142,9 +136,7 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
                   cn(
                     "flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
                     "hover:bg-accent hover:text-accent-foreground min-w-0",
-                    // Para o botão admin, só fica ativo se for explicitamente selecionado
-                    (item.id === 'admin' && activeAdminSection === 'admin') || 
-                    (item.id !== 'admin' && activeAdminSection === item.id)
+                    activeAdminSection === item.id
                       ? "bg-green-600 text-white shadow-md" 
                       : "text-muted-foreground"
                   )

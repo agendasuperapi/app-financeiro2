@@ -39,10 +39,10 @@ const UserDashboard: React.FC = () => {
         return;
       }
 
-      // Buscar dados de assinatura
+      // Buscar dados de assinatura completos
       const { data: subscriptions, error: subscriptionsError } = await supabase
         .from('poupeja_subscriptions')
-        .select('user_id, current_period_end, status');
+        .select('user_id, current_period_end, current_period_start, status, plan_type, created_at, updated_at, cancel_at_period_end');
 
       console.log('Resposta assinaturas:', { subscriptions, subscriptionsError });
 
@@ -54,13 +54,26 @@ const UserDashboard: React.FC = () => {
       const usersWithSubscriptions = users?.map(user => {
         const subscription = subscriptions?.find(sub => sub.user_id === user.id);
         
+        // Calcular data de vencimento se current_period_end for null
+        let subscriptionEndDate = subscription?.current_period_end;
+        
+        if (subscription && !subscriptionEndDate && subscription.created_at) {
+          const createdDate = new Date(subscription.created_at);
+          if (subscription.plan_type === 'monthly') {
+            createdDate.setMonth(createdDate.getMonth() + 1);
+          } else if (subscription.plan_type === 'annual') {
+            createdDate.setFullYear(createdDate.getFullYear() + 1);
+          }
+          subscriptionEndDate = createdDate.toISOString();
+        }
+        
         return {
           id: user.id,
           name: user.name || user.email || 'Usuário sem nome',
           phone: user.phone,
           email: user.email,
           created_at: user.created_at,
-          subscription_end_date: subscription?.current_period_end,
+          subscription_end_date: subscriptionEndDate,
           subscription_status: subscription?.status
         };
       }) || [];

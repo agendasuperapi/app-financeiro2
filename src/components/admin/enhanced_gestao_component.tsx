@@ -222,14 +222,18 @@ export const EnhancedGestaoComponent = () => {
         
         // Atualizar a senha se foi informada
         if (newPassword && newPassword.trim() !== '') {
-          const { error: passwordError } = await supabase.auth.admin.updateUserById(
-            selectedUser.id,
-            { password: newPassword }
+          const { error: passwordError } = await supabase.auth.resetPasswordForEmail(
+            editingEmail || selectedUser.email,
+            {
+              redirectTo: `${window.location.origin}/reset-password`
+            }
           );
             
           if (passwordError) {
-            console.error('Erro ao atualizar senha:', passwordError);
-            alert('Outras alterações salvas, mas erro ao atualizar senha: ' + passwordError.message);
+            console.error('Erro ao enviar reset de senha:', passwordError);
+            alert('Outras alterações salvas, mas erro ao enviar email de reset: ' + passwordError.message);
+          } else {
+            alert('Email de redefinição de senha enviado para o usuário!');
           }
         }
         
@@ -634,17 +638,22 @@ export const EnhancedGestaoComponent = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <h4 className="font-medium">Nova Senha:</h4>
+                    <h4 className="font-medium">Redefinir Senha:</h4>
                     <p className="text-xs text-muted-foreground mb-2">
-                      Por segurança, a senha atual não é exibida. Deixe em branco para manter a senha atual.
+                      Marque esta opção para enviar um email de redefinição de senha para o usuário.
                     </p>
-                    <Input
-                      type="password"
-                      placeholder="Digite a nova senha (opcional)"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full"
-                    />
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="resetPassword"
+                        checked={newPassword === 'reset'}
+                        onChange={(e) => setNewPassword(e.target.checked ? 'reset' : '')}
+                        className="rounded border-gray-300"
+                      />
+                      <label htmlFor="resetPassword" className="text-sm">
+                        Enviar email de redefinição de senha
+                      </label>
+                    </div>
                   </div>
                   
                   <div className="space-y-2">

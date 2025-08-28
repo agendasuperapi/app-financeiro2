@@ -183,17 +183,30 @@ export const EnhancedGestaoComponent = () => {
   };
 
   // Função para salvar as alterações
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (selectedUser && expirationDate) {
-      // Aqui você implementaria a lógica para salvar no backend
-      console.log('Salvando alterações:', {
-        userId: selectedUser.id,
-        newExpirationDate: expirationDate
-      });
-      // Fechar o dialog
-      setIsEditDialogOpen(false);
-      setSelectedUser(null);
-      setExpirationDate(undefined);
+      try {
+        console.log('Salvando alterações:', {
+          userId: selectedUser.id,
+          newExpirationDate: expirationDate
+        });
+
+        // Atualizar a data de vencimento no Supabase
+        await UserManagementService.updateSubscriptionExpirationDate(selectedUser.id, expirationDate);
+        
+        // Recarregar os dados para refletir as mudanças
+        await fetchUserData();
+        
+        // Fechar o dialog
+        setIsEditDialogOpen(false);
+        setSelectedUser(null);
+        setExpirationDate(undefined);
+
+        console.log('✅ Data de vencimento atualizada com sucesso');
+      } catch (error) {
+        console.error('❌ Erro ao salvar alterações:', error);
+        // Aqui você pode adicionar uma notificação de erro para o usuário
+      }
     }
   };
 

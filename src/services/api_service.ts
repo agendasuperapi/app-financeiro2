@@ -212,4 +212,31 @@ static async getAllUsersWithSubscriptions(): Promise<UserData[]> {
         return 'text-slate-700 bg-slate-100 border-slate-200';
     }
   }
+
+  /**
+   * Atualiza a data de vencimento de uma assinatura
+   */
+  static async updateSubscriptionExpirationDate(userId: string, newExpirationDate: Date): Promise<boolean> {
+    try {
+      console.log(`Atualizando data de vencimento para usuário ${userId}:`, newExpirationDate.toISOString());
+
+      const { error } = await supabase
+        .from('poupeja_subscriptions')
+        .update({ 
+          current_period_end: newExpirationDate.toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Erro ao atualizar data de vencimento:', error);
+        throw error;
+      }
+
+      console.log('✅ Data de vencimento atualizada com sucesso');
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao atualizar data de vencimento:', error);
+      throw error;
+    }
+  }
 }

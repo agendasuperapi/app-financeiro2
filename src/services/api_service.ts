@@ -103,20 +103,31 @@ static async getAllUsersWithSubscriptions(): Promise<UserData[]> {
       };
 
       const currentDate = new Date();
+      console.log('📊 Calculando estatísticas para', users.length, 'usuários');
 
       users.forEach(user => {
-        if (!user.current_period_end || user.status === 'Sem assinatura') {
+        console.log(`👤 Usuário ${user.name}: status="${user.status}", vencimento="${user.current_period_end}"`);
+        
+        // Se não tem assinatura ou status indica sem assinatura
+        if (!user.current_period_end || user.status === 'Sem assinatura' || !user.status) {
           stats.noSubscriptions++;
+          console.log('   ➜ Sem assinatura');
         } else {
           const expirationDate = new Date(user.current_period_end);
-          if (user.status === 'ativo' && expirationDate >= currentDate) {
+          const isExpired = expirationDate < currentDate;
+          
+          // Considera ativas: status 'active' ou 'ativo' E não expirada
+          if ((user.status === 'active' || user.status === 'ativo') && !isExpired) {
             stats.activeSubscriptions++;
+            console.log('   ➜ Assinatura ativa');
           } else {
             stats.expiredSubscriptions++;
+            console.log('   ➜ Assinatura expirada/cancelada');
           }
         }
       });
 
+      console.log('📊 Estatísticas finais:', stats);
       return stats;
     } catch (error) {
       console.error('Erro ao calcular estatísticas:', error);

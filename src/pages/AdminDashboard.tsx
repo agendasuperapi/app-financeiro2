@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import AdminProfileConfig from '@/components/admin/AdminProfileConfig';
 import AdminSectionTabs from '@/components/admin/AdminSectionTabs';
 import Sidebar from '@/components/layout/Sidebar';
@@ -8,15 +9,17 @@ import MobileNavBar from '@/components/layout/MobileNavBar';
 import MobileHeader from '@/components/layout/MobileHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppContext } from '@/contexts/AppContext';
-import { Shield, AlertTriangle } from 'lucide-react';
+import { Shield, AlertTriangle, Eye, EyeOff, LogOut } from 'lucide-react';
 import { AdminOptimizedProvider } from '@/contexts/AdminOptimizedContext';
 import { EnhancedGestaoComponent } from '@/components/admin/enhanced_gestao_component';
+import { BrandLogo } from '@/components/common/BrandLogo';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 const AdminDashboard: React.FC = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [showGestao, setShowGestao] = useState(false);
   const isMobile = useIsMobile();
-  const { hideValues, toggleHideValues } = useAppContext();
+  const { hideValues, toggleHideValues, logout } = useAppContext();
 
   const handleProfileClick = () => {
     setShowProfile(true);
@@ -31,6 +34,15 @@ const AdminDashboard: React.FC = () => {
   const handleGestaoClick = () => {
     setShowGestao(true);
     setShowProfile(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
   const handleAddTransaction = (type: 'income' | 'expense') => {
@@ -167,8 +179,34 @@ const AdminDashboard: React.FC = () => {
         </div>
       ) : (
         <div className="flex h-screen w-full">
+          {/* Header fixo para desktop/tablet */}
+          <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 bg-background/95 backdrop-blur-sm border-b hidden md:flex">
+            <div className="flex-shrink-0">
+              <BrandLogo size="md" showCompanyName={true} />
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleHideValues}
+                aria-label={hideValues ? 'Mostrar valores' : 'Ocultar valores'}
+              >
+                {hideValues ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </Button>
+              <ThemeToggle variant="ghost" size="icon" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                aria-label="Sair"
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+
           <Sidebar onProfileClick={handleProfileClick} onConfigClick={handleConfigClick} onGestaoClick={handleGestaoClick} />
-          <main className="flex-1 overflow-auto w-full">
+          <main className="flex-1 overflow-auto w-full pt-16 md:pt-20">
             <div className="w-full p-6">
               {showProfile ? (
                 <div className="w-full max-w-6xl mx-auto">

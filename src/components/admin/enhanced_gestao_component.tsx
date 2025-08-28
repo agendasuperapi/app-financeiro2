@@ -241,29 +241,37 @@ export const EnhancedGestaoComponent = () => {
       return;
     }
 
-    console.log('✅ Validação inicial passou');
-
     try {
-      console.log('📝 Adicionando novo cliente:', {
-        name: newClientName,
-        phone: newClientPhone,
-        date: newClientDate,
-        status: newClientStatus
-      });
-
       // Gerar um email temporário único para o cliente
       const tempEmail = `cliente_${Date.now()}@temp.local`;
-      const clientId = uuidv4();
+      const tempPassword = 'temp123456'; // Senha temporária
       
-      console.log('🆔 ID gerado:', clientId);
-      console.log('📧 Email temporário:', tempEmail);
-      
-      // Inserir novo usuário na tabela poupeja_users
-      console.log('💾 Inserindo na tabela poupeja_users...');
+      // Primeiro, criar o usuário no sistema de autenticação
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: tempEmail,
+        password: tempPassword,
+        user_metadata: {
+          name: newClientName.trim(),
+          phone: newClientPhone.trim()
+        }
+      });
+
+      if (authError) {
+        console.error('❌ Erro ao criar usuário de autenticação:', authError);
+        alert('Erro ao criar cliente: ' + authError.message);
+        return;
+      }
+
+      if (!authData.user) {
+        alert('Erro: Não foi possível criar o usuário');
+        return;
+      }
+
+      // Agora inserir na tabela poupeja_users com o ID do auth
       const { data, error } = await supabase
         .from('poupeja_users')
         .insert({
-          id: clientId,
+          id: authData.user.id,
           name: newClientName.trim(),
           phone: newClientPhone.trim(),
           email: tempEmail,
@@ -271,59 +279,47 @@ export const EnhancedGestaoComponent = () => {
         })
         .select();
 
-      console.log('📊 Resultado da inserção poupeja_users:', { data, error });
-
       if (error) {
         console.error('❌ Erro ao inserir em poupeja_users:', error);
-        throw error;
+        alert('Erro ao salvar dados do cliente: ' + error.message);
+        return;
       }
 
-      console.log('✅ Usuário inserido com sucesso');
-
-      // Criar entrada na tabela de assinaturas para todos os clientes
+      // Criar entrada na tabela de assinaturas
       if (data && data[0]) {
-        console.log('💳 Criando assinatura...');
         const subscriptionData = {
           user_id: data[0].id,
           status: newClientStatus,
-          plan_type: 'basic', // Tipo de plano padrão
+          plan_type: 'basic',
           current_period_start: newClientDate ? newClientDate.toISOString() : new Date().toISOString(),
           current_period_end: newClientDate ? new Date(newClientDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString() : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           created_at: new Date().toISOString()
         };
 
-        console.log('📋 Dados da assinatura:', subscriptionData);
-
         const { error: subError } = await supabase
           .from('poupeja_subscriptions')
           .insert(subscriptionData);
 
-        console.log('📊 Resultado da inserção poupeja_subscriptions:', { subError });
-
         if (subError) {
           console.error('❌ Erro ao criar assinatura:', subError);
-        } else {
-          console.log('✅ Assinatura criada com sucesso');
         }
       }
 
-      console.log('✅ Cliente adicionado com sucesso:', data);
+      alert('Cliente adicionado com sucesso!');
       
       // Limpar formulário e fechar dialog
-      console.log('🧹 Limpando formulário...');
       setNewClientName('');
       setNewClientPhone('');
       setNewClientDate(undefined);
       setNewClientStatus('active');
       setIsAddClientDialogOpen(false);
       
-      console.log('🔄 Recarregando dados...');
       // Recarregar dados para mostrar o novo cliente
       await fetchUserData();
-      console.log('✅ Processo completo!');
       
     } catch (error) {
       console.error('❌ Erro geral ao adicionar cliente:', error);
+      alert('Erro ao adicionar cliente: ' + (error as Error).message);
     }
   };
 

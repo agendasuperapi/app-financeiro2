@@ -231,49 +231,53 @@ export const EnhancedGestaoComponent = () => {
 
           {/* Controles de Filtro e Busca */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+            <CardHeader className="p-3 lg:p-6">
+              <CardTitle className="flex items-center justify-between text-sm lg:text-base">
                 <span className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
+                  <Users className="h-4 w-4 lg:h-5 lg:w-5" />
                   Dashboard de Usuários ({filteredData.length})
                 </span>
-                <div className="flex gap-2">
+                <div className="flex gap-1 lg:gap-2">
                   <Button
                     onClick={fetchUserData}
                     variant="outline"
                     size="sm"
                     disabled={loading}
+                    className="h-7 w-7 lg:h-9 lg:w-auto lg:px-3"
                   >
-                    <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`h-3 w-3 lg:h-4 lg:w-4 ${loading ? 'animate-spin' : ''}`} />
+                    <span className="hidden lg:inline ml-1">Atualizar</span>
                   </Button>
                   <Button
                     onClick={exportToCSV}
                     variant="outline"
                     size="sm"
                     disabled={filteredData.length === 0}
+                    className="h-7 w-7 lg:h-9 lg:w-auto lg:px-3"
                   >
-                    <Download className="h-4 w-4" />
+                    <Download className="h-3 w-3 lg:h-4 lg:w-4" />
+                    <span className="hidden lg:inline ml-1">Exportar</span>
                   </Button>
                 </div>
               </CardTitle>
               
-              <div className="flex flex-col sm:flex-row gap-4 mb-4">
+              <div className="flex flex-col sm:flex-row gap-2 lg:gap-4 mt-2 lg:mt-4">
                 <div className="flex-1">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-2 lg:left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 lg:h-4 lg:w-4 text-muted-foreground" />
                     <Input
                       placeholder="Buscar por nome, telefone ou email..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="pl-8 lg:pl-10 h-8 lg:h-10 text-sm"
                     />
                   </div>
                 </div>
                 
-                <div className="w-full sm:w-56">
+                <div className="w-full sm:w-40 lg:w-56">
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger>
-                      <Filter className="h-4 w-4 mr-2" />
+                    <SelectTrigger className="h-8 lg:h-10 text-sm">
+                      <Filter className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
                       <SelectValue placeholder="Filtrar por status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -293,7 +297,7 @@ export const EnhancedGestaoComponent = () => {
               </div>
             </CardHeader>
             
-            <CardContent>
+            <CardContent className="p-3 lg:p-6 pt-0">
               <div className="overflow-x-auto">
                 {userData.length === 0 && !loading && (
                   <div className="text-center py-8 space-y-4">

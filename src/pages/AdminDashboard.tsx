@@ -10,17 +10,26 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppContext } from '@/contexts/AppContext';
 import { Shield, AlertTriangle } from 'lucide-react';
 import { AdminOptimizedProvider } from '@/contexts/AdminOptimizedContext';
+import { EnhancedGestaoComponent } from '@/components/admin/enhanced_gestao_component';
 
 const AdminDashboard: React.FC = () => {
   const [showProfile, setShowProfile] = useState(false);
+  const [showGestao, setShowGestao] = useState(false);
   const isMobile = useIsMobile();
   const { hideValues, toggleHideValues } = useAppContext();
 
   const handleProfileClick = () => {
     setShowProfile(true);
+    setShowGestao(false);
   };
 
   const handleConfigClick = () => {
+    setShowProfile(false);
+    setShowGestao(false);
+  };
+
+  const handleGestaoClick = () => {
+    setShowGestao(true);
     setShowProfile(false);
   };
 
@@ -97,6 +106,27 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <AdminProfileConfig />
                 </div>
+              ) : showGestao ? (
+                <div className="w-full">
+                  <div className="mb-8">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Shield className="h-8 w-8 text-blue-600" />
+                      <h1 className="text-3xl font-bold text-gray-900">
+                        Gestão de Usuários
+                      </h1>
+                      <button 
+                        onClick={handleConfigClick}
+                        className="ml-auto text-blue-600 hover:text-blue-800"
+                      >
+                        ← Voltar ao Painel
+                      </button>
+                    </div>
+                    <p className="text-gray-600">
+                      Gerencie usuários, assinaturas e dados do sistema
+                    </p>
+                  </div>
+                  <EnhancedGestaoComponent />
+                </div>
               ) : (
                 <div className="w-full">
                   <div className="mb-8">
@@ -137,7 +167,7 @@ const AdminDashboard: React.FC = () => {
         </div>
       ) : (
         <div className="flex h-screen w-full">
-          <Sidebar onProfileClick={handleProfileClick} onConfigClick={handleConfigClick} />
+          <Sidebar onProfileClick={handleProfileClick} onConfigClick={handleConfigClick} onGestaoClick={handleGestaoClick} />
           <main className="flex-1 overflow-auto w-full">
             <div className="w-full p-6">
               {showProfile ? (
@@ -160,6 +190,31 @@ const AdminDashboard: React.FC = () => {
                     </p>
                   </div>
                   <AdminProfileConfig />
+                </div>
+              ) : showGestao ? (
+                <div className="w-full max-w-6xl mx-auto">
+                  <div className="mb-8">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Shield className="h-8 w-8 text-blue-600" />
+                      <h1 className="text-3xl font-bold text-gray-900">
+                        Gestão de Usuários
+                      </h1>
+                      <button 
+                        onClick={handleConfigClick}
+                        className="ml-auto text-blue-600 hover:text-blue-800"
+                      >
+                        ← Voltar ao Painel
+                      </button>
+                    </div>
+                    <p className="text-gray-600">
+                      Gerencie usuários, assinaturas e dados do sistema
+                    </p>
+                  </div>
+                  <Card>
+                    <CardContent className="p-6">
+                      <EnhancedGestaoComponent />
+                    </CardContent>
+                  </Card>
                 </div>
               ) : (
                 <div className="w-full max-w-6xl mx-auto">

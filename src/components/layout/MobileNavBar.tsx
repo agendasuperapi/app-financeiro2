@@ -138,17 +138,19 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
               <NavLink
                 key={item.href}
                 to={item.href!}
-                className={({ isActive }) =>
+                className={() =>
                   cn(
                     "flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
                     "hover:bg-accent hover:text-accent-foreground min-w-0",
-                    isActive ? "bg-green-600 text-white shadow-md" : "text-muted-foreground"
+                    // Para o botão admin, só fica ativo se for explicitamente selecionado
+                    (item.id === 'admin' && activeAdminSection === 'admin') || 
+                    (item.id !== 'admin' && activeAdminSection === item.id)
+                      ? "bg-green-600 text-white shadow-md" 
+                      : "text-muted-foreground"
                   )
                 }
                 onClick={() => {
-                  if (item.id !== 'admin') {
-                    setActiveAdminSection(item.id);
-                  }
+                  setActiveAdminSection(item.id);
                 }}
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />

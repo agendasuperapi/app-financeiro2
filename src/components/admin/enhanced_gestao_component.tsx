@@ -236,13 +236,17 @@ export const EnhancedGestaoComponent = () => {
 
   // Função para adicionar novo cliente
   const handleAddClient = async () => {
+    console.log('🔄 Iniciando handleAddClient...');
+    
     if (!newClientName.trim() || !newClientPhone.trim()) {
-      console.error('Nome e telefone são obrigatórios');
+      console.error('❌ Nome e telefone são obrigatórios');
       return;
     }
 
+    console.log('✅ Validação inicial passou');
+
     try {
-      console.log('Adicionando novo cliente:', {
+      console.log('📝 Adicionando novo cliente:', {
         name: newClientName,
         phone: newClientPhone,
         date: newClientDate,
@@ -253,7 +257,11 @@ export const EnhancedGestaoComponent = () => {
       const tempEmail = `cliente_${Date.now()}@temp.local`;
       const clientId = uuidv4();
       
+      console.log('🆔 ID gerado:', clientId);
+      console.log('📧 Email temporário:', tempEmail);
+      
       // Inserir novo usuário na tabela poupeja_users
+      console.log('💾 Inserindo na tabela poupeja_users...');
       const { data, error } = await supabase
         .from('poupeja_users')
         .insert({
@@ -265,12 +273,18 @@ export const EnhancedGestaoComponent = () => {
         })
         .select();
 
+      console.log('📊 Resultado da inserção poupeja_users:', { data, error });
+
       if (error) {
+        console.error('❌ Erro ao inserir em poupeja_users:', error);
         throw error;
       }
 
+      console.log('✅ Usuário inserido com sucesso');
+
       // Criar entrada na tabela de assinaturas para todos os clientes
       if (data && data[0]) {
+        console.log('💳 Criando assinatura...');
         const subscriptionData = {
           user_id: data[0].id,
           status: newClientStatus,
@@ -280,29 +294,38 @@ export const EnhancedGestaoComponent = () => {
           created_at: new Date().toISOString()
         };
 
+        console.log('📋 Dados da assinatura:', subscriptionData);
+
         const { error: subError } = await supabase
           .from('poupeja_subscriptions')
           .insert(subscriptionData);
 
+        console.log('📊 Resultado da inserção poupeja_subscriptions:', { subError });
+
         if (subError) {
-          console.error('Erro ao criar assinatura:', subError);
+          console.error('❌ Erro ao criar assinatura:', subError);
+        } else {
+          console.log('✅ Assinatura criada com sucesso');
         }
       }
 
       console.log('✅ Cliente adicionado com sucesso:', data);
       
       // Limpar formulário e fechar dialog
+      console.log('🧹 Limpando formulário...');
       setNewClientName('');
       setNewClientPhone('');
       setNewClientDate(undefined);
       setNewClientStatus('active');
       setIsAddClientDialogOpen(false);
       
+      console.log('🔄 Recarregando dados...');
       // Recarregar dados para mostrar o novo cliente
       await fetchUserData();
+      console.log('✅ Processo completo!');
       
     } catch (error) {
-      console.error('❌ Erro ao adicionar cliente:', error);
+      console.error('❌ Erro geral ao adicionar cliente:', error);
     }
   };
 

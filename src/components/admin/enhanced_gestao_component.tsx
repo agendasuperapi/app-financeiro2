@@ -23,10 +23,9 @@ import { UserManagementService, UserData, UserStats } from '../../services/api_s
 import { supabase } from '@/integrations/supabase/client';
 
 export const EnhancedGestaoComponent = () => {
-  const [showTable, setShowTable] = useState(false);
   const [userData, setUserData] = useState<UserData[]>([]);
   const [filteredData, setFilteredData] = useState<UserData[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -44,7 +43,6 @@ export const EnhancedGestaoComponent = () => {
       setUserData(users);
       setFilteredData(users);
       setStats(userStats);
-      setShowTable(true);
       
       console.log('✅ Dados carregados:', {
         totalUsers: users.length,
@@ -64,12 +62,16 @@ export const EnhancedGestaoComponent = () => {
         expiredSubscriptions: 0,
         noSubscriptions: 0
       });
-      setShowTable(true);
       
     } finally {
       setLoading(false);
     }
   };
+
+  // Carregar dados automaticamente quando o componente é montado
+  useEffect(() => {
+    fetchUserData();
+  }, []);
 
   // Filtrar dados baseado na busca e filtro de status
   useEffect(() => {
@@ -165,17 +167,14 @@ export const EnhancedGestaoComponent = () => {
 
   return (
     <div className="space-y-4">
-      <Button 
-        onClick={fetchUserData}
-        disabled={loading}
-        className="w-full flex items-center gap-2"
-        variant="outline"
-      >
-        <Users className="h-4 w-4" />
-        {loading ? 'Carregando...' : 'Gestão'}
-      </Button>
-
-      {showTable && (
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-4">
+            <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Carregando dados dos usuários...</p>
+          </div>
+        </div>
+      ) : (
         <div className="space-y-4">
           {/* Cards de Estatísticas */}
           {stats && (

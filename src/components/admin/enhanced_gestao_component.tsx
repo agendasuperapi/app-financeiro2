@@ -45,7 +45,7 @@ export const EnhancedGestaoComponent = () => {
   const [newClientName, setNewClientName] = useState('');
   const [newClientPhone, setNewClientPhone] = useState('');
   const [newClientDate, setNewClientDate] = useState<Date | undefined>();
-  const [newClientStatus, setNewClientStatus] = useState('sem_assinatura');
+  const [newClientStatus, setNewClientStatus] = useState('active');
 
   const fetchUserData = async () => {
     setLoading(true);
@@ -295,7 +295,7 @@ export const EnhancedGestaoComponent = () => {
       setNewClientName('');
       setNewClientPhone('');
       setNewClientDate(undefined);
-      setNewClientStatus('sem_assinatura');
+      setNewClientStatus('active');
       setIsAddClientDialogOpen(false);
       
       // Recarregar dados para mostrar o novo cliente
@@ -715,11 +715,8 @@ export const EnhancedGestaoComponent = () => {
                       <SelectValue placeholder="Selecionar status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="sem_assinatura">Sem Assinatura</SelectItem>
-                      <SelectItem value="active">Ativo</SelectItem>
-                      <SelectItem value="canceled">Cancelado</SelectItem>
-                      <SelectItem value="past_due">Vencido</SelectItem>
-                      <SelectItem value="trialing">Teste</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>  
+                      <SelectItem value="disabled">Disabled</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -732,7 +729,7 @@ export const EnhancedGestaoComponent = () => {
                       setNewClientName('');
                       setNewClientPhone('');
                       setNewClientDate(undefined);
-                      setNewClientStatus('sem_assinatura');
+                      setNewClientStatus('active');
                     }}
                   >
                     Cancelar

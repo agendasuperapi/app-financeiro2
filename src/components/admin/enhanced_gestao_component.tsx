@@ -24,7 +24,8 @@ import {
   TrendingDown,
   AlertCircle,
   UserX,
-  Pencil
+  Pencil,
+  Plus
 } from 'lucide-react';
 import { UserManagementService, UserData, UserStats } from '../../services/api_service';
 import { supabase } from '@/integrations/supabase/client';
@@ -300,6 +301,15 @@ export const EnhancedGestaoComponent = () => {
                   Dashboard de Usuários ({filteredData.length})
                 </span>
                 <div className="flex gap-1 lg:gap-2">
+                  <Button
+                    onClick={() => {/* TODO: Implementar função de adicionar cliente */}}
+                    variant="default"
+                    size="sm"
+                    className="h-7 w-7 lg:h-9 lg:w-auto lg:px-3"
+                  >
+                    <Plus className="h-3 w-3 lg:h-4 lg:w-4" />
+                    <span className="hidden lg:inline ml-1">Adicionar Cliente</span>
+                  </Button>
                   <Button
                     onClick={fetchUserData}
                     variant="outline"

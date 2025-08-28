@@ -245,10 +245,8 @@ export const EnhancedGestaoComponent = () => {
       // Gerar UUID válido e email único
       const clientId = uuidv4();
       const tempEmail = `cliente_${Date.now()}@poupeja.local`;
-      
-      console.log('Tentando inserir cliente com UUID:', clientId);
 
-      // Inserir diretamente na tabela poupeja_users
+      // Inserir na tabela poupeja_users
       const { data, error } = await supabase
         .from('poupeja_users')
         .insert({
@@ -260,42 +258,31 @@ export const EnhancedGestaoComponent = () => {
         })
         .select();
 
-      console.log('Resultado da inserção:', { data, error });
-
       if (error) {
-        // Se der erro de foreign key, vamos tentar uma abordagem diferente
-        if (error.code === '23503') {
-          console.log('Erro de foreign key detectado. Este UUID precisa existir na tabela de autenticação.');
-          alert('Este sistema requer que os usuários sejam criados através do processo de autenticação. Para adicionar clientes manualmente, você precisa configurar as permissões adequadas no Supabase.');
-          return;
-        } else {
-          throw error;
-        }
-      }
-
-      if (!data || data.length === 0) {
-        throw new Error('Não foi possível criar o usuário');
+        throw error;
       }
 
       // Criar entrada na tabela de assinaturas
-      const subscriptionData = {
-        user_id: data[0].id,
-        status: newClientStatus,
-        plan_type: 'basic',
-        current_period_start: newClientDate ? newClientDate.toISOString() : new Date().toISOString(),
-        current_period_end: newClientDate ? 
-          new Date(newClientDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString() : 
-          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date().toISOString()
-      };
+      if (data && data[0]) {
+        const subscriptionData = {
+          user_id: data[0].id,
+          status: newClientStatus,
+          plan_type: 'basic',
+          current_period_start: newClientDate ? newClientDate.toISOString() : new Date().toISOString(),
+          current_period_end: newClientDate ? 
+            new Date(newClientDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString() : 
+            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          created_at: new Date().toISOString()
+        };
 
-      const { error: subError } = await supabase
-        .from('poupeja_subscriptions')
-        .insert(subscriptionData);
+        const { error: subError } = await supabase
+          .from('poupeja_subscriptions')
+          .insert(subscriptionData);
 
-      if (subError) {
-        console.error('❌ Erro ao criar assinatura:', subError);
-        // Não falha aqui, cliente foi criado com sucesso
+        if (subError) {
+          console.error('Erro ao criar assinatura:', subError);
+          alert('Cliente criado, mas erro ao criar assinatura: ' + subError.message);
+        }
       }
 
       alert('Cliente adicionado com sucesso!');
@@ -307,11 +294,11 @@ export const EnhancedGestaoComponent = () => {
       setNewClientStatus('active');
       setIsAddClientDialogOpen(false);
       
-      // Recarregar dados para mostrar o novo cliente
+      // Recarregar dados
       await fetchUserData();
       
     } catch (error) {
-      console.error('❌ Erro geral ao adicionar cliente:', error);
+      console.error('Erro ao adicionar cliente:', error);
       alert('Erro ao adicionar cliente: ' + (error as Error).message);
     }
   };

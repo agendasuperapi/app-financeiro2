@@ -473,9 +473,6 @@ export const EnhancedGestaoComponent = () => {
                             <span className="sm:hidden">Usuário</span>
                           </div>
                         </TableHead>
-                        <TableHead className="min-w-[180px] hidden md:table-cell">
-                          Email
-                        </TableHead>
                         <TableHead className="min-w-[120px] hidden sm:table-cell">
                           <div className="flex items-center gap-2">
                             <Phone className="h-4 w-4" />
@@ -509,19 +506,16 @@ export const EnhancedGestaoComponent = () => {
                       {filteredData.map((user) => (
                         <TableRow key={user.id} className="hover:bg-muted/50">
                            <TableCell className="font-medium">
-                              <div className="flex flex-col">
-                                <span className="font-semibold">{user.name || 'N/A'}</span>
-                                <span className="text-sm text-muted-foreground sm:hidden">
-                                  {user.phone || 'N/A'}
-                                </span>
-                              </div>
-                            </TableCell>
-                           <TableCell className="hidden md:table-cell">
-                             {user.email || 'N/A'}
+                             <div className="flex flex-col">
+                               <span className="font-semibold">{user.name || 'N/A'}</span>
+                               <span className="text-sm text-muted-foreground sm:hidden">
+                                 {user.phone || 'N/A'}
+                               </span>
+                             </div>
                            </TableCell>
-                           <TableCell className="hidden sm:table-cell">
-                             {user.phone || 'N/A'}
-                           </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            {user.phone || 'N/A'}
+                          </TableCell>
                           <TableCell className="hidden md:table-cell">
                             {UserManagementService.formatDate(user.created_at)}
                           </TableCell>

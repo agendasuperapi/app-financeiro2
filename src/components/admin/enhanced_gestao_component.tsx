@@ -268,10 +268,8 @@ export const EnhancedGestaoComponent = () => {
           user_id: data[0].id,
           status: newClientStatus,
           plan_type: 'basic',
-          current_period_start: newClientDate ? newClientDate.toISOString() : new Date().toISOString(),
-          current_period_end: newClientDate ? 
-            new Date(newClientDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString() : 
-            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          current_period_start: new Date().toISOString(),
+          current_period_end: newClientDate ? newClientDate.toISOString() : null,
           created_at: new Date().toISOString()
         };
 

@@ -44,6 +44,8 @@ export const EnhancedGestaoComponent = () => {
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
   const [newClientName, setNewClientName] = useState('');
   const [newClientPhone, setNewClientPhone] = useState('');
+  const [newClientDate, setNewClientDate] = useState<Date | undefined>();
+  const [newClientStatus, setNewClientStatus] = useState('sem_assinatura');
 
   const fetchUserData = async () => {
     setLoading(true);
@@ -242,7 +244,9 @@ export const EnhancedGestaoComponent = () => {
     try {
       console.log('Adicionando novo cliente:', {
         name: newClientName,
-        phone: newClientPhone
+        phone: newClientPhone,
+        date: newClientDate,
+        status: newClientStatus
       });
 
       // Gerar um email temporário único para o cliente
@@ -257,7 +261,7 @@ export const EnhancedGestaoComponent = () => {
           name: newClientName.trim(),
           phone: newClientPhone.trim(),
           email: tempEmail,
-          created_at: new Date().toISOString()
+          created_at: newClientDate ? newClientDate.toISOString() : new Date().toISOString()
         })
         .select();
 
@@ -265,11 +269,33 @@ export const EnhancedGestaoComponent = () => {
         throw error;
       }
 
+      // Se um status diferente de "sem_assinatura" foi selecionado, criar entrada na tabela de assinaturas
+      if (newClientStatus !== 'sem_assinatura' && data && data[0]) {
+        const subscriptionData = {
+          user_id: data[0].id,
+          status: newClientStatus,
+          plan_type: 'basic', // Tipo de plano padrão
+          current_period_start: newClientDate ? newClientDate.toISOString() : new Date().toISOString(),
+          current_period_end: newClientDate ? new Date(newClientDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString() : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          created_at: new Date().toISOString()
+        };
+
+        const { error: subError } = await supabase
+          .from('poupeja_subscriptions')
+          .insert(subscriptionData);
+
+        if (subError) {
+          console.error('Erro ao criar assinatura:', subError);
+        }
+      }
+
       console.log('✅ Cliente adicionado com sucesso:', data);
       
       // Limpar formulário e fechar dialog
       setNewClientName('');
       setNewClientPhone('');
+      setNewClientDate(undefined);
+      setNewClientStatus('sem_assinatura');
       setIsAddClientDialogOpen(false);
       
       // Recarregar dados para mostrar o novo cliente
@@ -651,6 +677,53 @@ export const EnhancedGestaoComponent = () => {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Data de Registro
+                  </label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !newClientDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {newClientDate ? format(newClientDate, "dd/MM/yyyy") : "Selecionar data"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={newClientDate}
+                        onSelect={setNewClientDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Status
+                  </label>
+                  <Select value={newClientStatus} onValueChange={setNewClientStatus}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecionar status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sem_assinatura">Sem Assinatura</SelectItem>
+                      <SelectItem value="active">Ativo</SelectItem>
+                      <SelectItem value="canceled">Cancelado</SelectItem>
+                      <SelectItem value="past_due">Vencido</SelectItem>
+                      <SelectItem value="trialing">Teste</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="flex justify-end gap-2 pt-4">
                   <Button
                     variant="outline"
@@ -658,6 +731,8 @@ export const EnhancedGestaoComponent = () => {
                       setIsAddClientDialogOpen(false);
                       setNewClientName('');
                       setNewClientPhone('');
+                      setNewClientDate(undefined);
+                      setNewClientStatus('sem_assinatura');
                     }}
                   >
                     Cancelar

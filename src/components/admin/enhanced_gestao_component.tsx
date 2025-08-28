@@ -422,17 +422,14 @@ export const EnhancedGestaoComponent = () => {
                     <TableBody>
                       {filteredData.map((user) => (
                         <TableRow key={user.id} className="hover:bg-muted/50">
-                          <TableCell className="font-medium">
-                            <div className="flex flex-col">
-                              <span className="font-semibold">{user.name || 'N/A'}</span>
-                              <span className="text-sm text-muted-foreground sm:hidden">
-                                {user.phone || 'N/A'}
-                              </span>
-                              <span className="text-xs text-muted-foreground md:hidden">
-                                {UserManagementService.formatDate(user.created_at)}
-                              </span>
-                            </div>
-                          </TableCell>
+                           <TableCell className="font-medium">
+                             <div className="flex flex-col">
+                               <span className="font-semibold">{user.name || 'N/A'}</span>
+                               <span className="text-sm text-muted-foreground sm:hidden">
+                                 {user.phone || 'N/A'}
+                               </span>
+                             </div>
+                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
                             {user.phone || 'N/A'}
                           </TableCell>

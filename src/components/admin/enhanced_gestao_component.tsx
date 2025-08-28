@@ -245,48 +245,29 @@ export const EnhancedGestaoComponent = () => {
       // Gerar um email temporário único para o cliente
       const tempEmail = `cliente_${Date.now()}@temp.local`;
       
-      // Inserir diretamente na tabela poupeja_users com ID gerado
-      const clientId = uuidv4();
-      const { data, error } = await supabase
-        .from('poupeja_users')
-        .insert({
-          id: clientId,
+      // Chamar a edge function para criar o cliente
+      const { data, error } = await supabase.functions.invoke('create-admin-client', {
+        body: {
           name: newClientName.trim(),
           phone: newClientPhone.trim(),
           email: tempEmail,
-          created_at: newClientDate ? newClientDate.toISOString() : new Date().toISOString()
-        })
-        .select();
+          expirationDate: newClientDate ? newClientDate.toISOString() : null,
+          status: newClientStatus
+        }
+      });
 
-      console.log('Resultado da inserção:', { data, error });
+      console.log('Resultado da edge function:', { data, error });
 
       if (error) {
-        console.error('❌ Erro ao inserir em poupeja_users:', error);
-        alert('Erro ao salvar dados do cliente: ' + error.message);
+        console.error('❌ Erro na edge function:', error);
+        alert('Erro ao criar cliente: ' + error.message);
         return;
       }
 
-      // Criar entrada na tabela de assinaturas
-      if (data && data[0]) {
-        const subscriptionData = {
-          user_id: data[0].id,
-          status: newClientStatus,
-          plan_type: 'basic',
-          current_period_start: newClientDate ? newClientDate.toISOString() : new Date().toISOString(),
-          current_period_end: newClientDate ? 
-            new Date(newClientDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString() : 
-            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          created_at: new Date().toISOString()
-        };
-
-        const { error: subError } = await supabase
-          .from('poupeja_subscriptions')
-          .insert(subscriptionData);
-
-        if (subError) {
-          console.error('❌ Erro ao criar assinatura:', subError);
-          alert('Cliente criado, mas erro ao criar assinatura: ' + subError.message);
-        }
+      if (!data?.success) {
+        console.error('❌ Falha na criação do cliente:', data);
+        alert('Erro ao criar cliente: ' + (data?.error || 'Erro desconhecido'));
+        return;
       }
 
       alert('Cliente adicionado com sucesso!');

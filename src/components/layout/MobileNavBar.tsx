@@ -23,6 +23,7 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
   const location = useLocation();
   const { isAdmin } = useUserRole();
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
+  const [activeAdminSection, setActiveAdminSection] = useState<string>('config');
   
   // Verificar se estamos na página de administração
   const isAdminPage = location.pathname === '/admin';
@@ -84,20 +85,24 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
   if (isAdmin && isAdminPage) {
     const adminMenuItems = [
       {
+        id: 'admin',
         icon: Shield,
         label: 'Admin',
         href: '/admin'
       },
       {
+        id: 'gestao',
         icon: Users,
         label: 'Gestão',
         action: () => {
+          setActiveAdminSection('gestao');
           if (onGestaoClick) {
             onGestaoClick();
           }
         }
       },
       {
+        id: 'profile',
         icon: User,
         label: t('nav.profile'),
         href: '/profile'
@@ -107,16 +112,19 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
     return (
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t md:hidden">
         <nav className="flex items-center justify-around py-2">
-          {adminMenuItems.map((item, index) => {
+          {adminMenuItems.map((item) => {
             // Se o item tem uma ação (como Gestão), renderizar como button
             if (item.action) {
               return (
                 <button
-                  key={`action-${index}`}
+                  key={`action-${item.id}`}
                   onClick={item.action}
                   className={cn(
                     "flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
-                    "hover:bg-accent hover:text-accent-foreground min-w-0 text-muted-foreground"
+                    "hover:bg-accent hover:text-accent-foreground min-w-0",
+                    activeAdminSection === item.id
+                      ? "bg-green-600 text-white shadow-md"
+                      : "text-muted-foreground"
                   )}
                 >
                   <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -134,9 +142,14 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
                   cn(
                     "flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
                     "hover:bg-accent hover:text-accent-foreground min-w-0",
-                    isActive ? "text-primary bg-primary/10" : "text-muted-foreground"
+                    isActive ? "bg-green-600 text-white shadow-md" : "text-muted-foreground"
                   )
                 }
+                onClick={() => {
+                  if (item.id !== 'admin') {
+                    setActiveAdminSection(item.id);
+                  }
+                }}
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
                 <span className="truncate">{item.label}</span>
@@ -237,7 +250,7 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
             return (
               <Popover key="quick-actions" open={isQuickActionsOpen} onOpenChange={setIsQuickActionsOpen}>
                 <PopoverTrigger asChild>
-                  <button className={cn("flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground min-w-0", isQuickActionsOpen ? "text-primary bg-primary/10" : "text-muted-foreground")}>
+                  <button className={cn("flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground min-w-0", isQuickActionsOpen ? "bg-green-600 text-white shadow-md" : "text-muted-foreground")}>
                     <div className="rounded-full bg-primary text-primary-foreground p-1">
                       <Plus className="h-8 w-8 py-0" />
                     </div>
@@ -265,7 +278,7 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
           return (
             <NavLink key={item.href} to={item.href} className={({
               isActive
-            }) => cn("flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground min-w-0", isActive ? "text-primary bg-primary/10" : "text-muted-foreground")}>
+            }) => cn("flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground min-w-0", isActive ? "bg-green-600 text-white shadow-md" : "text-muted-foreground")}>
               <item.icon className="h-5 w-5 flex-shrink-0" />
               <span className="truncate">{item.label}</span>
             </NavLink>

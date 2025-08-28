@@ -18,7 +18,7 @@ import {
   TrendingUp,
   TrendingDown,
   AlertCircle,
-  Trash2,
+  UserX,
   Pencil
 } from 'lucide-react';
 import { UserManagementService, UserData, UserStats } from '../../services/api_service';
@@ -402,9 +402,9 @@ export const EnhancedGestaoComponent = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                                className="h-8 w-8 p-0 hover:bg-orange-50 hover:text-orange-600"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <UserX className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>

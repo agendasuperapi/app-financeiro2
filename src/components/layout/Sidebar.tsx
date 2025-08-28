@@ -8,14 +8,15 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import { LayoutDashboard, Receipt, BarChart3, Target, User, Settings, FolderOpen, Calendar, Crown, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, Receipt, BarChart3, Target, User, Settings, FolderOpen, Calendar, Crown, LogOut, Shield, Users } from 'lucide-react';
 
 interface SidebarProps {
   onProfileClick?: () => void;
   onConfigClick?: () => void;
+  onGestaoClick?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGestaoClick }) => {
   const { user, logout } = useAppContext();
   const { t } = usePreferences();
   const { isAdmin } = useUserRole();
@@ -41,6 +42,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick }) => {
   // Se for admin na página de admin, mostrar apenas menu administrativo
   if (isAdmin && isAdminPage) {
     const adminMenuItems = [
+      {
+        icon: Users,
+        label: 'Gestão',
+        action: () => {
+          if (onGestaoClick) {
+            onGestaoClick();
+          }
+        }
+      },
       {
         icon: Settings,
         label: 'Configurações',

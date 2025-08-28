@@ -25,6 +25,14 @@ const AdminDashboard: React.FC = () => {
     setShowProfile(false);
   };
 
+  const handleGestaoClick = () => {
+    // Rolar para o componente de gestão
+    const gestaoElement = document.getElementById('gestao-component');
+    if (gestaoElement) {
+      gestaoElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const handleAddTransaction = (type: 'income' | 'expense') => {
     console.log(`Add ${type} transaction`);
   };
@@ -132,7 +140,7 @@ const AdminDashboard: React.FC = () => {
                   <AdminSectionTabs />
                   
                   {/* Componente de Gestão de Usuários */}
-                  <div className="mt-8">
+                  <div className="mt-8" id="gestao-component">
                     <EnhancedGestaoComponent />
                   </div>
                 </div>
@@ -143,7 +151,7 @@ const AdminDashboard: React.FC = () => {
         </div>
       ) : (
         <div className="flex h-screen w-full">
-          <Sidebar onProfileClick={handleProfileClick} onConfigClick={handleConfigClick} />
+          <Sidebar onProfileClick={handleProfileClick} onConfigClick={handleConfigClick} onGestaoClick={handleGestaoClick} />
           <main className="flex-1 overflow-auto w-full">
             <div className="w-full p-6">
               {showProfile ? (
@@ -201,7 +209,7 @@ const AdminDashboard: React.FC = () => {
                   <AdminSectionTabs />
                   
                   {/* Componente de Gestão de Usuários */}
-                  <div className="mt-8">
+                  <div className="mt-8" id="gestao-component">
                     <EnhancedGestaoComponent />
                   </div>
                 </div>

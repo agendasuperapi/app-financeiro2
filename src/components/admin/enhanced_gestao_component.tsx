@@ -242,12 +242,11 @@ export const EnhancedGestaoComponent = () => {
     }
 
     try {
-      // Vamos inserir apenas na tabela de usuários personalizados sem foreign key constraint
-      // Usar um ID simples baseado em timestamp para evitar conflitos
-      const clientId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Gerar UUID válido e email único
+      const clientId = uuidv4();
       const tempEmail = `cliente_${Date.now()}@poupeja.local`;
       
-      console.log('Tentando inserir cliente com ID:', clientId);
+      console.log('Tentando inserir cliente com UUID:', clientId);
 
       // Inserir diretamente na tabela poupeja_users
       const { data, error } = await supabase
@@ -266,39 +265,9 @@ export const EnhancedGestaoComponent = () => {
       if (error) {
         // Se der erro de foreign key, vamos tentar uma abordagem diferente
         if (error.code === '23503') {
-          console.log('Erro de foreign key, tentando abordagem alternativa...');
-          
-          // Tentar usar o ID de um usuário existente como base
-          const { data: existingUsers } = await supabase
-            .from('poupeja_users')
-            .select('id')
-            .limit(1);
-          
-          if (existingUsers && existingUsers.length > 0) {
-            // Usar um ID derivado do usuário existente
-            const baseId = existingUsers[0].id;
-            const newId = baseId.replace(/.$/, Math.floor(Math.random() * 10).toString());
-            
-            const { data: retryData, error: retryError } = await supabase
-              .from('poupeja_users')
-              .insert({
-                id: newId,
-                name: newClientName.trim(),
-                phone: newClientPhone.trim(),
-                email: tempEmail,
-                created_at: newClientDate ? newClientDate.toISOString() : new Date().toISOString()
-              })
-              .select();
-              
-            if (retryError) {
-              throw retryError;
-            }
-            
-            // Usar os dados da retry
-            Object.assign(data, retryData);
-          } else {
-            throw error;
-          }
+          console.log('Erro de foreign key detectado. Este UUID precisa existir na tabela de autenticação.');
+          alert('Este sistema requer que os usuários sejam criados através do processo de autenticação. Para adicionar clientes manualmente, você precisa configurar as permissões adequadas no Supabase.');
+          return;
         } else {
           throw error;
         }

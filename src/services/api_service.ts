@@ -191,16 +191,26 @@ static async getAllUsersWithSubscriptions(): Promise<UserData[]> {
    */
   static getStatusColor(status: string): string {
     switch (status.toLowerCase()) {
+      case 'active':
       case 'ativo':
-        return 'text-green-600 bg-green-100';
-      case 'inativo':
-        return 'text-red-600 bg-red-100';
-      case 'pendente':
-        return 'text-yellow-600 bg-yellow-100';
+        return 'text-green-700 bg-green-100 border-green-200';
+      case 'canceled':
       case 'cancelado':
-        return 'text-gray-600 bg-gray-100';
+        return 'text-gray-700 bg-gray-100 border-gray-200';
+      case 'past_due':
+      case 'unpaid':
+      case 'expirado':
+        return 'text-red-700 bg-red-100 border-red-200';
+      case 'incomplete':
+        return 'text-orange-700 bg-orange-100 border-orange-200';
+      case 'trialing':
+        return 'text-blue-700 bg-blue-100 border-blue-200';
+      case 'sem assinatura':
+        return 'text-slate-700 bg-slate-100 border-slate-200';
+      case 'admin':
+        return 'text-purple-700 bg-purple-100 border-purple-200';
       default:
-        return 'text-blue-600 bg-blue-100';
+        return 'text-slate-700 bg-slate-100 border-slate-200';
     }
   }
 }

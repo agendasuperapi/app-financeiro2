@@ -112,39 +112,54 @@ export const EnhancedGestaoComponent = () => {
   useEffect(() => {
     let filtered = userData;
 
-    // Filtro por termo de busca
-    if (searchTerm) {
+    // Filtro por termo de busca (nome, telefone ou email)
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
       filtered = filtered.filter(user => 
-        (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (user.phone && user.phone.includes(searchTerm)) ||
-        (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
+        (user.name && user.name.toLowerCase().includes(searchLower)) ||
+        (user.phone && user.phone.replace(/\D/g, '').includes(searchTerm.replace(/\D/g, ''))) ||
+        (user.email && user.email.toLowerCase().includes(searchLower))
       );
     }
 
-    // Filtro por status
+    // Filtro por status de assinatura
     if (statusFilter !== 'all') {
       filtered = filtered.filter(user => {
-        if (statusFilter === 'sem_assinatura') {
-          return user.status === 'Sem assinatura';
+        switch (statusFilter) {
+          case 'sem_assinatura':
+            return !user.status || user.status === 'Sem assinatura';
+          case 'ativo':
+            return user.status === 'active' || user.status === 'ativo';
+          case 'cancelado':
+            return user.status === 'canceled' || user.status === 'cancelado';
+          case 'expirado':
+            return user.status === 'past_due' || user.status === 'unpaid' || user.status === 'expirado';
+          default:
+            return user.status === statusFilter;
         }
-        return user.status === statusFilter;
       });
     }
 
     setFilteredData(filtered);
   }, [searchTerm, statusFilter, userData]);
 
+  // Exportação CSV com dados corretos das tabelas
   const exportToCSV = () => {
+    if (filteredData.length === 0) {
+      console.log('Nenhum dado para exportar');
+      return;
+    }
+
     const headers = ['Nome', 'Telefone', 'Email', 'Data Ativação', 'Vencimento', 'Status'];
     const csvContent = [
       headers.join(','),
       ...filteredData.map(user => [
-        user.name || '',
-        user.phone || '',
-        user.email || '',
-        UserManagementService.formatDate(user.created_at),
-        UserManagementService.formatDate(user.current_period_end),
-        user.status || 'Sem assinatura'
+        `"${user.name || 'N/A'}"`,
+        `"${user.phone || 'N/A'}"`,
+        `"${user.email || 'N/A'}"`,
+        `"${UserManagementService.formatDate(user.created_at)}"`,
+        `"${UserManagementService.formatDate(user.current_period_end)}"`,
+        `"${user.status || 'Sem assinatura'}"`
       ].join(','))
     ].join('\n');
 
@@ -152,16 +167,37 @@ export const EnhancedGestaoComponent = () => {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `usuarios_gestao_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `usuarios_poupeja_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    console.log(`Exportados ${filteredData.length} usuários para CSV`);
   };
 
+  // Obter status únicos para filtros
   const getUniqueStatuses = () => {
-    const statuses = [...new Set(userData.map(user => user.status))];
-    return statuses.filter(status => status && status !== 'Sem assinatura');
+    const statuses = [...new Set(userData.map(user => user.status).filter(Boolean))];
+    const statusMapping = {
+      'active': 'Ativo',
+      'ativo': 'Ativo', 
+      'canceled': 'Cancelado',
+      'cancelado': 'Cancelado',
+      'past_due': 'Vencido',
+      'unpaid': 'Vencido',
+      'expirado': 'Vencido',
+      'incomplete': 'Incompleto',
+      'trialing': 'Teste'
+    };
+    
+    return statuses
+      .filter(status => status && status !== 'Sem assinatura')
+      .map(status => ({
+        value: status,
+        label: statusMapping[status as keyof typeof statusMapping] || status
+      }));
   };
 
   return (
@@ -259,7 +295,7 @@ export const EnhancedGestaoComponent = () => {
                 </div>
               </CardTitle>
               
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 mb-4">
                 <div className="flex-1">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -272,7 +308,7 @@ export const EnhancedGestaoComponent = () => {
                   </div>
                 </div>
                 
-                <div className="w-full sm:w-48">
+                <div className="w-full sm:w-56">
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger>
                       <Filter className="h-4 w-4 mr-2" />
@@ -281,9 +317,12 @@ export const EnhancedGestaoComponent = () => {
                     <SelectContent>
                       <SelectItem value="all">Todos os Status</SelectItem>
                       <SelectItem value="sem_assinatura">Sem Assinatura</SelectItem>
-                      {getUniqueStatuses().map(status => (
-                        <SelectItem key={status} value={status || ''}>
-                          {status}
+                      <SelectItem value="ativo">Ativo</SelectItem>
+                      <SelectItem value="cancelado">Cancelado</SelectItem>
+                      <SelectItem value="expirado">Vencido</SelectItem>
+                      {getUniqueStatuses().map(statusObj => (
+                        <SelectItem key={statusObj.value} value={statusObj.value}>
+                          {statusObj.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -316,31 +355,32 @@ export const EnhancedGestaoComponent = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>
+                        <TableHead className="min-w-[120px]">
                           <div className="flex items-center gap-2">
                             <User className="h-4 w-4" />
-                            Nome
+                            <span className="hidden sm:inline">Nome</span>
+                            <span className="sm:hidden">Usuário</span>
                           </div>
                         </TableHead>
-                        <TableHead>
+                        <TableHead className="min-w-[120px] hidden sm:table-cell">
                           <div className="flex items-center gap-2">
                             <Phone className="h-4 w-4" />
                             Telefone
                           </div>
                         </TableHead>
-                        <TableHead>
+                        <TableHead className="min-w-[100px] hidden md:table-cell">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
-                            Data Ativação
+                            Ativação
                           </div>
                         </TableHead>
-                        <TableHead>
+                        <TableHead className="min-w-[100px] hidden lg:table-cell">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
                             Vencimento
                           </div>
                         </TableHead>
-                        <TableHead>
+                        <TableHead className="min-w-[100px]">
                           <div className="flex items-center gap-2">
                             <CreditCard className="h-4 w-4" />
                             Status
@@ -350,15 +390,31 @@ export const EnhancedGestaoComponent = () => {
                     </TableHeader>
                     <TableBody>
                       {filteredData.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
-                          <TableCell>{user.phone || 'N/A'}</TableCell>
-                          <TableCell>{UserManagementService.formatDate(user.created_at)}</TableCell>
-                          <TableCell>{UserManagementService.formatDate(user.current_period_end)}</TableCell>
+                        <TableRow key={user.id} className="hover:bg-muted/50">
+                          <TableCell className="font-medium">
+                            <div className="flex flex-col">
+                              <span className="font-semibold">{user.name || 'N/A'}</span>
+                              <span className="text-sm text-muted-foreground sm:hidden">
+                                {user.phone || 'N/A'}
+                              </span>
+                              <span className="text-xs text-muted-foreground md:hidden">
+                                {UserManagementService.formatDate(user.created_at)}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            {user.phone || 'N/A'}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {UserManagementService.formatDate(user.created_at)}
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            {UserManagementService.formatDate(user.current_period_end)}
+                          </TableCell>
                           <TableCell>
                             <Badge 
-                              variant="secondary" 
-                              className={UserManagementService.getStatusColor(user.status || 'Sem assinatura')}
+                              variant="outline" 
+                              className={`${UserManagementService.getStatusColor(user.status || 'Sem assinatura')} text-xs`}
                             >
                               {user.status || 'Sem assinatura'}
                             </Badge>

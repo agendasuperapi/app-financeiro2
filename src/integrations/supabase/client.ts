@@ -13,9 +13,9 @@ const ENV_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 
 // Função para obter configurações
 const getSupabaseConfig = () => {
-  // Usar variáveis de ambiente se disponíveis, senão usar fallbacks válidos
-  const url = ENV_URL || FALLBACK_URL;
-  const key = ENV_KEY || FALLBACK_KEY;
+  // Usar variáveis de ambiente 
+  const url = ENV_URL;
+  const key = ENV_KEY;
   
   return {
     url,

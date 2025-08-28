@@ -9,6 +9,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { LayoutDashboard, Receipt, BarChart3, Target, User, Settings, FolderOpen, Calendar, Crown, LogOut, Shield, Users } from 'lucide-react';
+import { EnhancedGestaoComponent } from '@/components/admin/EnhancedGestaoComponent';
 
 interface SidebarProps {
   onProfileClick?: () => void;
@@ -60,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2" data-component-content='%7B%22className%22%3A%22flex-1%20p-4%20space-y-2%22%7D'>
           {adminMenuItems.map((item, index) => (
             <Button
               key={index}
@@ -72,6 +73,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick }) => {
               {item.label}
             </Button>
           ))}
+          
+          {/* Componente de Gestão de Usuários */}
+          <EnhancedGestaoComponent />
           
           {/* Botão Perfil que executa função ao invés de navegar */}
           <Button

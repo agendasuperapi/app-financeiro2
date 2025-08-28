@@ -8,34 +8,19 @@ const ENV_URL = 'https://gpttodmpflpzhbgzagcc.supabase.co';
 const ENV_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwdHRvZG1wZmxwemhiZ3phZ2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNzU2MTcsImV4cCI6MjA3MDg1MTYxN30.Ro2k_slVwV7hsGDM1YNcNP3csi876LPuAwFSBpxJN2I';
 
 // Valores padrão válidos para demonstração quando as variáveis não estão configuradas
-const FALLBACK_URL = 'https://demo.supabase.co';
-const FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
+//const FALLBACK_URL = 'https://demo.supabase.co';
+//const FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
 
-// Função para obter configurações
-const getSupabaseConfig = () => {
-  // Usar variáveis de ambiente se disponíveis, senão usar fallbacks válidos
-  const url = ENV_URL || FALLBACK_URL;
-  const key = ENV_KEY || FALLBACK_KEY;
-  
-  return {
-    url,
-    key,
-    isPlaceholder: !ENV_URL || !ENV_KEY
-  };
-};
+// Configuração direta
+const supabaseUrl = ENV_URL;
+const supabaseAnonKey = ENV_KEY;
 
-// Obter configurações iniciais
-const initialConfig = getSupabaseConfig();
-
-// Verificar se estamos usando configuração de placeholder
-export const isUsingPlaceholderConfig = initialConfig.isPlaceholder;
-
-// Criar cliente Supabase com as configurações obtidas
-export const supabase = createClient<Database>(initialConfig.url, initialConfig.key);
+// Criar cliente Supabase
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
 // Exportar URL e chave para acesso público quando necessário
-export const SUPABASE_URL = initialConfig.url;
-export const SUPABASE_PUBLISHABLE_KEY = initialConfig.key;
+export const SUPABASE_URL = supabaseUrl;
+export const SUPABASE_PUBLISHABLE_KEY = supabaseAnonKey;
 
 // Função para verificar se o Supabase está configurado corretamente
 export const isSupabaseConfigured = () => {

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminProfileConfig from '@/components/admin/AdminProfileConfig';
 import AdminSectionTabs from '@/components/admin/AdminSectionTabs';
+import UserDataTable from '@/components/admin/UserDataTable';
 import Sidebar from '@/components/layout/Sidebar';
 import MobileNavBar from '@/components/layout/MobileNavBar';
 import MobileHeader from '@/components/layout/MobileHeader';
@@ -10,7 +11,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppContext } from '@/contexts/AppContext';
 import { Shield, AlertTriangle } from 'lucide-react';
 import { AdminOptimizedProvider } from '@/contexts/AdminOptimizedContext';
-import UserDashboard from '@/components/admin/UserDashboard';
 
 const AdminDashboard: React.FC = () => {
   const [showProfile, setShowProfile] = useState(false);
@@ -129,7 +129,9 @@ const AdminDashboard: React.FC = () => {
                   </Card>
 
                   {/* Dashboard de Usuários */}
-                  <UserDashboard />
+                  <div className="mb-6">
+                    <UserDataTable />
+                  </div>
 
                   {/* Navegação por Abas */}
                   <AdminSectionTabs />
@@ -196,7 +198,9 @@ const AdminDashboard: React.FC = () => {
                   </Card>
 
                   {/* Dashboard de Usuários */}
-                  <UserDashboard />
+                  <div className="mb-6">
+                    <UserDataTable />
+                  </div>
 
                   {/* Navegação por Abas */}
                   <AdminSectionTabs />

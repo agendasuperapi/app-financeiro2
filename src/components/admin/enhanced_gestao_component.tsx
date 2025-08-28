@@ -34,114 +34,75 @@ export const EnhancedGestaoComponent = () => {
   const fetchUserData = async () => {
     setLoading(true);
     try {
-      console.log('Iniciando busca de dados de usuários...');
+      console.log('Buscando dados reais das tabelas poupeja_users e poupeja_subscriptions...');
       
-      // Tentar buscar dados com fallback para demonstração
-      let users: UserData[] = [];
-      let userStats: UserStats = {
-        totalUsers: 0,
-        activeSubscriptions: 0,
-        expiredSubscriptions: 0,
-        noSubscriptions: 0
-      };
-      
-      try {
-        // Tentar buscar dados customizados primeiro
-        const [customUsers, customStats] = await Promise.all([
-          UserManagementService.getAllUsersWithSubscriptions(),
-          UserManagementService.getUserStats()
-        ]);
-        users = customUsers;
-        userStats = customStats;
-        console.log('Dados customizados carregados com sucesso');
-      } catch (customError) {
-        console.log('Erro ao buscar dados customizados, criando dados de demonstração:', customError);
-        
-        // Criar dados de demonstração realistas
-        const demoUsers: UserData[] = [
-          {
-            id: 'demo-1',
-            name: 'João Silva',
-            phone: '(11) 99999-1234',
-            created_at: '2024-01-15T10:30:00Z',
-            email: 'joao.silva@email.com',
-            current_period_end: '2024-12-31T23:59:59Z',
-            status: 'ativo'
-          },
-          {
-            id: 'demo-2',
-            name: 'Maria Santos',
-            phone: '(11) 88888-5678',
-            created_at: '2024-02-20T14:15:00Z',
-            email: 'maria.santos@email.com',
-            current_period_end: '2024-01-15T23:59:59Z',
-            status: 'expirado'
-          },
-          {
-            id: 'demo-3',
-            name: 'Pedro Costa',
-            phone: '(11) 77777-9876',
-            created_at: '2024-03-10T09:45:00Z',
-            email: 'pedro.costa@email.com',
-            current_period_end: null,
-            status: 'Sem assinatura'
-          },
-          {
-            id: 'demo-4',
-            name: 'Ana Oliveira',
-            phone: '(11) 66666-5432',
-            created_at: '2024-01-05T16:20:00Z',
-            email: 'ana.oliveira@email.com',
-            current_period_end: '2025-01-05T23:59:59Z',
-            status: 'ativo'
-          }
-        ];
-        
-        users = demoUsers;
-        userStats = {
-          totalUsers: demoUsers.length,
-          activeSubscriptions: demoUsers.filter(u => u.status === 'ativo').length,
-          expiredSubscriptions: demoUsers.filter(u => u.status === 'expirado').length,
-          noSubscriptions: demoUsers.filter(u => u.status === 'Sem assinatura').length
-        };
-      }
+      const [users, userStats] = await Promise.all([
+        UserManagementService.getAllUsersWithSubscriptions(),
+        UserManagementService.getUserStats()
+      ]);
       
       setUserData(users);
       setFilteredData(users);
       setStats(userStats);
       setShowTable(true);
       
-      console.log('Dados carregados com sucesso:', {
+      console.log('Dados reais carregados com sucesso:', {
         totalUsers: users.length,
         stats: userStats
       });
       
     } catch (error) {
-      console.error('Erro geral ao buscar dados:', error);
+      console.error('Erro ao buscar dados das tabelas:', error);
       
-      // Fallback final com dados mínimos
-      const fallbackData: UserData[] = [
-        {
-          id: 'fallback-1',
-          name: 'Sistema Demonstração',
-          phone: 'N/A',
-          created_at: new Date().toISOString(),
-          email: 'demo@sistema.com',
-          current_period_end: null,
-          status: 'Demonstração'
+      // Se há erro de RLS, tentar buscar apenas usuários primeiro
+      try {
+        console.log('Tentando buscar apenas usuários...');
+        const { data: users, error: usersError } = await supabase
+          .from('poupeja_users')
+          .select('*');
+          
+        if (usersError) {
+          console.error('Erro ao buscar tabela poupeja_users:', usersError);
+          throw usersError;
         }
-      ];
-      
-      setUserData(fallbackData);
-      setFilteredData(fallbackData);
-      setStats({
-        totalUsers: 1,
-        activeSubscriptions: 0,
-        expiredSubscriptions: 0,
-        noSubscriptions: 1
-      });
-      setShowTable(true);
-      
+        
+        console.log('Usuários encontrados na tabela:', users?.length || 0);
+        
+        // Transformar dados para o formato esperado
+        const userData: UserData[] = users?.map(user => ({
+          id: user.id,
+          name: user.name,
+          phone: user.phone,
+          created_at: user.created_at,
+          email: user.email,
+          current_period_end: null,
+          status: 'Sem assinatura'
+        })) || [];
+        
+        setUserData(userData);
+        setFilteredData(userData);
+        setStats({
+          totalUsers: userData.length,
+          activeSubscriptions: 0,
+          expiredSubscriptions: 0,
+          noSubscriptions: userData.length
+        });
+        setShowTable(true);
+        
+      } catch (fallbackError) {
+        console.error('Erro no fallback para buscar usuários:', fallbackError);
+        
+        // Mostrar erro para o usuário
+        setUserData([]);
+        setFilteredData([]);
+        setStats({
+          totalUsers: 0,
+          activeSubscriptions: 0,
+          expiredSubscriptions: 0,
+          noSubscriptions: 0
+        });
+        setShowTable(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -333,63 +294,83 @@ export const EnhancedGestaoComponent = () => {
             
             <CardContent>
               <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          Nome
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4" />
-                          Telefone
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          Data Ativação
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          Vencimento
-                        </div>
-                      </TableHead>
-                      <TableHead>
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="h-4 w-4" />
-                          Status
-                        </div>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredData.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
-                        <TableCell>{user.phone || 'N/A'}</TableCell>
-                        <TableCell>{UserManagementService.formatDate(user.created_at)}</TableCell>
-                        <TableCell>{UserManagementService.formatDate(user.current_period_end)}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant="secondary" 
-                            className={UserManagementService.getStatusColor(user.status || 'Sem assinatura')}
-                          >
-                            {user.status || 'Sem assinatura'}
-                          </Badge>
-                        </TableCell>
+                {userData.length === 0 && !loading && (
+                  <div className="text-center py-8 space-y-4">
+                    <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-muted-foreground">Configuração Necessária</h3>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Para exibir dados das tabelas, configure as políticas RLS no Supabase:
+                      </p>
+                      <div className="bg-muted p-4 rounded-lg mt-4 text-left">
+                        <p className="text-xs font-mono">
+                          CREATE POLICY "Admins can view all users" ON poupeja_users<br/>
+                          FOR SELECT USING (EXISTS (SELECT 1 FROM user_roles WHERE user_roles.user_id = auth.uid() AND user_roles.role = 'admin'));
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {userData.length > 0 && (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            Nome
+                          </div>
+                        </TableHead>
+                        <TableHead>
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4" />
+                            Telefone
+                          </div>
+                        </TableHead>
+                        <TableHead>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            Data Ativação
+                          </div>
+                        </TableHead>
+                        <TableHead>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            Vencimento
+                          </div>
+                        </TableHead>
+                        <TableHead>
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4" />
+                            Status
+                          </div>
+                        </TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredData.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
+                          <TableCell>{user.phone || 'N/A'}</TableCell>
+                          <TableCell>{UserManagementService.formatDate(user.created_at)}</TableCell>
+                          <TableCell>{UserManagementService.formatDate(user.current_period_end)}</TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant="secondary" 
+                              className={UserManagementService.getStatusColor(user.status || 'Sem assinatura')}
+                            >
+                              {user.status || 'Sem assinatura'}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </div>
               
-              {filteredData.length === 0 && !loading && (
+              {filteredData.length === 0 && !loading && userData.length > 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   {searchTerm || statusFilter !== 'all' 
                     ? 'Nenhum usuário encontrado com os filtros aplicados' 

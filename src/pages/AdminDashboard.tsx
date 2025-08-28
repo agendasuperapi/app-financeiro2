@@ -17,7 +17,7 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 const AdminDashboard: React.FC = () => {
   const [showProfile, setShowProfile] = useState(false);
-  const [showGestao, setShowGestao] = useState(false);
+  const [showGestao, setShowGestao] = useState(true); // Iniciar com Gestão ativa
   const isMobile = useIsMobile();
   const { hideValues, toggleHideValues, logout } = useAppContext();
 

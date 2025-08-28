@@ -27,7 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
   const isAdminPage = location.pathname === '/admin';
   
   // Estado para rastrear qual seção admin está ativa
-  const [activeAdminSection, setActiveAdminSection] = React.useState<string>('config');
+  const [activeAdminSection, setActiveAdminSection] = React.useState<string>('gestao');
 
   const handleLogout = async () => {
     await logout();

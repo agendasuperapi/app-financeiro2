@@ -23,7 +23,7 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
   const location = useLocation();
   const { isAdmin } = useUserRole();
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
-  const [activeAdminSection, setActiveAdminSection] = useState<string>('config');
+  const [activeAdminSection, setActiveAdminSection] = useState<string>('gestao');
   
   // Verificar se estamos na página de administração
   const isAdminPage = location.pathname === '/admin';

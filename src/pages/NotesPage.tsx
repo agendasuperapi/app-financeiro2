@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-// import { NotesService, type Note } from '@/services/notesService';
+import { NotesService } from '@/services/notesService';
 
 interface Note {
   id: string;
@@ -31,34 +31,34 @@ const NotesPage: React.FC = () => {
   });
   const { toast } = useToast();
 
-  // Dados mockados - substituir pela integração real com Supabase após criar a tabela
+  // Carregar notas do Supabase
   useEffect(() => {
-    const mockNotes: Note[] = [
-      {
-        id: '1',
-        data: '2024-01-15',
-        descricao: 'Reunião com cliente',
-        notas: 'Discutir propostas de orçamento para o próximo trimestre',
-        created_at: '2024-01-15T10:00:00Z'
-      },
-      {
-        id: '2',
-        data: '2024-01-14',
-        descricao: 'Análise financeira',
-        notas: 'Revisar gastos do mês anterior e identificar áreas de economia',
-        created_at: '2024-01-14T14:30:00Z'
-      }
-    ];
-    setNotes(mockNotes);
-    setLoading(false);
+    loadNotes();
   }, []);
+
+  const loadNotes = async () => {
+    try {
+      setLoading(true);
+      const data = await NotesService.getUserNotes();
+      setNotes(data);
+    } catch (error) {
+      console.error('Erro ao carregar notas:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as notas.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredNotes = notes.filter(note =>
     note.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
     note.notas.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddNote = () => {
+  const handleAddNote = async () => {
     if (!newNote.descricao || !newNote.notas) {
       toast({
         title: "Erro",
@@ -68,36 +68,55 @@ const NotesPage: React.FC = () => {
       return;
     }
 
-    // Mock - substituir pela integração real com Supabase
-    const note: Note = {
-      id: Date.now().toString(),
-      data: newNote.data,
-      descricao: newNote.descricao,
-      notas: newNote.notas,
-      created_at: new Date().toISOString()
-    };
+    try {
+      await NotesService.createNote({
+        data: newNote.data,
+        descricao: newNote.descricao,
+        notas: newNote.notas
+      });
 
-    setNotes(prev => [note, ...prev]);
-    setNewNote({
-      data: format(new Date(), 'yyyy-MM-dd'),
-      descricao: '',
-      notas: ''
-    });
-    setIsAddingNote(false);
+      setNewNote({
+        data: format(new Date(), 'yyyy-MM-dd'),
+        descricao: '',
+        notas: ''
+      });
+      setIsAddingNote(false);
 
-    toast({
-      title: "Sucesso",
-      description: "Nota adicionada com sucesso!"
-    });
+      toast({
+        title: "Sucesso",
+        description: "Nota adicionada com sucesso!"
+      });
+
+      // Recarregar notas
+      await loadNotes();
+    } catch (error) {
+      console.error('Erro ao adicionar nota:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível adicionar a nota.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDeleteNote = (id: string) => {
-    // Mock - substituir pela integração real com Supabase
-    setNotes(prev => prev.filter(note => note.id !== id));
-    toast({
-      title: "Sucesso",
-      description: "Nota excluída com sucesso!"
-    });
+  const handleDeleteNote = async (id: string) => {
+    try {
+      await NotesService.deleteNote(id);
+      toast({
+        title: "Sucesso",
+        description: "Nota excluída com sucesso!"
+      });
+
+      // Recarregar notas
+      await loadNotes();
+    } catch (error) {
+      console.error('Erro ao excluir nota:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir a nota.",
+        variant: "destructive"
+      });
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -179,7 +198,21 @@ const NotesPage: React.FC = () => {
 
       {/* Lista de notas */}
       <div className="grid gap-4">
-        {filteredNotes.length === 0 ? (
+        {loading ? (
+          // Skeleton loading
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="py-6">
+                  <div className="h-4 bg-muted rounded w-1/3 mb-2"></div>
+                  <div className="h-3 bg-muted rounded w-1/4 mb-4"></div>
+                  <div className="h-3 bg-muted rounded w-full mb-2"></div>
+                  <div className="h-3 bg-muted rounded w-2/3"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : filteredNotes.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center">
               <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />

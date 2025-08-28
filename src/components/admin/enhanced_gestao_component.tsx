@@ -5,9 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { 
   Users, 
-  Calendar, 
+  Calendar as CalendarIcon, 
   Phone, 
   User, 
   CreditCard, 
@@ -31,6 +36,9 @@ export const EnhancedGestaoComponent = () => {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [expirationDate, setExpirationDate] = useState<Date | undefined>();
 
   const fetchUserData = async () => {
     setLoading(true);
@@ -165,6 +173,28 @@ export const EnhancedGestaoComponent = () => {
         value: status,
         label: statusMapping[status as keyof typeof statusMapping] || status
       }));
+  };
+
+  // Função para abrir o dialog de edição
+  const handleEditUser = (user: UserData) => {
+    setSelectedUser(user);
+    setExpirationDate(user.current_period_end ? new Date(user.current_period_end) : undefined);
+    setIsEditDialogOpen(true);
+  };
+
+  // Função para salvar as alterações
+  const handleSaveChanges = () => {
+    if (selectedUser && expirationDate) {
+      // Aqui você implementaria a lógica para salvar no backend
+      console.log('Salvando alterações:', {
+        userId: selectedUser.id,
+        newExpirationDate: expirationDate
+      });
+      // Fechar o dialog
+      setIsEditDialogOpen(false);
+      setSelectedUser(null);
+      setExpirationDate(undefined);
+    }
   };
 
   return (
@@ -338,13 +368,13 @@ export const EnhancedGestaoComponent = () => {
                         </TableHead>
                         <TableHead className="min-w-[100px] hidden md:table-cell">
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
+                            <CalendarIcon className="h-4 w-4" />
                             Ativação
                           </div>
                         </TableHead>
                         <TableHead className="min-w-[100px] hidden lg:table-cell">
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
+                            <CalendarIcon className="h-4 w-4" />
                             Vencimento
                           </div>
                         </TableHead>
@@ -396,6 +426,7 @@ export const EnhancedGestaoComponent = () => {
                                 variant="ghost"
                                 size="sm"
                                 className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                                onClick={() => handleEditUser(user)}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -425,6 +456,75 @@ export const EnhancedGestaoComponent = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Dialog para editar data de vencimento */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Editar Data de Vencimento</DialogTitle>
+              </DialogHeader>
+              {selectedUser && (
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Usuário:</h4>
+                    <p className="text-sm text-muted-foreground">{selectedUser.name}</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Data de Vencimento Atual:</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedUser.current_period_end 
+                        ? UserManagementService.formatDate(selectedUser.current_period_end)
+                        : 'Sem data definida'
+                      }
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Nova Data de Vencimento:</h4>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !expirationDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {expirationDate ? format(expirationDate, "dd/MM/yyyy") : "Selecionar data"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={expirationDate}
+                          onSelect={setExpirationDate}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditDialogOpen(false)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={handleSaveChanges}
+                      disabled={!expirationDate}
+                    >
+                      Salvar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       )}
     </div>

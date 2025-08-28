@@ -178,51 +178,51 @@ export const EnhancedGestaoComponent = () => {
         <div className="space-y-4">
           {/* Cards de Estatísticas */}
           {stats && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-2 md:p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total de Usuários</p>
-                      <p className="text-2xl font-bold">{stats.totalUsers}</p>
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground">Total de Usuários</p>
+                      <p className="text-lg md:text-2xl font-bold">{stats.totalUsers}</p>
                     </div>
-                    <Users className="h-8 w-8 text-primary" />
+                    <Users className="h-5 w-5 md:h-8 md:w-8 text-primary" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-2 md:p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Assinaturas Ativas</p>
-                      <p className="text-2xl font-bold text-green-600">{stats.activeSubscriptions}</p>
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground">Assinaturas Ativas</p>
+                      <p className="text-lg md:text-2xl font-bold text-green-600">{stats.activeSubscriptions}</p>
                     </div>
-                    <TrendingUp className="h-8 w-8 text-green-600" />
+                    <TrendingUp className="h-5 w-5 md:h-8 md:w-8 text-green-600" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-2 md:p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Assinaturas Vencidas</p>
-                      <p className="text-2xl font-bold text-red-600">{stats.expiredSubscriptions}</p>
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground">Assinaturas Vencidas</p>
+                      <p className="text-lg md:text-2xl font-bold text-red-600">{stats.expiredSubscriptions}</p>
                     </div>
-                    <TrendingDown className="h-8 w-8 text-red-600" />
+                    <TrendingDown className="h-5 w-5 md:h-8 md:w-8 text-red-600" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-2 md:p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Sem Assinatura</p>
-                      <p className="text-2xl font-bold text-muted-foreground">{stats.noSubscriptions}</p>
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground">Sem Assinatura</p>
+                      <p className="text-lg md:text-2xl font-bold text-muted-foreground">{stats.noSubscriptions}</p>
                     </div>
-                    <AlertCircle className="h-8 w-8 text-muted-foreground" />
+                    <AlertCircle className="h-5 w-5 md:h-8 md:w-8 text-muted-foreground" />
                   </div>
                 </CardContent>
               </Card>

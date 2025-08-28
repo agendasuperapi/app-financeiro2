@@ -1,18 +1,19 @@
 
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Palette, CreditCard, DollarSign, Phone, Database, Code } from 'lucide-react';
+import { Palette, CreditCard, DollarSign, Phone, Database, Code, Users } from 'lucide-react';
 import BrandingConfigManager from './BrandingConfigManager';
 import StripeConfigManager from './StripeConfigManager';
 import PlanPricingManager from './PlanPricingManager';
 import ContactConfigManager from './ContactConfigManager';
 import SystemConfigManager from './SystemConfigManager';
 import { PWAManifestGenerator } from './PWAManifestGenerator';
+import { EnhancedGestaoComponent } from './enhanced_gestao_component';
 
 const AdminSectionTabs: React.FC = () => {
   return (
     <Tabs defaultValue="system" className="w-full">
-      <TabsList className="grid w-full grid-cols-6">
+      <TabsList className="grid w-full grid-cols-7">
         <TabsTrigger value="system" className="flex items-center gap-2">
           <Database className="h-4 w-4" />
           Sistema
@@ -36,6 +37,10 @@ const AdminSectionTabs: React.FC = () => {
         <TabsTrigger value="pwa" className="flex items-center gap-2">
           <Code className="h-4 w-4" />
           PWA
+        </TabsTrigger>
+        <TabsTrigger value="gestao" className="flex items-center gap-2">
+          <Users className="h-4 w-4" />
+          Gestão
         </TabsTrigger>
       </TabsList>
 
@@ -61,6 +66,10 @@ const AdminSectionTabs: React.FC = () => {
 
       <TabsContent value="pwa" className="mt-6">
         <PWAManifestGenerator />
+      </TabsContent>
+
+      <TabsContent value="gestao" className="mt-6">
+        <EnhancedGestaoComponent />
       </TabsContent>
     </Tabs>
   );

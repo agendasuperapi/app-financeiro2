@@ -210,6 +210,23 @@ export const EnhancedGestaoComponent = () => {
     }
   };
 
+  // Função para alternar o status do usuário
+  const handleToggleStatus = async (user: UserData) => {
+    try {
+      console.log('Alternando status do usuário:', user.id, 'Status atual:', user.status);
+      
+      // Alternar o status no Supabase
+      await UserManagementService.toggleUserStatus(user.id, user.status || '');
+      
+      // Recarregar os dados para refletir as mudanças
+      await fetchUserData();
+      
+      console.log('✅ Status alternado com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao alternar status:', error);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {loading ? (
@@ -447,6 +464,7 @@ export const EnhancedGestaoComponent = () => {
                                 variant="ghost"
                                 size="sm"
                                 className="h-8 w-8 p-0 hover:bg-orange-50 hover:text-orange-600"
+                                onClick={() => handleToggleStatus(user)}
                               >
                                 <UserX className="h-4 w-4" />
                               </Button>

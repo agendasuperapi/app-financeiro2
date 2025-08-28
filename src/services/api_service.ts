@@ -239,4 +239,33 @@ static async getAllUsersWithSubscriptions(): Promise<UserData[]> {
       throw error;
     }
   }
+
+  /**
+   * Alterna o status de uma assinatura entre active/disabled
+   */
+  static async toggleUserStatus(userId: string, currentStatus: string): Promise<boolean> {
+    try {
+      // Determinar o novo status
+      const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
+      console.log(`Alternando status do usuário ${userId}: ${currentStatus} → ${newStatus}`);
+
+      const { error } = await supabase
+        .from('poupeja_subscriptions')
+        .update({ 
+          status: newStatus
+        })
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Erro ao atualizar status:', error);
+        throw error;
+      }
+
+      console.log('✅ Status atualizado com sucesso');
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao atualizar status:', error);
+      throw error;
+    }
+  }
 }

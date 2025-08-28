@@ -25,6 +25,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
   
   // Verificar se estamos na página de administração
   const isAdminPage = location.pathname === '/admin';
+  
+  // Estado para rastrear qual seção admin está ativa
+  const [activeAdminSection, setActiveAdminSection] = React.useState<string>('config');
 
   const handleLogout = async () => {
     await logout();
@@ -43,18 +46,22 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
   if (isAdmin && isAdminPage) {
     const adminMenuItems = [
       {
+        id: 'gestao',
         icon: Users,
         label: 'Gestão',
         action: () => {
+          setActiveAdminSection('gestao');
           if (onGestaoClick) {
             onGestaoClick();
           }
         }
       },
       {
+        id: 'config',
         icon: Settings,
         label: 'Configurações',
         action: () => {
+          setActiveAdminSection('config');
           if (onConfigClick) {
             onConfigClick();
           }
@@ -71,11 +78,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2">
-          {adminMenuItems.map((item, index) => (
+          {adminMenuItems.map((item) => (
             <Button
-              key={index}
+              key={item.id}
               variant="ghost"
-              className="w-full justify-start gap-3 px-4 py-3 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              className={cn(
+                "w-full justify-start gap-3 px-4 py-3 font-medium transition-colors",
+                "hover:bg-accent hover:text-accent-foreground",
+                activeAdminSection === item.id
+                  ? "bg-green-600 text-white shadow-md"
+                  : "text-muted-foreground"
+              )}
               onClick={item.action}
             >
               <item.icon className="h-5 w-5" />
@@ -86,8 +99,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
           {/* Botão Perfil que executa função ao invés de navegar */}
           <Button
             variant="ghost"
-            className="w-full justify-start gap-3 px-4 py-3 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            onClick={handleProfileClick}
+            className={cn(
+              "w-full justify-start gap-3 px-4 py-3 font-medium transition-colors",
+              "hover:bg-accent hover:text-accent-foreground",
+              activeAdminSection === 'profile'
+                ? "bg-green-600 text-white shadow-md"
+                : "text-muted-foreground"
+            )}
+            onClick={() => {
+              setActiveAdminSection('profile');
+              handleProfileClick();
+            }}
           >
             <User className="h-5 w-5" />
             Perfil
@@ -197,7 +219,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
                   "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
                   "hover:bg-accent hover:text-accent-foreground",
                   isActive 
-                    ? "bg-primary text-primary-foreground" 
+                    ? "bg-green-600 text-white shadow-md" 
                     : "text-muted-foreground"
                 )
               }
@@ -218,9 +240,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
                 cn(
                   "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
                   "hover:bg-accent hover:text-accent-foreground",
-                  isActive 
-                    ? "bg-primary text-primary-foreground" 
-                    : "text-muted-foreground"
+                   isActive 
+                     ? "bg-green-600 text-white shadow-md" 
+                     : "text-muted-foreground"
                 )
               }
             >

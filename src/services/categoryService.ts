@@ -26,9 +26,9 @@ export const getCategories = async (): Promise<Category[]> => {
   }
 };
 
-export const getCategoriesByType = async (type: 'income' | 'expense' | 'reminder'): Promise<Category[]> => {
+export const getCategoriesByType = async (type: 'income' | 'expense' | 'reminder' | 'outros'): Promise<Category[]> => {
   try {
-    // Para lembretes, retornamos uma categoria padrão
+    // Para lembretes e outros, retornamos uma categoria padrão
     if (type === 'reminder') {
       return [{
         id: 'reminder-default',
@@ -36,6 +36,17 @@ export const getCategoriesByType = async (type: 'income' | 'expense' | 'reminder
         type: 'expense', // Usar 'expense' como base para compatibilidade
         color: '#3B82F6',
         icon: 'bell',
+        isDefault: true
+      }];
+    }
+    
+    if (type === 'outros') {
+      return [{
+        id: 'outros-default',
+        name: 'Outros',
+        type: 'expense', // Usar 'expense' como base para compatibilidade
+        color: '#9E9E9E',
+        icon: 'circle',
         isDefault: true
       }];
     }

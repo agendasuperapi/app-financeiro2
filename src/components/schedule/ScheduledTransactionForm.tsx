@@ -33,7 +33,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
 }) => {
   const { t } = usePreferences();
   const { addScheduledTransaction, updateScheduledTransaction, deleteScheduledTransaction } = useAppContext();
-  const [selectedType, setSelectedType] = useState<'income' | 'expense' | 'reminder'>(initialData?.type || 'expense');
+  const [selectedType, setSelectedType] = useState<'income' | 'expense' | 'reminder' | 'outros'>(initialData?.type || 'expense');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isOnline] = useState(navigator.onLine);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -41,7 +41,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
 
   // Schema for the scheduled transaction form
   const formSchema = z.object({
-    type: z.enum(['income', 'expense', 'reminder']),
+    type: z.enum(['income', 'expense', 'reminder', 'outros']),
     description: z.string().min(1, { message: t('validation.required') }),
     amount: z.number().optional(),
     category: z.string().min(1, { message: t('validation.required') }),
@@ -67,13 +67,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues,
-    mode: 'onChange', // Habilita validação em tempo real
-  });
-
-  console.log('Form initialized with:', {
-    defaultValues,
-    formState: form.formState,
-    errors: form.formState.errors
   });
 
   // Load categories when type changes
@@ -130,7 +123,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
   }, [open, initialData, form]);
 
   // Handle type change
-  const handleTypeChange = (type: 'income' | 'expense' | 'reminder') => {
+  const handleTypeChange = (type: 'income' | 'expense' | 'reminder' | 'outros') => {
     setSelectedType(type);
     form.setValue('type', type);
     form.setValue('category', ''); // Reset category when type changes
@@ -219,13 +212,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={(e) => {
-              console.log('Form submit event triggered');
-              console.log('Form state:', form.formState);
-              form.handleSubmit(onSubmit, (errors) => {
-                console.log('Form validation errors:', errors);
-              })(e);
-            }} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <ScheduleTransactionTypeSelector form={form} onTypeChange={handleTypeChange} />
               
               {/* Amount Field - Hidden for reminders */}
@@ -356,17 +343,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
                   >
                     {t('common.cancel')}
                   </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={!isOnline}
-                    onClick={(e) => {
-                      console.log('Button clicked!');
-                      console.log('Form valid:', form.formState.isValid);
-                      console.log('Form errors:', form.formState.errors);
-                      console.log('Form values:', form.getValues());
-                      console.log('Is online:', isOnline);
-                    }}
-                  >
+                  <Button type="submit" disabled={!isOnline}>
                     {mode === 'create' ? t('common.create') : t('common.update')}
                   </Button>
                 </div>

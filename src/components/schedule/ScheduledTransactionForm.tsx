@@ -133,13 +133,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
   const handleTypeChange = (type: 'income' | 'expense' | 'reminder' | 'outros') => {
     setSelectedType(type);
     form.setValue('type', type);
-    
-    // If reminder is selected, automatically set category to "outros"
-    if (type === 'reminder') {
-      form.setValue('category', 'outros');
-    } else {
-      form.setValue('category', ''); // Reset category when type changes
-    }
+    form.setValue('category', ''); // Reset category when type changes
   };
 
   // Form submission handler

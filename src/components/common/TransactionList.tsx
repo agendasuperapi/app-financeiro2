@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Table,
   TableBody,
@@ -15,6 +15,14 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { Transaction } from '@/types';
 import { formatCurrency, formatDate } from '@/utils/transactionUtils';
 import { MoreHorizontal, TrendingUp, TrendingDown, Target, ArrowUp, ArrowDown } from 'lucide-react';
@@ -43,6 +51,21 @@ const TransactionList: React.FC<TransactionListProps> = ({
   const { goals } = useAppContext();
   const { t, currency } = usePreferences();
   const isMobile = useIsMobile();
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Calculate pagination
+  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentTransactions = transactions.slice(startIndex, endIndex);
+
+  // Reset to first page when transactions change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [transactions.length]);
 
   // Helper to get goal name
   const getGoalName = (goalId?: string) => {
@@ -77,133 +100,233 @@ const TransactionList: React.FC<TransactionListProps> = ({
   // Mobile card layout
   if (isMobile) {
     return (
-      <div className="space-y-3">
-        {transactions.map((transaction, index) => (
-          <TransactionCard
-            key={transaction.id}
-            transaction={transaction}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            hideValues={hideValues}
-            index={index}
-          />
-        ))}
+      <div className="space-y-4">
+        <div className="space-y-3">
+          {currentTransactions.map((transaction, index) => (
+            <TransactionCard
+              key={transaction.id}
+              transaction={transaction}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              hideValues={hideValues}
+              index={index}
+            />
+          ))}
+        </div>
+        
+        {/* Mobile Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center mt-6">
+            <Pagination>
+              <PaginationContent>
+                {currentPage > 1 && (
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage(currentPage - 1);
+                      }}
+                    />
+                  </PaginationItem>
+                )}
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      href="#"
+                      isActive={page === currentPage}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage(page);
+                      }}
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                
+                {currentPage < totalPages && (
+                  <PaginationItem>
+                    <PaginationNext 
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage(currentPage + 1);
+                      }}
+                    />
+                  </PaginationItem>
+                )}
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="border rounded-lg overflow-hidden shadow-sm">
-      <Table>
-        <TableHeader className="bg-muted/30">
-          <TableRow>
-            <TableHead>{t('common.type')}</TableHead>
-            <TableHead>{t('common.date')}</TableHead>
-            <TableHead>{t('common.category')}</TableHead>
-            <TableHead>{t('common.description')}</TableHead>
-            <TableHead>{t('nav.goals')}</TableHead>
-            <TableHead className="text-right">{t('common.amount')}</TableHead>
-            <TableHead className="w-10"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {transactions.map((transaction, index) => {
-            // Use different icons and colors based on transaction type
-            const iconColor = transaction.type === 'income' ? '#26DE81' : '#EF4444';
-            
-            return (
-              <motion.tr
-                key={transaction.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05, duration: 0.3 }}
-                className="group"
-              >
-                <TableCell>
-                  {transaction.type === 'income' ? (
-                    <div className="flex items-center">
-                      <div className="w-7 h-7 rounded-full bg-metacash-success flex items-center justify-center mr-2">
-                        <ArrowUp className="w-4 h-4 text-white" />
+    <div className="space-y-4">
+      <div className="border rounded-lg overflow-hidden shadow-sm">
+        <Table>
+          <TableHeader className="bg-muted/30">
+            <TableRow>
+              <TableHead>{t('common.type')}</TableHead>
+              <TableHead>{t('common.date')}</TableHead>
+              <TableHead>{t('common.category')}</TableHead>
+              <TableHead>{t('common.description')}</TableHead>
+              <TableHead>{t('nav.goals')}</TableHead>
+              <TableHead className="text-right">{t('common.amount')}</TableHead>
+              <TableHead className="w-10"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {currentTransactions.map((transaction, index) => {
+              // Use different icons and colors based on transaction type
+              const iconColor = transaction.type === 'income' ? '#26DE81' : '#EF4444';
+              
+              return (
+                <motion.tr
+                  key={transaction.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.3 }}
+                  className="group"
+                >
+                  <TableCell>
+                    {transaction.type === 'income' ? (
+                      <div className="flex items-center">
+                        <div className="w-7 h-7 rounded-full bg-metacash-success flex items-center justify-center mr-2">
+                          <ArrowUp className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-xs md:text-sm">{t('income.title')}</span>
                       </div>
-                      <span className="text-xs md:text-sm">{t('income.title')}</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center">
-                      <div className="w-7 h-7 rounded-full bg-metacash-error flex items-center justify-center mr-2">
-                        <ArrowDown className="w-4 h-4 text-white" />
+                    ) : (
+                      <div className="flex items-center">
+                        <div className="w-7 h-7 rounded-full bg-metacash-error flex items-center justify-center mr-2">
+                          <ArrowDown className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-xs md:text-sm">{t('expense.title')}</span>
                       </div>
-                      <span className="text-xs md:text-sm">{t('expense.title')}</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-medium text-xs md:text-sm">
+                    {formatDate(transaction.date)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <CategoryIcon 
+                        icon={transaction.type === 'income' ? 'trending-up' : transaction.type === 'expense' ? transaction.category.toLowerCase().includes('food') ? 'utensils' : 'shopping-bag' : 'circle'} 
+                        color={iconColor} 
+                        size={16}
+                      />
+                      <Badge variant="outline" className={cn(
+                        "text-xs",
+                        transaction.type === 'income' 
+                          ? "bg-green-50 text-green-600 hover:bg-green-100 border-green-200"
+                          : "bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
+                      )}>
+                        {transaction.category}
+                      </Badge>
                     </div>
-                  )}
-                </TableCell>
-                <TableCell className="font-medium text-xs md:text-sm">
-                  {formatDate(transaction.date)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <CategoryIcon 
-                      icon={transaction.type === 'income' ? 'trending-up' : transaction.type === 'expense' ? transaction.category.toLowerCase().includes('food') ? 'utensils' : 'shopping-bag' : 'circle'} 
-                      color={iconColor} 
-                      size={16}
-                    />
-                    <Badge variant="outline" className={cn(
-                      "text-xs",
-                      transaction.type === 'income' 
-                        ? "bg-green-50 text-green-600 hover:bg-green-100 border-green-200"
-                        : "bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
-                    )}>
-                      {transaction.category}
-                    </Badge>
-                  </div>
-                </TableCell>
-                <TableCell className="text-xs md:text-sm">
-                  {transaction.description}
-                </TableCell>
-                <TableCell>
-                  {transaction.goalId && (
-                    <div className="flex items-center gap-1">
-                      <Target className="h-3 w-3 text-metacash-blue" />
-                      <span className="text-xs">{getGoalName(transaction.goalId)}</span>
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell className={cn(
-                  "text-right font-semibold text-xs md:text-sm",
-                  transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
-                )}>
-                  {transaction.type === 'income' ? '+' : '-'}
-                  {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">{t('common.edit')}</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {onEdit && (
-                        <DropdownMenuItem onClick={() => onEdit(transaction)}>
-                          {t('common.edit')}
-                        </DropdownMenuItem>
-                      )}
-                      {onDelete && (
-                        <DropdownMenuItem 
-                          onClick={() => onDelete(transaction.id)}
-                          className="text-metacash-error"
-                        >
-                          {t('common.delete')}
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </motion.tr>
-            );
-          })}
-        </TableBody>
-      </Table>
+                  </TableCell>
+                  <TableCell className="text-xs md:text-sm">
+                    {transaction.description}
+                  </TableCell>
+                  <TableCell>
+                    {transaction.goalId && (
+                      <div className="flex items-center gap-1">
+                        <Target className="h-3 w-3 text-metacash-blue" />
+                        <span className="text-xs">{getGoalName(transaction.goalId)}</span>
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell className={cn(
+                    "text-right font-semibold text-xs md:text-sm",
+                    transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
+                  )}>
+                    {transaction.type === 'income' ? '+' : '-'}
+                    {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">{t('common.edit')}</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {onEdit && (
+                          <DropdownMenuItem onClick={() => onEdit(transaction)}>
+                            {t('common.edit')}
+                          </DropdownMenuItem>
+                        )}
+                        {onDelete && (
+                          <DropdownMenuItem 
+                            onClick={() => onDelete(transaction.id)}
+                            className="text-metacash-error"
+                          >
+                            {t('common.delete')}
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </motion.tr>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Desktop Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              {currentPage > 1 && (
+                <PaginationItem>
+                  <PaginationPrevious 
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentPage(currentPage - 1);
+                    }}
+                  />
+                </PaginationItem>
+              )}
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    href="#"
+                    isActive={page === currentPage}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentPage(page);
+                    }}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              
+              {currentPage < totalPages && (
+                <PaginationItem>
+                  <PaginationNext 
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentPage(currentPage + 1);
+                    }}
+                  />
+                </PaginationItem>
+              )}
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 };

@@ -16,6 +16,7 @@ import { getCategoriesByType } from '@/services/categoryService';
 import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
 import { addDays, addWeeks, addMonths, addYears } from "date-fns";
+import { formatForDateTimeLocalInput, getCurrentBrazilTime, convertBrazilTimeToUTC } from '@/utils/timezoneUtils';
 
 interface ScheduledTransactionFormProps {
   open: boolean;
@@ -58,24 +59,12 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
     amount: initialData?.amount || (initialData?.type === 'reminder' ? 0 : 0),
     category: initialData?.category_id || '',
     scheduledDate: initialData?.scheduledDate 
-      ? (() => {
-          const date = new Date(initialData.scheduledDate);
-          // Format for datetime-local input (YYYY-MM-DDTHH:MM)
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          const hours = String(date.getHours()).padStart(2, '0');
-          const minutes = String(date.getMinutes()).padStart(2, '0');
-          return `${year}-${month}-${day}T${hours}:${minutes}`;
-        })()
+      ? formatForDateTimeLocalInput(initialData.scheduledDate)
       : (() => {
-          // For new transactions, set to today at 12:00 PM
-          const today = new Date();
-          today.setHours(12, 0, 0, 0);
-          const year = today.getFullYear();
-          const month = String(today.getMonth() + 1).padStart(2, '0');
-          const day = String(today.getDate()).padStart(2, '0');
-          return `${year}-${month}-${day}T12:00`;
+          // Para transações novas, usar horário atual de Brasília + 1 hora
+          const brazilTime = getCurrentBrazilTime();
+          brazilTime.setHours(brazilTime.getHours() + 1, 0, 0, 0);
+          return formatForDateTimeLocalInput(brazilTime);
         })(),
     recurrence: (initialData?.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
     goalId: initialData?.goalId || undefined,
@@ -127,23 +116,12 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
       setSelectedType(defaultValues.type);
     } else if (open && initialData) {
       // Populate form with initial data when editing
-      const formattedScheduledDate = (() => {
-        const date = new Date(initialData.scheduledDate);
-        // Format for datetime-local input (YYYY-MM-DDTHH:MM)
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
-      })();
-
       form.reset({
         type: initialData.type,
         description: initialData.description,
         amount: initialData.amount,
         category: initialData.category_id || '',
-        scheduledDate: formattedScheduledDate,
+        scheduledDate: formatForDateTimeLocalInput(initialData.scheduledDate),
         recurrence: initialData.recurrence || 'once',
         goalId: initialData.goalId,
       });
@@ -186,7 +164,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           amount: submitData.amount,
           category: selectedCategory?.name || 'Lembretes',
           category_id: submitData.category,
-          scheduledDate: submitData.scheduledDate,
+          scheduledDate: convertBrazilTimeToUTC(submitData.scheduledDate).toISOString(),
           recurrence: submitData.recurrence,
           goalId: submitData.goalId,
         };
@@ -206,7 +184,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           amount: submitData.amount,
           category: selectedCategory?.name || 'Lembretes',
           category_id: submitData.category,
-          scheduledDate: submitData.scheduledDate,
+          scheduledDate: convertBrazilTimeToUTC(submitData.scheduledDate).toISOString(),
           recurrence: submitData.recurrence,
           goalId: submitData.goalId,
         };

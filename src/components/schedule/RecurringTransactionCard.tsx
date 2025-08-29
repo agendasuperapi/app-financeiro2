@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ScheduledTransaction } from '@/types';
 import { formatCurrency, createLocalDate } from '@/utils/transactionUtils';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { formatBrazilTime } from '@/utils/timezoneUtils';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { Calendar, Edit, Trash2, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -31,16 +32,10 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
   const { formatShortDate } = useDateFormat();
   const isMobile = useIsMobile();
 
-  // Função para formatar data e hora 
+  // Função para formatar data e hora no horário de Brasília
   const formatDateTimeShort = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      return formatBrazilTime(dateString, 'dd/MM/yyyy HH:mm');
     } catch (error) {
       return dateString;
     }

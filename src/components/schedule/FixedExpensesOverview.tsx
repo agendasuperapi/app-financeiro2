@@ -61,7 +61,7 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
     }, {} as Record<string, number>);
 
   return (
-    <div className="grid grid-cols-4 lg:grid-cols-4 gap-1 md:gap-2 lg:gap-4 mb-6">
+    <div className="grid grid-cols-3 lg:grid-cols-3 gap-1 md:gap-2 lg:gap-4 mb-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-1 py-2 md:px-3 md:py-2 lg:px-6 lg:py-6">
           <CardTitle className="text-xs md:text-xs lg:text-sm font-medium break-words leading-tight">{t('schedule.monthlyTotal')}</CardTitle>
@@ -107,20 +107,6 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-1 py-2 md:px-3 md:py-2 lg:px-6 lg:py-6">
-          <CardTitle className="text-xs md:text-xs lg:text-sm font-medium break-words leading-tight">{t('schedule.overdue')}</CardTitle>
-          <AlertCircle className="h-2 w-2 md:h-3 md:w-3 lg:h-4 lg:w-4 text-red-500 flex-shrink-0" />
-        </CardHeader>
-        <CardContent className="px-1 pb-1 md:px-3 md:pb-3 lg:px-6 lg:pb-6">
-          <div className="text-sm md:text-lg lg:text-2xl font-bold text-red-600">
-            {overdueTransactions.length}
-          </div>
-          <p className="text-xs md:text-xs lg:text-xs text-muted-foreground break-words">
-            {t('schedule.needAttention')}
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 };

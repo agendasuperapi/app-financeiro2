@@ -234,8 +234,10 @@ const SchedulePage = () => {
                 <ScheduleFilters
                   selectedRecurrence={selectedRecurrence}
                   selectedCategory={selectedCategory}
+                  selectedStatus={selectedStatus}
                   onRecurrenceFilter={setSelectedRecurrence}
                   onCategoryFilter={setSelectedCategory}
+                  onStatusFilter={setSelectedStatus}
                   availableCategories={availableCategories}
                 />
               )}
@@ -292,38 +294,12 @@ const SchedulePage = () => {
                 <ScheduleFilters
                   selectedRecurrence={selectedRecurrence}
                   selectedCategory={selectedCategory}
+                  selectedStatus={selectedStatus}
                   onRecurrenceFilter={setSelectedRecurrence}
                   onCategoryFilter={setSelectedCategory}
+                  onStatusFilter={setSelectedStatus}
                   availableCategories={availableCategories}
                 />
-                
-                {/* Filtro de Status */}
-                <Card className="mt-4">
-                  <CardHeader>
-                    <CardTitle className="text-base">{t('common.status')}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <Button
-                      variant={selectedStatus === null ? "default" : "outline"}
-                      size="sm"
-                      className="w-full justify-start"
-                      onClick={() => setSelectedStatus(null)}
-                    >
-                      {t('common.all')}
-                    </Button>
-                    {availableStatuses.map(status => (
-                      <Button
-                        key={status}
-                        variant={selectedStatus === status ? "default" : "outline"}
-                        size="sm"
-                        className="w-full justify-start"
-                        onClick={() => setSelectedStatus(selectedStatus === status ? null : status)}
-                      >
-                        {t(`schedule.${status}`)}
-                      </Button>
-                    ))}
-                  </CardContent>
-                </Card>
               </div>
 
               {/* Conteúdo principal */}

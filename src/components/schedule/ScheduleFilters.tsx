@@ -10,16 +10,20 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface ScheduleFiltersProps {
   selectedRecurrence: string | null;
   selectedCategory: string | null;
+  selectedStatus: string | null;
   onRecurrenceFilter: (recurrence: string | null) => void;
   onCategoryFilter: (category: string | null) => void;
+  onStatusFilter: (status: string | null) => void;
   availableCategories: string[];
 }
 
 const ScheduleFilters: React.FC<ScheduleFiltersProps> = ({
   selectedRecurrence,
   selectedCategory,
+  selectedStatus,
   onRecurrenceFilter,
   onCategoryFilter,
+  onStatusFilter,
   availableCategories
 }) => {
   const { t } = usePreferences();
@@ -33,11 +37,12 @@ const ScheduleFilters: React.FC<ScheduleFiltersProps> = ({
     { value: 'once', label: t('schedule.once') }
   ];
 
-  const hasActiveFilters = selectedRecurrence || selectedCategory;
+  const hasActiveFilters = selectedRecurrence || selectedCategory || selectedStatus;
 
   const clearAllFilters = () => {
     onRecurrenceFilter(null);
     onCategoryFilter(null);
+    onStatusFilter(null);
   };
 
   return (
@@ -104,6 +109,41 @@ const ScheduleFilters: React.FC<ScheduleFiltersProps> = ({
               </div>
             </div>
           )}
+          
+          {/* Filtro por Status */}
+          <div>
+            <h4 className={`font-medium mb-2 ${isMobile ? 'text-sm' : 'text-sm'}`}>Status</h4>
+            <div className="flex flex-wrap gap-2">
+              <Badge
+                variant={selectedStatus === null ? 'default' : 'outline'}
+                className={`cursor-pointer hover:bg-accent ${isMobile ? 'text-xs' : ''}`}
+                onClick={() => onStatusFilter(null)}
+              >
+                Todos
+              </Badge>
+              <Badge
+                variant={selectedStatus === 'pending' ? 'default' : 'outline'}
+                className={`cursor-pointer hover:bg-accent ${isMobile ? 'text-xs' : ''}`}
+                onClick={() => onStatusFilter(selectedStatus === 'pending' ? null : 'pending')}
+              >
+                Pendente
+              </Badge>
+              <Badge
+                variant={selectedStatus === 'paid' ? 'default' : 'outline'}
+                className={`cursor-pointer hover:bg-accent ${isMobile ? 'text-xs' : ''}`}
+                onClick={() => onStatusFilter(selectedStatus === 'paid' ? null : 'paid')}
+              >
+                Pago/Lembrado
+              </Badge>
+              <Badge
+                variant={selectedStatus === 'overdue' ? 'default' : 'outline'}
+                className={`cursor-pointer hover:bg-accent ${isMobile ? 'text-xs' : ''}`}
+                onClick={() => onStatusFilter(selectedStatus === 'overdue' ? null : 'overdue')}
+              >
+                Vencido
+              </Badge>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

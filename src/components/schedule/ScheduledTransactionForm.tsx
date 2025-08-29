@@ -343,7 +343,18 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
                   >
                     {t('common.cancel')}
                   </Button>
-                  <Button type="submit" disabled={!isOnline}>
+                  <Button 
+                    type="submit" 
+                    disabled={!isOnline}
+                    onClick={() => {
+                      console.log('🔄 Update button clicked!');
+                      console.log('📝 Form state:', form.formState);
+                      console.log('❌ Form errors:', form.formState.errors);
+                      console.log('📊 Form values:', form.getValues());
+                      console.log('✅ Form valid:', form.formState.isValid);
+                      console.log('🌐 Online status:', isOnline);
+                    }}
+                  >
                     {mode === 'create' ? t('common.create') : t('common.update')}
                   </Button>
                 </div>

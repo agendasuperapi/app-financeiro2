@@ -252,12 +252,16 @@ export const markAsPaid = async (
     // Converte para UTC mantendo o horário atual de Brasília
     const now = convertBrasiliaToUTC(new Date()).toISOString();
 
-    // Create a real transaction
+    // Create a real transaction - convert 'outros' and 'reminder' types to 'expense'
+    const transactionType = scheduledTransaction.type === 'outros' || scheduledTransaction.type === 'reminder' 
+      ? 'expense' 
+      : scheduledTransaction.type;
+
     const { error: transactionError } = await supabase
       .from("poupeja_transactions")
       .insert({
         user_id: session.user.id,
-        type: scheduledTransaction.type,
+        type: transactionType,
         amount: actualPaidAmount,
         category_id: scheduledTransaction.category_id,
         description: `${scheduledTransaction.description} (Agendado)`,

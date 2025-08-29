@@ -11,6 +11,8 @@ import { Calendar, Edit, Trash2, CheckCircle, Clock, AlertTriangle } from 'lucid
 import { cn } from '@/lib/utils';
 import TransactionStatusBadge from './TransactionStatusBadge';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface RecurringTransactionCardProps {
   transaction: ScheduledTransaction;
@@ -28,6 +30,16 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
   const { t, currency } = usePreferences();
   const { formatShortDate } = useDateFormat();
   const isMobile = useIsMobile();
+
+  // Função para formatar data e hora
+  const formatDateTimeShort = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    } catch (error) {
+      return dateString;
+    }
+  };
 
   // Função para normalizar valores de recorrência
   const normalizeRecurrence = (recurrence: string | null | undefined): 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' => {
@@ -97,7 +109,7 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
             <div className={`flex items-center gap-2 flex-wrap ${isMobile ? 'mb-2' : 'mb-3'}`}>
               <div className={`flex items-center gap-1 text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
                 <Calendar className="h-3 w-3" />
-                <span>{formatShortDate(transactionDate)}</span>
+                <span>{formatDateTimeShort(transaction.nextExecutionDate || transaction.scheduledDate)}</span>
               </div>
               
               <Badge className={cn("text-xs border", getRecurrenceColor(transaction.recurrence))}>

@@ -370,6 +370,14 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
                       console.log('📊 Form values:', form.getValues());
                       console.log('✅ Form valid:', form.formState.isValid);
                       console.log('🌐 Online status:', isOnline);
+                      
+                      // Trigger validation manually to see detailed errors
+                      form.trigger().then((isValid) => {
+                        console.log('🔍 Manual validation result:', isValid);
+                        if (!isValid) {
+                          console.log('❌ Validation errors after trigger:', form.formState.errors);
+                        }
+                      });
                     }}
                   >
                     {mode === 'create' ? t('common.create') : t('common.update')}

@@ -38,6 +38,18 @@ const SchedulePage = () => {
   const { t, currency } = usePreferences();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  
+  // Check if it's tablet (md breakpoint: 768px to 1023px)
+  const [isTablet, setIsTablet] = React.useState(false);
+  
+  React.useEffect(() => {
+    const checkTablet = () => {
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
+    };
+    checkTablet();
+    window.addEventListener('resize', checkTablet);
+    return () => window.removeEventListener('resize', checkTablet);
+  }, []);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -195,7 +207,7 @@ const SchedulePage = () => {
             </div>
             
             <div className="flex gap-2">
-              {isMobile && (
+              {(isMobile || isTablet) && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -208,7 +220,7 @@ const SchedulePage = () => {
                 </Button>
               )}
               
-              <Button onClick={handleAddSchedule} disabled={!isOnline} size={isMobile ? "sm" : "default"}>
+              <Button onClick={handleAddSchedule} disabled={!isOnline} size={isMobile || isTablet ? "sm" : "default"}>
                 <Plus className="mr-2 h-4 w-4" /> 
                 <span className="hidden sm:inline">Adicionar</span>
                 <span className="sm:hidden">Adicionar</span>
@@ -226,10 +238,10 @@ const SchedulePage = () => {
           {/* Overview das Despesas Fixas */}
           <FixedExpensesOverview scheduledTransactions={localScheduledTransactions} />
 
-          {/* Mobile Layout */}
-          {isMobile ? (
+          {/* Mobile and Tablet Layout */}
+          {isMobile || isTablet ? (
             <div className="space-y-4">
-              {/* Mobile Filters */}
+              {/* Mobile and Tablet Filters */}
               {showFilters && (
                 <ScheduleFilters
                   selectedRecurrence={selectedRecurrence}

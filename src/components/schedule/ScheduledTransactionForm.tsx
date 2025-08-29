@@ -163,8 +163,8 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         };
         
         console.log('📋 Creating transaction with data:', transactionData);
-        await addScheduledTransaction(transactionData);
-        console.log('✅ Transaction created successfully');
+        addScheduledTransaction(transactionData);
+        console.log('✅ Create request sent');
       } else if (initialData) {
         console.log('✏️ Updating scheduled transaction...', initialData.id);
         // Find the selected category to get both name and id
@@ -184,11 +184,11 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         
         console.log('📋 Updating transaction with ID:', initialData.id);
         console.log('📋 Update data:', updateData);
-        await updateScheduledTransaction(initialData.id, updateData);
-        console.log('✅ Transaction updated successfully');
+        updateScheduledTransaction(initialData.id, updateData);
+        console.log('✅ Update request sent');
       }
       
-      console.log('🎉 Transaction processed successfully');
+      console.log('🎉 Closing dialog');
       onOpenChange(false);
       // Call onSuccess callback if provided
       if (onSuccess) {
@@ -198,10 +198,11 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
     } catch (error) {
       console.error('❌ Error in onSubmit:', error);
       console.error('📊 Error details:', {
-        message: error.message,
-        stack: error.stack,
-        cause: error.cause
+        message: error?.message,
+        stack: error?.stack,
+        cause: error?.cause
       });
+      // Don't close dialog on error, let user try again
     }
   };
 

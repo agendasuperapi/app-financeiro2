@@ -3,6 +3,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { ScheduledTransaction } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 
+// Função para normalizar valores de recorrência
+const normalizeRecurrence = (recurrence: string | null | undefined): 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | undefined => {
+  if (!recurrence) return 'once';
+  
+  // Mapeamento de valores em português para inglês
+  const recurrenceMap: { [key: string]: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' } = {
+    'Uma vez': 'once',
+    'Diário': 'daily',
+    'Semanal': 'weekly',
+    'Mensal': 'monthly',
+    'Anual': 'yearly',
+    // Valores já em inglês
+    'once': 'once',
+    'daily': 'daily',
+    'weekly': 'weekly',
+    'monthly': 'monthly',
+    'yearly': 'yearly'
+  };
+  
+  return recurrenceMap[recurrence] || 'once';
+};
+
 export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]> => {
   try {
     const { data, error } = await supabase
@@ -17,7 +39,7 @@ export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]
 
     return data.map((item) => ({
       id: item.id,
-      type: item.type as 'income' | 'expense',
+      type: item.type as 'income' | 'expense' | 'reminder',
       amount: item.amount,
       category: item.category?.name || "Outros",
       category_id: item.category_id,
@@ -25,7 +47,7 @@ export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]
       categoryColor: item.category?.color || "#607D8B",
       description: item.description || "",
       scheduledDate: item.scheduled_date,
-      recurrence: item.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | undefined,
+      recurrence: normalizeRecurrence(item.recurrence),
       goalId: item.goal_id,
       status: item.status as 'pending' | 'paid' | 'overdue' | 'upcoming' | undefined,
       paidDate: item.paid_date,
@@ -98,7 +120,7 @@ export const addScheduledTransaction = async (
 
     return {
       id: data.id,
-      type: data.type as 'income' | 'expense',
+      type: data.type as 'income' | 'expense' | 'reminder',
       amount: data.amount,
       category: data.category?.name || "Outros",
       category_id: data.category_id,
@@ -106,7 +128,7 @@ export const addScheduledTransaction = async (
       categoryColor: data.category?.color || "#607D8B",
       description: data.description || "",
       scheduledDate: data.scheduled_date,
-      recurrence: data.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | undefined,
+      recurrence: normalizeRecurrence(data.recurrence),
       goalId: data.goal_id,
       status: data.status as 'pending' | 'paid' | 'overdue' | 'upcoming' | undefined,
       paidDate: data.paid_date,
@@ -173,7 +195,7 @@ export const updateScheduledTransaction = async (
 
     return {
       id: data.id,
-      type: data.type as 'income' | 'expense',
+      type: data.type as 'income' | 'expense' | 'reminder',
       amount: data.amount,
       category: data.category?.name || "Outros",
       category_id: data.category_id,
@@ -181,7 +203,7 @@ export const updateScheduledTransaction = async (
       categoryColor: data.category?.color || "#607D8B",
       description: data.description || "",
       scheduledDate: data.scheduled_date,
-      recurrence: data.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | undefined,
+      recurrence: normalizeRecurrence(data.recurrence),
       goalId: data.goal_id,
       status: data.status as 'pending' | 'paid' | 'overdue' | 'upcoming' | undefined,
       paidDate: data.paid_date,

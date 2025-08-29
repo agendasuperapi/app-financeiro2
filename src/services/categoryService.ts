@@ -26,8 +26,20 @@ export const getCategories = async (): Promise<Category[]> => {
   }
 };
 
-export const getCategoriesByType = async (type: 'income' | 'expense'): Promise<Category[]> => {
+export const getCategoriesByType = async (type: 'income' | 'expense' | 'reminder'): Promise<Category[]> => {
   try {
+    // Para lembretes, retornamos uma categoria padrão
+    if (type === 'reminder') {
+      return [{
+        id: 'reminder-default',
+        name: 'Lembretes',
+        type: 'expense', // Usar 'expense' como base para compatibilidade
+        color: '#3B82F6',
+        icon: 'bell',
+        isDefault: true
+      }];
+    }
+    
     const { data, error } = await supabase
       .from("poupeja_categories")
       .select("*")

@@ -33,7 +33,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
 }) => {
   const { t } = usePreferences();
   const { addScheduledTransaction, updateScheduledTransaction, deleteScheduledTransaction } = useAppContext();
-  const [selectedType, setSelectedType] = useState<'income' | 'expense'>(initialData?.type || 'expense');
+  const [selectedType, setSelectedType] = useState<'income' | 'expense' | 'reminder'>(initialData?.type || 'expense');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isOnline] = useState(navigator.onLine);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -41,9 +41,9 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
 
   // Schema for the scheduled transaction form
   const formSchema = z.object({
-    type: z.enum(['income', 'expense']),
+    type: z.enum(['income', 'expense', 'reminder']),
     description: z.string().min(1, { message: t('validation.required') }),
-    amount: z.number().positive({ message: t('validation.positive') }),
+    amount: z.number().min(0).optional().or(z.number().positive({ message: t('validation.positive') })),
     category: z.string().min(1, { message: t('validation.required') }),
     scheduledDate: z.string().min(1, { message: t('validation.required') }),
     recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly']),
@@ -54,7 +54,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
   const defaultValues = {
     type: initialData?.type || 'expense',
     description: initialData?.description || '',
-    amount: initialData?.amount || 0,
+    amount: initialData?.amount || (initialData?.type === 'reminder' ? 0 : 0),
     category: initialData?.category_id || '',
     scheduledDate: initialData?.scheduledDate 
       ? new Date(initialData.scheduledDate).toISOString().split('T')[0] 
@@ -122,7 +122,8 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
     }
   }, [open, initialData, form]);
 
-  const handleTypeChange = (type: 'income' | 'expense') => {
+  // Handle type change
+  const handleTypeChange = (type: 'income' | 'expense' | 'reminder') => {
     setSelectedType(type);
     form.setValue('type', type);
     form.setValue('category', ''); // Reset category when type changes
@@ -130,33 +131,39 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
 
   // Form submission handler
   const onSubmit = (values: z.infer<typeof formSchema>) => {
+    // For reminders, set amount to 0
+    const submitData = {
+      ...values,
+      amount: values.type === 'reminder' ? 0 : values.amount || 0
+    };
+    
     if (mode === 'create') {
       // Find the selected category to get both name and id
-      const selectedCategory = categories.find(cat => cat.id === values.category);
+      const selectedCategory = categories.find(cat => cat.id === submitData.category);
       
       addScheduledTransaction({
-        type: values.type,
-        description: values.description,
-        amount: values.amount,
-        category: selectedCategory?.name || 'Outros',
-        category_id: values.category,
-        scheduledDate: new Date(values.scheduledDate).toISOString(),
-        recurrence: values.recurrence,
-        goalId: values.goalId,
+        type: submitData.type,
+        description: submitData.description,
+        amount: submitData.amount,
+        category: selectedCategory?.name || 'Lembretes',
+        category_id: submitData.category,
+        scheduledDate: new Date(submitData.scheduledDate).toISOString(),
+        recurrence: submitData.recurrence,
+        goalId: submitData.goalId,
       });
     } else if (initialData) {
       // Find the selected category to get both name and id
-      const selectedCategory = categories.find(cat => cat.id === values.category);
+      const selectedCategory = categories.find(cat => cat.id === submitData.category);
       
       updateScheduledTransaction(initialData.id, {
-        type: values.type,
-        description: values.description,
-        amount: values.amount,
-        category: selectedCategory?.name || 'Outros',
-        category_id: values.category,
-        scheduledDate: new Date(values.scheduledDate).toISOString(),
-        recurrence: values.recurrence,
-        goalId: values.goalId,
+        type: submitData.type,
+        description: submitData.description,
+        amount: submitData.amount,
+        category: selectedCategory?.name || 'Lembretes',
+        category_id: submitData.category,
+        scheduledDate: new Date(submitData.scheduledDate).toISOString(),
+        recurrence: submitData.recurrence,
+        goalId: submitData.goalId,
       });
     }
     onOpenChange(false);
@@ -192,26 +199,28 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <ScheduleTransactionTypeSelector form={form} onTypeChange={handleTypeChange} />
               
-              {/* Amount Field */}
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('common.amount')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        {...field}
-                        onChange={e => field.onChange(parseFloat(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Amount Field - Hidden for reminders */}
+              {form.watch('type') !== 'reminder' && (
+                <FormField
+                  control={form.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('common.amount')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          {...field}
+                          onChange={e => field.onChange(parseFloat(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               
               <FormField
                 control={form.control}

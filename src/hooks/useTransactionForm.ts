@@ -12,7 +12,7 @@ interface UseTransactionFormProps {
   initialData?: Transaction;
   mode: 'create' | 'edit';
   onComplete: () => void;
-  defaultType?: 'income' | 'expense';
+  defaultType?: 'income' | 'expense' | 'reminder';
 }
 
 export const useTransactionForm = ({ 
@@ -23,7 +23,7 @@ export const useTransactionForm = ({
 }: UseTransactionFormProps) => {
   const { addTransaction, updateTransaction, getTransactions, getGoals } = useAppContext();
   const { t } = usePreferences();
-  const [selectedType, setSelectedType] = useState<'income' | 'expense'>(
+  const [selectedType, setSelectedType] = useState<'income' | 'expense' | 'reminder'>(
     initialData?.type || defaultType
   );
 

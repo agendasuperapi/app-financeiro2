@@ -1,11 +1,11 @@
 
-export type TransactionType = 'income' | 'expense';
+export type TransactionType = 'income' | 'expense' | 'reminder';
 
 export type TimeRange = 'today' | 'yesterday' | '7days' | '14days' | '30days' | 'custom';
 
 export interface Transaction {
   id: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'reminder';
   amount: number;
   category: string;
   categoryIcon?: string;
@@ -42,7 +42,7 @@ export interface Goal {
 
 export interface ScheduledTransaction {
   id: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'reminder';
   amount: number;
   category: string;
   categoryIcon?: string;

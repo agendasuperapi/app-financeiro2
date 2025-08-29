@@ -71,7 +71,7 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
           <div className="text-sm md:text-lg lg:text-2xl font-bold text-red-600">
             {formatCurrency(monthlyTotal, currency)}
           </div>
-          <p className="text-xs md:text-xs lg:text-xs text-muted-foreground hidden md:block">
+          <p className="text-xs md:text-xs lg:text-xs text-muted-foreground break-words">
             {t('schedule.pendingExpenses')}
           </p>
         </CardContent>
@@ -86,7 +86,7 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
           <div className="text-sm md:text-lg lg:text-2xl font-bold text-green-600">
             {formatCurrency(monthlyPaid, currency)}
           </div>
-          <p className="text-xs md:text-xs lg:text-xs text-muted-foreground hidden md:block">
+          <p className="text-xs md:text-xs lg:text-xs text-muted-foreground break-words">
             {t('schedule.alreadyPaid')}
           </p>
         </CardContent>
@@ -101,7 +101,7 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
           <div className="text-sm md:text-lg lg:text-2xl font-bold text-orange-600">
             {upcomingPayments.length}
           </div>
-          <p className="text-xs md:text-xs lg:text-xs text-muted-foreground hidden md:block">
+          <p className="text-xs md:text-xs lg:text-xs text-muted-foreground break-words">
             {t('schedule.next7Days')}
           </p>
         </CardContent>
@@ -116,7 +116,7 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
           <div className="text-sm md:text-lg lg:text-2xl font-bold text-red-600">
             {overdueTransactions.length}
           </div>
-          <p className="text-xs md:text-xs lg:text-xs text-muted-foreground hidden md:block">
+          <p className="text-xs md:text-xs lg:text-xs text-muted-foreground break-words">
             {t('schedule.needAttention')}
           </p>
         </CardContent>

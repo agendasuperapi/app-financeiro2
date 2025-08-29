@@ -460,7 +460,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             category:poupeja_categories(id, name, icon, color, type)
           `)
           .eq('user_id', user.id)
-          .order('date', { ascending: false }),
+          .order('created_at', { ascending: false }),
         supabase.from('poupeja_categories').select('*').eq('user_id', user.id),
         supabase.from('poupeja_goals').select('*').eq('user_id', user.id),
         supabase.from('poupeja_scheduled_transactions')
@@ -546,7 +546,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           category:poupeja_categories(id, name, icon, color, type)
         `)
         .eq('user_id', user.id)
-        .order('date', { ascending: false });
+        .order('created_at', { ascending: false });
   
       if (error) throw error;
       

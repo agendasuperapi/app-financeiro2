@@ -16,7 +16,7 @@ import { getCategoriesByType } from '@/services/categoryService';
 import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
 import { addDays, addWeeks, addMonths, addYears } from "date-fns";
-import { formatForDateTimeLocalInput, getCurrentBrazilTime, convertBrazilTimeToUTC } from '@/utils/timezoneUtils';
+
 
 interface ScheduledTransactionFormProps {
   open: boolean;
@@ -59,12 +59,11 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
     amount: initialData?.amount || (initialData?.type === 'reminder' ? 0 : 0),
     category: initialData?.category_id || '',
     scheduledDate: initialData?.scheduledDate 
-      ? formatForDateTimeLocalInput(initialData.scheduledDate)
+      ? new Date(initialData.scheduledDate).toISOString().slice(0, 16)
       : (() => {
-          // Para transações novas, usar horário atual de Brasília + 1 hora
-          const brazilTime = getCurrentBrazilTime();
-          brazilTime.setHours(brazilTime.getHours() + 1, 0, 0, 0);
-          return formatForDateTimeLocalInput(brazilTime);
+          const now = new Date();
+          now.setHours(now.getHours() + 1, 0, 0, 0);
+          return now.toISOString().slice(0, 16);
         })(),
     recurrence: (initialData?.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
     goalId: initialData?.goalId || undefined,
@@ -121,7 +120,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         description: initialData.description,
         amount: initialData.amount,
         category: initialData.category_id || '',
-        scheduledDate: formatForDateTimeLocalInput(initialData.scheduledDate),
+        scheduledDate: new Date(initialData.scheduledDate).toISOString().slice(0, 16),
         recurrence: initialData.recurrence || 'once',
         goalId: initialData.goalId,
       });
@@ -164,13 +163,13 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           amount: submitData.amount,
           category: selectedCategory?.name || 'Lembretes',
           category_id: submitData.category,
-          scheduledDate: convertBrazilTimeToUTC(submitData.scheduledDate).toISOString(),
+          scheduledDate: new Date(submitData.scheduledDate).toISOString(),
           recurrence: submitData.recurrence,
           goalId: submitData.goalId,
         };
         
         console.log('📋 Creating transaction with data:', transactionData);
-        addScheduledTransaction(transactionData);
+        await addScheduledTransaction(transactionData);
         console.log('✅ Create request sent');
       } else if (initialData) {
         console.log('✏️ Updating scheduled transaction...', initialData.id);
@@ -184,14 +183,14 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           amount: submitData.amount,
           category: selectedCategory?.name || 'Lembretes',
           category_id: submitData.category,
-          scheduledDate: convertBrazilTimeToUTC(submitData.scheduledDate).toISOString(),
+          scheduledDate: new Date(submitData.scheduledDate).toISOString(),
           recurrence: submitData.recurrence,
           goalId: submitData.goalId,
         };
         
         console.log('📋 Updating transaction with ID:', initialData.id);
         console.log('📋 Update data:', updateData);
-        updateScheduledTransaction(initialData.id, updateData);
+        await updateScheduledTransaction(initialData.id, updateData);
         console.log('✅ Update request sent');
       }
       

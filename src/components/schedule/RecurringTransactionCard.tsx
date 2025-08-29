@@ -6,13 +6,12 @@ import { Button } from '@/components/ui/button';
 import { ScheduledTransaction } from '@/types';
 import { formatCurrency, createLocalDate } from '@/utils/transactionUtils';
 import { usePreferences } from '@/contexts/PreferencesContext';
-import { formatBrazilTime } from '@/utils/timezoneUtils';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { Calendar, Edit, Trash2, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import TransactionStatusBadge from './TransactionStatusBadge';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface RecurringTransactionCardProps {
@@ -32,10 +31,11 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
   const { formatShortDate } = useDateFormat();
   const isMobile = useIsMobile();
 
-  // Função para formatar data e hora no horário de Brasília
+  // Função para formatar data e hora
   const formatDateTimeShort = (dateString: string) => {
     try {
-      return formatBrazilTime(dateString, 'dd/MM/yyyy HH:mm');
+      const dateObject = new Date(dateString);
+      return format(dateObject, 'dd/MM/yyyy HH:mm', { locale: ptBR });
     } catch (error) {
       return dateString;
     }

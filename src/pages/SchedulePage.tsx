@@ -210,7 +210,7 @@ const SchedulePage = () => {
               
               <Button onClick={handleAddSchedule} disabled={!isOnline} size={isMobile ? "sm" : "default"}>
                 <Plus className="mr-2 h-4 w-4" /> 
-                <span className="hidden sm:inline">{t('schedule.addFixedExpense')}</span>
+                <span className="hidden sm:inline">Adicionar</span>
                 <span className="sm:hidden">Adicionar</span>
               </Button>
             </div>

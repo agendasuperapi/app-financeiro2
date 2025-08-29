@@ -43,7 +43,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
   const formSchema = z.object({
     type: z.enum(['income', 'expense', 'reminder']),
     description: z.string().min(1, { message: t('validation.required') }),
-    amount: z.number().min(0).optional().or(z.number().positive({ message: t('validation.positive') })),
+    amount: z.number().optional(),
     category: z.string().min(1, { message: t('validation.required') }),
     scheduledDate: z.string().min(1, { message: t('validation.required') }),
     recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly']),
@@ -131,45 +131,61 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
 
   // Form submission handler
   const onSubmit = (values: z.infer<typeof formSchema>) => {
+    console.log('Form submitted with values:', values);
+    console.log('Is online:', isOnline);
+    console.log('Mode:', mode);
+    
     // For reminders, set amount to 0
     const submitData = {
       ...values,
       amount: values.type === 'reminder' ? 0 : values.amount || 0
     };
     
-    if (mode === 'create') {
-      // Find the selected category to get both name and id
-      const selectedCategory = categories.find(cat => cat.id === submitData.category);
+    console.log('Submit data processed:', submitData);
+    
+    try {
+      if (mode === 'create') {
+        console.log('Creating scheduled transaction...');
+        // Find the selected category to get both name and id
+        const selectedCategory = categories.find(cat => cat.id === submitData.category);
+        console.log('Selected category:', selectedCategory);
+        
+        addScheduledTransaction({
+          type: submitData.type,
+          description: submitData.description,
+          amount: submitData.amount,
+          category: selectedCategory?.name || 'Lembretes',
+          category_id: submitData.category,
+          scheduledDate: new Date(submitData.scheduledDate).toISOString(),
+          recurrence: submitData.recurrence,
+          goalId: submitData.goalId,
+        });
+      } else if (initialData) {
+        console.log('Updating scheduled transaction...', initialData.id);
+        // Find the selected category to get both name and id
+        const selectedCategory = categories.find(cat => cat.id === submitData.category);
+        console.log('Selected category:', selectedCategory);
+        
+        updateScheduledTransaction(initialData.id, {
+          type: submitData.type,
+          description: submitData.description,
+          amount: submitData.amount,
+          category: selectedCategory?.name || 'Lembretes',
+          category_id: submitData.category,
+          scheduledDate: new Date(submitData.scheduledDate).toISOString(),
+          recurrence: submitData.recurrence,
+          goalId: submitData.goalId,
+        });
+      }
       
-      addScheduledTransaction({
-        type: submitData.type,
-        description: submitData.description,
-        amount: submitData.amount,
-        category: selectedCategory?.name || 'Lembretes',
-        category_id: submitData.category,
-        scheduledDate: new Date(submitData.scheduledDate).toISOString(),
-        recurrence: submitData.recurrence,
-        goalId: submitData.goalId,
-      });
-    } else if (initialData) {
-      // Find the selected category to get both name and id
-      const selectedCategory = categories.find(cat => cat.id === submitData.category);
-      
-      updateScheduledTransaction(initialData.id, {
-        type: submitData.type,
-        description: submitData.description,
-        amount: submitData.amount,
-        category: selectedCategory?.name || 'Lembretes',
-        category_id: submitData.category,
-        scheduledDate: new Date(submitData.scheduledDate).toISOString(),
-        recurrence: submitData.recurrence,
-        goalId: submitData.goalId,
-      });
-    }
-    onOpenChange(false);
-    // Call onSuccess callback if provided
-    if (onSuccess) {
-      onSuccess();
+      console.log('Transaction processed successfully');
+      onOpenChange(false);
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error('Error in onSubmit:', error);
     }
   };
 
@@ -196,7 +212,9 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+              console.log('Form validation errors:', errors);
+            })} className="space-y-4">
               <ScheduleTransactionTypeSelector form={form} onTypeChange={handleTypeChange} />
               
               {/* Amount Field - Hidden for reminders */}

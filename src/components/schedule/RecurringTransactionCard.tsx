@@ -29,6 +29,27 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
   const { formatShortDate } = useDateFormat();
   const isMobile = useIsMobile();
 
+  // Função para normalizar valores de recorrência
+  const normalizeRecurrence = (recurrence: string | null | undefined): 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' => {
+    if (!recurrence) return 'once';
+    
+    const recurrenceMap: { [key: string]: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' } = {
+      'Uma vez': 'once',
+      'Diário': 'daily',
+      'Semanal': 'weekly',
+      'semanal': 'weekly',
+      'Mensal': 'monthly',
+      'Anual': 'yearly',
+      'once': 'once',
+      'daily': 'daily',
+      'weekly': 'weekly',
+      'monthly': 'monthly',
+      'yearly': 'yearly'
+    };
+    
+    return recurrenceMap[recurrence] || 'once';
+  };
+
   // Verificar status da transação
   const isPaid = transaction.status === 'paid';
   
@@ -80,7 +101,7 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
               </div>
               
               <Badge className={cn("text-xs border", getRecurrenceColor(transaction.recurrence))}>
-                {t(`schedule.${transaction.recurrence || 'once'}`)}
+                {t(`schedule.${normalizeRecurrence(transaction.recurrence)}`)}
               </Badge>
               
               <Badge variant="outline" className="text-xs">

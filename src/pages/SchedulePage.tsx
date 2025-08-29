@@ -136,8 +136,32 @@ const SchedulePage = () => {
     }
   };
 
+  // Função para normalizar valores de recorrência (mesmo que no serviço)
+  const normalizeRecurrence = (recurrence: string | null | undefined): 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | undefined => {
+    if (!recurrence) return 'once';
+    
+    const recurrenceMap: { [key: string]: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' } = {
+      'Uma vez': 'once',
+      'Diário': 'daily',
+      'Semanal': 'weekly',
+      'semanal': 'weekly', // adicionar versão minúscula
+      'Mensal': 'monthly',
+      'Anual': 'yearly',
+      'once': 'once',
+      'daily': 'daily',
+      'weekly': 'weekly',
+      'monthly': 'monthly',
+      'yearly': 'yearly'
+    };
+    
+    return recurrenceMap[recurrence] || 'once';
+  };
+
   const filteredTransactions = localScheduledTransactions.filter(transaction => {
-    if (selectedRecurrence && transaction.recurrence !== selectedRecurrence) return false;
+    if (selectedRecurrence) {
+      const normalizedTransactionRecurrence = normalizeRecurrence(transaction.recurrence);
+      if (normalizedTransactionRecurrence !== selectedRecurrence) return false;
+    }
     if (selectedCategory && transaction.category !== selectedCategory) return false;
     if (selectedStatus && transaction.status !== selectedStatus) return false;
     // Incluir todos os tipos de transação: expense, income, reminder, e outros tipos salvos no banco
@@ -145,7 +169,7 @@ const SchedulePage = () => {
   });
 
   const groupedTransactions = filteredTransactions.reduce((groups, transaction) => {
-    const recurrence = transaction.recurrence || 'once';
+    const recurrence = normalizeRecurrence(transaction.recurrence) || 'once';
     if (!groups[recurrence]) {
       groups[recurrence] = [];
     }

@@ -140,7 +140,8 @@ const SchedulePage = () => {
     if (selectedRecurrence && transaction.recurrence !== selectedRecurrence) return false;
     if (selectedCategory && transaction.category !== selectedCategory) return false;
     if (selectedStatus && transaction.status !== selectedStatus) return false;
-    return transaction.type === 'expense';
+    // Incluir todos os tipos de transação: expense, income, reminder, e outros tipos salvos no banco
+    return true;
   });
 
   const groupedTransactions = filteredTransactions.reduce((groups, transaction) => {

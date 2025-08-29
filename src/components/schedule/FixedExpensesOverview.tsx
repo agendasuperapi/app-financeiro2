@@ -61,7 +61,7 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
     }, {} as Record<string, number>);
 
   return (
-    <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-5 gap-1.5 md:gap-4 mb-6">
+    <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-4 gap-1.5 md:gap-4 mb-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 px-3 md:px-6 py-2 md:py-6">
           <CardTitle className="text-xs md:text-sm font-medium">{t('schedule.monthlyTotal')}</CardTitle>
@@ -119,25 +119,6 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
           <p className="text-xs md:text-xs text-muted-foreground">
             {t('schedule.needAttention')}
           </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 px-3 md:px-6 py-2 md:py-6">
-          <CardTitle className="text-xs md:text-sm font-medium">{t('schedule.totalScheduled')}</CardTitle>
-          <Calendar className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="px-3 md:px-6 pb-3 md:pb-6">
-          <div className="text-lg md:text-2xl font-bold">
-            {expenses.filter(t => t.status !== 'paid').length}
-          </div>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {Object.entries(recurrenceStats).slice(0, 3).map(([recurrence, count]) => (
-              <Badge key={recurrence} variant="secondary" className="text-xs">
-                {t(`schedule.${recurrence}`)}: {count}
-              </Badge>
-            ))}
-          </div>
         </CardContent>
       </Card>
     </div>

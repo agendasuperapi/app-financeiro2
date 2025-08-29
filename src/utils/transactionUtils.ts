@@ -1,4 +1,5 @@
 import { Transaction, TimeRange } from '../types';
+import { convertUTCToBrasilia } from './timezoneUtils';
 
 // Get today's date at midnight
 const getTodayStart = () => {
@@ -25,14 +26,8 @@ const getDaysAgoStart = (days: number) => {
 
 // Create a local date from string to avoid timezone issues
 export const createLocalDate = (dateString: string): Date => {
-  if (dateString.includes('-') && dateString.length === 10) {
-    // For YYYY-MM-DD format, create local date to avoid timezone conversion
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day); // month is 0-indexed
-  } else {
-    // For other formats, use normal Date constructor
-    return new Date(dateString);
-  }
+  // Use the timezone utility to convert UTC to Brasilia time
+  return convertUTCToBrasilia(dateString);
 };
 
 // Filter transactions by time range

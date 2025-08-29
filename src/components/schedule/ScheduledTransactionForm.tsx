@@ -15,6 +15,7 @@ import ScheduleTransactionTypeSelector from './ScheduleTransactionTypeSelector';
 import { getCategoriesByType } from '@/services/categoryService';
 import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
+import { convertToDateTimeLocal, convertFromDateTimeLocal } from '@/utils/timezoneUtils';
 
 interface ScheduledTransactionFormProps {
   open: boolean;
@@ -57,8 +58,8 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
     amount: initialData?.amount || (initialData?.type === 'reminder' ? 0 : 0),
     category: initialData?.category_id || '',
     scheduledDate: initialData?.scheduledDate 
-      ? new Date(initialData.scheduledDate).toISOString().slice(0, 16)
-      : new Date().toISOString().slice(0, 16),
+      ? convertToDateTimeLocal(initialData.scheduledDate)
+      : convertToDateTimeLocal(new Date()),
     recurrence: (initialData?.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
     goalId: initialData?.goalId || undefined,
   };
@@ -114,7 +115,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         description: initialData.description,
         amount: initialData.amount,
         category: initialData.category_id || '',
-        scheduledDate: new Date(initialData.scheduledDate).toISOString().slice(0, 16),
+        scheduledDate: convertToDateTimeLocal(initialData.scheduledDate),
         recurrence: initialData.recurrence || 'once',
         goalId: initialData.goalId,
       });
@@ -157,7 +158,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           amount: submitData.amount,
           category: selectedCategory?.name || 'Lembretes',
           category_id: submitData.category,
-          scheduledDate: new Date(submitData.scheduledDate).toISOString(),
+          scheduledDate: convertFromDateTimeLocal(submitData.scheduledDate).toISOString(),
           recurrence: submitData.recurrence,
           goalId: submitData.goalId,
         };
@@ -177,7 +178,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           amount: submitData.amount,
           category: selectedCategory?.name || 'Lembretes',
           category_id: submitData.category,
-          scheduledDate: new Date(submitData.scheduledDate).toISOString(),
+          scheduledDate: convertFromDateTimeLocal(submitData.scheduledDate).toISOString(),
           recurrence: submitData.recurrence,
           goalId: submitData.goalId,
         };

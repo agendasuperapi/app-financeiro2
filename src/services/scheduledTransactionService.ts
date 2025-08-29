@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ScheduledTransaction } from "@/types";
 import { v4 as uuidv4 } from "uuid";
+import { convertBrasiliaToUTC } from "@/utils/timezoneUtils";
 
 // Função para normalizar valores de recorrência
 const normalizeRecurrence = (recurrence: string | null | undefined): 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | undefined => {
@@ -248,7 +249,8 @@ export const markAsPaid = async (
     console.log("Scheduled transaction found:", scheduledTransaction);
 
     const actualPaidAmount = paidAmount || scheduledTransaction.amount;
-    const now = new Date().toISOString();
+    // Converte para UTC mantendo o horário atual de Brasília
+    const now = convertBrasiliaToUTC(new Date()).toISOString();
 
     // Create a real transaction
     const { error: transactionError } = await supabase
@@ -300,7 +302,7 @@ export const markAsPaid = async (
           break;
       }
 
-      const nextExecutionDate = currentDate.toISOString();
+      const nextExecutionDate = convertBrasiliaToUTC(currentDate).toISOString();
 
       // Create new scheduled transaction for next occurrence
       const { error: nextTransactionError } = await supabase

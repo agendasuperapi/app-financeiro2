@@ -258,6 +258,7 @@ export const markAsPaid = async (
       .from("poupeja_scheduled_transactions")
       .update({
         status: 'paid',
+        situacao: 'concluido',
         paid_date: now,
         paid_amount: actualPaidAmount,
         last_execution_date: now,

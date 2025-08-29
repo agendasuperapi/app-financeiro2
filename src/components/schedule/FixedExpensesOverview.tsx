@@ -61,7 +61,7 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
     }, {} as Record<string, number>);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-1.5 md:gap-4 mb-6">
+    <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-5 gap-1.5 md:gap-4 mb-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 px-3 md:px-6 py-2 md:py-6">
           <CardTitle className="text-xs md:text-sm font-medium">{t('schedule.monthlyTotal')}</CardTitle>

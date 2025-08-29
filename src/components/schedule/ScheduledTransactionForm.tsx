@@ -67,6 +67,13 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues,
+    mode: 'onChange', // Habilita validação em tempo real
+  });
+
+  console.log('Form initialized with:', {
+    defaultValues,
+    formState: form.formState,
+    errors: form.formState.errors
   });
 
   // Load categories when type changes
@@ -212,9 +219,13 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
-              console.log('Form validation errors:', errors);
-            })} className="space-y-4">
+            <form onSubmit={(e) => {
+              console.log('Form submit event triggered');
+              console.log('Form state:', form.formState);
+              form.handleSubmit(onSubmit, (errors) => {
+                console.log('Form validation errors:', errors);
+              })(e);
+            }} className="space-y-4">
               <ScheduleTransactionTypeSelector form={form} onTypeChange={handleTypeChange} />
               
               {/* Amount Field - Hidden for reminders */}
@@ -345,7 +356,17 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
                   >
                     {t('common.cancel')}
                   </Button>
-                  <Button type="submit" disabled={!isOnline}>
+                  <Button 
+                    type="submit" 
+                    disabled={!isOnline}
+                    onClick={(e) => {
+                      console.log('Button clicked!');
+                      console.log('Form valid:', form.formState.isValid);
+                      console.log('Form errors:', form.formState.errors);
+                      console.log('Form values:', form.getValues());
+                      console.log('Is online:', isOnline);
+                    }}
+                  >
                     {mode === 'create' ? t('common.create') : t('common.update')}
                   </Button>
                 </div>

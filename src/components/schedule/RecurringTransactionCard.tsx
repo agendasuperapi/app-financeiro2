@@ -11,7 +11,8 @@ import { Calendar, Edit, Trash2, CheckCircle, Clock, AlertTriangle } from 'lucid
 import { cn } from '@/lib/utils';
 import TransactionStatusBadge from './TransactionStatusBadge';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { formatDateInBrasilia, convertUTCToBrasilia } from '@/utils/timezoneUtils';
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface RecurringTransactionCardProps {
   transaction: ScheduledTransaction;
@@ -30,10 +31,16 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
   const { formatShortDate } = useDateFormat();
   const isMobile = useIsMobile();
 
-  // Função para formatar data e hora no horário de Brasília
+  // Função para formatar data e hora 
   const formatDateTimeShort = (dateString: string) => {
     try {
-      return formatDateInBrasilia(dateString, "dd/MM/yyyy 'às' HH:mm");
+      return new Date(dateString).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     } catch (error) {
       return dateString;
     }
@@ -64,7 +71,7 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
   const isPaid = transaction.status === 'paid';
   
   const today = new Date();
-  const transactionDate = convertUTCToBrasilia(transaction.nextExecutionDate || transaction.scheduledDate);
+  const transactionDate = new Date(transaction.nextExecutionDate || transaction.scheduledDate);
   const daysUntilDue = Math.ceil((transactionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   const isUpcoming = daysUntilDue <= 3 && daysUntilDue >= 0;
   const isOverdue = daysUntilDue < 0;

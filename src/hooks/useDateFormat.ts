@@ -1,43 +1,39 @@
 
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { usePreferences } from '@/contexts/PreferencesContext';
-import { convertUTCToBrasilia } from '@/utils/timezoneUtils';
 
 export const useDateFormat = () => {
   const { language } = usePreferences();
 
   const formatDate = (date: Date | string, formatString: string = 'dd/MM/yyyy') => {
-    // Converte para horário de Brasília antes de formatar
-    const brasiliaDate = convertUTCToBrasilia(date);
+    const dateObject = typeof date === 'string' ? new Date(date) : date;
     
     if (language === 'pt') {
-      return format(brasiliaDate, formatString, { locale: ptBR });
+      return format(dateObject, formatString, { locale: ptBR });
     }
     
-    return format(brasiliaDate, formatString);
+    return format(dateObject, formatString);
   };
 
   const formatMonth = (date: Date | string) => {
-    // Converte para horário de Brasília antes de formatar
-    const brasiliaDate = convertUTCToBrasilia(date);
+    const dateObject = typeof date === 'string' ? new Date(date) : date;
     
     if (language === 'pt') {
-      return format(brasiliaDate, 'MMMM yyyy', { locale: ptBR });
+      return format(dateObject, 'MMMM yyyy', { locale: ptBR });
     }
     
-    return format(brasiliaDate, 'MMMM yyyy');
+    return format(dateObject, 'MMMM yyyy');
   };
 
   const formatShortDate = (date: Date | string) => {
-    // Converte para horário de Brasília antes de formatar
-    const brasiliaDate = convertUTCToBrasilia(date);
+    const dateObject = typeof date === 'string' ? new Date(date) : date;
     
     if (language === 'pt') {
-      return format(brasiliaDate, "d 'de' MMM", { locale: ptBR });
+      return format(dateObject, "d 'de' MMM", { locale: ptBR });
     }
     
-    return format(brasiliaDate, 'MMM d');
+    return format(dateObject, 'MMM d');
   };
 
   return {

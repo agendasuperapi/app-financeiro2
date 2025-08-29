@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ScheduledTransaction } from "@/types";
 import { v4 as uuidv4 } from "uuid";
-import { convertBrasiliaToUTC } from "@/utils/timezoneUtils";
+
 
 // Função para normalizar valores de recorrência
 const normalizeRecurrence = (recurrence: string | null | undefined): 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | undefined => {
@@ -223,109 +223,21 @@ export const markAsPaid = async (
   paidAmount?: number
 ): Promise<boolean> => {
   try {
-    console.log("markAsPaid called with transactionId:", transactionId);
-    
-    // Get the current user
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      console.error("User not authenticated");
-      throw new Error("User not authenticated");
-    }
+    const actualPaidAmount = paidAmount;
+    const now = new Date().toISOString();
 
-    console.log("User authenticated:", session.user.id);
-
-    // Get the scheduled transaction
-    const { data: scheduledTransaction, error: fetchError } = await supabase
-      .from("poupeja_scheduled_transactions")
-      .select("*")
-      .eq("id", transactionId)
-      .single();
-
-    if (fetchError) {
-      console.error("Error fetching scheduled transaction:", fetchError);
-      throw fetchError;
-    }
-
-    console.log("Scheduled transaction found:", scheduledTransaction);
-
-    const actualPaidAmount = paidAmount || scheduledTransaction.amount;
-    // Converte para UTC mantendo o horário atual de Brasília
-    const now = convertBrasiliaToUTC(new Date()).toISOString();
-
-    // Create a real transaction - convert 'outros' and 'reminder' types to 'expense'
-    const transactionType = scheduledTransaction.type === 'outros' || scheduledTransaction.type === 'reminder' 
-      ? 'expense' 
-      : scheduledTransaction.type;
-
-    const { error: transactionError } = await supabase
-      .from("poupeja_transactions")
-      .insert({
-        user_id: session.user.id,
-        type: transactionType,
-        amount: actualPaidAmount,
-        category_id: scheduledTransaction.category_id,
-        description: `${scheduledTransaction.description} (Agendado)`,
-        date: now,
-        goal_id: scheduledTransaction.goal_id
-      });
-
-    if (transactionError) throw transactionError;
-
-    // Mark current transaction as paid
+    // Simply mark the transaction as paid
     const { error: updateError } = await supabase
       .from("poupeja_scheduled_transactions")
       .update({
         status: 'paid',
-        situacao: 'concluido',
         paid_date: now,
         paid_amount: actualPaidAmount,
-        last_execution_date: now,
         updated_at: now
       })
       .eq("id", transactionId);
 
     if (updateError) throw updateError;
-
-    // For recurring transactions, create a new scheduled transaction for the next occurrence
-    if (scheduledTransaction.recurrence && scheduledTransaction.recurrence !== 'once') {
-      const currentDate = new Date(scheduledTransaction.next_execution_date || scheduledTransaction.scheduled_date);
-      
-      // Calculate next execution date
-      switch (scheduledTransaction.recurrence) {
-        case 'daily':
-          currentDate.setDate(currentDate.getDate() + 1);
-          break;
-        case 'weekly':
-          currentDate.setDate(currentDate.getDate() + 7);
-          break;
-        case 'monthly':
-          currentDate.setMonth(currentDate.getMonth() + 1);
-          break;
-        case 'yearly':
-          currentDate.setFullYear(currentDate.getFullYear() + 1);
-          break;
-      }
-
-      const nextExecutionDate = convertBrasiliaToUTC(currentDate).toISOString();
-
-      // Create new scheduled transaction for next occurrence
-      const { error: nextTransactionError } = await supabase
-        .from("poupeja_scheduled_transactions")
-        .insert({
-          user_id: session.user.id,
-          type: scheduledTransaction.type,
-          amount: scheduledTransaction.amount,
-          category_id: scheduledTransaction.category_id,
-          description: scheduledTransaction.description,
-          scheduled_date: nextExecutionDate,
-          recurrence: scheduledTransaction.recurrence,
-          goal_id: scheduledTransaction.goal_id,
-          status: 'pending',
-          next_execution_date: nextExecutionDate
-        });
-
-      if (nextTransactionError) throw nextTransactionError;
-    }
 
     return true;
   } catch (error) {

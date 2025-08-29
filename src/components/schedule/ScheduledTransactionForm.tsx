@@ -57,8 +57,8 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
     amount: initialData?.amount || (initialData?.type === 'reminder' ? 0 : 0),
     category: initialData?.category_id || '',
     scheduledDate: initialData?.scheduledDate 
-      ? new Date(initialData.scheduledDate).toISOString().split('T')[0] 
-      : new Date().toISOString().split('T')[0],
+      ? new Date(initialData.scheduledDate).toISOString().slice(0, 16)
+      : new Date().toISOString().slice(0, 16),
     recurrence: (initialData?.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
     goalId: initialData?.goalId || undefined,
   };
@@ -114,7 +114,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         description: initialData.description,
         amount: initialData.amount,
         category: initialData.category_id || '',
-        scheduledDate: new Date(initialData.scheduledDate).toISOString().split('T')[0],
+        scheduledDate: new Date(initialData.scheduledDate).toISOString().slice(0, 16),
         recurrence: initialData.recurrence || 'once',
         goalId: initialData.goalId,
       });
@@ -274,9 +274,9 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('schedule.scheduledFor')}</FormLabel>
-                        <FormControl>
-                      <Input type="date" {...field} />
-                        </FormControl>
+                    <FormControl>
+                      <Input type="datetime-local" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

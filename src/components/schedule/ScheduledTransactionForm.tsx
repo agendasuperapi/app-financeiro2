@@ -47,7 +47,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
     category: z.string().min(1, { message: t('validation.required') }),
     scheduledDate: z.string().min(1, { message: t('validation.required') }),
     recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly']),
-    goalId: z.string().optional(),
+    goalId: z.string().optional().nullable(),
   });
 
   // Default form values

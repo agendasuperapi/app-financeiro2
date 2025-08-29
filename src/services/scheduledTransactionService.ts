@@ -222,9 +222,16 @@ export const markAsPaid = async (
   paidAmount?: number
 ): Promise<boolean> => {
   try {
+    console.log("markAsPaid called with transactionId:", transactionId);
+    
     // Get the current user
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error("User not authenticated");
+    if (!session) {
+      console.error("User not authenticated");
+      throw new Error("User not authenticated");
+    }
+
+    console.log("User authenticated:", session.user.id);
 
     // Get the scheduled transaction
     const { data: scheduledTransaction, error: fetchError } = await supabase
@@ -233,7 +240,12 @@ export const markAsPaid = async (
       .eq("id", transactionId)
       .single();
 
-    if (fetchError) throw fetchError;
+    if (fetchError) {
+      console.error("Error fetching scheduled transaction:", fetchError);
+      throw fetchError;
+    }
+
+    console.log("Scheduled transaction found:", scheduledTransaction);
 
     const actualPaidAmount = paidAmount || scheduledTransaction.amount;
     const now = new Date().toISOString();

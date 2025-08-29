@@ -61,62 +61,62 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
     }, {} as Record<string, number>);
 
   return (
-    <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-4 gap-1.5 md:gap-4 mb-6">
+    <div className="grid grid-cols-4 lg:grid-cols-4 gap-1 md:gap-2 lg:gap-4 mb-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 px-3 md:px-6 py-2 md:py-6">
-          <CardTitle className="text-xs md:text-sm font-medium">{t('schedule.monthlyTotal')}</CardTitle>
-          <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-1 py-1 md:px-3 md:py-2 lg:px-6 lg:py-6">
+          <CardTitle className="text-xs md:text-xs lg:text-sm font-medium truncate">{t('schedule.monthlyTotal')}</CardTitle>
+          <TrendingUp className="h-2 w-2 md:h-3 md:w-3 lg:h-4 lg:w-4 text-muted-foreground flex-shrink-0" />
         </CardHeader>
-        <CardContent className="px-3 md:px-6 pb-3 md:pb-6">
-          <div className="text-lg md:text-2xl font-bold text-red-600">
+        <CardContent className="px-1 pb-1 md:px-3 md:pb-3 lg:px-6 lg:pb-6">
+          <div className="text-sm md:text-lg lg:text-2xl font-bold text-red-600">
             {formatCurrency(monthlyTotal, currency)}
           </div>
-          <p className="text-xs md:text-xs text-muted-foreground">
+          <p className="text-xs md:text-xs lg:text-xs text-muted-foreground hidden md:block">
             {t('schedule.pendingExpenses')}
           </p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 px-3 md:px-6 py-2 md:py-6">
-          <CardTitle className="text-xs md:text-sm font-medium">{t('schedule.paidThisMonth')}</CardTitle>
-          <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-500" />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-1 py-1 md:px-3 md:py-2 lg:px-6 lg:py-6">
+          <CardTitle className="text-xs md:text-xs lg:text-sm font-medium truncate">{t('schedule.paidThisMonth')}</CardTitle>
+          <CheckCircle className="h-2 w-2 md:h-3 md:w-3 lg:h-4 lg:w-4 text-green-500 flex-shrink-0" />
         </CardHeader>
-        <CardContent className="px-3 md:px-6 pb-3 md:pb-6">
-          <div className="text-lg md:text-2xl font-bold text-green-600">
+        <CardContent className="px-1 pb-1 md:px-3 md:pb-3 lg:px-6 lg:pb-6">
+          <div className="text-sm md:text-lg lg:text-2xl font-bold text-green-600">
             {formatCurrency(monthlyPaid, currency)}
           </div>
-          <p className="text-xs md:text-xs text-muted-foreground">
+          <p className="text-xs md:text-xs lg:text-xs text-muted-foreground hidden md:block">
             {t('schedule.alreadyPaid')}
           </p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 px-3 md:px-6 py-2 md:py-6">
-          <CardTitle className="text-xs md:text-sm font-medium">{t('schedule.upcomingPayments')}</CardTitle>
-          <Clock className="h-3 w-3 md:h-4 md:w-4 text-orange-500" />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-1 py-1 md:px-3 md:py-2 lg:px-6 lg:py-6">
+          <CardTitle className="text-xs md:text-xs lg:text-sm font-medium truncate">{t('schedule.upcomingPayments')}</CardTitle>
+          <Clock className="h-2 w-2 md:h-3 md:w-3 lg:h-4 lg:w-4 text-orange-500 flex-shrink-0" />
         </CardHeader>
-        <CardContent className="px-3 md:px-6 pb-3 md:pb-6">
-          <div className="text-lg md:text-2xl font-bold text-orange-600">
+        <CardContent className="px-1 pb-1 md:px-3 md:pb-3 lg:px-6 lg:pb-6">
+          <div className="text-sm md:text-lg lg:text-2xl font-bold text-orange-600">
             {upcomingPayments.length}
           </div>
-          <p className="text-xs md:text-xs text-muted-foreground">
+          <p className="text-xs md:text-xs lg:text-xs text-muted-foreground hidden md:block">
             {t('schedule.next7Days')}
           </p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2 px-3 md:px-6 py-2 md:py-6">
-          <CardTitle className="text-xs md:text-sm font-medium">{t('schedule.overdue')}</CardTitle>
-          <AlertCircle className="h-3 w-3 md:h-4 md:w-4 text-red-500" />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-1 py-1 md:px-3 md:py-2 lg:px-6 lg:py-6">
+          <CardTitle className="text-xs md:text-xs lg:text-sm font-medium truncate">{t('schedule.overdue')}</CardTitle>
+          <AlertCircle className="h-2 w-2 md:h-3 md:w-3 lg:h-4 lg:w-4 text-red-500 flex-shrink-0" />
         </CardHeader>
-        <CardContent className="px-3 md:px-6 pb-3 md:pb-6">
-          <div className="text-lg md:text-2xl font-bold text-red-600">
+        <CardContent className="px-1 pb-1 md:px-3 md:pb-3 lg:px-6 lg:pb-6">
+          <div className="text-sm md:text-lg lg:text-2xl font-bold text-red-600">
             {overdueTransactions.length}
           </div>
-          <p className="text-xs md:text-xs text-muted-foreground">
+          <p className="text-xs md:text-xs lg:text-xs text-muted-foreground hidden md:block">
             {t('schedule.needAttention')}
           </p>
         </CardContent>

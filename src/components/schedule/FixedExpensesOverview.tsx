@@ -63,8 +63,8 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
   return (
     <div className="grid grid-cols-4 lg:grid-cols-4 gap-1 md:gap-2 lg:gap-4 mb-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-1 py-1 md:px-3 md:py-2 lg:px-6 lg:py-6">
-          <CardTitle className="text-xs md:text-xs lg:text-sm font-medium truncate">{t('schedule.monthlyTotal')}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-1 py-2 md:px-3 md:py-2 lg:px-6 lg:py-6">
+          <CardTitle className="text-xs md:text-xs lg:text-sm font-medium break-words leading-tight">{t('schedule.monthlyTotal')}</CardTitle>
           <TrendingUp className="h-2 w-2 md:h-3 md:w-3 lg:h-4 lg:w-4 text-muted-foreground flex-shrink-0" />
         </CardHeader>
         <CardContent className="px-1 pb-1 md:px-3 md:pb-3 lg:px-6 lg:pb-6">
@@ -78,8 +78,8 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-1 py-1 md:px-3 md:py-2 lg:px-6 lg:py-6">
-          <CardTitle className="text-xs md:text-xs lg:text-sm font-medium truncate">{t('schedule.paidThisMonth')}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-1 py-2 md:px-3 md:py-2 lg:px-6 lg:py-6">
+          <CardTitle className="text-xs md:text-xs lg:text-sm font-medium break-words leading-tight">{t('schedule.paidThisMonth')}</CardTitle>
           <CheckCircle className="h-2 w-2 md:h-3 md:w-3 lg:h-4 lg:w-4 text-green-500 flex-shrink-0" />
         </CardHeader>
         <CardContent className="px-1 pb-1 md:px-3 md:pb-3 lg:px-6 lg:pb-6">
@@ -93,8 +93,8 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-1 py-1 md:px-3 md:py-2 lg:px-6 lg:py-6">
-          <CardTitle className="text-xs md:text-xs lg:text-sm font-medium truncate">{t('schedule.upcomingPayments')}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-1 py-2 md:px-3 md:py-2 lg:px-6 lg:py-6">
+          <CardTitle className="text-xs md:text-xs lg:text-sm font-medium break-words leading-tight">{t('schedule.upcomingPayments')}</CardTitle>
           <Clock className="h-2 w-2 md:h-3 md:w-3 lg:h-4 lg:w-4 text-orange-500 flex-shrink-0" />
         </CardHeader>
         <CardContent className="px-1 pb-1 md:px-3 md:pb-3 lg:px-6 lg:pb-6">
@@ -108,8 +108,8 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-1 py-1 md:px-3 md:py-2 lg:px-6 lg:py-6">
-          <CardTitle className="text-xs md:text-xs lg:text-sm font-medium truncate">{t('schedule.overdue')}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0 px-1 py-2 md:px-3 md:py-2 lg:px-6 lg:py-6">
+          <CardTitle className="text-xs md:text-xs lg:text-sm font-medium break-words leading-tight">{t('schedule.overdue')}</CardTitle>
           <AlertCircle className="h-2 w-2 md:h-3 md:w-3 lg:h-4 lg:w-4 text-red-500 flex-shrink-0" />
         </CardHeader>
         <CardContent className="px-1 pb-1 md:px-3 md:pb-3 lg:px-6 lg:pb-6">

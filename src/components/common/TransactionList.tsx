@@ -211,7 +211,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     )}
                   </TableCell>
                   <TableCell className="font-medium text-xs md:text-sm">
-                    {formatDateTime(transaction.date)}
+                    {formatDateTime(transaction.created_at || transaction.date)}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

@@ -73,7 +73,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ transactions }) =
                 <div className="space-y-1 text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="h-3 w-3" />
-                    <span>{new Date(transaction.date).toLocaleDateString('pt-BR')}</span>
+                    <span>{new Date(transaction.date).toLocaleDateString('pt-BR')} {new Date(transaction.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   <div className="font-medium">{transaction.category}</div>
                   {transaction.description && (
@@ -99,7 +99,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ transactions }) =
               <tbody>
                 {transactions.map((transaction) => (
                   <tr key={transaction.id} className="border-b hover:bg-muted">
-                    <td className="py-2 px-4">{new Date(transaction.date).toLocaleDateString('pt-BR')}</td>
+                    <td className="py-2 px-4">{new Date(transaction.date).toLocaleDateString('pt-BR')} {new Date(transaction.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
                     <td className="py-2 px-4">
                       {transaction.type === 'income' ? t('common.income') : t('common.expense')}
                     </td>

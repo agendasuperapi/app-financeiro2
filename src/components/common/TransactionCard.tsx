@@ -1,6 +1,6 @@
 import React from 'react';
 import { Transaction } from '@/types';
-import { formatCurrency, formatDate } from '@/utils/transactionUtils';
+import { formatCurrency, formatDateTime } from '@/utils/transactionUtils';
 import { MoreHorizontal, Target, ArrowUp, ArrowDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -78,7 +78,7 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
               {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
             </span>
             <p className="text-sm text-muted-foreground">
-              {formatDate(transaction.date)}
+              {formatDateTime(transaction.date)}
             </p>
           </div>
         </div>

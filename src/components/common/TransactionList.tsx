@@ -24,7 +24,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { Transaction } from '@/types';
-import { formatCurrency, formatDate } from '@/utils/transactionUtils';
+import { formatCurrency, formatDateTime } from '@/utils/transactionUtils';
 import { MoreHorizontal, TrendingUp, TrendingDown, Target, ArrowUp, ArrowDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAppContext } from '@/contexts/AppContext';
@@ -211,7 +211,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     )}
                   </TableCell>
                   <TableCell className="font-medium text-xs md:text-sm">
-                    {formatDate(transaction.date)}
+                    {formatDateTime(transaction.date)}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

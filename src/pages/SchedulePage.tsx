@@ -272,7 +272,9 @@ const SchedulePage = () => {
                         </CardHeader>
                         <CardContent className="pt-0">
                           <div className="space-y-3">
-                            {transactions.map(transaction => (
+                            {transactions
+                              .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
+                              .map(transaction => (
                               <RecurringTransactionCard
                                 key={transaction.id}
                                 transaction={transaction}
@@ -333,7 +335,9 @@ const SchedulePage = () => {
                           </CardHeader>
                           <CardContent>
                             <div className="grid gap-4">
-                              {transactions.map(transaction => (
+                              {transactions
+                                .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
+                                .map(transaction => (
                                 <RecurringTransactionCard
                                   key={transaction.id}
                                   transaction={transaction}

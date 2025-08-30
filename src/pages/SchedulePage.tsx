@@ -180,14 +180,10 @@ const SchedulePage = () => {
     return true;
   });
 
-  const groupedTransactions = filteredTransactions.reduce((groups, transaction) => {
-    const recurrence = normalizeRecurrence(transaction.recurrence) || 'once';
-    if (!groups[recurrence]) {
-      groups[recurrence] = [];
-    }
-    groups[recurrence].push(transaction);
-    return groups;
-  }, {} as Record<string, ScheduledTransaction[]>);
+  // Sort transactions by creation date (newest first)
+  const sortedTransactions = filteredTransactions.sort((a, b) => 
+    new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
+  );
 
   const availableCategories = Array.from(new Set(localScheduledTransactions.map(t => t.category)));
   const availableStatuses = ['pending', 'paid', 'overdue'];
@@ -255,39 +251,28 @@ const SchedulePage = () => {
               )}
 
               {/* Lista de Despesas */}
-              {Object.entries(groupedTransactions).length > 0 ? (
-                <div className="space-y-4">
-                  {Object.entries(groupedTransactions)
-                    .sort(([a], [b]) => {
-                      const order = ['monthly', 'weekly', 'yearly', 'daily', 'once'];
-                      return order.indexOf(a) - order.indexOf(b);
-                    })
-                    .map(([recurrence, transactions]) => (
-                      <Card key={recurrence}>
-                        <CardHeader className="pb-3">
-                          <CardTitle className="flex items-center gap-2 text-lg">
-                            {t(`schedule.${recurrence}`)}
-                            <Badge variant="secondary" className="text-xs">{transactions.length}</Badge>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <div className="space-y-3">
-                            {transactions
-                              .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
-                              .map(transaction => (
-                              <RecurringTransactionCard
-                                key={transaction.id}
-                                transaction={transaction}
-                                onEdit={handleEditTransaction}
-                                onDelete={handleDeleteTransaction}
-                                onMarkAsPaid={handleMarkAsPaid}
-                              />
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                </div>
+              {sortedTransactions.length > 0 ? (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      {t('schedule.title')}
+                      <Badge variant="secondary" className="text-xs">{sortedTransactions.length}</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      {sortedTransactions.map(transaction => (
+                        <RecurringTransactionCard
+                          key={transaction.id}
+                          transaction={transaction}
+                          onEdit={handleEditTransaction}
+                          onDelete={handleDeleteTransaction}
+                          onMarkAsPaid={handleMarkAsPaid}
+                        />
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               ) : (
                 <Card>
                   <CardContent className="text-center py-8">
@@ -318,39 +303,28 @@ const SchedulePage = () => {
 
               {/* Conteúdo principal */}
               <div className="lg:col-span-3 space-y-6">
-                {Object.entries(groupedTransactions).length > 0 ? (
-                  <div className="space-y-6">
-                    {Object.entries(groupedTransactions)
-                      .sort(([a], [b]) => {
-                        const order = ['monthly', 'weekly', 'yearly', 'daily', 'once'];
-                        return order.indexOf(a) - order.indexOf(b);
-                      })
-                      .map(([recurrence, transactions]) => (
-                        <Card key={recurrence}>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              {t(`schedule.${recurrence}`)}
-                              <Badge variant="secondary">{transactions.length}</Badge>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="grid gap-4">
-                              {transactions
-                                .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
-                                .map(transaction => (
-                                <RecurringTransactionCard
-                                  key={transaction.id}
-                                  transaction={transaction}
-                                  onEdit={handleEditTransaction}
-                                  onDelete={handleDeleteTransaction}
-                                  onMarkAsPaid={handleMarkAsPaid}
-                                />
-                              ))}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                  </div>
+                {sortedTransactions.length > 0 ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        {t('schedule.title')}
+                        <Badge variant="secondary">{sortedTransactions.length}</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid gap-4">
+                        {sortedTransactions.map(transaction => (
+                          <RecurringTransactionCard
+                            key={transaction.id}
+                            transaction={transaction}
+                            onEdit={handleEditTransaction}
+                            onDelete={handleDeleteTransaction}
+                            onMarkAsPaid={handleMarkAsPaid}
+                          />
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
                 ) : (
                   <Card>
                     <CardContent className="text-center py-10">

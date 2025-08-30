@@ -229,33 +229,10 @@ export const formatCurrency = (amount: number, currency = 'BRL'): string => {
   }).format(amount);
 };
 
-// Format date and time to readable string - fixed to pt-BR with timezone handling
+// Format date and time to readable string - dd/MM/yy HH:mm format
 export const formatDateTime = (dateString: string): string => {
-  // Parse the date string manually to avoid timezone issues
-  // If the string is in YYYY-MM-DD format, treat it as local date
-  if (dateString.includes('-') && dateString.length === 10) {
-    const [year, month, day] = dateString.split('-').map(Number);
-    const date = new Date(year, month - 1, day); // month is 0-indexed
-    return date.toLocaleDateString('pt-BR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }) + ' ' + date.toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-  
-  // For other date formats, use the original logic
   const date = new Date(dateString);
-  return date.toLocaleDateString('pt-BR', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }) + ' ' + date.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return format(date, 'dd/MM/yy HH:mm');
 };
 
 // Format date to readable string - fixed to pt-BR with timezone handling

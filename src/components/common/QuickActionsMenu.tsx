@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, TrendingUp, TrendingDown, Target, Calendar } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Target, Calendar, Clock } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -58,6 +58,16 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
       },
       color: 'text-purple-600',
       bgColor: 'bg-purple-50 hover:bg-purple-100'
+    },
+    {
+      icon: Clock,
+      label: 'Lembretes',
+      action: () => {
+        navigate('/lembretes');
+        setIsOpen(false);
+      },
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50 hover:bg-amber-100'
     }
   ];
 

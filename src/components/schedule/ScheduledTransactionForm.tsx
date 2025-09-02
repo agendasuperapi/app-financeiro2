@@ -24,6 +24,7 @@ interface ScheduledTransactionFormProps {
   initialData?: ScheduledTransaction | null;
   mode: 'create' | 'edit';
   onSuccess?: () => void;
+  defaultType?: 'income' | 'expense' | 'reminder' | 'outros';
 }
 
 const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
@@ -32,10 +33,11 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
   initialData,
   mode,
   onSuccess,
+  defaultType = 'expense',
 }) => {
   const { t } = usePreferences();
   const { addScheduledTransaction, updateScheduledTransaction, deleteScheduledTransaction } = useAppContext();
-  const [selectedType, setSelectedType] = useState<'income' | 'expense' | 'reminder' | 'outros'>(initialData?.type || 'expense');
+  const [selectedType, setSelectedType] = useState<'income' | 'expense' | 'reminder' | 'outros'>(initialData?.type || defaultType);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isOnline] = useState(navigator.onLine);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -54,9 +56,9 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
 
   // Default form values
   const defaultValues = {
-    type: initialData?.type || 'expense',
+    type: initialData?.type || defaultType,
     description: initialData?.description || '',
-    amount: initialData?.amount || (initialData?.type === 'reminder' ? 0 : 0),
+    amount: initialData?.amount || (defaultType === 'reminder' ? 0 : 0),
     category: initialData?.category_id || '',
     scheduledDate: initialData?.scheduledDate 
       ? new Date(initialData.scheduledDate).toISOString().slice(0, 16)
@@ -112,7 +114,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
     if (open && !initialData) {
       // Reset form to default values when creating new transaction
       form.reset(defaultValues);
-      setSelectedType(defaultValues.type);
+      setSelectedType(defaultType);
     } else if (open && initialData) {
       // Populate form with initial data when editing
       form.reset({

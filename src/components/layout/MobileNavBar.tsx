@@ -4,7 +4,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useUserRole } from '@/hooks/useUserRole';
-import { LayoutDashboard, Receipt, Settings, Crown, Plus, Target, Calendar, Shield, User, FileText, Tag, Users } from 'lucide-react';
+import { LayoutDashboard, Receipt, Settings, Crown, Plus, Target, Calendar, Clock, Shield, User, FileText, Tag, Users } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -68,6 +68,16 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       },
       color: 'text-purple-600',
       bgColor: 'bg-purple-50 hover:bg-purple-100'
+    },
+    {
+      icon: Clock,
+      label: 'Lembretes',
+      action: () => {
+        navigate('/lembretes');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50 hover:bg-amber-100'
     },
     {
       icon: FileText,

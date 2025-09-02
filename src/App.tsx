@@ -12,6 +12,7 @@ import { AppProvider } from "@/contexts/AppContext";
 import { SupabaseInitializer } from "@/components/common/SupabaseInitializer";
 import Index from "./pages/Index";
 import LandingPage from "./pages/LandingPage";
+import LembretesPage from "./pages/LembretesPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import RegisterWithPlanPage from "./pages/RegisterWithPlanPage";
@@ -65,6 +66,7 @@ function App() {
                         <Route path="/reports" element={<ReportsPage />} />
                         <Route path="/notes" element={<NotesPage />} />
                         <Route path="/schedule" element={<SchedulePage />} />
+                        <Route path="/lembretes" element={<LembretesPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
                         <Route path="/categories" element={<CategoriesPage />} />
                         <Route path="/plans" element={<PlansPage />} />

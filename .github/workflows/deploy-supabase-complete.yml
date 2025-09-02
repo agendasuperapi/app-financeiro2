@@ -107,6 +107,7 @@ jobs:
         supabase functions deploy migrate-settings --project-ref $SUPABASE_PROJECT_ID
         supabase functions deploy get-public-settings --project-ref $SUPABASE_PROJECT_ID
         supabase functions deploy get-stripe-prices --project-ref $SUPABASE_PROJECT_ID
+        supabase functions deploy get-plan-config --project-ref $SUPABASE_PROJECT_ID
         supabase functions deploy check-subscription-status --project-ref $SUPABASE_PROJECT_ID
         supabase functions deploy verify-admin-access --project-ref $SUPABASE_PROJECT_ID
         supabase functions deploy promote-to-admin --project-ref $SUPABASE_PROJECT_ID

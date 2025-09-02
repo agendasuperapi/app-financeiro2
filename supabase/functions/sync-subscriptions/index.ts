@@ -165,7 +165,7 @@ serve(async (req) => {
             // Usar a função utilitária para mapear price ID para plan type
             try {
               const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/get-plan-config`, {
-                method: 'POST',
+                method: 'GET',
                 headers: {
                   'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
                   'Content-Type': 'application/json'

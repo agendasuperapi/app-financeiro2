@@ -1,5 +1,12 @@
 import type { SubscriptionData } from "../types.ts";
 
+// Deno environment declarations
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined;
+  };
+};
+
 export async function handleCheckoutSessionCompleted(
   event: any,
   stripe: any,
@@ -37,15 +44,19 @@ export async function handleCheckoutSessionCompleted(
   let planType;
   
   try {
-    // Fetch plan configurations from database directly
-    const { data: planConfigData } = await supabase
-      .from('poupeja_settings')
-      .select('value')
-      .eq('key', 'plan_config')
-      .single();
+    // Use the same logic as sync-subscriptions: call get-plan-config function
+    const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/get-plan-config`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        'Content-Type': 'application/json'
+      }
+    });
     
-    if (planConfigData?.value) {
-      const planConfig = JSON.parse(planConfigData.value);
+    if (response.ok) {
+      const planConfig = await response.json();
+      console.log('Plan config from get-plan-config:', planConfig);
+      
       if (priceId === planConfig.prices?.monthly?.priceId) {
         planType = "monthly";
       } else if (priceId === planConfig.prices?.annual?.priceId) {
@@ -55,6 +66,7 @@ export async function handleCheckoutSessionCompleted(
         planType = subscription.items.data[0].price.recurring?.interval === 'year' ? "annual" : "monthly";
       }
     } else {
+      console.warn('Failed to fetch plan config, using interval fallback');
       // Fallback to interval detection
       planType = subscription.items.data[0].price.recurring?.interval === 'year' ? "annual" : "monthly";
     }

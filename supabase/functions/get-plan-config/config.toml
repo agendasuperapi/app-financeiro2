@@ -1,0 +1,2 @@
+[functions.get-plan-config]
+verify_jwt = false

@@ -842,6 +842,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addScheduledTransaction = async (transaction: Omit<ScheduledTransaction, 'id' | 'created_at'>) => {
     try {
       const user = await getCurrentUser();
+      
+      // Generate reference code if not provided
+      const referenceCode = transaction.reference_code || `REM-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      
       const { data, error } = await supabase
         .from('poupeja_scheduled_transactions')
         .insert({ 
@@ -853,6 +857,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           recurrence: transaction.recurrence,
           goal_id: transaction.goalId || transaction.goal_id,
           status: transaction.status,
+          reference_code: referenceCode,
           user_id: user.id,
         })
         .select()

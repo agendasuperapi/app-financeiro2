@@ -10,8 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { usePreferences } from '@/contexts/PreferencesContext';
 import ScheduledTransactionForm from '@/components/schedule/ScheduledTransactionForm';
 import TransactionForm from '@/components/common/TransactionForm';
-import LembretesCard from '@/components/lembretes/LembretesCard';
-import LembretesFilters from '@/components/lembretes/LembretesFilters';
+import FixedExpensesOverview from '@/components/schedule/FixedExpensesOverview';
+import RecurringTransactionCard from '@/components/schedule/RecurringTransactionCard';
+import ScheduleFilters from '@/components/schedule/ScheduleFilters';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { deleteScheduledTransaction, getScheduledTransactions, markAsPaid } from '@/services/scheduledTransactionService';

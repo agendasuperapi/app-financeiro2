@@ -163,13 +163,11 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
     console.log('📄 Initial data:', initialData);
 
     try {
-      // Get user's phone number from profile
+      // Get user phone from user_metadata  
       const { data: { user } } = await supabase.auth.getUser();
       let userPhone = '';
-      
-      if (user) {
-        // For now, use empty phone until we confirm the correct field name
-        userPhone = '';
+      if (user?.user_metadata?.phone) {
+        userPhone = user.user_metadata.phone;
       }
 
       // Use the specific outros category ID
@@ -194,16 +192,17 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
           description: submitData.description,
           amount: submitData.amount,
           category: 'Outros',
-          category_id: outrosCategoryId, // This will be null if no category found
+          category_id: outrosCategoryId,
           scheduledDate: new Date(submitData.scheduledDate).toISOString(),
           recurrence: submitData.recurrence, // Keep in English for type compatibility
           goalId: submitData.goalId,
           reference_code: referenceCode,
-          status: 'pending' as const // Default status with proper typing
+          status: 'pending' as const, // Default status with proper typing
+          phone: userPhone, // User's phone from registration
+          situacao: 'ativo' // Default situacao
         };
         
         console.log('🎯 Final category_id before sending:', outrosCategoryId);
-        
         console.log('📋 Creating transaction with data:', transactionData);
         await addScheduledTransaction(transactionData);
         console.log('✅ Create request sent');
@@ -220,7 +219,9 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
           recurrence: submitData.recurrence, // Keep in English for type compatibility
           goalId: submitData.goalId,
           reference_code: referenceCode,
-          status: 'pending' as const // Default status with proper typing
+          status: 'pending' as const, // Default status with proper typing
+          phone: userPhone, // User's phone from registration
+          situacao: 'ativo' // Default situacao
         };
         
         console.log('📋 Updating transaction with ID:', initialData.id);

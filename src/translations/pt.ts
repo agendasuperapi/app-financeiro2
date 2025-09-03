@@ -205,6 +205,7 @@ export default {
   },
   transactions: {
     title: 'Transações',
+    transactionType: 'Tipo de Transação',
     addTransaction: 'Adicionar Transação',
     addIncome: 'Adicionar Receita',
     addExpense: 'Adicionar Despesa',

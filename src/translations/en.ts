@@ -142,6 +142,7 @@ const en = {
   },
   transactions: {
     title: "Transactions",
+    transactionType: "Transaction Type",
     addTransaction: "Add Transaction",
     editTransaction: "Edit Transaction",
     deleteTransaction: "Delete Transaction",

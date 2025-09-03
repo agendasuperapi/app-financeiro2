@@ -241,16 +241,6 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <ScheduleTransactionTypeSelector form={form} onTypeChange={handleTypeChange} />
               
-              {/* Amount Field - Hidden for reminders */}
-              {form.watch('type') !== 'reminder' && <FormField control={form.control} name="amount" render={({
-              field
-            }) => <FormItem>
-                      <FormLabel>{t('common.amount')}</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" min="0" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>} />}
               
               
               

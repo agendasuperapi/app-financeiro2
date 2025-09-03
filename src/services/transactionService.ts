@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Transaction } from "@/types";
 import { v4 as uuidv4 } from "uuid";
+import { getNextReferenceCode } from "@/utils/referenceCodeUtils";
 
 export const getTransactions = async (): Promise<Transaction[]> => {
   try {
@@ -42,6 +43,10 @@ export const addTransaction = async (transaction: Omit<Transaction, "id">): Prom
     const userId = authData.user.id;
     const newId = uuidv4();
 
+    // Generate next reference code
+    const referenceCode = await getNextReferenceCode();
+    console.log("Generated reference code:", referenceCode);
+
     // Get category ID - if it's already an ID, use it directly, otherwise find by name
     let categoryId = transaction.category;
     
@@ -81,7 +86,7 @@ export const addTransaction = async (transaction: Omit<Transaction, "id">): Prom
         date: transaction.date,
         goal_id: transaction.goalId,
         user_id: userId,
-        reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000) // Generate reference code
+        reference_code: referenceCode
       })
       .select(`
         *,
@@ -169,7 +174,7 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
         description: transaction.description,
         date: transaction.date,
         goal_id: transaction.goalId,
-        reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000) // Keep existing or generate new
+        reference_code: await getNextReferenceCode() // Generate new reference code for updates
       })
       .eq("id", transaction.id)
       .select(`

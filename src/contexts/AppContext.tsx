@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Transaction, Goal, ScheduledTransaction } from '@/types';
 import { setupAuthListener, getCurrentSession } from '@/services/authService';
 import { recalculateGoalAmounts as recalculateGoalAmountsService } from '@/services/goalService';
+import { getNextReferenceCode } from '@/utils/referenceCodeUtils';
 
 // Use database types directly from Supabase
 interface Category {
@@ -844,7 +845,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const user = await getCurrentUser();
       
       // Generate numeric reference code if not provided
-      const referenceCode = transaction.reference_code || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000);
+      const referenceCode = transaction.reference_code || await getNextReferenceCode();
       
       // For reminders, always set amount to 0
       const finalAmount = transaction.type === 'reminder' ? 0 : transaction.amount;

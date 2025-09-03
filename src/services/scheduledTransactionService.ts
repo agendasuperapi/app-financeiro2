@@ -62,6 +62,11 @@ export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]
   }
 };
 
+import { getNextReferenceCode } from "@/utils/referenceCodeUtils";
+
+// Function to get next reference code for scheduled transactions
+const getNextScheduledReferenceCode = getNextReferenceCode;
+
 export const addScheduledTransaction = async (
   transaction: Omit<ScheduledTransaction, "id">
 ): Promise<ScheduledTransaction | null> => {
@@ -96,6 +101,10 @@ export const addScheduledTransaction = async (
       }
     }
     
+    // Generate next reference code
+    const referenceCode = await getNextScheduledReferenceCode();
+    console.log("Generated scheduled reference code:", referenceCode);
+    
     const { data, error } = await supabase
       .from("poupeja_scheduled_transactions")
       .insert({
@@ -109,7 +118,8 @@ export const addScheduledTransaction = async (
         recurrence: transaction.recurrence,
         goal_id: transaction.goalId,
         status: 'pending',
-        next_execution_date: transaction.scheduledDate
+        next_execution_date: transaction.scheduledDate,
+        reference_code: referenceCode
       })
       .select(`
         *,

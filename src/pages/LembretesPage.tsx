@@ -11,7 +11,7 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import ScheduledTransactionForm from '@/components/schedule/ScheduledTransactionForm';
 import TransactionForm from '@/components/common/TransactionForm';
 import FixedExpensesOverview from '@/components/schedule/FixedExpensesOverview';
-import RecurringTransactionCard from '@/components/schedule/RecurringTransactionCard';
+import LembretesCard from '@/components/lembretes/LembretesCard';
 import ScheduleFilters from '@/components/schedule/ScheduleFilters';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -263,7 +263,7 @@ const LembretesPage = () => {
                   <CardContent className="pt-0">
                     <div className="space-y-3">
                       {sortedTransactions.map(transaction => (
-                        <RecurringTransactionCard
+                        <LembretesCard
                           key={transaction.id}
                           transaction={transaction}
                           onEdit={handleEditTransaction}
@@ -315,7 +315,7 @@ const LembretesPage = () => {
                     <CardContent>
                       <div className="grid gap-4">
                         {sortedTransactions.map(transaction => (
-                          <RecurringTransactionCard
+                          <LembretesCard
                             key={transaction.id}
                             transaction={transaction}
                             onEdit={handleEditTransaction}

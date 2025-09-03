@@ -168,6 +168,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           scheduledDate: new Date(submitData.scheduledDate).toISOString(),
           recurrence: submitData.recurrence,
           goalId: submitData.goalId,
+          reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000), // Generate reference code
         };
         
         console.log('📋 Creating transaction with data:', transactionData);
@@ -188,6 +189,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           scheduledDate: new Date(submitData.scheduledDate).toISOString(),
           recurrence: submitData.recurrence,
           goalId: submitData.goalId,
+          reference_code: initialData?.reference_code || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000), // Keep existing or generate new reference code
         };
         
         console.log('📋 Updating transaction with ID:', initialData.id);

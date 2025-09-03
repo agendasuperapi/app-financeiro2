@@ -8,7 +8,7 @@ import { useAppContext } from '@/contexts/AppContext';
 import { ScheduledTransaction } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { usePreferences } from '@/contexts/PreferencesContext';
-import ScheduledTransactionForm from '@/components/schedule/ScheduledTransactionForm';
+import LembretesTransactionForm from '@/components/lembretes/LembretesTransactionForm';
 import TransactionForm from '@/components/common/TransactionForm';
 import FixedExpensesOverview from '@/components/schedule/FixedExpensesOverview';
 import LembretesCard from '@/components/lembretes/LembretesCard';
@@ -411,7 +411,7 @@ const LembretesPage = () => {
         </Dialog>
 
         {/* Scheduled Transaction Form Dialog */}
-        <ScheduledTransactionForm
+        <LembretesTransactionForm
           open={isFormOpen}
           onOpenChange={setIsFormOpen}
           initialData={selectedTransaction}

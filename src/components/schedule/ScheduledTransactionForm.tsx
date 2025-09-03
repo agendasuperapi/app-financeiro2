@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useAppContext } from '@/contexts/AppContext';
+import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -159,6 +160,14 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         const selectedCategory = categories.find(cat => cat.id === submitData.category);
         console.log('🏷️ Selected category:', selectedCategory);
         
+        // Get current user for phone number
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data: userData } = await supabase
+          .from('poupeja_users')
+          .select('phone')
+          .eq('id', user?.id)
+          .single();
+        
         const transactionData = {
           type: submitData.type,
           description: submitData.description,
@@ -169,6 +178,8 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           recurrence: submitData.recurrence,
           goalId: submitData.goalId,
           reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000), // Generate reference code
+          situacao: 'ativo', // Set status as active
+          phone: userData?.phone || '', // Set user's phone number
         };
         
         console.log('📋 Creating transaction with data:', transactionData);

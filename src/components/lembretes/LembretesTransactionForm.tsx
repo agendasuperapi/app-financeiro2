@@ -53,9 +53,7 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
       message: t('validation.required')
     }),
     amount: z.number().optional(),
-    category: z.string().min(1, {
-      message: t('validation.required')
-    }),
+    category: z.string().optional(), // Make category optional for lembretes
     scheduledDate: z.string().min(1, {
       message: t('validation.required')
     }),

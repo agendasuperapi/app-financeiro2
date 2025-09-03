@@ -172,6 +172,11 @@ const LembretesPage = () => {
   };
 
   const filteredTransactions = localScheduledTransactions.filter(transaction => {
+    // Na aba Lembretes, incluir transações com valor 0 e do tipo 'reminder'
+    // Priorizar transações tipo 'reminder' ou com valor 0
+    const isReminder = transaction.type === 'reminder' || transaction.amount === 0;
+    if (!isReminder) return false;
+    
     if (selectedRecurrence) {
       const normalizedTransactionRecurrence = normalizeRecurrence(transaction.recurrence);
       if (normalizedTransactionRecurrence !== selectedRecurrence) return false;

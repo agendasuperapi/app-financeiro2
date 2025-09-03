@@ -114,10 +114,6 @@ const LembretesCard: React.FC<LembretesCardProps> = ({
               <Badge className={cn("text-xs border", getRecurrenceColor(transaction.recurrence))}>
                 {t(`schedule.${normalizeRecurrence(transaction.recurrence)}`)}
               </Badge>
-              
-              <Badge variant="outline" className="text-xs">
-                {transaction.category}
-              </Badge>
             </div>
             
             <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'}`}>

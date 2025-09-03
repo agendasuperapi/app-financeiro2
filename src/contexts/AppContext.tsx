@@ -846,11 +846,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       // Generate numeric reference code if not provided
       const referenceCode = transaction.reference_code || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000);
       
+      // For reminders, always set amount to 0
+      const finalAmount = transaction.type === 'reminder' ? 0 : transaction.amount;
+      
       const { data, error } = await supabase
         .from('poupeja_scheduled_transactions')
         .insert({ 
           type: transaction.type,
-          amount: transaction.amount,
+          amount: finalAmount,
           category_id: transaction.category_id,
           description: transaction.description,
           scheduled_date: transaction.scheduledDate || transaction.scheduled_date,

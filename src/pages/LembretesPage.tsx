@@ -64,8 +64,8 @@ const LembretesPage = () => {
 
   useEffect(() => {
     if (Array.isArray(scheduledTransactions)) {
-      // Filtrar apenas lembretes (tipo 'reminder')
-      setLocalScheduledTransactions(scheduledTransactions.filter(t => t.type === 'reminder'));
+      // Carregar todos os dados (mesmos da aba Agendamentos)
+      setLocalScheduledTransactions(scheduledTransactions);
     } else {
       setLocalScheduledTransactions([]);
     }
@@ -74,8 +74,8 @@ const LembretesPage = () => {
   const refreshLocalScheduledTransactions = async () => {
     try {
       const transactions = await getScheduledTransactions();
-      // Filtrar apenas lembretes
-      setLocalScheduledTransactions(transactions.filter(t => t.type === 'reminder'));
+      // Carregar todos os dados (mesmos da aba Agendamentos)
+      setLocalScheduledTransactions(transactions);
     } catch (error) {
       console.error('Error refreshing scheduled transactions:', error);
     }
@@ -172,17 +172,14 @@ const LembretesPage = () => {
   };
 
   const filteredTransactions = localScheduledTransactions.filter(transaction => {
-    // Na aba Lembretes, incluir transações com valor 0 e do tipo 'reminder'
-    // Priorizar transações tipo 'reminder' ou com valor 0
-    const isReminder = transaction.type === 'reminder' || transaction.amount === 0;
-    if (!isReminder) return false;
-    
+    // Na aba Lembretes, mostrar todas as transações (mesmos dados da aba Agendamentos)
     if (selectedRecurrence) {
       const normalizedTransactionRecurrence = normalizeRecurrence(transaction.recurrence);
       if (normalizedTransactionRecurrence !== selectedRecurrence) return false;
     }
     if (selectedCategory && transaction.category !== selectedCategory) return false;
     if (selectedStatus && transaction.status !== selectedStatus) return false;
+    // Incluir todos os tipos de transação: expense, income, reminder, e outros tipos salvos no banco
     return true;
   });
 

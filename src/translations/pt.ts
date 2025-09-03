@@ -466,7 +466,7 @@ export default {
     yearlyOverview: 'Visão Anual',
   },
   schedule: {
-    title: 'Agendamentos',
+    title: 'Contas a Pagar',
     paymentSchedule: "Cronograma de Pagamentos",
     scheduleTransaction: "Agendar Transação",
     requiresConnection: "Requer conexão",

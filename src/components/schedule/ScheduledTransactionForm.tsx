@@ -361,45 +361,35 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
                 )}
               />
 
-              <DialogFooter className="gap-2 justify-between sm:justify-end">
+              <DialogFooter className="flex flex-col sm:flex-row gap-3 justify-between items-center">
                 {mode === 'edit' && (
                   <Button
                     type="button"
-                    variant="outline"
-                    className="border-red-200 text-red-600 hover:bg-red-50 sm:mr-auto"
+                    variant="destructive"
+                    size="sm"
                     onClick={() => setDeleteDialogOpen(true)}
                     disabled={!isOnline}
+                    className="w-full sm:w-auto"
                   >
                     {t('common.delete')}
                   </Button>
                 )}
-                <div className="space-x-2">
+                <div className="flex gap-2 w-full sm:w-auto">
                   <Button
                     type="button"
                     variant="outline"
+                    size="sm"
                     onClick={() => onOpenChange(false)}
+                    className="flex-1 sm:flex-initial min-w-20"
                   >
                     {t('common.cancel')}
                   </Button>
                   <Button 
                     type="submit" 
+                    variant="default"
+                    size="sm"
                     disabled={!isOnline}
-                    onClick={() => {
-                      console.log('🔄 Update button clicked!');
-                      console.log('📝 Form state:', form.formState);
-                      console.log('❌ Form errors:', form.formState.errors);
-                      console.log('📊 Form values:', form.getValues());
-                      console.log('✅ Form valid:', form.formState.isValid);
-                      console.log('🌐 Online status:', isOnline);
-                      
-                      // Trigger validation manually to see detailed errors
-                      form.trigger().then((isValid) => {
-                        console.log('🔍 Manual validation result:', isValid);
-                        if (!isValid) {
-                          console.log('❌ Validation errors after trigger:', form.formState.errors);
-                        }
-                      });
-                    }}
+                    className="flex-1 sm:flex-initial min-w-20"
                   >
                     {mode === 'create' ? t('common.create') : t('common.update')}
                   </Button>

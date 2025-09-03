@@ -80,7 +80,8 @@ export const addTransaction = async (transaction: Omit<Transaction, "id">): Prom
         description: transaction.description,
         date: transaction.date,
         goal_id: transaction.goalId,
-        user_id: userId
+        user_id: userId,
+        reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000) // Generate reference code
       })
       .select(`
         *,
@@ -167,7 +168,8 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
         category_id: categoryId,
         description: transaction.description,
         date: transaction.date,
-        goal_id: transaction.goalId
+        goal_id: transaction.goalId,
+        reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000) // Keep existing or generate new
       })
       .eq("id", transaction.id)
       .select(`

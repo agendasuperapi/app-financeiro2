@@ -41,7 +41,7 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
     },
     {
       icon: FileText,
-      label: 'Notas',
+      label: 'Anotações',
       action: () => {
         navigate('/notes');
         setIsQuickActionsOpen(false);

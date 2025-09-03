@@ -174,7 +174,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
     },
     {
       icon: FileText,
-      label: 'Notas',
+      label: 'Anotações',
       href: '/notes'
     },
     {

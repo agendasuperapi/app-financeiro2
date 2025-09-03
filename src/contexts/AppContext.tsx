@@ -622,6 +622,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       console.log('AppContext: Adding transaction...', transaction);
       const user = await getCurrentUser();
+      
+      // Generate reference code
+      const referenceCode = await getNextReferenceCode();
+      console.log('Generated reference code:', referenceCode);
+      
       const { data, error } = await supabase
         .from('poupeja_transactions')
         .insert({ 
@@ -632,6 +637,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           date: transaction.date,
           goal_id: transaction.goalId,
           user_id: user.id,
+          reference_code: referenceCode,
         })
         .select(`
           *,

@@ -29,36 +29,31 @@ const ScheduleTransactionTypeSelector: React.FC<ScheduleTransactionTypeSelectorP
     }
   }, [isLembretesPage, form, onTypeChange]);
 
+  // On lembretes page, don't render the type selector
+  if (isLembretesPage) {
+    return null;
+  }
+
   return <FormField control={form.control} name="type" render={({
     field
   }) => <FormItem>
           <FormLabel>{t('transactions.transactionType')}</FormLabel>
           <FormControl>
-            <div>
-              {!isLembretesPage && (
-                <div className="grid grid-cols-3 gap-2">
-                  <Button type="button" variant={field.value === 'expense' ? 'default' : 'outline'} className="flex items-center gap-2" onClick={() => {
-              field.onChange('expense');
-              onTypeChange('expense');
-            }}>
-                    <TrendingDown className="w-4 h-4" />
-                    {t('transactions.expense')}
-                  </Button>
-                  <Button type="button" variant={field.value === 'income' ? 'default' : 'outline'} className="flex items-center gap-2" onClick={() => {
-              field.onChange('income');
-              onTypeChange('income');
-            }}>
-                    <TrendingUp className="w-4 h-4" />
-                    {t('transactions.income')}
-                  </Button>
-                  
-                </div>
-              )}
-              {isLembretesPage && (
-                <div className="text-sm text-muted-foreground">
-                  Tipo fixo: Lembretes
-                </div>
-              )}
+            <div className="grid grid-cols-3 gap-2">
+              <Button type="button" variant={field.value === 'expense' ? 'default' : 'outline'} className="flex items-center gap-2" onClick={() => {
+            field.onChange('expense');
+            onTypeChange('expense');
+          }}>
+                <TrendingDown className="w-4 h-4" />
+                {t('transactions.expense')}
+              </Button>
+              <Button type="button" variant={field.value === 'income' ? 'default' : 'outline'} className="flex items-center gap-2" onClick={() => {
+            field.onChange('income');
+            onTypeChange('income');
+          }}>
+                <TrendingUp className="w-4 h-4" />
+                {t('transactions.income')}
+              </Button>
             </div>
           </FormControl>
           <FormMessage />

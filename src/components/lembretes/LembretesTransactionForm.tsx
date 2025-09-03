@@ -173,8 +173,10 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
       }
 
       // Get "outros" category ID
-      const outrosCategory = categories.find(cat => cat.name.toLowerCase() === 'outros');
-      const outrosCategoryId = outrosCategory?.id;
+      console.log('🏷️ Available categories:', categories.map(cat => ({ id: cat.id, name: cat.name })));
+      const outrosCategory = categories.find(cat => cat.name.toLowerCase() === 'outros' || cat.name.toLowerCase() === 'other');
+      console.log('🎯 Found outros category:', outrosCategory);
+      const outrosCategoryId = outrosCategory?.id || null;
 
       // Generate reference code
       const referenceCode = await getNextReferenceCode();

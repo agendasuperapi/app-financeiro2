@@ -16,6 +16,8 @@ import { getCategoriesByType } from '@/services/categoryService';
 import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
 import { addDays, addWeeks, addMonths, addYears } from "date-fns";
+import { getNextReferenceCode } from '@/utils/referenceCodeUtils';
+import { supabase } from '@/integrations/supabase/client';
 interface LembretesTransactionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -141,6 +143,18 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
     form.setValue('category', ''); // Reset category when type changes
   };
 
+  // Helper function to translate recurrence to Portuguese
+  const translateRecurrence = (recurrence: string) => {
+    const translations = {
+      'once': 'uma vez',
+      'daily': 'diariamente', 
+      'weekly': 'semanalmente',
+      'monthly': 'mensalmente',
+      'yearly': 'anualmente'
+    };
+    return translations[recurrence as keyof typeof translations] || recurrence;
+  };
+
   // Form submission handler
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log('🚀 Form submitted with values:', values);
@@ -148,57 +162,75 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
     console.log('🔧 Mode:', mode);
     console.log('📄 Initial data:', initialData);
 
-    // For reminders, set amount to 0
-    const submitData = {
-      ...values,
-      amount: values.type === 'reminder' ? 0 : values.amount || 0
-    };
-    console.log('📝 Submit data processed:', submitData);
     try {
+      // Get user's phone number from profile
+      const { data: { user } } = await supabase.auth.getUser();
+      let userPhone = '';
+      
+      if (user) {
+        // For now, use empty phone until we confirm the correct field name
+        userPhone = '';
+      }
+
+      // Get "outros" category ID
+      const outrosCategory = categories.find(cat => cat.name.toLowerCase() === 'outros');
+      const outrosCategoryId = outrosCategory?.id;
+
+      // Generate reference code
+      const referenceCode = await getNextReferenceCode();
+
+      // For reminders, set amount to 0
+      const submitData = {
+        ...values,
+        amount: values.type === 'reminder' ? 0 : values.amount || 0
+      };
+      
+      console.log('📝 Submit data processed:', submitData);
+
       if (mode === 'create') {
         console.log('➕ Creating scheduled transaction...');
-        // Find the selected category to get both name and id
-        const selectedCategory = categories.find(cat => cat.id === submitData.category);
-        console.log('🏷️ Selected category:', selectedCategory);
+        
         const transactionData = {
           type: submitData.type,
           description: submitData.description,
           amount: submitData.amount,
-          category: selectedCategory?.name || 'Lembretes',
-          category_id: submitData.type === 'reminder' ? null : submitData.category,
-          // Para lembretes, não enviar category_id
+          category: 'Outros',
+          category_id: outrosCategoryId,
           scheduledDate: new Date(submitData.scheduledDate).toISOString(),
-          recurrence: submitData.recurrence,
+          recurrence: submitData.recurrence, // Keep in English for type compatibility
           goalId: submitData.goalId,
-          reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000) // Generate reference code
+          reference_code: referenceCode,
+          status: 'pending' as const // Default status with proper typing
         };
+        
         console.log('📋 Creating transaction with data:', transactionData);
         await addScheduledTransaction(transactionData);
         console.log('✅ Create request sent');
       } else if (initialData) {
         console.log('✏️ Updating scheduled transaction...', initialData.id);
-        // Find the selected category to get both name and id
-        const selectedCategory = categories.find(cat => cat.id === submitData.category);
-        console.log('🏷️ Selected category:', selectedCategory);
+        
         const updateData = {
           type: submitData.type,
           description: submitData.description,
           amount: submitData.amount,
-          category: selectedCategory?.name || 'Lembretes',
-          category_id: submitData.type === 'reminder' ? null : submitData.category,
-          // Para lembretes, não enviar category_id
+          category: 'Outros',
+          category_id: outrosCategoryId,
           scheduledDate: new Date(submitData.scheduledDate).toISOString(),
-          recurrence: submitData.recurrence,
+          recurrence: submitData.recurrence, // Keep in English for type compatibility
           goalId: submitData.goalId,
-          reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000) // Generate reference code
+          reference_code: referenceCode,
+          status: 'pending' as const // Default status with proper typing
         };
+        
         console.log('📋 Updating transaction with ID:', initialData.id);
         console.log('📋 Update data:', updateData);
         await updateScheduledTransaction(initialData.id, updateData);
         console.log('✅ Update request sent');
       }
+      
       console.log('🎉 Closing dialog');
       onOpenChange(false);
+      
       // Call onSuccess callback if provided
       if (onSuccess) {
         console.log('🔄 Calling onSuccess callback');

@@ -119,7 +119,9 @@ export const addScheduledTransaction = async (
         goal_id: transaction.goalId,
         status: 'pending',
         next_execution_date: transaction.scheduledDate,
-        reference_code: referenceCode
+        reference_code: referenceCode,
+        situacao: (transaction as any).situacao || 'ativo',
+        phone: (transaction as any).phone || ''
       })
       .select(`
         *,

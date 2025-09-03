@@ -12,7 +12,7 @@ import ScheduledTransactionForm from '@/components/schedule/ScheduledTransaction
 import TransactionForm from '@/components/common/TransactionForm';
 import FixedExpensesOverview from '@/components/schedule/FixedExpensesOverview';
 import LembretesCard from '@/components/lembretes/LembretesCard';
-import ScheduleFilters from '@/components/schedule/ScheduleFilters';
+import LembretesFilters from '@/components/lembretes/LembretesFilters';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { deleteScheduledTransaction, getScheduledTransactions, markAsPaid } from '@/services/scheduledTransactionService';
@@ -240,7 +240,7 @@ const LembretesPage = () => {
             <div className="space-y-4">
               {/* Mobile and Tablet Filters */}
               {showFilters && (
-                <ScheduleFilters
+                <LembretesFilters
                   selectedRecurrence={selectedRecurrence}
                   selectedCategory={selectedCategory}
                   selectedStatus={selectedStatus}
@@ -290,7 +290,7 @@ const LembretesPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* Filtros (coluna lateral) */}
               <div className="lg:col-span-1">
-                <ScheduleFilters
+                <LembretesFilters
                   selectedRecurrence={selectedRecurrence}
                   selectedCategory={selectedCategory}
                   selectedStatus={selectedStatus}

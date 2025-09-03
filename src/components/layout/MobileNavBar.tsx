@@ -61,7 +61,7 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
     },
     {
       icon: Calendar,
-      label: 'Agendamentos',
+      label: t('schedule.title'),
       action: () => {
         navigate('/schedule');
         setIsQuickActionsOpen(false);

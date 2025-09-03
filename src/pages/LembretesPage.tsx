@@ -172,14 +172,15 @@ const LembretesPage = () => {
   };
 
   const filteredTransactions = localScheduledTransactions.filter(transaction => {
-    // Na aba Lembretes, mostrar todas as transações (mesmos dados da aba Agendamentos)
+    // Na aba Lembretes, mostrar apenas transações com valor 0
+    if (transaction.amount > 0) return false;
+    
     if (selectedRecurrence) {
       const normalizedTransactionRecurrence = normalizeRecurrence(transaction.recurrence);
       if (normalizedTransactionRecurrence !== selectedRecurrence) return false;
     }
     if (selectedCategory && transaction.category !== selectedCategory) return false;
     if (selectedStatus && transaction.status !== selectedStatus) return false;
-    // Incluir todos os tipos de transação: expense, income, reminder, e outros tipos salvos no banco
     return true;
   });
 

@@ -418,7 +418,7 @@ const SchedulePage = () => {
         <ScheduledTransactionForm
           open={isFormOpen}
           onOpenChange={setIsFormOpen}
-          initialData={formMode === 'edit' ? selectedTransaction : null}
+          initialData={selectedTransaction}
           mode={formMode}
           onSuccess={refreshLocalScheduledTransactions}
         />

@@ -88,27 +88,6 @@ const LembretesFilters: React.FC<LembretesFiltersProps> = ({
             </div>
           </div>
           
-          {/* Filtro por Categoria */}
-          {availableCategories.length > 0 && (
-            <div>
-              <h4 className={`font-medium mb-2 ${isMobile ? 'text-sm' : 'text-sm'}`}>{t('categories.title')}</h4>
-              <div className="flex flex-wrap gap-2">
-                {availableCategories.map((category) => (
-                  <Badge
-                    key={category}
-                    variant={selectedCategory === category ? 'default' : 'outline'}
-                    className={`cursor-pointer hover:bg-accent ${isMobile ? 'text-xs' : ''}`}
-                    onClick={() => onCategoryFilter(
-                      selectedCategory === category ? null : category
-                    )}
-                  >
-                    {category}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-          
           {/* Filtro por Status */}
           <div>
             <h4 className={`font-medium mb-2 ${isMobile ? 'text-sm' : 'text-sm'}`}>Status</h4>

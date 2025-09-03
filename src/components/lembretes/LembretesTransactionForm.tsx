@@ -197,13 +197,15 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
           description: submitData.description,
           amount: submitData.amount,
           category: 'Outros',
-          category_id: outrosCategoryId,
+          category_id: outrosCategoryId, // This will be null if no category found
           scheduledDate: new Date(submitData.scheduledDate).toISOString(),
           recurrence: submitData.recurrence, // Keep in English for type compatibility
           goalId: submitData.goalId,
           reference_code: referenceCode,
           status: 'pending' as const // Default status with proper typing
         };
+        
+        console.log('🎯 Final category_id before sending:', outrosCategoryId);
         
         console.log('📋 Creating transaction with data:', transactionData);
         await addScheduledTransaction(transactionData);

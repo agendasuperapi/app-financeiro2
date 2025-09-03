@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { ScheduledTransaction } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import ScheduleTransactionTypeSelector from '../schedule/ScheduleTransactionTypeSelector';
+
 import { getCategoriesByType } from '@/services/categoryService';
 import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
@@ -33,11 +33,11 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
   initialData,
   mode,
   onSuccess,
-  defaultType = 'expense',
+  defaultType = 'reminder',
 }) => {
   const { t } = usePreferences();
   const { addScheduledTransaction, updateScheduledTransaction, deleteScheduledTransaction } = useAppContext();
-  const [selectedType, setSelectedType] = useState<'income' | 'expense' | 'reminder' | 'outros'>(initialData?.type || defaultType);
+  const [selectedType, setSelectedType] = useState<'income' | 'expense' | 'reminder' | 'outros'>('reminder');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isOnline] = useState(navigator.onLine);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -56,9 +56,9 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
 
   // Default form values
   const defaultValues = {
-    type: initialData?.type || defaultType,
+    type: 'reminder' as const,
     description: initialData?.description || '',
-    amount: initialData?.amount || (defaultType === 'reminder' ? 0 : 0),
+    amount: 0,
     category: initialData?.category_id || '',
     scheduledDate: initialData?.scheduledDate 
       ? new Date(initialData.scheduledDate).toISOString().slice(0, 16)
@@ -82,8 +82,8 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
     const loadCategories = async () => {
       setLoadingCategories(true);
       try {
-        const categoryData = await getCategoriesByType(selectedType);
-        console.log(`Loaded ${categoryData.length} categories for ${selectedType}:`, categoryData);
+        const categoryData = await getCategoriesByType('reminder');
+        console.log(`Loaded ${categoryData.length} categories for reminder:`, categoryData);
         setCategories(categoryData);
         
         // Set default category if none selected and categories are available
@@ -107,18 +107,18 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
 
     // Always load categories, regardless of whether modal is open
     loadCategories();
-  }, [selectedType, form]);
+  }, [form]);
 
   // Reset form when opening/closing
   useEffect(() => {
     if (open && !initialData) {
       // Reset form to default values when creating new transaction
       form.reset(defaultValues);
-      setSelectedType(defaultType);
+      setSelectedType('reminder');
     } else if (open && initialData) {
       // Populate form with initial data when editing
       form.reset({
-        type: initialData.type,
+        type: 'reminder',
         description: initialData.description,
         amount: initialData.amount,
         category: initialData.category_id || '',
@@ -126,15 +126,13 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
         recurrence: initialData.recurrence || 'once',
         goalId: initialData.goalId,
       });
-      setSelectedType(initialData.type);
+      setSelectedType('reminder');
     }
   }, [open, initialData, form]);
 
-  // Handle type change
-  const handleTypeChange = (type: 'income' | 'expense' | 'reminder' | 'outros') => {
-    setSelectedType(type);
-    form.setValue('type', type);
-    form.setValue('category', ''); // Reset category when type changes
+  // Handle type change (not needed since always reminder)
+  const handleTypeChange = (type: 'reminder') => {
+    // Form is always reminder type, no need to change
   };
 
   // Form submission handler
@@ -240,8 +238,6 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <ScheduleTransactionTypeSelector form={form} onTypeChange={handleTypeChange} />
-              
               {/* Amount Field - Hidden for reminders */}
               {form.watch('type') !== 'reminder' && (
                 <FormField

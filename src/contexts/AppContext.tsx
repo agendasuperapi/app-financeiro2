@@ -869,6 +869,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           status: transaction.status,
           reference_code: referenceCode,
           user_id: user.id,
+          phone: transaction.phone,
+          situacao: transaction.situacao,
         })
         .select()
         .single();

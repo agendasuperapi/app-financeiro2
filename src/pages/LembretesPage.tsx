@@ -268,7 +268,6 @@ const LembretesPage = () => {
                           transaction={transaction}
                           onEdit={handleEditTransaction}
                           onDelete={handleDeleteTransaction}
-                          onMarkAsPaid={handleMarkAsPaid}
                         />
                       ))}
                     </div>
@@ -320,7 +319,6 @@ const LembretesPage = () => {
                             transaction={transaction}
                             onEdit={handleEditTransaction}
                             onDelete={handleDeleteTransaction}
-                            onMarkAsPaid={handleMarkAsPaid}
                           />
                         ))}
                       </div>

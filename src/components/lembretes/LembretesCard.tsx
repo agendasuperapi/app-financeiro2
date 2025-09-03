@@ -122,20 +122,6 @@ const LembretesCard: React.FC<LembretesCardProps> = ({
             
             <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'}`}>
               <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
-                {onMarkAsPaid && !isPaid && (
-                  <Button
-                    size={isMobile ? "sm" : "sm"}
-                    variant="outline"
-                    onClick={() => onMarkAsPaid(transaction)}
-                    className={`text-green-600 border-green-200 hover:bg-green-50 dark:hover:bg-green-900/20 dark:hover:text-green-200 dark:border-green-700 dark:text-green-400 ${
-                      isMobile ? 'h-7 px-2 text-xs' : 'h-8 px-3'
-                    }`}
-                  >
-                    <CheckCircle className={`mr-1 ${isMobile ? 'h-3 w-3' : 'h-3 w-3'}`} />
-                    {isMobile ? 'Concluir' : 'Marcar como concluído'}
-                  </Button>
-                )}
-                
                 <Button
                   size={isMobile ? "sm" : "sm"}
                   variant="ghost"

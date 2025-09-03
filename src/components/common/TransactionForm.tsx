@@ -112,15 +112,23 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                 <Button 
                   type="submit" 
                   className={selectedType === 'income' ? 'bg-green-600 hover:bg-green-700' : ''}
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     console.log("Save button clicked");
                     console.log("Form state:", form.formState);
                     console.log("Form values:", form.getValues());
                     console.log("Form errors:", form.formState.errors);
                     
                     // Try manual validation
-                    const isValid = form.trigger();
+                    const isValid = await form.trigger();
                     console.log("Manual validation result:", isValid);
+                    
+                    if (!isValid) {
+                      console.log("Form validation failed, preventing submit");
+                      e.preventDefault();
+                      return;
+                    }
+                    
+                    console.log("Form is valid, proceeding with submit");
                   }}
                 >
                   {mode === 'create' ? t('common.add') : t('common.save')}

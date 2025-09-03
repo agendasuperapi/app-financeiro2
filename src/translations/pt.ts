@@ -224,7 +224,10 @@ export default {
     updated: 'Transação atualizada',
     addSuccess: 'Transação adicionada com sucesso!',
     updateSuccess: 'Transação atualizada com sucesso!',
-    amountPlaceholder: 'Digite o valor', // Adicione esta linha
+    amountPlaceholder: 'Digite o valor',
+    expense: 'Despesa',
+    income: 'Receita',
+    reminder: 'Lembrete',
   },
   income: {
     title: "Receitas",

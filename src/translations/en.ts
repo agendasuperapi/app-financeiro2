@@ -155,6 +155,9 @@ const en = {
     category: "Category",
     selectCategory: "Select Category",
     amountPlaceholder: "Enter amount",
+    expense: "Expense",
+    income: "Income",
+    reminder: "Reminder",
   },
   income: {
     title: "Income",

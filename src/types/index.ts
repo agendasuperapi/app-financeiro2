@@ -56,7 +56,7 @@ export interface ScheduledTransaction {
   paidAmount?: number;
   lastExecutionDate?: string; // ISO date string
   nextExecutionDate?: string; // ISO date string
-  reference_code?: string; // Reference code for tracking
+  reference_code?: number; // Reference code for tracking (numeric)
   // Database fields for compatibility
   category_id?: string;
   goal_id?: string;

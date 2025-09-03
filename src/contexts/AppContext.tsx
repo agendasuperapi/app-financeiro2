@@ -843,8 +843,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       const user = await getCurrentUser();
       
-      // Generate reference code if not provided
-      const referenceCode = transaction.reference_code || `REM-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      // Generate numeric reference code if not provided
+      const referenceCode = transaction.reference_code || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000);
       
       const { data, error } = await supabase
         .from('poupeja_scheduled_transactions')

@@ -164,7 +164,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           description: submitData.description,
           amount: submitData.amount,
           category: selectedCategory?.name || 'Lembretes',
-          category_id: submitData.category,
+          category_id: submitData.type === 'reminder' ? null : submitData.category, // Para lembretes, não enviar category_id
           scheduledDate: new Date(submitData.scheduledDate).toISOString(),
           recurrence: submitData.recurrence,
           goalId: submitData.goalId,
@@ -184,7 +184,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           description: submitData.description,
           amount: submitData.amount,
           category: selectedCategory?.name || 'Lembretes',
-          category_id: submitData.category,
+          category_id: submitData.type === 'reminder' ? null : submitData.category, // Para lembretes, não enviar category_id
           scheduledDate: new Date(submitData.scheduledDate).toISOString(),
           recurrence: submitData.recurrence,
           goalId: submitData.goalId,

@@ -16,57 +16,30 @@ const ScheduleTransactionTypeSelector: React.FC<ScheduleTransactionTypeSelectorP
   const {
     t
   } = usePreferences();
-  return (
-    <FormField 
-      control={form.control} 
-      name="type" 
-      render={({ field }) => (
-        <FormItem>
+  return <FormField control={form.control} name="type" render={({
+    field
+  }) => <FormItem>
           <FormLabel>{t('transactions.transactionType')}</FormLabel>
           <FormControl>
             <div className="grid grid-cols-3 gap-2">
-              <Button
-                type="button"
-                variant={field.value === 'expense' ? 'default' : 'outline'}
-                className="flex items-center gap-2"
-                onClick={() => {
-                  field.onChange('expense');
-                  onTypeChange('expense');
-                }}
-              >
+              <Button type="button" variant={field.value === 'expense' ? 'default' : 'outline'} className="flex items-center gap-2" onClick={() => {
+          field.onChange('expense');
+          onTypeChange('expense');
+        }}>
                 <TrendingDown className="w-4 h-4" />
                 {t('transactions.expense')}
               </Button>
-              <Button
-                type="button"
-                variant={field.value === 'income' ? 'default' : 'outline'}
-                className="flex items-center gap-2"
-                onClick={() => {
-                  field.onChange('income');
-                  onTypeChange('income');
-                }}
-              >
+              <Button type="button" variant={field.value === 'income' ? 'default' : 'outline'} className="flex items-center gap-2" onClick={() => {
+          field.onChange('income');
+          onTypeChange('income');
+        }}>
                 <TrendingUp className="w-4 h-4" />
                 {t('transactions.income')}
               </Button>
-              <Button
-                type="button"
-                variant={field.value === 'reminder' ? 'default' : 'outline'}
-                className="flex items-center gap-2"
-                onClick={() => {
-                  field.onChange('reminder');
-                  onTypeChange('reminder');
-                }}
-              >
-                <Bell className="w-4 h-4" />
-                {t('transactions.reminder')}
-              </Button>
+              
             </div>
           </FormControl>
           <FormMessage />
-        </FormItem>
-      )}
-    />
-  );
+        </FormItem>} />;
 };
 export default ScheduleTransactionTypeSelector;

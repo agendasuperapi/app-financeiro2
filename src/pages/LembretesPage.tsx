@@ -417,7 +417,7 @@ const LembretesPage = () => {
           initialData={selectedTransaction}
           mode={formMode}
           onSuccess={refreshLocalScheduledTransactions}
-          defaultType="reminder"
+          defaultType="outros"
         />
 
         {/* Regular Transaction Form Dialog */}

@@ -167,7 +167,9 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       let userPhone = '';
       if (user?.user_metadata?.phone) {
-        userPhone = user.user_metadata.phone;
+        const rawPhone = user.user_metadata.phone;
+        // Add Brazilian country code 55 if not already present
+        userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
       }
 
       // Use the specific outros category ID

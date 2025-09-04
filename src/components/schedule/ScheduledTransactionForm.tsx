@@ -168,6 +168,13 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           .eq('id', user?.id)
           .single();
         
+        // Add Brazilian country code 55 if not already present
+        let userPhone = '';
+        if (userData?.phone) {
+          const rawPhone = userData.phone;
+          userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+        }
+        
         const transactionData = {
           type: submitData.type,
           description: submitData.description,
@@ -179,7 +186,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           goalId: submitData.goalId,
           reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000), // Generate reference code
           situacao: 'ativo', // Set status as active
-          phone: userData?.phone || '', // Set user's phone number
+          phone: userPhone, // Set user's phone number with Brazilian country code
         };
         
         console.log('📋 Creating transaction with data:', transactionData);
@@ -191,6 +198,21 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         const selectedCategory = categories.find(cat => cat.id === submitData.category);
         console.log('🏷️ Selected category:', selectedCategory);
         
+        // Get current user for phone number
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data: userData } = await supabase
+          .from('poupeja_users')
+          .select('phone')
+          .eq('id', user?.id)
+          .single();
+        
+        // Add Brazilian country code 55 if not already present
+        let userPhone = '';
+        if (userData?.phone) {
+          const rawPhone = userData.phone;
+          userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+        }
+        
         const updateData = {
           type: submitData.type,
           description: submitData.description,
@@ -201,6 +223,8 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           recurrence: submitData.recurrence,
           goalId: submitData.goalId,
           reference_code: initialData?.reference_code || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000), // Keep existing or generate new reference code
+          situacao: 'ativo', // Set status as active
+          phone: userPhone, // Set user's phone number with Brazilian country code
         };
         
         console.log('📋 Updating transaction with ID:', initialData.id);

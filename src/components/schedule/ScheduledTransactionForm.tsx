@@ -124,7 +124,7 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         amount: initialData.amount,
         category: initialData.category_id || '',
         scheduledDate: new Date(initialData.scheduledDate).toISOString().slice(0, 16),
-        recurrence: initialData.recurrence || 'once',
+        recurrence: (initialData.recurrence || 'once') as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly',
         goalId: initialData.goalId,
       });
       setSelectedType(initialData.type);

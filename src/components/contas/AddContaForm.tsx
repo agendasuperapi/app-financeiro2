@@ -24,7 +24,7 @@ const contaSchema = z.object({
   amount: z.coerce.number().min(0.01, 'Valor deve ser maior que zero'),
   category_id: z.string().min(1, 'Categoria é obrigatória'),
   scheduled_date: z.date({ required_error: 'Data é obrigatória' }),
-  recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly']),
+  recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly', 'installments']),
   parcela: z.string().optional()
 });
 
@@ -127,7 +127,8 @@ const AddContaForm: React.FC<AddContaFormProps> = ({ onSuccess, onCancel }) => {
     { value: 'daily', label: 'Diário' },
     { value: 'weekly', label: 'Semanal' },
     { value: 'monthly', label: 'Mensal' },
-    { value: 'yearly', label: 'Anual' }
+    { value: 'yearly', label: 'Anual' },
+    { value: 'installments', label: 'Parcelas' }
   ];
 
   return (
@@ -171,7 +172,10 @@ const AddContaForm: React.FC<AddContaFormProps> = ({ onSuccess, onCancel }) => {
           <SelectContent>
             {categories.map((category) => (
               <SelectItem key={category.id} value={category.id}>
-                {category.icon} {category.name}
+                <span className="flex items-center gap-2">
+                  <span>{category.icon}</span>
+                  <span>{category.name}</span>
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -237,15 +241,17 @@ const AddContaForm: React.FC<AddContaFormProps> = ({ onSuccess, onCancel }) => {
         )}
       </div>
 
-      {/* Parcela (sempre visível para informações adicionais) */}
-      <div className="space-y-2">
-        <Label htmlFor="parcela">Informações Adicionais</Label>
-        <Input
-          id="parcela"
-          {...form.register('parcela')}
-          placeholder="Ex: Parcela 1/12, Referência, etc."
-        />
-      </div>
+      {/* Parcela (se recorrência = parcelas) */}
+      {selectedRecurrence === 'installments' && (
+        <div className="space-y-2">
+          <Label htmlFor="parcela">Parcela</Label>
+          <Input
+            id="parcela"
+            {...form.register('parcela')}
+            placeholder="Ex: 1/12"
+          />
+        </div>
+      )}
 
       {/* Botões */}
       <div className="flex justify-end gap-2 pt-4">

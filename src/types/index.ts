@@ -49,7 +49,7 @@ export interface ScheduledTransaction {
   categoryColor?: string;
   description?: string;
   scheduledDate: string; // ISO date string
-  recurrence?: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+  recurrence?: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'installments';
   goalId?: string; // Optional reference to a goal
   status?: 'pending' | 'paid' | 'overdue' | 'upcoming';
   paidDate?: string; // ISO date string

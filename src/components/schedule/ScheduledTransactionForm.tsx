@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useAppContext } from '@/contexts/AppContext';
 import { supabase } from '@/integrations/supabase/client';
+import { addScheduledTransaction, updateScheduledTransaction, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,7 +38,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
   defaultType = 'expense',
 }) => {
   const { t } = usePreferences();
-  const { addScheduledTransaction, updateScheduledTransaction, deleteScheduledTransaction } = useAppContext();
   const [selectedType, setSelectedType] = useState<'income' | 'expense' | 'reminder' | 'outros'>(initialData?.type || defaultType);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isOnline] = useState(navigator.onLine);
@@ -190,8 +190,8 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         };
         
         console.log('📋 Creating transaction with data:', transactionData);
-        await addScheduledTransaction(transactionData);
-        console.log('✅ Create request sent');
+        const result = await addScheduledTransaction(transactionData);
+        console.log('✅ Create request sent', result);
       } else if (initialData) {
         console.log('✏️ Updating scheduled transaction...', initialData.id);
         // Find the selected category to get both name and id
@@ -229,8 +229,8 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         
         console.log('📋 Updating transaction with ID:', initialData.id);
         console.log('📋 Update data:', updateData);
-        await updateScheduledTransaction(initialData.id, updateData);
-        console.log('✅ Update request sent');
+        const result = await updateScheduledTransaction({ ...updateData, id: initialData.id });
+        console.log('✅ Update request sent', result);
       }
       
       console.log('🎉 Closing dialog');
@@ -252,9 +252,9 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
   };
 
   // Delete handler
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (initialData) {
-      deleteScheduledTransaction(initialData.id);
+      await deleteScheduledTransaction(initialData.id);
       onOpenChange(false);
       setDeleteDialogOpen(false);
       // Call onSuccess callback if provided

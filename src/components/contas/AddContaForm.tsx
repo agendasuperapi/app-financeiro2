@@ -45,7 +45,6 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
     resolver: zodResolver(contaSchema),
     defaultValues: {
       description: '',
-      amount: 0,
       category_id: '',
       recurrence: 'once',
       parcela: ''

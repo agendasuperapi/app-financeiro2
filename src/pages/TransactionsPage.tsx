@@ -18,6 +18,9 @@ const TransactionsPage = () => {
   const { transactions, deleteTransaction } = useAppContext();
   const isMobile = useIsMobile();
 
+  // Filter out transactions with zero amount
+  const filteredTransactions = transactions.filter(transaction => transaction.amount > 0);
+
   const handleAddTransaction = () => {
     setEditingTransaction(null);
     setFormOpen(true);
@@ -60,7 +63,7 @@ const TransactionsPage = () => {
             {/* Content */}
             {isMobile ? (
               <TransactionList 
-                transactions={transactions}
+                transactions={filteredTransactions}
                 onEdit={handleEditTransaction}
                 onDelete={handleDeleteTransaction}
               />
@@ -71,7 +74,7 @@ const TransactionsPage = () => {
                 </CardHeader>
                 <CardContent>
                   <TransactionList 
-                    transactions={transactions}
+                    transactions={filteredTransactions}
                     onEdit={handleEditTransaction}
                     onDelete={handleDeleteTransaction}
                   />

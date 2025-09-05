@@ -29,12 +29,12 @@ const normalizeRecurrence = (recurrence: string | null | undefined): 'once' | 'd
 export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]> => {
   try {
     const { data, error } = await supabase
-      .from("poupeja_scheduled_transactions")
+      .from("poupeja_transactions")
       .select(`
         *,
         category:poupeja_categories(id, name, icon, color, type)
       `)
-      .order("scheduled_date", { ascending: true });
+      .order("date", { ascending: true });
 
     if (error) throw error;
 
@@ -47,14 +47,14 @@ export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]
       categoryIcon: item.category?.icon || "circle",
       categoryColor: item.category?.color || "#607D8B",
       description: item.description || "",
-      scheduledDate: item.scheduled_date,
-      recurrence: normalizeRecurrence(item.recurrence),
+      scheduledDate: item.date, // usando date da tabela poupeja_transactions
+      recurrence: 'once' as const, // valor padrão para transações regulares
       goalId: item.goal_id,
-      status: item.status as 'pending' | 'paid' | 'overdue' | 'upcoming' | undefined,
-      paidDate: item.paid_date,
-      paidAmount: item.paid_amount,
-      lastExecutionDate: item.last_execution_date,
-      nextExecutionDate: item.next_execution_date,
+      status: 'pending' as const, // valor padrão para status
+      paidDate: undefined,
+      paidAmount: undefined,
+      lastExecutionDate: undefined,
+      nextExecutionDate: undefined,
     }));
   } catch (error) {
     console.error("Error fetching scheduled transactions:", error);

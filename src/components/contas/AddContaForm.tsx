@@ -185,15 +185,17 @@ const AddContaForm: React.FC<AddContaFormProps> = ({ onSuccess, onCancel }) => {
         )}
       </div>
 
-      {/* Data Agendada */}
+      {/* Data e Hora Agendada */}
       <div className="space-y-2">
-        <Label>Agendado para</Label>
+        <Label>Agendado para (Data e Hora - Brasília)</Label>
         <div className="flex gap-2">
           <Input
-            type="date"
+            type="datetime-local"
             onChange={(e) => {
               if (e.target.value) {
-                form.setValue('scheduled_date', new Date(e.target.value));
+                // Converter para timezone de Brasília
+                const localDate = new Date(e.target.value);
+                form.setValue('scheduled_date', localDate);
               }
             }}
             className="flex-1"
@@ -208,7 +210,14 @@ const AddContaForm: React.FC<AddContaFormProps> = ({ onSuccess, onCancel }) => {
               <Calendar
                 mode="single"
                 selected={form.watch('scheduled_date')}
-                onSelect={(date) => date && form.setValue('scheduled_date', date)}
+                onSelect={(date) => {
+                  if (date) {
+                    // Definir hora como 09:00 por padrão quando selecionado pelo calendário
+                    const dateWithTime = new Date(date);
+                    dateWithTime.setHours(9, 0, 0, 0);
+                    form.setValue('scheduled_date', dateWithTime);
+                  }
+                }}
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
                 locale={ptBR}
@@ -216,6 +225,9 @@ const AddContaForm: React.FC<AddContaFormProps> = ({ onSuccess, onCancel }) => {
             </PopoverContent>
           </Popover>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Horário de Brasília (GMT-3). Se usar o calendário, a hora será definida como 09:00.
+        </p>
         {form.formState.errors.scheduled_date && (
           <p className="text-sm text-red-500">{form.formState.errors.scheduled_date.message}</p>
         )}

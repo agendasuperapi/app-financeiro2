@@ -396,7 +396,27 @@ const SchedulePage = () => {
         <ScheduledTransactionForm
           open={isFormOpen}
           onOpenChange={setIsFormOpen}
-          initialData={formMode === 'edit' ? selectedTransaction as any : null}
+          initialData={formMode === 'edit' && selectedTransaction ? {
+            id: selectedTransaction.id,
+            type: selectedTransaction.type,
+            amount: selectedTransaction.amount,
+            category: selectedTransaction.category,
+            category_id: selectedTransaction.category_id,
+            categoryIcon: selectedTransaction.categoryIcon,
+            categoryColor: selectedTransaction.categoryColor,
+            description: selectedTransaction.description || '',
+            scheduledDate: selectedTransaction.scheduled_date || selectedTransaction.scheduledDate || selectedTransaction.date,
+            recurrence: (selectedTransaction.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
+            goalId: selectedTransaction.goalId || selectedTransaction.goal_id,
+            status: (selectedTransaction.status as 'pending' | 'paid' | 'overdue' | 'upcoming'),
+            paidDate: selectedTransaction.paidDate,
+            paidAmount: selectedTransaction.paidAmount,
+            lastExecutionDate: selectedTransaction.lastExecutionDate,
+            nextExecutionDate: selectedTransaction.nextExecutionDate,
+            reference_code: selectedTransaction.reference_code,
+            phone: selectedTransaction.phone,
+            situacao: selectedTransaction.situacao,
+          } : null}
           mode={formMode}
           onSuccess={refreshLocalTransactions}
         />

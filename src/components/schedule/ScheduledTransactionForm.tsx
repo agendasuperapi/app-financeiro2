@@ -62,7 +62,20 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
     amount: initialData?.amount || (defaultType === 'reminder' ? 0 : 0),
     category: initialData?.category_id || '',
     scheduledDate: initialData?.scheduledDate 
-      ? new Date(initialData.scheduledDate).toISOString().slice(0, 16)
+      ? (() => {
+          try {
+            const date = new Date(initialData.scheduledDate);
+            return isNaN(date.getTime()) ? (() => {
+              const now = new Date();
+              now.setHours(now.getHours() + 1, 0, 0, 0);
+              return now.toISOString().slice(0, 16);
+            })() : date.toISOString().slice(0, 16);
+          } catch {
+            const now = new Date();
+            now.setHours(now.getHours() + 1, 0, 0, 0);
+            return now.toISOString().slice(0, 16);
+          }
+        })()
       : (() => {
           const now = new Date();
           now.setHours(now.getHours() + 1, 0, 0, 0);
@@ -123,7 +136,14 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         description: initialData.description,
         amount: initialData.amount,
         category: initialData.category_id || '',
-        scheduledDate: new Date(initialData.scheduledDate).toISOString().slice(0, 16),
+        scheduledDate: (() => {
+          try {
+            const date = new Date(initialData.scheduledDate || new Date());
+            return isNaN(date.getTime()) ? new Date().toISOString().slice(0, 16) : date.toISOString().slice(0, 16);
+          } catch {
+            return new Date().toISOString().slice(0, 16);
+          }
+        })(),
         recurrence: initialData.recurrence || 'once',
         goalId: initialData.goalId,
       });

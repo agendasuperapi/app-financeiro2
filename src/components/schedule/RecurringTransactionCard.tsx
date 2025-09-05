@@ -32,13 +32,29 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
   const isMobile = useIsMobile();
 
   // Função para formatar data e hora
-  const formatDateTimeShort = (dateString: string) => {
+  const formatDateTimeShort = (dateString?: string) => {
+    if (!dateString) return 'Data não disponível';
+    
     try {
       const dateObject = new Date(dateString);
+      if (isNaN(dateObject.getTime())) return 'Data inválida';
       return format(dateObject, 'dd/MM/yyyy HH:mm', { locale: ptBR });
     } catch (error) {
       return dateString;
     }
+  };
+
+  // Debug: verificar qual data está sendo usada
+  const getDisplayDate = () => {
+    const date = transaction.scheduled_date || transaction.scheduledDate || transaction.nextExecutionDate || transaction.date;
+    console.log('Date values:', {
+      scheduled_date: transaction.scheduled_date,
+      scheduledDate: transaction.scheduledDate,
+      nextExecutionDate: transaction.nextExecutionDate,
+      date: transaction.date,
+      finalDate: date
+    });
+    return date;
   };
 
   // Função para normalizar valores de recorrência
@@ -66,7 +82,7 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
   const isPaid = transaction.status === 'paid';
   
   const today = new Date();
-  const transactionDate = new Date(transaction.scheduled_date || transaction.scheduledDate || transaction.nextExecutionDate || transaction.date);
+  const transactionDate = new Date(getDisplayDate());
   const daysUntilDue = Math.ceil((transactionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   const isUpcoming = daysUntilDue <= 3 && daysUntilDue >= 0;
   const isOverdue = daysUntilDue < 0;
@@ -109,7 +125,7 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
             <div className={`flex items-center gap-2 flex-wrap ${isMobile ? 'mb-2' : 'mb-3'}`}>
               <div className={`flex items-center gap-1 text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
                 <Calendar className="h-3 w-3" />
-                <span>{formatDateTimeShort(transaction.scheduled_date || transaction.scheduledDate || transaction.nextExecutionDate || transaction.date)}</span>
+                <span>{formatDateTimeShort(getDisplayDate())}</span>
               </div>
               
               <Badge className={cn("text-xs border", getRecurrenceColor(transaction.recurrence))}>

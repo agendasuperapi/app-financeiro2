@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, WifiOff, Filter, X } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
-import { Transaction } from '@/types';
+import { ScheduledTransaction } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import ScheduledTransactionForm from '@/components/schedule/ScheduledTransactionForm';
@@ -22,9 +22,9 @@ import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const SchedulePage = () => {
-  const { transactions } = useAppContext();
-  const [localTransactions, setLocalTransactions] = useState<Transaction[]>([]);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const { scheduledTransactions } = useAppContext();
+  const [localScheduledTransactions, setLocalScheduledTransactions] = useState<ScheduledTransaction[]>([]);
+  const [selectedTransaction, setSelectedTransaction] = useState<ScheduledTransaction | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
@@ -63,19 +63,23 @@ const SchedulePage = () => {
   }, []);
 
   useEffect(() => {
-    if (Array.isArray(transactions)) {
-      setLocalTransactions(transactions);
+    if (Array.isArray(scheduledTransactions)) {
+      setLocalScheduledTransactions(scheduledTransactions);
     } else {
-      setLocalTransactions([]);
+      setLocalScheduledTransactions([]);
     }
-  }, [transactions]);
+  }, [scheduledTransactions]);
 
-  const refreshLocalTransactions = async () => {
-    // Para transactions não precisamos de refresh específico pois vem do contexto
-    console.log('Transactions refreshed from context');
+  const refreshLocalScheduledTransactions = async () => {
+    try {
+      const transactions = await getScheduledTransactions();
+      setLocalScheduledTransactions(transactions);
+    } catch (error) {
+      console.error('Error refreshing scheduled transactions:', error);
+    }
   };
 
-  const handleSelectTransaction = (transaction: Transaction) => {
+  const handleSelectTransaction = (transaction: ScheduledTransaction) => {
     setSelectedTransaction(transaction);
     setIsDialogOpen(true);
   };
@@ -91,7 +95,7 @@ const SchedulePage = () => {
     setIsTransactionFormOpen(true);
   };
 
-  const handleEditTransaction = (transaction: Transaction) => {
+  const handleEditTransaction = (transaction: ScheduledTransaction) => {
     setSelectedTransaction(transaction);
     setFormMode('edit');
     setIsFormOpen(true);
@@ -100,22 +104,40 @@ const SchedulePage = () => {
 
   const handleDeleteTransaction = async (id: string) => {
     if (!confirm(t('common.confirmDelete'))) return;
-    // Para transactions regulares, usar deleteTransaction do contexto
-    console.log('Delete transaction:', id);
-    toast({
-      title: t('schedule.deleted'),
-      description: t('schedule.transactionDeleted')
-    });
+    const success = await deleteScheduledTransaction(id);
+    if (success) {
+      toast({
+        title: t('schedule.deleted'),
+        description: t('schedule.transactionDeleted')
+      });
+      refreshLocalScheduledTransactions();
+    } else {
+      toast({
+        title: t('common.error'),
+        description: t('common.somethingWentWrong'),
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleMarkAsPaid = async (transaction: Transaction) => {
+  const handleMarkAsPaid = async (transaction: ScheduledTransaction) => {
     try {
-      // Para transactions regulares, não temos status de "paid"
-      console.log('Mark as paid not available for regular transactions:', transaction.id);
-      toast({
-        title: t('common.info'),
-        description: 'Funcionalidade não disponível para transações regulares'
-      });
+      const success = await markAsPaid(transaction.id);
+      if (success) {
+        toast({
+          title: t('schedule.marked_as_paid'),
+          description: t('schedule.transaction_marked_as_paid')
+        });
+        
+        // Atualizar estado local
+        await refreshLocalScheduledTransactions();
+      } else {
+        toast({
+          title: t('common.error'),
+          description: t('common.somethingWentWrong'),
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       console.error('Error marking transaction as paid:', error);
       toast({
@@ -147,8 +169,8 @@ const SchedulePage = () => {
     return recurrenceMap[recurrence] || 'once';
   };
 
-  const filteredTransactions = localTransactions.filter(transaction => {
-    // Não mostrar transações com valor 0
+  const filteredTransactions = localScheduledTransactions.filter(transaction => {
+    // Não mostrar transações com valor 0 na aba Agendamentos
     if (transaction.amount === 0) return false;
     
     if (selectedRecurrence) {
@@ -157,7 +179,7 @@ const SchedulePage = () => {
     }
     if (selectedCategory && transaction.category !== selectedCategory) return false;
     if (selectedStatus && transaction.status !== selectedStatus) return false;
-    
+    // Incluir todos os tipos de transação: expense, income, reminder, e outros tipos salvos no banco
     return true;
   });
 
@@ -166,7 +188,7 @@ const SchedulePage = () => {
     new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
   );
 
-  const availableCategories = Array.from(new Set(localTransactions.map(t => t.category).filter(Boolean))) as string[];
+  const availableCategories = Array.from(new Set(localScheduledTransactions.map(t => t.category)));
   const availableStatuses = ['pending', 'paid', 'overdue'];
 
   return (
@@ -213,7 +235,7 @@ const SchedulePage = () => {
           )}
 
           {/* Overview das Despesas Fixas */}
-          <FixedExpensesOverview scheduledTransactions={localTransactions} />
+          <FixedExpensesOverview scheduledTransactions={localScheduledTransactions} />
 
           {/* Mobile and Tablet Layout */}
           {isMobile || isTablet ? (
@@ -348,7 +370,7 @@ const SchedulePage = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">{t('common.date')}</p>
-                    <p>{format(new Date(selectedTransaction.scheduled_date || selectedTransaction.scheduledDate || selectedTransaction.date), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
+                    <p>{format(new Date(selectedTransaction.scheduledDate), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">{t('schedule.recurrence')}</p>
@@ -396,29 +418,9 @@ const SchedulePage = () => {
         <ScheduledTransactionForm
           open={isFormOpen}
           onOpenChange={setIsFormOpen}
-          initialData={formMode === 'edit' && selectedTransaction ? {
-            id: selectedTransaction.id,
-            type: selectedTransaction.type,
-            amount: selectedTransaction.amount,
-            category: selectedTransaction.category,
-            category_id: selectedTransaction.category_id,
-            categoryIcon: selectedTransaction.categoryIcon,
-            categoryColor: selectedTransaction.categoryColor,
-            description: selectedTransaction.description || '',
-            scheduledDate: selectedTransaction.scheduled_date || selectedTransaction.scheduledDate || selectedTransaction.date,
-            recurrence: (selectedTransaction.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
-            goalId: selectedTransaction.goalId || selectedTransaction.goal_id,
-            status: (selectedTransaction.status as 'pending' | 'paid' | 'overdue' | 'upcoming'),
-            paidDate: selectedTransaction.paidDate,
-            paidAmount: selectedTransaction.paidAmount,
-            lastExecutionDate: selectedTransaction.lastExecutionDate,
-            nextExecutionDate: selectedTransaction.nextExecutionDate,
-            reference_code: selectedTransaction.reference_code,
-            phone: selectedTransaction.phone,
-            situacao: selectedTransaction.situacao,
-          } : null}
+          initialData={formMode === 'edit' ? selectedTransaction : null}
           mode={formMode}
-          onSuccess={refreshLocalTransactions}
+          onSuccess={refreshLocalScheduledTransactions}
         />
 
         {/* Regular Transaction Form Dialog */}

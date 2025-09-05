@@ -2,13 +2,13 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Transaction } from '@/types';
+import { ScheduledTransaction } from '@/types';
 import { formatCurrency, createLocalDate } from '@/utils/transactionUtils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { Calendar, TrendingUp, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 
 interface FixedExpensesOverviewProps {
-  scheduledTransactions: Transaction[];
+  scheduledTransactions: ScheduledTransaction[];
 }
 
 const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduledTransactions }) => {
@@ -40,14 +40,14 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
 
   const upcomingPayments = expenses.filter(transaction => {
     if (transaction.status === 'paid') return false;
-    const transactionDate = createLocalDate(transaction.nextExecutionDate || transaction.scheduledDate || transaction.scheduled_date || transaction.date);
+    const transactionDate = createLocalDate(transaction.nextExecutionDate || transaction.scheduledDate);
     return transactionDate >= today && transactionDate <= nextWeek;
   });
 
   // Calcular transações vencidas
   const overdueTransactions = expenses.filter(transaction => {
     if (transaction.status === 'paid') return false;
-    const transactionDate = createLocalDate(transaction.nextExecutionDate || transaction.scheduledDate || transaction.scheduled_date || transaction.date);
+    const transactionDate = createLocalDate(transaction.nextExecutionDate || transaction.scheduledDate);
     return transactionDate < today;
   });
 

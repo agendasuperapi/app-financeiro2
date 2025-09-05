@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Transaction } from '@/types';
+import { ScheduledTransaction } from '@/types';
 import { formatCurrency, createLocalDate } from '@/utils/transactionUtils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useDateFormat } from '@/hooks/useDateFormat';
@@ -15,10 +15,10 @@ import { formatDistanceToNow, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface RecurringTransactionCardProps {
-  transaction: Transaction;
-  onEdit: (transaction: Transaction) => void;
+  transaction: ScheduledTransaction;
+  onEdit: (transaction: ScheduledTransaction) => void;
   onDelete: (id: string) => void;
-  onMarkAsPaid?: (transaction: Transaction) => void;
+  onMarkAsPaid?: (transaction: ScheduledTransaction) => void;
 }
 
 const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
@@ -32,30 +32,13 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
   const isMobile = useIsMobile();
 
   // Função para formatar data e hora
-  const formatDateTimeShort = (dateString?: string) => {
-    if (!dateString) return 'Data não disponível';
-    
+  const formatDateTimeShort = (dateString: string) => {
     try {
       const dateObject = new Date(dateString);
-      if (isNaN(dateObject.getTime())) return 'Data inválida';
       return format(dateObject, 'dd/MM/yyyy HH:mm', { locale: ptBR });
     } catch (error) {
       return dateString;
     }
-  };
-
-  // Debug: verificar qual data está sendo usada
-  const getDisplayDate = () => {
-    // Para transactions regulares, usar 'date'. Para scheduled, usar 'scheduled_date' ou 'scheduledDate'
-    const date = transaction.date || transaction.scheduled_date || transaction.scheduledDate || transaction.nextExecutionDate;
-    console.log('Date values:', {
-      date: transaction.date,
-      scheduled_date: transaction.scheduled_date,
-      scheduledDate: transaction.scheduledDate,
-      nextExecutionDate: transaction.nextExecutionDate,
-      finalDate: date
-    });
-    return date;
   };
 
   // Função para normalizar valores de recorrência
@@ -83,7 +66,7 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
   const isPaid = transaction.status === 'paid';
   
   const today = new Date();
-  const transactionDate = new Date(getDisplayDate());
+  const transactionDate = new Date(transaction.nextExecutionDate || transaction.scheduledDate);
   const daysUntilDue = Math.ceil((transactionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   const isUpcoming = daysUntilDue <= 3 && daysUntilDue >= 0;
   const isOverdue = daysUntilDue < 0;
@@ -120,13 +103,13 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
             <div className={`flex items-center gap-2 ${isMobile ? 'mb-1' : 'mb-2'}`}>
               {getStatusIcon()}
               <h3 className={`font-semibold truncate ${isMobile ? 'text-base' : 'text-lg'}`}>{transaction.description}</h3>
-              <TransactionStatusBadge transaction={transaction as any} />
+              <TransactionStatusBadge transaction={transaction} />
             </div>
             
             <div className={`flex items-center gap-2 flex-wrap ${isMobile ? 'mb-2' : 'mb-3'}`}>
               <div className={`flex items-center gap-1 text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
                 <Calendar className="h-3 w-3" />
-                <span>{formatDateTimeShort(getDisplayDate())}</span>
+                <span>{formatDateTimeShort(transaction.nextExecutionDate || transaction.scheduledDate)}</span>
               </div>
               
               <Badge className={cn("text-xs border", getRecurrenceColor(transaction.recurrence))}>

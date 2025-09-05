@@ -18,21 +18,6 @@ export interface Transaction {
   goal_id?: string;
   user_id?: string;
   created_at?: string;
-  updated_at?: string;
-  // Additional fields from scheduled transactions
-  recurrence?: string;
-  status?: string;
-  situacao?: string;
-  phone?: string;
-  reference_code?: number;
-  scheduled_date?: string;
-  aba?: string;
-  // Fields needed for scheduled transaction compatibility
-  scheduledDate?: string;
-  nextExecutionDate?: string;
-  lastExecutionDate?: string;
-  paidDate?: string;
-  paidAmount?: number;
 }
 
 export interface Goal {

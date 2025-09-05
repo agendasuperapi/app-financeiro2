@@ -103,10 +103,10 @@ export const addScheduledTransaction = async (
     
     // Generate next reference code
     const referenceCode = await getNextScheduledReferenceCode();
-    console.log("Generated scheduled reference code:", referenceCode);
+    console.log("Generated reference code:", referenceCode);
     
     const { data, error } = await supabase
-      .from("poupeja_scheduled_transactions")
+      .from("poupeja_transactions")
       .insert({
         id: newId,
         user_id: session.user.id,
@@ -114,14 +114,8 @@ export const addScheduledTransaction = async (
         amount: transaction.amount,
         category_id: categoryId,
         description: transaction.description,
-        scheduled_date: transaction.scheduledDate,
-        recurrence: transaction.recurrence,
-        goal_id: transaction.goalId,
-        status: 'pending',
-        next_execution_date: transaction.scheduledDate,
-        reference_code: referenceCode,
-        situacao: (transaction as any).situacao || 'ativo',
-        phone: (transaction as any).phone || ''
+        date: transaction.scheduledDate,
+        goal_id: transaction.goalId
       })
       .select(`
         *,
@@ -140,14 +134,14 @@ export const addScheduledTransaction = async (
       categoryIcon: data.category?.icon || "circle",
       categoryColor: data.category?.color || "#607D8B",
       description: data.description || "",
-      scheduledDate: data.scheduled_date,
-      recurrence: normalizeRecurrence(data.recurrence),
+      scheduledDate: data.date, // usando date da tabela poupeja_transactions
+      recurrence: 'once' as const, // valor padrão para transações regulares
       goalId: data.goal_id,
-      status: data.status as 'pending' | 'paid' | 'overdue' | 'upcoming' | undefined,
-      paidDate: data.paid_date,
-      paidAmount: data.paid_amount,
-      lastExecutionDate: data.last_execution_date,
-      nextExecutionDate: data.next_execution_date,
+      status: 'pending' as const, // valor padrão para status
+      paidDate: undefined,
+      paidAmount: undefined,
+      lastExecutionDate: undefined,
+      nextExecutionDate: undefined,
     };
   } catch (error) {
     console.error("Error adding scheduled transaction:", error);
@@ -181,21 +175,14 @@ export const updateScheduledTransaction = async (
     }
 
     const { data, error } = await supabase
-      .from("poupeja_scheduled_transactions")
+      .from("poupeja_transactions")
       .update({
         type: transaction.type,
         amount: transaction.amount,
         category_id: categoryId,
         description: transaction.description,
-        scheduled_date: transaction.scheduledDate,
-        recurrence: transaction.recurrence,
-        goal_id: transaction.goalId,
-        status: transaction.status,
-        paid_date: transaction.paidDate,
-        paid_amount: transaction.paidAmount,
-        last_execution_date: transaction.lastExecutionDate,
-        next_execution_date: transaction.nextExecutionDate,
-        updated_at: new Date().toISOString()
+        date: transaction.scheduledDate,
+        goal_id: transaction.goalId
       })
       .eq("id", transaction.id)
       .select(`
@@ -215,14 +202,14 @@ export const updateScheduledTransaction = async (
       categoryIcon: data.category?.icon || "circle",
       categoryColor: data.category?.color || "#607D8B",
       description: data.description || "",
-      scheduledDate: data.scheduled_date,
-      recurrence: normalizeRecurrence(data.recurrence),
+      scheduledDate: data.date, // usando date da tabela poupeja_transactions
+      recurrence: 'once' as const, // valor padrão para transações regulares
       goalId: data.goal_id,
-      status: data.status as 'pending' | 'paid' | 'overdue' | 'upcoming' | undefined,
-      paidDate: data.paid_date,
-      paidAmount: data.paid_amount,
-      lastExecutionDate: data.last_execution_date,
-      nextExecutionDate: data.next_execution_date,
+      status: 'pending' as const, // valor padrão para status
+      paidDate: undefined,
+      paidAmount: undefined,
+      lastExecutionDate: undefined,
+      nextExecutionDate: undefined,
     };
   } catch (error) {
     console.error("Error updating scheduled transaction:", error);
@@ -235,18 +222,10 @@ export const markAsPaid = async (
   paidAmount?: number
 ): Promise<boolean> => {
   try {
-    const actualPaidAmount = paidAmount;
-    const now = new Date().toISOString();
-
-    // Simply mark the transaction as paid
+    // Just delete the transaction since it was "paid"
     const { error: updateError } = await supabase
-      .from("poupeja_scheduled_transactions")
-      .update({
-        status: 'paid',
-        paid_date: now,
-        paid_amount: actualPaidAmount,
-        updated_at: now
-      })
+      .from("poupeja_transactions")
+      .delete()
       .eq("id", transactionId);
 
     if (updateError) throw updateError;
@@ -261,7 +240,7 @@ export const markAsPaid = async (
 export const deleteScheduledTransaction = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from("poupeja_scheduled_transactions")
+      .from("poupeja_transactions")
       .delete()
       .eq("id", id);
 
@@ -269,7 +248,7 @@ export const deleteScheduledTransaction = async (id: string): Promise<boolean> =
 
     return true;
   } catch (error) {
-    console.error("Error deleting scheduled transaction:", error);
+    console.error("Error deleting transaction:", error);
     return false;
   }
 };

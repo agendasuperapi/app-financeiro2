@@ -348,7 +348,7 @@ const SchedulePage = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">{t('common.date')}</p>
-                    <p>{format(new Date(selectedTransaction.scheduled_date || selectedTransaction.date), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
+                    <p>{format(new Date(selectedTransaction.scheduled_date || selectedTransaction.scheduledDate || selectedTransaction.date), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">{t('schedule.recurrence')}</p>

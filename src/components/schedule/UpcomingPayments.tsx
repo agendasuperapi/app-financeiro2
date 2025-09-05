@@ -29,10 +29,10 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({
 
   const upcomingPayments = scheduledTransactions
     .filter(transaction => {
-      const transactionDate = createLocalDate(transaction.scheduledDate);
+      const transactionDate = createLocalDate(transaction.scheduledDate || transaction.scheduled_date);
       return transactionDate >= today && transactionDate <= nextWeek && transaction.type === 'expense';
     })
-    .sort((a, b) => createLocalDate(a.scheduledDate).getTime() - createLocalDate(b.scheduledDate).getTime());
+    .sort((a, b) => createLocalDate(a.scheduledDate || a.scheduled_date).getTime() - createLocalDate(b.scheduledDate || b.scheduled_date).getTime());
 
   const getDaysUntilDue = (date: string) => {
     const transactionDate = createLocalDate(date);
@@ -72,7 +72,7 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({
       <CardContent className={isMobile ? "pt-0" : undefined}>
         <div className={isMobile ? "space-y-2" : "space-y-3"}>
           {upcomingPayments.map((transaction) => {
-            const daysUntilDue = getDaysUntilDue(transaction.scheduledDate);
+            const daysUntilDue = getDaysUntilDue(transaction.scheduledDate || transaction.scheduled_date);
             
             return (
               <div
@@ -96,7 +96,7 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({
                   </div>
                   
                   <div className={`flex items-center gap-2 text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                    <span>{formatShortDate(transaction.scheduledDate)}</span>
+                    <span>{formatShortDate(transaction.scheduledDate || transaction.scheduled_date)}</span>
                     <span>•</span>
                     <span className="truncate">{transaction.category}</span>
                   </div>

@@ -23,7 +23,7 @@ const TransactionStatusBadge: React.FC<TransactionStatusBadgeProps> = ({ transac
     }
 
     const today = new Date();
-    const transactionDate = createLocalDate(transaction.nextExecutionDate || transaction.scheduledDate);
+    const transactionDate = createLocalDate(transaction.nextExecutionDate || transaction.scheduledDate || transaction.scheduled_date);
     const daysUntilDue = Math.ceil((transactionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
     // Se está vencido

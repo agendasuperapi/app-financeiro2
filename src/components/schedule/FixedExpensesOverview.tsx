@@ -40,14 +40,14 @@ const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduled
 
   const upcomingPayments = expenses.filter(transaction => {
     if (transaction.status === 'paid') return false;
-    const transactionDate = createLocalDate(transaction.nextExecutionDate || transaction.scheduledDate);
+    const transactionDate = createLocalDate(transaction.nextExecutionDate || transaction.scheduledDate || transaction.scheduled_date || transaction.date);
     return transactionDate >= today && transactionDate <= nextWeek;
   });
 
   // Calcular transações vencidas
   const overdueTransactions = expenses.filter(transaction => {
     if (transaction.status === 'paid') return false;
-    const transactionDate = createLocalDate(transaction.nextExecutionDate || transaction.scheduledDate);
+    const transactionDate = createLocalDate(transaction.nextExecutionDate || transaction.scheduledDate || transaction.scheduled_date || transaction.date);
     return transactionDate < today;
   });
 

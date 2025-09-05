@@ -25,6 +25,7 @@ import GoalsPage from "./pages/GoalsPage";
 import ReportsPage from "./pages/ReportsPage";
 import NotesPage from "./pages/NotesPage";
 import SchedulePage from "./pages/SchedulePage";
+import ContasPage from "./pages/ContasPage";
 import SettingsPage from "./pages/SettingsPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import PlansPage from "./pages/PlansPage";
@@ -66,6 +67,7 @@ function App() {
                         <Route path="/reports" element={<ReportsPage />} />
                         <Route path="/notes" element={<NotesPage />} />
                         <Route path="/schedule" element={<SchedulePage />} />
+                        <Route path="/contas" element={<ContasPage />} />
                         <Route path="/lembretes" element={<LembretesPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
                         <Route path="/categories" element={<CategoriesPage />} />

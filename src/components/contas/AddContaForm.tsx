@@ -188,13 +188,13 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar mode="single" selected={form.watch('scheduled_date')} onSelect={date => {
               if (date) {
-                // Manter a hora atual se já existir, senão definir como 09:00
+                // Manter a hora atual se já existir, senão definir como 09:00, mas sempre zerar os segundos
                 const currentDate = form.watch('scheduled_date');
                 const dateWithTime = new Date(date);
                 if (currentDate) {
-                  dateWithTime.setHours(currentDate.getHours(), currentDate.getMinutes(), currentDate.getSeconds());
+                  dateWithTime.setHours(currentDate.getHours(), currentDate.getMinutes(), 0);
                 } else {
-                  dateWithTime.setHours(9, 0);
+                  dateWithTime.setHours(9, 0, 0);
                 }
                 form.setValue('scheduled_date', dateWithTime);
               }

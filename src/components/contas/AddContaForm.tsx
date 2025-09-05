@@ -110,6 +110,8 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
         aba: 'contas'
       };
 
+      console.log('Transaction data being sent:', transactionData);
+
       let result;
       if (mode === 'edit' && initialData) {
         result = await updateScheduledTransaction({
@@ -126,6 +128,8 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
       } else {
         result = await addScheduledTransaction(transactionData);
       }
+
+      console.log('Result from service:', result);
 
       if (result) {
         toast.success(mode === 'edit' ? 'Conta atualizada com sucesso!' : 'Conta adicionada com sucesso!');

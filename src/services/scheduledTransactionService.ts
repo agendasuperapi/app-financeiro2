@@ -130,6 +130,9 @@ export const addScheduledTransaction = async (
     if (transaction.phone) insertData.phone = transaction.phone;
     if (transaction.aba) insertData.aba = transaction.aba;
     if (transaction.recurrence) insertData.recurrence = transaction.recurrence;
+    if (transaction.status) insertData.status = transaction.status;
+
+    console.log('Insert data with all fields:', insertData);
     
     const { data, error } = await supabase
       .from("poupeja_transactions")
@@ -213,6 +216,9 @@ export const updateScheduledTransaction = async (
     if (transaction.phone) updateData.phone = transaction.phone;
     if (transaction.aba) updateData.aba = transaction.aba;
     if (transaction.recurrence) updateData.recurrence = transaction.recurrence;
+    if (transaction.status) updateData.status = transaction.status;
+
+    console.log('Update data with all fields:', updateData);
 
     const { data, error } = await supabase
       .from("poupeja_transactions")

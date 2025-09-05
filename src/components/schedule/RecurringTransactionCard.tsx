@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ScheduledTransaction } from '@/types';
+import { Transaction } from '@/types';
 import { formatCurrency, createLocalDate } from '@/utils/transactionUtils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useDateFormat } from '@/hooks/useDateFormat';
@@ -15,10 +15,10 @@ import { formatDistanceToNow, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface RecurringTransactionCardProps {
-  transaction: ScheduledTransaction;
-  onEdit: (transaction: ScheduledTransaction) => void;
+  transaction: Transaction;
+  onEdit: (transaction: Transaction) => void;
   onDelete: (id: string) => void;
-  onMarkAsPaid?: (transaction: ScheduledTransaction) => void;
+  onMarkAsPaid?: (transaction: Transaction) => void;
 }
 
 const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({

@@ -2,13 +2,13 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ScheduledTransaction } from '@/types';
+import { Transaction } from '@/types';
 import { formatCurrency, createLocalDate } from '@/utils/transactionUtils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { Calendar, TrendingUp, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 
 interface FixedExpensesOverviewProps {
-  scheduledTransactions: ScheduledTransaction[];
+  scheduledTransactions: Transaction[];
 }
 
 const FixedExpensesOverview: React.FC<FixedExpensesOverviewProps> = ({ scheduledTransactions }) => {

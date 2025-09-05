@@ -18,28 +18,28 @@ import { getCategoriesByType } from '@/services/categoryService';
 import { addScheduledTransaction } from '@/services/scheduledTransactionService';
 import { Category } from '@/types/categories';
 import { supabase } from '@/integrations/supabase/client';
-
 const contaSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
   amount: z.coerce.number().min(0.01, 'Valor deve ser maior que zero'),
   category_id: z.string().min(1, 'Categoria é obrigatória'),
-  scheduled_date: z.date({ required_error: 'Data é obrigatória' }),
+  scheduled_date: z.date({
+    required_error: 'Data é obrigatória'
+  }),
   recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly', 'installments']),
   parcela: z.string().optional()
 });
-
 type ContaFormValues = z.infer<typeof contaSchema>;
-
 interface AddContaFormProps {
   onSuccess: () => void;
   onCancel: () => void;
 }
-
-const AddContaForm: React.FC<AddContaFormProps> = ({ onSuccess, onCancel }) => {
+const AddContaForm: React.FC<AddContaFormProps> = ({
+  onSuccess,
+  onCancel
+}) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [userPhone, setUserPhone] = useState<string>('');
   const [loading, setLoading] = useState(false);
-
   const form = useForm<ContaFormValues>({
     resolver: zodResolver(contaSchema),
     defaultValues: {
@@ -50,14 +50,11 @@ const AddContaForm: React.FC<AddContaFormProps> = ({ onSuccess, onCancel }) => {
       parcela: ''
     }
   });
-
   const selectedRecurrence = form.watch('recurrence');
-
   useEffect(() => {
     loadCategories();
     loadUserPhone();
   }, []);
-
   const loadCategories = async () => {
     try {
       const data = await getCategoriesByType('expense');
@@ -66,17 +63,17 @@ const AddContaForm: React.FC<AddContaFormProps> = ({ onSuccess, onCancel }) => {
       console.error('Error loading categories:', error);
     }
   };
-
   const loadUserPhone = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (user) {
-        const { data: profile } = await supabase
-          .from('poupeja_users')
-          .select('phone')
-          .eq('id', user.id)
-          .single();
-        
+        const {
+          data: profile
+        } = await supabase.from('poupeja_users').select('phone').eq('id', user.id).single();
         if (profile?.phone) {
           setUserPhone(profile.phone.startsWith('+55') ? profile.phone : `+55${profile.phone}`);
         } else {
@@ -88,7 +85,6 @@ const AddContaForm: React.FC<AddContaFormProps> = ({ onSuccess, onCancel }) => {
       setUserPhone('+5511999999999'); // Default fallback
     }
   };
-
   const onSubmit = async (data: ContaFormValues) => {
     setLoading(true);
     try {
@@ -106,7 +102,6 @@ const AddContaForm: React.FC<AddContaFormProps> = ({ onSuccess, onCancel }) => {
         phone: userPhone,
         aba: 'contas'
       };
-
       const result = await addScheduledTransaction(scheduledTransaction);
       if (result) {
         toast.success('Conta adicionada com sucesso!');
@@ -121,149 +116,111 @@ const AddContaForm: React.FC<AddContaFormProps> = ({ onSuccess, onCancel }) => {
       setLoading(false);
     }
   };
-
-  const recurrenceOptions = [
-    { value: 'once', label: 'Uma vez' },
-    { value: 'daily', label: 'Diário' },
-    { value: 'weekly', label: 'Semanal' },
-    { value: 'monthly', label: 'Mensal' },
-    { value: 'yearly', label: 'Anual' },
-    { value: 'installments', label: 'Parcelas' }
-  ];
-
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+  const recurrenceOptions = [{
+    value: 'once',
+    label: 'Uma vez'
+  }, {
+    value: 'daily',
+    label: 'Diário'
+  }, {
+    value: 'weekly',
+    label: 'Semanal'
+  }, {
+    value: 'monthly',
+    label: 'Mensal'
+  }, {
+    value: 'yearly',
+    label: 'Anual'
+  }, {
+    value: 'installments',
+    label: 'Parcelas'
+  }];
+  return <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       {/* Descrição */}
       <div className="space-y-2">
         <Label htmlFor="description">Descrição</Label>
-        <Textarea
-          id="description"
-          {...form.register('description')}
-          placeholder="Digite a descrição da conta"
-        />
-        {form.formState.errors.description && (
-          <p className="text-sm text-red-500">{form.formState.errors.description.message}</p>
-        )}
+        <Textarea id="description" {...form.register('description')} placeholder="Digite a descrição da conta" />
+        {form.formState.errors.description && <p className="text-sm text-red-500">{form.formState.errors.description.message}</p>}
       </div>
 
       {/* Valor */}
       <div className="space-y-2">
         <Label htmlFor="amount">Valor</Label>
-        <Input
-          id="amount"
-          type="number"
-          step="0.01"
-          min="0"
-          {...form.register('amount')}
-          placeholder="0.00"
-        />
-        {form.formState.errors.amount && (
-          <p className="text-sm text-red-500">{form.formState.errors.amount.message}</p>
-        )}
+        <Input id="amount" type="number" step="0.01" min="0" {...form.register('amount')} placeholder="0.00" />
+        {form.formState.errors.amount && <p className="text-sm text-red-500">{form.formState.errors.amount.message}</p>}
       </div>
 
       {/* Categoria */}
       <div className="space-y-2">
         <Label>Categoria</Label>
-        <Select onValueChange={(value) => form.setValue('category_id', value)}>
+        <Select onValueChange={value => form.setValue('category_id', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione uma categoria" />
           </SelectTrigger>
           <SelectContent>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
+            {categories.map(category => <SelectItem key={category.id} value={category.id}>
                 <span className="flex items-center gap-2">
                   <span>{category.icon}</span>
                   <span>{category.name}</span>
                 </span>
-              </SelectItem>
-            ))}
+              </SelectItem>)}
           </SelectContent>
         </Select>
-        {form.formState.errors.category_id && (
-          <p className="text-sm text-red-500">{form.formState.errors.category_id.message}</p>
-        )}
+        {form.formState.errors.category_id && <p className="text-sm text-red-500">{form.formState.errors.category_id.message}</p>}
       </div>
 
       {/* Data e Hora Agendada */}
       <div className="space-y-2">
         <Label>Agendado para (Data e Hora - Brasília)</Label>
         <div className="flex gap-2">
-          <Input
-            type="datetime-local"
-            onChange={(e) => {
-              if (e.target.value) {
-                // Converter para timezone de Brasília
-                const localDate = new Date(e.target.value);
-                form.setValue('scheduled_date', localDate);
-              }
-            }}
-            className="flex-1"
-          />
+          <Input type="datetime-local" onChange={e => {
+          if (e.target.value) {
+            // Converter para timezone de Brasília
+            const localDate = new Date(e.target.value);
+            form.setValue('scheduled_date', localDate);
+          }
+        }} className="flex-1" />
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-10 p-0">
-                <CalendarIcon className="h-4 w-4" />
-              </Button>
+              
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={form.watch('scheduled_date')}
-                onSelect={(date) => {
-                  if (date) {
-                    // Definir hora como 09:00 por padrão quando selecionado pelo calendário
-                    const dateWithTime = new Date(date);
-                    dateWithTime.setHours(9, 0, 0, 0);
-                    form.setValue('scheduled_date', dateWithTime);
-                  }
-                }}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-                locale={ptBR}
-              />
+              <Calendar mode="single" selected={form.watch('scheduled_date')} onSelect={date => {
+              if (date) {
+                // Definir hora como 09:00 por padrão quando selecionado pelo calendário
+                const dateWithTime = new Date(date);
+                dateWithTime.setHours(9, 0, 0, 0);
+                form.setValue('scheduled_date', dateWithTime);
+              }
+            }} initialFocus className={cn("p-3 pointer-events-auto")} locale={ptBR} />
             </PopoverContent>
           </Popover>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Horário de Brasília (GMT-3). Se usar o calendário, a hora será definida como 09:00.
-        </p>
-        {form.formState.errors.scheduled_date && (
-          <p className="text-sm text-red-500">{form.formState.errors.scheduled_date.message}</p>
-        )}
+        
+        {form.formState.errors.scheduled_date && <p className="text-sm text-red-500">{form.formState.errors.scheduled_date.message}</p>}
       </div>
 
       {/* Recorrência */}
       <div className="space-y-2">
         <Label>Recorrência</Label>
-        <Select onValueChange={(value) => form.setValue('recurrence', value as any)}>
+        <Select onValueChange={value => form.setValue('recurrence', value as any)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione a recorrência" />
           </SelectTrigger>
           <SelectContent>
-            {recurrenceOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
+            {recurrenceOptions.map(option => <SelectItem key={option.value} value={option.value}>
                 {option.label}
-              </SelectItem>
-            ))}
+              </SelectItem>)}
           </SelectContent>
         </Select>
-        {form.formState.errors.recurrence && (
-          <p className="text-sm text-red-500">{form.formState.errors.recurrence.message}</p>
-        )}
+        {form.formState.errors.recurrence && <p className="text-sm text-red-500">{form.formState.errors.recurrence.message}</p>}
       </div>
 
       {/* Parcela (se recorrência = parcelas) */}
-      {selectedRecurrence === 'installments' && (
-        <div className="space-y-2">
+      {selectedRecurrence === 'installments' && <div className="space-y-2">
           <Label htmlFor="parcela">Parcela</Label>
-          <Input
-            id="parcela"
-            {...form.register('parcela')}
-            placeholder="Ex: 1/12"
-          />
-        </div>
-      )}
+          <Input id="parcela" {...form.register('parcela')} placeholder="Ex: 1/12" />
+        </div>}
 
       {/* Botões */}
       <div className="flex justify-end gap-2 pt-4">
@@ -274,8 +231,6 @@ const AddContaForm: React.FC<AddContaFormProps> = ({ onSuccess, onCancel }) => {
           {loading ? 'Salvando...' : 'Salvar'}
         </Button>
       </div>
-    </form>
-  );
+    </form>;
 };
-
 export default AddContaForm;

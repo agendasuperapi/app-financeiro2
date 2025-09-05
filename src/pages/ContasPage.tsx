@@ -103,8 +103,8 @@ const ContasPage = () => {
   };
 
   return (
-    <SubscriptionGuard>
-      <MainLayout>
+    <MainLayout>
+      <SubscriptionGuard>
         <div className="container mx-auto p-6 space-y-6">
           <Card>
             <CardHeader>
@@ -210,8 +210,8 @@ const ContasPage = () => {
             </CardContent>
           </Card>
         </div>
-      </MainLayout>
-    </SubscriptionGuard>
+      </SubscriptionGuard>
+    </MainLayout>
   );
 };
 

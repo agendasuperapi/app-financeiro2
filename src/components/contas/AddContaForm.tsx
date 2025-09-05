@@ -176,8 +176,9 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
         <div className="flex gap-2">
           <Input type="datetime-local" onChange={e => {
           if (e.target.value) {
-            // Converter para timezone de Brasília
+            // Converter para timezone de Brasília e forçar segundos para 00
             const localDate = new Date(e.target.value);
+            localDate.setSeconds(0);
             form.setValue('scheduled_date', localDate);
           }
         }} className="flex-1" />

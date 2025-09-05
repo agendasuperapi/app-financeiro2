@@ -59,6 +59,8 @@ export interface ScheduledTransaction {
   reference_code?: number; // Reference code for tracking (numeric)
   phone?: string; // User's phone number
   situacao?: string; // Status or situation
+  parcela?: string; // Installment information
+  aba?: string; // Tab/section identifier
   // Database fields for compatibility
   category_id?: string;
   goal_id?: string;

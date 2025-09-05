@@ -103,7 +103,7 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
         recurrence: data.recurrence,
         status: 'pending' as const,
         category_id: data.category_id,
-        // Campos automáticos
+        // Campos obrigatórios
         parcela: data.parcela || '',
         situacao: 'ativo',
         phone: userPhone,

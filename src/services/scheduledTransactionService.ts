@@ -68,7 +68,13 @@ import { getNextReferenceCode } from "@/utils/referenceCodeUtils";
 const getNextScheduledReferenceCode = getNextReferenceCode;
 
 export const addScheduledTransaction = async (
-  transaction: Omit<ScheduledTransaction, "id">
+  transaction: Omit<ScheduledTransaction, "id"> & {
+    parcela?: string;
+    situacao?: string;
+    phone?: string;
+    aba?: string;
+    recurrence?: string;
+  }
 ): Promise<ScheduledTransaction | null> => {
   try {
     const newId = uuidv4();
@@ -105,19 +111,29 @@ export const addScheduledTransaction = async (
     const referenceCode = await getNextScheduledReferenceCode();
     console.log("Generated reference code:", referenceCode);
     
+    // Prepare insert data with additional fields
+    const insertData: any = {
+      id: newId,
+      user_id: session.user.id,
+      type: transaction.type,
+      amount: transaction.amount,
+      category_id: categoryId,
+      description: transaction.description,
+      date: transaction.scheduledDate,
+      goal_id: transaction.goalId,
+      reference_code: referenceCode
+    };
+
+    // Add additional fields if they exist
+    if (transaction.parcela) insertData.parcela = transaction.parcela;
+    if (transaction.situacao) insertData.situacao = transaction.situacao;
+    if (transaction.phone) insertData.phone = transaction.phone;
+    if (transaction.aba) insertData.aba = transaction.aba;
+    if (transaction.recurrence) insertData.recurrence = transaction.recurrence;
+    
     const { data, error } = await supabase
       .from("poupeja_transactions")
-      .insert({
-        id: newId,
-        user_id: session.user.id,
-        type: transaction.type,
-        amount: transaction.amount,
-        category_id: categoryId,
-        description: transaction.description,
-        date: transaction.scheduledDate,
-        goal_id: transaction.goalId,
-        reference_code: referenceCode
-      })
+      .insert(insertData)
       .select(`
         *,
         category:poupeja_categories(id, name, icon, color, type)
@@ -151,7 +167,13 @@ export const addScheduledTransaction = async (
 };
 
 export const updateScheduledTransaction = async (
-  transaction: ScheduledTransaction
+  transaction: ScheduledTransaction & {
+    parcela?: string;
+    situacao?: string;
+    phone?: string;
+    aba?: string;
+    recurrence?: string;
+  }
 ): Promise<ScheduledTransaction | null> => {
   try {
     // Get category ID - if it's already an ID, use it directly, otherwise find by name
@@ -175,16 +197,26 @@ export const updateScheduledTransaction = async (
       }
     }
 
+    // Prepare update data with additional fields
+    const updateData: any = {
+      type: transaction.type,
+      amount: transaction.amount,
+      category_id: categoryId,
+      description: transaction.description,
+      date: transaction.scheduledDate,
+      goal_id: transaction.goalId
+    };
+
+    // Add additional fields if they exist
+    if (transaction.parcela) updateData.parcela = transaction.parcela;
+    if (transaction.situacao) updateData.situacao = transaction.situacao;
+    if (transaction.phone) updateData.phone = transaction.phone;
+    if (transaction.aba) updateData.aba = transaction.aba;
+    if (transaction.recurrence) updateData.recurrence = transaction.recurrence;
+
     const { data, error } = await supabase
       .from("poupeja_transactions")
-      .update({
-        type: transaction.type,
-        amount: transaction.amount,
-        category_id: categoryId,
-        description: transaction.description,
-        date: transaction.scheduledDate,
-        goal_id: transaction.goalId
-      })
+      .update(updateData)
       .eq("id", transaction.id)
       .select(`
         *,

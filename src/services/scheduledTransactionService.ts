@@ -115,7 +115,8 @@ export const addScheduledTransaction = async (
         category_id: categoryId,
         description: transaction.description,
         date: transaction.scheduledDate,
-        goal_id: transaction.goalId
+        goal_id: transaction.goalId,
+        reference_code: referenceCode
       })
       .select(`
         *,

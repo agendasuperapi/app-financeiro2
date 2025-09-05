@@ -15,7 +15,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { getCategoriesByType } from '@/services/categoryService';
-import { addScheduledTransaction } from '@/services/scheduledTransactionService';
+import { addScheduledTransaction, updateScheduledTransaction } from '@/services/scheduledTransactionService';
 import { Category } from '@/types/categories';
 import { supabase } from '@/integrations/supabase/client';
 import CategoryIcon from '@/components/categories/CategoryIcon';
@@ -33,10 +33,14 @@ type ContaFormValues = z.infer<typeof contaSchema>;
 interface AddContaFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  initialData?: any;
+  mode?: 'create' | 'edit';
 }
 const AddContaForm: React.FC<AddContaFormProps> = ({
   onSuccess,
-  onCancel
+  onCancel,
+  initialData,
+  mode = 'create'
 }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [userPhone, setUserPhone] = useState<string>('');
@@ -44,10 +48,12 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
   const form = useForm<ContaFormValues>({
     resolver: zodResolver(contaSchema),
     defaultValues: {
-      description: '',
-      category_id: '',
-      recurrence: 'once',
-      parcela: ''
+      description: initialData?.description || '',
+      amount: initialData?.amount || 0,
+      category_id: initialData?.category_id || '',
+      scheduled_date: initialData?.scheduledDate ? new Date(initialData.scheduledDate) : undefined,
+      recurrence: initialData?.recurrence || 'once',
+      parcela: initialData?.parcela || ''
     }
   });
   const selectedRecurrence = form.watch('recurrence');
@@ -88,7 +94,7 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
   const onSubmit = async (data: ContaFormValues) => {
     setLoading(true);
     try {
-      const scheduledTransaction = {
+      const transactionData = {
         type: 'expense' as const,
         amount: data.amount,
         category: categories.find(c => c.id === data.category_id)?.name || '',
@@ -103,16 +109,33 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
         phone: userPhone,
         aba: 'contas'
       };
-      const result = await addScheduledTransaction(scheduledTransaction);
+
+      let result;
+      if (mode === 'edit' && initialData) {
+        result = await updateScheduledTransaction({
+          ...transactionData,
+          id: initialData.id,
+          categoryIcon: initialData.categoryIcon,
+          categoryColor: initialData.categoryColor,
+          goalId: initialData.goalId,
+          paidDate: initialData.paidDate,
+          paidAmount: initialData.paidAmount,
+          lastExecutionDate: initialData.lastExecutionDate,
+          nextExecutionDate: initialData.nextExecutionDate
+        });
+      } else {
+        result = await addScheduledTransaction(transactionData);
+      }
+
       if (result) {
-        toast.success('Conta adicionada com sucesso!');
+        toast.success(mode === 'edit' ? 'Conta atualizada com sucesso!' : 'Conta adicionada com sucesso!');
         onSuccess();
       } else {
-        toast.error('Erro ao adicionar conta');
+        toast.error(mode === 'edit' ? 'Erro ao atualizar conta' : 'Erro ao adicionar conta');
       }
     } catch (error) {
-      console.error('Error adding conta:', error);
-      toast.error('Erro ao adicionar conta');
+      console.error('Error saving conta:', error);
+      toast.error(mode === 'edit' ? 'Erro ao atualizar conta' : 'Erro ao adicionar conta');
     } finally {
       setLoading(false);
     }
@@ -147,17 +170,29 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
       {/* Valor */}
       <div className="space-y-2">
         <Label htmlFor="amount">Valor</Label>
-        <Input id="amount" type="number" step="0.01" min="0" {...form.register('amount')} placeholder="0.00" />
+        <Input 
+          id="amount" 
+          type="number" 
+          step="0.01" 
+          min="0" 
+          {...form.register('amount')}
+          onChange={e => {
+            const value = e.target.value;
+            form.setValue('amount', value ? parseFloat(value) : 0);
+          }} 
+          value={form.watch('amount') || ''}
+          placeholder="0.00" 
+        />
         {form.formState.errors.amount && <p className="text-sm text-red-500">{form.formState.errors.amount.message}</p>}
       </div>
 
       {/* Categoria */}
       <div className="space-y-2">
         <Label>Categoria</Label>
-        <Select onValueChange={value => form.setValue('category_id', value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione uma categoria" />
-          </SelectTrigger>
+         <Select onValueChange={value => form.setValue('category_id', value)} value={form.watch('category_id')}>
+           <SelectTrigger>
+             <SelectValue placeholder="Selecione uma categoria" />
+           </SelectTrigger>
           <SelectContent>
             {categories.map(category => <SelectItem key={category.id} value={category.id}>
                 <span className="flex items-center gap-2">
@@ -174,19 +209,20 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
       <div className="space-y-2">
         <Label>Agendado para (Data e Hora - Brasília)</Label>
         <div className="flex gap-2">
-          <Input 
-            type="datetime-local" 
-            step="60"
-            onChange={e => {
-              if (e.target.value) {
-                // Converter para timezone de Brasília e forçar segundos para 00
-                const localDate = new Date(e.target.value);
-                localDate.setSeconds(0);
-                form.setValue('scheduled_date', localDate);
-              }
-            }} 
-            className="flex-1" 
-          />
+         <Input 
+           type="datetime-local" 
+           step="60"
+           value={form.watch('scheduled_date') ? format(form.watch('scheduled_date'), "yyyy-MM-dd'T'HH:mm") : ''}
+           onChange={e => {
+             if (e.target.value) {
+               // Converter para timezone de Brasília e forçar segundos para 00
+               const localDate = new Date(e.target.value);
+               localDate.setSeconds(0);
+               form.setValue('scheduled_date', localDate);
+             }
+           }} 
+           className="flex-1" 
+         />
           <Popover>
             <PopoverTrigger asChild>
               
@@ -215,10 +251,10 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
       {/* Recorrência */}
       <div className="space-y-2">
         <Label>Recorrência</Label>
-        <Select onValueChange={value => form.setValue('recurrence', value as any)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione a recorrência" />
-          </SelectTrigger>
+         <Select onValueChange={value => form.setValue('recurrence', value as any)} value={form.watch('recurrence')}>
+           <SelectTrigger>
+             <SelectValue placeholder="Selecione a recorrência" />
+           </SelectTrigger>
           <SelectContent>
             {recurrenceOptions.map(option => <SelectItem key={option.value} value={option.value}>
                 {option.label}
@@ -240,7 +276,7 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
           Cancelar
         </Button>
         <Button type="submit" disabled={loading}>
-          {loading ? 'Salvando...' : 'Salvar'}
+          {loading ? 'Salvando...' : mode === 'edit' ? 'Atualizar' : 'Salvar'}
         </Button>
       </div>
     </form>;

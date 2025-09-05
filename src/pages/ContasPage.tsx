@@ -18,6 +18,8 @@ const ContasPage = () => {
   const [contas, setContas] = useState<ScheduledTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
   const { formatDate } = useDateFormat();
   const { currency } = usePreferences();
 
@@ -53,8 +55,8 @@ const ContasPage = () => {
   };
 
   const handleEdit = async (conta: ScheduledTransaction) => {
-    // TODO: Implementar edição
-    console.log('Edit conta:', conta);
+    setEditingConta(conta);
+    setIsEditDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -235,6 +237,28 @@ const ContasPage = () => {
             </CardContent>
           </Card>
         </div>
+        
+        {/* Dialog de Edição */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Editar Conta</DialogTitle>
+            </DialogHeader>
+            <AddContaForm
+              initialData={editingConta}
+              mode="edit"
+              onSuccess={() => {
+                setIsEditDialogOpen(false);
+                setEditingConta(null);
+                loadContas();
+              }}
+              onCancel={() => {
+                setIsEditDialogOpen(false);
+                setEditingConta(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       </SubscriptionGuard>
     </MainLayout>
   );

@@ -18,6 +18,7 @@ import { getCategoriesByType } from '@/services/categoryService';
 import { addScheduledTransaction } from '@/services/scheduledTransactionService';
 import { Category } from '@/types/categories';
 import { supabase } from '@/integrations/supabase/client';
+import CategoryIcon from '@/components/categories/CategoryIcon';
 const contaSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
   amount: z.coerce.number().min(0.01, 'Valor deve ser maior que zero'),
@@ -160,7 +161,7 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
           <SelectContent>
             {categories.map(category => <SelectItem key={category.id} value={category.id}>
                 <span className="flex items-center gap-2">
-                  <span>{category.icon}</span>
+                  <CategoryIcon icon={category.icon} color={category.color} size={16} />
                   <span>{category.name}</span>
                 </span>
               </SelectItem>)}

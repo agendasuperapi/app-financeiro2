@@ -2,14 +2,21 @@ import React, { useState, useEffect } from 'react';
 import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ContasCard } from '@/components/contas/ContasCard';
-import { getScheduledTransactions } from '@/services/scheduledTransactionService';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
 import { ScheduledTransaction } from '@/types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Edit, Trash2, CheckCircle, Calendar } from 'lucide-react';
+import { useDateFormat } from '@/hooks/useDateFormat';
+import { usePreferences } from '@/contexts/PreferencesContext';
+import { isAfter, isToday } from 'date-fns';
+import { toast } from 'sonner';
 
 const ContasPage = () => {
   const [contas, setContas] = useState<ScheduledTransaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const { formatDate } = useDateFormat();
+  const { currency } = usePreferences();
 
   useEffect(() => {
     loadContas();
@@ -28,7 +35,18 @@ const ContasPage = () => {
   };
 
   const handleMarkAsPaid = async (id: string) => {
-    await loadContas(); // Recarregar dados após marcar como pago
+    try {
+      const success = await markAsPaid(id);
+      if (success) {
+        toast.success('Conta marcada como paga');
+        await loadContas();
+      } else {
+        toast.error('Erro ao marcar conta como paga');
+      }
+    } catch (error) {
+      console.error('Error marking as paid:', error);
+      toast.error('Erro ao marcar conta como paga');
+    }
   };
 
   const handleEdit = async (conta: ScheduledTransaction) => {
@@ -37,7 +55,51 @@ const ContasPage = () => {
   };
 
   const handleDelete = async (id: string) => {
-    await loadContas(); // Recarregar dados após exclusão
+    try {
+      const success = await deleteScheduledTransaction(id);
+      if (success) {
+        toast.success('Conta excluída com sucesso');
+        await loadContas();
+      } else {
+        toast.error('Erro ao excluir conta');
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast.error('Erro ao excluir conta');
+    }
+  };
+
+  // Formatar valor monetário
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: currency
+    }).format(value);
+  };
+
+  // Formatar recorrência
+  const formatRecurrence = (recurrence?: string) => {
+    const recurrenceMap: { [key: string]: string } = {
+      'once': 'Uma vez',
+      'daily': 'Diário',
+      'weekly': 'Semanal',
+      'monthly': 'Mensal',
+      'yearly': 'Anual'
+    };
+    return recurrenceMap[recurrence || 'once'] || 'Uma vez';
+  };
+
+  // Determinar status
+  const getStatus = (conta: ScheduledTransaction) => {
+    const scheduledDate = new Date(conta.scheduledDate);
+    const isOverdue = isAfter(new Date(), scheduledDate) && !isToday(scheduledDate);
+    const isDueToday = isToday(scheduledDate);
+    const isPaid = conta.description?.includes('[PAGO]') || false;
+
+    if (isPaid) return { label: 'Pago', variant: 'default' as const };
+    if (isDueToday) return { label: 'Vence Hoje', variant: 'destructive' as const };
+    if (isOverdue) return { label: 'Vencido', variant: 'destructive' as const };
+    return { label: 'Pendente', variant: 'secondary' as const };
   };
 
   return (
@@ -60,15 +122,89 @@ const ContasPage = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {contas.map((conta) => (
-                    <ContasCard
-                      key={conta.id}
-                      conta={conta}
-                      onMarkAsPaid={() => handleMarkAsPaid(conta.id)}
-                      onEdit={() => handleEdit(conta)}
-                      onDelete={() => handleDelete(conta.id)}
-                    />
-                  ))}
+                  {contas.map((conta) => {
+                    const status = getStatus(conta);
+                    const isPaid = conta.description?.includes('[PAGO]') || false;
+                    
+                    return (
+                      <Card key={conta.id} className="transition-all hover:shadow-md">
+                        <CardContent className="p-4">
+                          {/* Primeira linha: Descrição e Status */}
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-lg">
+                                {conta.description || 'Conta sem descrição'}
+                              </h3>
+                            </div>
+                            <Badge variant={status.variant} className="ml-2">
+                              {status.label}
+                            </Badge>
+                          </div>
+
+                          {/* Segunda linha: Data, Recorrência e Categoria */}
+                          <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              <span>{formatDate(conta.scheduledDate)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span>•</span>
+                              <span>{formatRecurrence(conta.recurrence)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span>•</span>
+                              <span>{conta.category}</span>
+                            </div>
+                          </div>
+
+                          {/* Terceira linha: Valor e Ações */}
+                          <div className="flex items-center justify-between">
+                            <div className="font-bold text-xl">
+                              {formatCurrency(conta.amount)}
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              {!isPaid && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleMarkAsPaid(conta.id)}
+                                  className="text-green-600 border-green-600 hover:bg-green-50"
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Marcar como Pago
+                                </Button>
+                              )}
+                              
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(conta)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDelete(conta.id)}
+                                className="text-red-600 border-red-600 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Mostrar data de pagamento se foi pago */}
+                          {isPaid && conta.paidDate && (
+                            <div className="mt-2 text-sm text-green-600">
+                              Pago em: {formatDate(conta.paidDate)}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

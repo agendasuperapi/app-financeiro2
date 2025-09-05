@@ -103,7 +103,7 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
             <div className={`flex items-center gap-2 ${isMobile ? 'mb-1' : 'mb-2'}`}>
               {getStatusIcon()}
               <h3 className={`font-semibold truncate ${isMobile ? 'text-base' : 'text-lg'}`}>{transaction.description}</h3>
-              <TransactionStatusBadge transaction={transaction} />
+              <TransactionStatusBadge transaction={transaction as any} />
             </div>
             
             <div className={`flex items-center gap-2 flex-wrap ${isMobile ? 'mb-2' : 'mb-3'}`}>

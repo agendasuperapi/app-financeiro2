@@ -99,6 +99,7 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
         status: 'pending' as const,
         category_id: data.category_id,
         // Campos automáticos
+        parcela: data.parcela || '',
         situacao: 'ativo',
         phone: userPhone,
         aba: 'contas'

@@ -46,12 +46,13 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
 
   // Debug: verificar qual data está sendo usada
   const getDisplayDate = () => {
-    const date = transaction.scheduled_date || transaction.scheduledDate || transaction.nextExecutionDate || transaction.date;
+    // Para transactions regulares, usar 'date'. Para scheduled, usar 'scheduled_date' ou 'scheduledDate'
+    const date = transaction.date || transaction.scheduled_date || transaction.scheduledDate || transaction.nextExecutionDate;
     console.log('Date values:', {
+      date: transaction.date,
       scheduled_date: transaction.scheduled_date,
       scheduledDate: transaction.scheduledDate,
       nextExecutionDate: transaction.nextExecutionDate,
-      date: transaction.date,
       finalDate: date
     });
     return date;

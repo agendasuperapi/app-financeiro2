@@ -4,17 +4,20 @@ import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
 import { ScheduledTransaction } from '@/types';
-import { Loader2, Edit, Trash2, CheckCircle, Calendar } from 'lucide-react';
+import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { isAfter, isToday } from 'date-fns';
 import { toast } from 'sonner';
+import AddContaForm from '@/components/contas/AddContaForm';
 
 const ContasPage = () => {
   const [contas, setContas] = useState<ScheduledTransaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { formatDate } = useDateFormat();
   const { currency } = usePreferences();
 
@@ -108,7 +111,29 @@ const ContasPage = () => {
         <div className="container mx-auto p-6 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl font-bold">Contas</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl font-bold">Contas</CardTitle>
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
+                      Adicionar
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Adicionar Nova Conta</DialogTitle>
+                    </DialogHeader>
+                    <AddContaForm
+                      onSuccess={() => {
+                        setIsAddDialogOpen(false);
+                        loadContas();
+                      }}
+                      onCancel={() => setIsAddDialogOpen(false)}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardHeader>
             <CardContent>
               {loading ? (

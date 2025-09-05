@@ -66,7 +66,7 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
   const isPaid = transaction.status === 'paid';
   
   const today = new Date();
-  const transactionDate = new Date(transaction.nextExecutionDate || transaction.scheduledDate || transaction.scheduled_date || transaction.date);
+  const transactionDate = new Date(transaction.scheduled_date || transaction.scheduledDate || transaction.nextExecutionDate || transaction.date);
   const daysUntilDue = Math.ceil((transactionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   const isUpcoming = daysUntilDue <= 3 && daysUntilDue >= 0;
   const isOverdue = daysUntilDue < 0;
@@ -109,7 +109,7 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
             <div className={`flex items-center gap-2 flex-wrap ${isMobile ? 'mb-2' : 'mb-3'}`}>
               <div className={`flex items-center gap-1 text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
                 <Calendar className="h-3 w-3" />
-                <span>{formatDateTimeShort(transaction.nextExecutionDate || transaction.scheduledDate || transaction.scheduled_date || transaction.date)}</span>
+                <span>{formatDateTimeShort(transaction.scheduled_date || transaction.scheduledDate || transaction.nextExecutionDate || transaction.date)}</span>
               </div>
               
               <Badge className={cn("text-xs border", getRecurrenceColor(transaction.recurrence))}>

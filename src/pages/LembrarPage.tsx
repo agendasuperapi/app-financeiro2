@@ -168,14 +168,14 @@ const LembrarPage = () => {
   return (
     <MainLayout>
       <SubscriptionGuard>
-        <div className="container mx-auto p-2 md:p-6 space-y-4 md:space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 md:mb-6">
-            <h1 className="text-xl md:text-2xl font-bold">Lembrar</h1>
+        <div className="container mx-auto p-3 md:p-4 lg:p-6 space-y-4 lg:space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4 mb-4 lg:mb-6">
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold">Lembrar</h1>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="flex items-center gap-2 w-full sm:w-auto">
                   <Plus className="h-4 w-4" />
-                  <span className="sm:inline">Adicionar</span>
+                  <span>Adicionar</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md mx-4 w-full">
@@ -211,10 +211,10 @@ const LembrarPage = () => {
             </Select>
           </div>
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg md:text-2xl font-bold">Lembretes Agendados</CardTitle>
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="text-lg md:text-xl lg:text-2xl font-bold">Lembretes Agendados</CardTitle>
             </CardHeader>
-            <CardContent className="p-0 md:p-6">
+            <CardContent className="p-0 md:p-4 lg:p-6">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin" />
@@ -227,7 +227,7 @@ const LembrarPage = () => {
               ) : (
                 <>
                   {/* Tabela para desktop */}
-                  <div className="hidden md:block">
+                  <div className="hidden lg:block">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -280,6 +280,71 @@ const LembrarPage = () => {
                                     variant="outline"
                                     onClick={() => handleDelete(conta.id)}
                                     className="text-red-600 border-red-600 hover:bg-red-50 h-8 w-8 p-0"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Tabela simplificada para tablet */}
+                  <div className="hidden md:block lg:hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Lembrete</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredContas.map((conta) => {
+                          const status = getStatus(conta);
+                          
+                          return (
+                            <TableRow key={conta.id}>
+                              <TableCell>
+                                <div>
+                                  <div className="font-semibold text-sm">
+                                    {conta.description || 'Lembrete sem descrição'}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      <span>{formatDate(conta.scheduledDate)}</span>
+                                    </div>
+                                    <div className="mt-1">
+                                      {formatRecurrence(conta.recurrence)}
+                                    </div>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={status.variant} className="text-xs">
+                                  {status.label}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleEdit(conta)}
+                                    className="h-7 w-7 p-0"
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleDelete(conta.id)}
+                                    className="text-red-600 border-red-600 hover:bg-red-50 h-7 w-7 p-0"
                                   >
                                     <Trash2 className="h-3 w-3" />
                                   </Button>

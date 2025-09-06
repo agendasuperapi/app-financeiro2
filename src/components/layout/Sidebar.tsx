@@ -168,6 +168,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       href: '/lembrar'
     },
     {
+      icon: Clock,
+      label: 'Lembretes',
+      href: '/lembretes'
+    },
+    {
       icon: BarChart3,
       label: t('nav.reports'),
       href: '/reports'

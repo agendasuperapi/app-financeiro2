@@ -124,7 +124,7 @@ const ContasPage = () => {
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
-                      <DialogTitle>Adicionar Nova Conta</DialogTitle>
+                      <DialogTitle>Agendar Transação</DialogTitle>
                     </DialogHeader>
                     <AddContaForm
                       onSuccess={() => {

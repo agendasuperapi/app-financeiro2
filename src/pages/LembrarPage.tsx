@@ -47,8 +47,7 @@ const LembrarPage = () => {
           category:poupeja_categories(id, name, icon, color, type)
         `)
         .eq('type', 'lembrete')
-        .eq('amount', 0)
-        .order("scheduled_date", { ascending: true });
+        .order("date", { ascending: true });
 
       if (error) throw error;
 
@@ -62,7 +61,7 @@ const LembrarPage = () => {
         categoryIcon: item.category?.icon || "circle",
         categoryColor: item.category?.color || "#607D8B",
         description: item.description || "",
-        scheduledDate: item.scheduled_date || item.date,
+        scheduledDate: item.date,
         recurrence: item.recurrence || 'once',
         goalId: item.goal_id,
         status: item.status || 'pending',

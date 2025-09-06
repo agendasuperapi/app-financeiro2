@@ -169,18 +169,18 @@ const LembrarPage = () => {
     <MainLayout>
       <SubscriptionGuard>
         <div className="container mx-auto p-2 md:p-6 space-y-4 md:space-y-6">
-          <div className="flex items-center justify-between mb-4 md:mb-6">
-            <h1 className="text-base md:text-xl font-bold">Lembrar</h1>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 md:mb-6">
+            <h1 className="text-xl md:text-2xl font-bold">Lembrar</h1>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
+                <Button className="flex items-center gap-2 w-full sm:w-auto">
                   <Plus className="h-4 w-4" />
-                  Adicionar
+                  <span className="sm:inline">Adicionar</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md mx-4 w-full">
                 <DialogHeader>
-                  <DialogTitle>Agendar Transação</DialogTitle>
+                  <DialogTitle>Agendar Lembrete</DialogTitle>
                 </DialogHeader>
                 <AddContaForm
                   onSuccess={() => {
@@ -194,10 +194,13 @@ const LembrarPage = () => {
           </div>
           
           {/* Filtro de Status */}
-          <div className="flex items-center gap-2 mb-2 md:mb-4">
-            <Filter className="h-4 w-4 text-muted-foreground" />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Filtro:</span>
+            </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Filtrar por status" />
               </SelectTrigger>
               <SelectContent>
@@ -209,84 +212,139 @@ const LembrarPage = () => {
           </div>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base md:text-2xl font-bold">Agendadas</CardTitle>
+              <CardTitle className="text-lg md:text-2xl font-bold">Lembretes Agendados</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0 md:p-6">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin" />
-                  <span className="ml-2">Carregando contas...</span>
+                  <span className="ml-2">Carregando lembretes...</span>
                 </div>
               ) : filteredContas.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  {statusFilter === 'todos' ? 'Nenhuma conta encontrada' : `Nenhuma conta ${statusFilter} encontrada`}
+                  {statusFilter === 'todos' ? 'Nenhum lembrete encontrado' : `Nenhum lembrete ${statusFilter} encontrado`}
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Data / Recorrência</TableHead>
-                      <TableHead>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <>
+                  {/* Tabela para desktop */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Descrição</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Data / Recorrência</TableHead>
+                          <TableHead>Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredContas.map((conta) => {
+                          const status = getStatus(conta);
+                          
+                          return (
+                            <TableRow key={conta.id}>
+                              <TableCell>
+                                <div className="font-semibold">
+                                  {conta.description || 'Lembrete sem descrição'}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={status.variant}>
+                                  {status.label}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm text-muted-foreground">
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    <span>{formatDate(conta.scheduledDate)}</span>
+                                  </div>
+                                  <div className="mt-1">
+                                    {formatRecurrence(conta.recurrence)}
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleEdit(conta)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleDelete(conta.id)}
+                                    className="text-red-600 border-red-600 hover:bg-red-50 h-8 w-8 p-0"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Cards para mobile */}
+                  <div className="md:hidden space-y-3 p-4">
                     {filteredContas.map((conta) => {
                       const status = getStatus(conta);
-                      const isPaid = conta.status === 'paid';
                       
                       return (
-                        <TableRow key={conta.id}>
-                          <TableCell>
-                            <div>
-                              <div className="font-semibold">
-                                {conta.description || 'Conta sem descrição'}
+                        <Card key={conta.id} className="shadow-sm">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-sm truncate">
+                                  {conta.description || 'Lembrete sem descrição'}
+                                </h3>
+                                <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                                  <Calendar className="h-3 w-3" />
+                                  <span>{formatDate(conta.scheduledDate)}</span>
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {formatRecurrence(conta.recurrence)}
+                                </div>
                               </div>
+                              <Badge variant={status.variant} className="ml-2 flex-shrink-0">
+                                {status.label}
+                              </Badge>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={status.variant}>
-                              {status.label}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                <span>{formatDate(conta.scheduledDate)}</span>
-                              </div>
-                              <div className="mt-1">
-                                {formatRecurrence(conta.recurrence)}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
+                            
+                            <div className="flex items-center gap-2 pt-2 border-t">
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleEdit(conta)}
-                                className="h-8 w-8 p-0"
+                                className="flex-1 h-8 text-xs"
                               >
-                                <Edit className="h-3 w-3" />
+                                <Edit className="h-3 w-3 mr-1" />
+                                Editar
                               </Button>
                               
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleDelete(conta.id)}
-                                className="text-red-600 border-red-600 hover:bg-red-50 h-8 w-8 p-0"
+                                className="flex-1 h-8 text-xs text-red-600 border-red-600 hover:bg-red-50"
                               >
-                                <Trash2 className="h-3 w-3" />
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Excluir
                               </Button>
                             </div>
-                          </TableCell>
-                        </TableRow>
+                          </CardContent>
+                        </Card>
                       );
                     })}
-                  </TableBody>
-                </Table>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
@@ -294,9 +352,9 @@ const LembrarPage = () => {
         
         {/* Dialog de Edição */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md mx-4 w-full">
             <DialogHeader>
-              <DialogTitle>Editar Conta</DialogTitle>
+              <DialogTitle>Editar Lembrete</DialogTitle>
             </DialogHeader>
             <AddContaForm
               initialData={editingConta}

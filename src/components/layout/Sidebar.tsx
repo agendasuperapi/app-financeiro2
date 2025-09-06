@@ -159,7 +159,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
     },
     {
       icon: CreditCard,
-      label: 'Contas',
+      label: 'Contas a Pagar',
       href: '/contas'
     },
     {

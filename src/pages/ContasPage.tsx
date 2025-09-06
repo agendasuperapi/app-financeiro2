@@ -153,8 +153,8 @@ const ContasPage = () => {
   return (
     <MainLayout>
       <SubscriptionGuard>
-        <div className="container mx-auto p-6 space-y-6">
-          <div className="flex items-center justify-between mb-6">
+        <div className="container mx-auto p-2 md:p-6 space-y-4 md:space-y-6">
+          <div className="flex items-center justify-between mb-4 md:mb-6">
             <h1 className="text-base md:text-xl font-bold">Contas a Pagar</h1>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
@@ -179,7 +179,7 @@ const ContasPage = () => {
           </div>
           
           {/* Filtro de Status */}
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-2 md:mb-4">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-48">
@@ -215,7 +215,7 @@ const ContasPage = () => {
                     
                     return (
                       <Card key={conta.id} className="transition-all hover:shadow-md">
-                        <CardContent className="p-4">
+                        <CardContent className="p-2 md:p-4">
                           {/* Primeira linha: Descrição e Status */}
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex-1">

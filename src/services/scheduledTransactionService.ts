@@ -29,12 +29,12 @@ const normalizeRecurrence = (recurrence: string | null | undefined): 'once' | 'd
 export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]> => {
   try {
     const { data, error } = await supabase
-      .from("poupeja_scheduled_transactions")
+      .from("poupeja_transactions")
       .select(`
         *,
         category:poupeja_categories(id, name, icon, color, type)
       `)
-      .order("scheduled_date", { ascending: true });
+      .order("date", { ascending: true });
 
     if (error) throw error;
 
@@ -47,14 +47,14 @@ export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]
       categoryIcon: item.category?.icon || "circle",
       categoryColor: item.category?.color || "#607D8B",
       description: item.description || "",
-      scheduledDate: item.scheduled_date,
-      recurrence: normalizeRecurrence(item.recurrence),
+      scheduledDate: item.date,
+      recurrence: 'once' as const,
       goalId: item.goal_id,
-      status: (item.status as 'pending' | 'paid' | 'overdue' | 'upcoming') || 'pending',
-      paidDate: item.paid_date,
-      paidAmount: item.paid_amount,
-      lastExecutionDate: item.last_execution_date,
-      nextExecutionDate: item.next_execution_date,
+      status: (item.description?.includes('[PAID]') ? 'paid' : 'pending') as 'pending' | 'paid' | 'overdue' | 'upcoming',
+      paidDate: undefined,
+      paidAmount: undefined,
+      lastExecutionDate: undefined,
+      nextExecutionDate: undefined,
     }));
   } catch (error) {
     console.error("Error fetching scheduled transactions:", error);
@@ -119,7 +119,7 @@ export const addScheduledTransaction = async (
       amount: transaction.amount,
       category_id: categoryId,
       description: transaction.description,
-      scheduled_date: transaction.scheduledDate,
+      date: transaction.scheduledDate,
       goal_id: transaction.goalId,
       reference_code: referenceCode
     };
@@ -135,7 +135,7 @@ export const addScheduledTransaction = async (
     console.log('Insert data with all fields:', insertData);
     
     const { data, error } = await supabase
-      .from("poupeja_scheduled_transactions")
+      .from("poupeja_transactions")
       .insert(insertData)
       .select(`
         *,
@@ -154,14 +154,14 @@ export const addScheduledTransaction = async (
       categoryIcon: data.category?.icon || "circle",
       categoryColor: data.category?.color || "#607D8B",
       description: data.description || "",
-      scheduledDate: data.scheduled_date,
-      recurrence: normalizeRecurrence(data.recurrence),
+      scheduledDate: data.date,
+      recurrence: 'once' as const,
       goalId: data.goal_id,
-      status: (data.status as 'pending' | 'paid' | 'overdue' | 'upcoming') || 'pending',
-      paidDate: data.paid_date,
-      paidAmount: data.paid_amount,
-      lastExecutionDate: data.last_execution_date,
-      nextExecutionDate: data.next_execution_date,
+      status: (data.description?.includes('[PAID]') ? 'paid' : 'pending') as 'pending' | 'paid' | 'overdue' | 'upcoming',
+      paidDate: undefined,
+      paidAmount: undefined,
+      lastExecutionDate: undefined,
+      nextExecutionDate: undefined,
     };
   } catch (error) {
     console.error("Error adding scheduled transaction:", error);
@@ -206,7 +206,7 @@ export const updateScheduledTransaction = async (
       amount: transaction.amount,
       category_id: categoryId,
       description: transaction.description,
-      scheduled_date: transaction.scheduledDate,
+      date: transaction.scheduledDate,
       goal_id: transaction.goalId
     };
 
@@ -221,7 +221,7 @@ export const updateScheduledTransaction = async (
     console.log('Update data with all fields:', updateData);
 
     const { data, error } = await supabase
-      .from("poupeja_scheduled_transactions")
+      .from("poupeja_transactions")
       .update(updateData)
       .eq("id", transaction.id)
       .select(`
@@ -241,14 +241,14 @@ export const updateScheduledTransaction = async (
       categoryIcon: data.category?.icon || "circle",
       categoryColor: data.category?.color || "#607D8B",
       description: data.description || "",
-      scheduledDate: data.scheduled_date,
-      recurrence: normalizeRecurrence(data.recurrence),
+      scheduledDate: data.date,
+      recurrence: 'once' as const,
       goalId: data.goal_id,
-      status: (data.status as 'pending' | 'paid' | 'overdue' | 'upcoming') || 'pending',
-      paidDate: data.paid_date,
-      paidAmount: data.paid_amount,
-      lastExecutionDate: data.last_execution_date,
-      nextExecutionDate: data.next_execution_date,
+      status: (data.description?.includes('[PAID]') ? 'paid' : 'pending') as 'pending' | 'paid' | 'overdue' | 'upcoming',
+      paidDate: undefined,
+      paidAmount: undefined,
+      lastExecutionDate: undefined,
+      nextExecutionDate: undefined,
     };
   } catch (error) {
     console.error("Error updating scheduled transaction:", error);
@@ -261,10 +261,25 @@ export const markAsPaid = async (
   paidAmount?: number
 ): Promise<boolean> => {
   try {
+    // Get current description to preserve it
+    const { data: currentTransaction, error: selectError } = await supabase
+      .from("poupeja_transactions")
+      .select("description")
+      .eq("id", transactionId)
+      .single();
+
+    if (selectError) throw selectError;
+
+    // Add [PAID] marker to description to mark as paid
+    const currentDesc = currentTransaction.description || "";
+    const updatedDescription = currentDesc.includes("[PAID]") 
+      ? currentDesc 
+      : currentDesc + " [PAID]";
+
     const { error } = await supabase
-      .from("poupeja_scheduled_transactions")
+      .from("poupeja_transactions")
       .update({
-        status: "paid"
+        description: updatedDescription
       })
       .eq("id", transactionId);
 
@@ -280,7 +295,7 @@ export const markAsPaid = async (
 export const deleteScheduledTransaction = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from("poupeja_scheduled_transactions")
+      .from("poupeja_transactions")
       .delete()
       .eq("id", id);
 

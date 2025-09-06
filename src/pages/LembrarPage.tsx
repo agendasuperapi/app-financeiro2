@@ -38,7 +38,9 @@ const LembrarPage = () => {
     setLoading(true);
     try {
       const data = await getScheduledTransactions();
-      setContas(data);
+      // Filtrar apenas contas com valor igual a 0
+      const filteredData = data.filter(conta => conta.amount === 0);
+      setContas(filteredData);
     } catch (error) {
       console.error('Error loading contas:', error);
     } finally {

@@ -38,9 +38,9 @@ export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]
 
     if (error) throw error;
 
-    // Filtrar apenas transações com status pending ou paid
+    // Filtrar apenas transações com status pending ou paid e amount > 0
     const filteredData = data.filter((item: any) => 
-      item.status === 'pending' || item.status === 'paid'
+      (item.status === 'pending' || item.status === 'paid') && item.amount > 0
     );
 
     return filteredData.map((item: any) => ({

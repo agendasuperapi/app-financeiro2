@@ -4,10 +4,11 @@ import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
 import { ScheduledTransaction } from '@/types';
-import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus } from 'lucide-react';
+import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { isAfter, isToday } from 'date-fns';
@@ -16,7 +17,9 @@ import AddContaForm from '@/components/contas/AddContaForm';
 
 const ContasPage = () => {
   const [contas, setContas] = useState<ScheduledTransaction[]>([]);
+  const [filteredContas, setFilteredContas] = useState<ScheduledTransaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
@@ -26,6 +29,10 @@ const ContasPage = () => {
   useEffect(() => {
     loadContas();
   }, []);
+
+  useEffect(() => {
+    applyStatusFilter();
+  }, [contas, statusFilter]);
 
   const loadContas = async () => {
     setLoading(true);
@@ -37,6 +44,42 @@ const ContasPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyStatusFilter = () => {
+    if (statusFilter === 'todos') {
+      setFilteredContas(contas);
+      return;
+    }
+
+    const filtered = contas.filter((conta) => {
+      const status = getContaStatus(conta);
+      
+      switch (statusFilter) {
+        case 'pendente':
+          return status === 'Pendente';
+        case 'pago':
+          return status === 'Pago';
+        case 'vencido':
+          return status === 'Vencido' || status === 'Vence Hoje';
+        default:
+          return true;
+      }
+    });
+    
+    setFilteredContas(filtered);
+  };
+
+  const getContaStatus = (conta: ScheduledTransaction): string => {
+    const scheduledDate = new Date(conta.scheduledDate);
+    const isOverdue = isAfter(new Date(), scheduledDate) && !isToday(scheduledDate);
+    const isDueToday = isToday(scheduledDate);
+    const isPaid = conta.status === 'paid';
+
+    if (isPaid) return 'Pago';
+    if (isDueToday) return 'Vence Hoje';
+    if (isOverdue) return 'Vencido';
+    return 'Pendente';
   };
 
   const handleMarkAsPaid = async (id: string) => {
@@ -134,6 +177,22 @@ const ContasPage = () => {
               </DialogContent>
             </Dialog>
           </div>
+          
+          {/* Filtro de Status */}
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filtrar por status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="pendente">Pendente</SelectItem>
+                <SelectItem value="pago">Pago</SelectItem>
+                <SelectItem value="vencido">Vencido</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl font-bold">Agendadas</CardTitle>
@@ -144,13 +203,13 @@ const ContasPage = () => {
                   <Loader2 className="h-8 w-8 animate-spin" />
                   <span className="ml-2">Carregando contas...</span>
                 </div>
-              ) : contas.length === 0 ? (
+              ) : filteredContas.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  Nenhuma conta encontrada
+                  {statusFilter === 'todos' ? 'Nenhuma conta encontrada' : `Nenhuma conta ${statusFilter} encontrada`}
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {contas.map((conta) => {
+                  {filteredContas.map((conta) => {
                     const status = getStatus(conta);
                     const isPaid = conta.status === 'paid';
                     

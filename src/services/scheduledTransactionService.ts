@@ -270,7 +270,7 @@ export const markAsPaid = async (
 
     if (selectError) throw selectError;
 
-    // Update the transaction to mark as paid by adding [PAGO] to description
+    // Update the transaction to mark as paid by adding [PAGO] to description and changing status to paid
     const updatedDescription = currentTransaction.description?.includes("[PAGO]") 
       ? currentTransaction.description 
       : (currentTransaction.description || "") + " [PAGO]";
@@ -278,7 +278,8 @@ export const markAsPaid = async (
     const { error: updateError } = await supabase
       .from("poupeja_transactions")
       .update({
-        description: updatedDescription
+        description: updatedDescription,
+        status: 'paid'
       })
       .eq("id", transactionId);
 

@@ -38,7 +38,12 @@ export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]
 
     if (error) throw error;
 
-    return data.map((item) => ({
+    // Filtrar apenas transações com status pending ou paid
+    const filteredData = data.filter((item: any) => 
+      item.status === 'pending' || item.status === 'paid'
+    );
+
+    return filteredData.map((item: any) => ({
       id: item.id,
       type: item.type as 'income' | 'expense' | 'reminder' | 'outros',
       amount: item.amount,
@@ -50,7 +55,7 @@ export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]
       scheduledDate: item.date,
       recurrence: 'once' as const,
       goalId: item.goal_id,
-      status: ((item as any).status as 'pending' | 'paid' | 'overdue' | 'upcoming') || 'pending',
+      status: (item.status as 'pending' | 'paid' | 'overdue' | 'upcoming') || 'pending',
       paidDate: undefined,
       paidAmount: undefined,
       lastExecutionDate: undefined,
@@ -265,7 +270,7 @@ export const markAsPaid = async (
       .from("poupeja_transactions")
       .update({
         status: "paid"
-      })
+      } as any)
       .eq("id", transactionId);
 
     if (error) throw error;

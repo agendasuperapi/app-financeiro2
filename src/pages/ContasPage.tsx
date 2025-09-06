@@ -111,6 +111,7 @@ const ContasPage = () => {
     <MainLayout>
       <SubscriptionGuard>
         <div className="container mx-auto p-6 space-y-6">
+          <h1 className="text-3xl font-bold text-center mb-6">Contas a Pagar</h1>
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">

@@ -158,11 +158,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       href: '/goals'
     },
     {
-      icon: Calendar,
-      label: t('schedule.title'),
-      href: '/schedule'
-    },
-    {
       icon: CreditCard,
       label: 'Contas',
       href: '/contas'

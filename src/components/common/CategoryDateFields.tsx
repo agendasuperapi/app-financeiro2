@@ -11,7 +11,7 @@ import CategoryIcon from '@/components/categories/CategoryIcon';
 
 interface CategoryDateFieldsProps {
   form: UseFormReturn<TransactionFormValues>;
-  transactionType: 'income' | 'expense' | 'reminder' | 'outros';
+  transactionType: 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros';
 }
 
 const CategoryDateFields: React.FC<CategoryDateFieldsProps> = ({ form, transactionType }) => {

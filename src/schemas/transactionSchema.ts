@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 export const createTransactionSchema = (translationFn: (key: string) => string) => {
   return z.object({
-    type: z.enum(['income', 'expense', 'reminder', 'outros']),
+    type: z.enum(['income', 'expense', 'reminder', 'lembrete', 'outros']),
     amount: z.coerce.number().min(0.01, translationFn('validation.positive')),
     category: z.string().min(1, translationFn('validation.required')),
     description: z.string().optional(),

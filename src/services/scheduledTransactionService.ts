@@ -45,7 +45,7 @@ export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]
 
     return filteredData.map((item: any) => ({
       id: item.id,
-      type: item.type as 'income' | 'expense' | 'reminder' | 'outros',
+      type: item.type as 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros',
       amount: item.amount,
       category: item.category?.name || "Outros",
       category_id: item.category_id,
@@ -152,7 +152,7 @@ export const addScheduledTransaction = async (
 
     return {
       id: data.id,
-      type: data.type as 'income' | 'expense' | 'reminder' | 'outros',
+      type: data.type as 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros',
       amount: data.amount,
       category: data.category?.name || "Outros",
       category_id: data.category_id,
@@ -239,7 +239,7 @@ export const updateScheduledTransaction = async (
 
     return {
       id: data.id,
-      type: data.type as 'income' | 'expense' | 'reminder' | 'outros',
+      type: data.type as 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros',
       amount: data.amount,
       category: data.category?.name || "Outros",
       category_id: data.category_id,

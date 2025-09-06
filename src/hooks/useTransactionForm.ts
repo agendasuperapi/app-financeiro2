@@ -12,7 +12,7 @@ interface UseTransactionFormProps {
   initialData?: Transaction;
   mode: 'create' | 'edit';
   onComplete: () => void;
-  defaultType?: 'income' | 'expense' | 'reminder' | 'outros';
+  defaultType?: 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros';
 }
 
 export const useTransactionForm = ({ 
@@ -23,7 +23,7 @@ export const useTransactionForm = ({
 }: UseTransactionFormProps) => {
   const { addTransaction, updateTransaction, getTransactions, getGoals } = useAppContext();
   const { t } = usePreferences();
-  const [selectedType, setSelectedType] = useState<'income' | 'expense' | 'reminder' | 'outros'>(
+  const [selectedType, setSelectedType] = useState<'income' | 'expense' | 'reminder' | 'lembrete' | 'outros'>(
     initialData?.type || defaultType
   );
 
@@ -52,7 +52,7 @@ export const useTransactionForm = ({
   });
 
   // Simple type change handler that doesn't cause infinite loops
-  const handleTypeChange = async (type: 'income' | 'expense' | 'reminder' | 'outros') => {
+  const handleTypeChange = async (type: 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros') => {
     if (type !== selectedType) {
       setSelectedType(type);
       

@@ -78,7 +78,7 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
     setLoading(true);
     try {
       const transactionData = {
-        type: 'reminder' as const,
+        type: 'lembrete' as const,
         amount: 0,
         category: 'Lembrete',
         description: data.description,

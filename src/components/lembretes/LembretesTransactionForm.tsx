@@ -42,7 +42,7 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
     updateScheduledTransaction,
     deleteScheduledTransaction
   } = useAppContext();
-  const [selectedType, setSelectedType] = useState<'income' | 'expense' | 'reminder' | 'outros'>(initialData?.type || defaultType);
+  const [selectedType, setSelectedType] = useState<'income' | 'expense' | 'reminder' | 'lembrete' | 'outros'>(initialData?.type || defaultType);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isOnline] = useState(navigator.onLine);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -50,7 +50,7 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
 
   // Schema for the scheduled transaction form
   const formSchema = z.object({
-    type: z.enum(['income', 'expense', 'reminder', 'outros']),
+    type: z.enum(['income', 'expense', 'reminder', 'lembrete', 'outros']),
     description: z.string().min(1, {
       message: t('validation.required')
     }),

@@ -261,7 +261,7 @@ export const markAsPaid = async (
   paidAmount?: number
 ): Promise<boolean> => {
   try {
-    // First get the current transaction to preserve description
+    // Get the current transaction to preserve description
     const { data: currentTransaction, error: selectError } = await supabase
       .from("poupeja_transactions")
       .select("description")
@@ -270,10 +270,11 @@ export const markAsPaid = async (
 
     if (selectError) throw selectError;
 
-    // Update the transaction to mark as paid by adding [PAGO] to description
-    const updatedDescription = currentTransaction.description?.includes("[PAGO]") 
-      ? currentTransaction.description 
-      : (currentTransaction.description || "") + " [PAGO]";
+    // Update the transaction with PAID status marker
+    const currentDesc = currentTransaction.description || "";
+    const updatedDescription = currentDesc.includes("[PAID]") 
+      ? currentDesc 
+      : currentDesc + " [PAID]";
 
     const { error: updateError } = await supabase
       .from("poupeja_transactions")

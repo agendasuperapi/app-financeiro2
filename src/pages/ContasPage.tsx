@@ -99,7 +99,7 @@ const ContasPage = () => {
     const scheduledDate = new Date(conta.scheduledDate);
     const isOverdue = isAfter(new Date(), scheduledDate) && !isToday(scheduledDate);
     const isDueToday = isToday(scheduledDate);
-    const isPaid = conta.description?.includes('[PAGO]') || false;
+    const isPaid = conta.description?.includes('[PAID]') || false;
 
     if (isPaid) return { label: 'Pago', variant: 'default' as const };
     if (isDueToday) return { label: 'Vence Hoje', variant: 'destructive' as const };
@@ -151,7 +151,7 @@ const ContasPage = () => {
                 <div className="space-y-4">
                   {contas.map((conta) => {
                     const status = getStatus(conta);
-                    const isPaid = conta.description?.includes('[PAGO]') || false;
+                    const isPaid = conta.description?.includes('[PAID]') || false;
                     
                     return (
                       <Card key={conta.id} className="transition-all hover:shadow-md">
@@ -160,7 +160,7 @@ const ContasPage = () => {
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex-1">
                               <h3 className="font-semibold text-lg">
-                                {conta.description || 'Conta sem descrição'}
+                                {conta.description?.replace(' [PAID]', '') || 'Conta sem descrição'}
                               </h3>
                             </div>
                             <Badge variant={status.variant} className="ml-2">
@@ -191,7 +191,7 @@ const ContasPage = () => {
                             </div>
                             
                             <div className="flex items-center gap-2">
-                              {!isPaid && (
+                               {!isPaid && (
                                 <Button
                                   size="sm"
                                   variant="outline"
@@ -200,6 +200,18 @@ const ContasPage = () => {
                                 >
                                   <CheckCircle className="h-4 w-4 mr-1" />
                                   Marcar como Pago
+                                </Button>
+                              )}
+                              
+                              {isPaid && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled
+                                  className="text-green-600 border-green-600"
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Pago
                                 </Button>
                               )}
                               

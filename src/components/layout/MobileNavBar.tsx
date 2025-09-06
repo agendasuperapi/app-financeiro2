@@ -71,9 +71,9 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
     },
     {
       icon: Clock,
-      label: 'Lembretes',
+      label: 'Lembrar',
       action: () => {
-        navigate('/lembretes');
+        navigate('/lembrar');
         setIsQuickActionsOpen(false);
       },
       color: 'text-amber-600',

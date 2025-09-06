@@ -136,7 +136,7 @@ const ContasPage = () => {
           </div>
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl font-bold">Contas</CardTitle>
+              <CardTitle className="text-2xl font-bold">Agendadas</CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (

@@ -15,6 +15,7 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { isAfter, isToday } from 'date-fns';
 import { toast } from 'sonner';
 import AddContaForm from '@/components/contas/AddContaForm';
+import { supabase } from '@/integrations/supabase/client';
 
 const LembrarPage = () => {
   const [contas, setContas] = useState<ScheduledTransaction[]>([]);
@@ -38,11 +39,36 @@ const LembrarPage = () => {
   const loadContas = async () => {
     setLoading(true);
     try {
-      const data = await getScheduledTransactions();
-      // Filtrar apenas lembretes com valor igual a 0
-      const filteredData = data.filter(conta => 
-        (conta.type as string) === 'lembrete' && conta.amount === 0
-      );
+      // Buscar diretamente da tabela poupeja_transactions
+      const { data, error } = await supabase
+        .from("poupeja_transactions")
+        .select(`
+          *,
+          category:poupeja_categories(id, name, icon, color, type)
+        `)
+        .eq('type', 'lembrete')
+        .eq('amount', 0)
+        .order("scheduled_date", { ascending: true });
+
+      if (error) throw error;
+
+      // Converter para o formato esperado
+      const filteredData = data.map((item: any) => ({
+        id: item.id,
+        type: item.type,
+        amount: item.amount,
+        category: item.category?.name || "Outros",
+        category_id: item.category_id,
+        categoryIcon: item.category?.icon || "circle",
+        categoryColor: item.category?.color || "#607D8B",
+        description: item.description || "",
+        scheduledDate: item.scheduled_date || item.date,
+        recurrence: item.recurrence || 'once',
+        goalId: item.goal_id,
+        status: item.status || 'pending',
+        situacao: item.situacao || 'pendente'
+      }));
+
       setContas(filteredData);
     } catch (error) {
       console.error('Error loading contas:', error);
@@ -63,10 +89,8 @@ const LembrarPage = () => {
       switch (statusFilter) {
         case 'pendente':
           return status === 'Pendente';
-        case 'pago':
-          return status === 'Pago';
-        case 'vencido':
-          return status === 'Vencido' || status === 'Vence Hoje';
+        case 'avisado':
+          return status === 'Avisado';
         default:
           return true;
       }
@@ -76,14 +100,8 @@ const LembrarPage = () => {
   };
 
   const getContaStatus = (conta: ScheduledTransaction): string => {
-    const scheduledDate = new Date(conta.scheduledDate);
-    const isOverdue = isAfter(new Date(), scheduledDate) && !isToday(scheduledDate);
-    const isDueToday = isToday(scheduledDate);
-    const isPaid = conta.status === 'paid';
-
-    if (isPaid) return 'Pago';
-    if (isDueToday) return 'Vence Hoje';
-    if (isOverdue) return 'Vencido';
+    // Use situacao field to determine status
+    if (conta.situacao === 'avisado') return 'Avisado';
     return 'Pendente';
   };
 
@@ -144,14 +162,7 @@ const LembrarPage = () => {
 
   // Determinar status
   const getStatus = (conta: ScheduledTransaction) => {
-    const scheduledDate = new Date(conta.scheduledDate);
-    const isOverdue = isAfter(new Date(), scheduledDate) && !isToday(scheduledDate);
-    const isDueToday = isToday(scheduledDate);
-    const isPaid = conta.status === 'paid';
-
-    if (isPaid) return { label: 'Pago', variant: 'default' as const };
-    if (isDueToday) return { label: 'Vence Hoje', variant: 'destructive' as const };
-    if (isOverdue) return { label: 'Vencido', variant: 'destructive' as const };
+    if (conta.situacao === 'avisado') return { label: 'Avisado', variant: 'default' as const };
     return { label: 'Pendente', variant: 'secondary' as const };
   };
 
@@ -193,8 +204,7 @@ const LembrarPage = () => {
               <SelectContent>
                 <SelectItem value="todos">Todos</SelectItem>
                 <SelectItem value="pendente">Pendente</SelectItem>
-                <SelectItem value="pago">Pago</SelectItem>
-                <SelectItem value="vencido">Vencido</SelectItem>
+                <SelectItem value="avisado">Avisado</SelectItem>
               </SelectContent>
             </Select>
           </div>

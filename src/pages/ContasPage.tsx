@@ -99,7 +99,9 @@ const ContasPage = () => {
     const scheduledDate = new Date(conta.scheduledDate);
     const isOverdue = isAfter(new Date(), scheduledDate) && !isToday(scheduledDate);
     const isDueToday = isToday(scheduledDate);
+    const isPaid = conta.status === 'paid' || conta.description?.includes('[PAGO]') || false;
 
+    if (isPaid) return { label: 'Pago', variant: 'default' as const };
     if (isDueToday) return { label: 'Vence Hoje', variant: 'destructive' as const };
     if (isOverdue) return { label: 'Vencido', variant: 'destructive' as const };
     return { label: 'Pendente', variant: 'secondary' as const };
@@ -149,6 +151,7 @@ const ContasPage = () => {
                 <div className="space-y-4">
                   {contas.map((conta) => {
                     const status = getStatus(conta);
+                    const isPaid = conta.status === 'paid' || conta.description?.includes('[PAGO]') || false;
                     
                     return (
                       <Card key={conta.id} className="transition-all hover:shadow-md">
@@ -188,15 +191,17 @@ const ContasPage = () => {
                             </div>
                             
                             <div className="flex items-center gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleMarkAsPaid(conta.id)}
-                                className="text-green-600 border-green-600 hover:bg-green-50"
-                              >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Marcar como Pago
-                              </Button>
+                              {!isPaid && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleMarkAsPaid(conta.id)}
+                                  className="text-green-600 border-green-600 hover:bg-green-50"
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Marcar como Pago
+                                </Button>
+                              )}
                               
                               <Button
                                 size="sm"
@@ -216,6 +221,13 @@ const ContasPage = () => {
                               </Button>
                             </div>
                           </div>
+
+                          {/* Mostrar data de pagamento se foi pago */}
+                          {isPaid && conta.paidDate && (
+                            <div className="mt-2 text-sm text-green-600">
+                              Pago em: {formatDate(conta.paidDate)}
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     );

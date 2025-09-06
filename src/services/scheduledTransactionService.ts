@@ -261,10 +261,31 @@ export const markAsPaid = async (
   paidAmount?: number
 ): Promise<boolean> => {
   try {
-    // For now, just log that the transaction was marked as paid
-    // since the status column doesn't exist in the database
-    console.log(`Transaction ${transactionId} marked as paid`);
+    // Since status column doesn't exist, we'll update the description to mark as paid
+    const { data: currentTransaction } = await supabase
+      .from("poupeja_transactions")
+      .select("description")
+      .eq("id", transactionId)
+      .single();
+
+    if (!currentTransaction) throw new Error("Transaction not found");
+
+    // Add paid marker to description without showing [PAGO] text
+    const updatedDescription = currentTransaction.description || "";
+    const paidMarker = "[PAID_STATUS]";
     
+    const { error } = await supabase
+      .from("poupeja_transactions")
+      .update({ 
+        description: updatedDescription.includes(paidMarker) 
+          ? updatedDescription 
+          : `${updatedDescription}${paidMarker}`
+      })
+      .eq("id", transactionId);
+
+    if (error) throw error;
+    
+    console.log(`Transaction ${transactionId} marked as paid`);
     return true;
   } catch (error) {
     console.error("Error marking transaction as paid:", error);

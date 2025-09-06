@@ -256,7 +256,7 @@ const ContasPage = () => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleMarkAsPaid(conta.id)}
-                                  className="text-green-600 border-green-600 hover:bg-green-50 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7"
+                                  className="text-green-600 border-green-600 hover:bg-green-50 text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7"
                                 >
                                   <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
                                   Marcar como Pago

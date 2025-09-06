@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
 import { ScheduledTransaction } from '@/types';
 import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter } from 'lucide-react';
@@ -212,104 +213,71 @@ const LembrarPage = () => {
                   {statusFilter === 'todos' ? 'Nenhuma conta encontrada' : `Nenhuma conta ${statusFilter} encontrada`}
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {filteredContas.map((conta) => {
-                    const status = getStatus(conta);
-                    const isPaid = conta.status === 'paid';
-                    
-                    return (
-                      <Card key={conta.id} className="transition-all hover:shadow-md">
-                        <CardContent className="p-2 md:p-4">
-                          {/* Primeira linha: Descrição e Status */}
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-xs md:text-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Data / Recorrência</TableHead>
+                      <TableHead>Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredContas.map((conta) => {
+                      const status = getStatus(conta);
+                      const isPaid = conta.status === 'paid';
+                      
+                      return (
+                        <TableRow key={conta.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-semibold">
                                 {conta.description || 'Conta sem descrição'}
-                              </h3>
+                              </div>
                             </div>
-                            <Badge variant={status.variant} className="ml-2">
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={status.variant}>
                               {status.label}
                             </Badge>
-                          </div>
-
-                          {/* Segunda linha: Data, Recorrência e Categoria */}
-                          <div className="flex items-center gap-1 md:gap-4 mb-2 md:mb-3 text-[10px] md:text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-2.5 w-2.5 md:h-4 md:w-4" />
-                              <span>{formatDate(conta.scheduledDate)}</span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                <span>{formatDate(conta.scheduledDate)}</span>
+                              </div>
+                              <div className="mt-1">
+                                {formatRecurrence(conta.recurrence)}
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <span>•</span>
-                              <span>{formatRecurrence(conta.recurrence)}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <span>•</span>
-                              <span className="truncate">{conta.category}</span>
-                            </div>
-                          </div>
-
-                          {/* Terceira linha: Valor e Ações */}
-                          <div className="flex items-center justify-between">
-                            <div className="font-bold text-sm md:text-xl">
-                              {formatCurrency(conta.amount)}
-                            </div>
-                            
-                            <div className="flex items-center gap-1 flex-wrap">
-                              {!isPaid && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleMarkAsPaid(conta.id)}
-                                  className="text-green-600 border-green-600 hover:bg-green-50 text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7"
-                                >
-                                  <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
-                                  Marcar como Pago
-                                </Button>
-                              )}
-                              
-                              {isPaid && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  disabled
-                                  className="text-green-600 border-green-600 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7"
-                                >
-                                  <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
-                                  Pago
-                                </Button>
-                              )}
-                              
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleEdit(conta)}
-                                className="h-6 md:h-7 w-6 md:w-7 p-0"
+                                className="h-8 w-8 p-0"
                               >
-                                <Edit className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                                <Edit className="h-3 w-3" />
                               </Button>
                               
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleDelete(conta.id)}
-                                className="text-red-600 border-red-600 hover:bg-red-50 h-6 md:h-7 w-6 md:w-7 p-0"
+                                className="text-red-600 border-red-600 hover:bg-red-50 h-8 w-8 p-0"
                               >
-                                <Trash2 className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                                <Trash2 className="h-3 w-3" />
                               </Button>
                             </div>
-                          </div>
-
-                          {/* Mostrar data de pagamento se foi pago */}
-                          {isPaid && conta.paidDate && (
-                            <div className="mt-2 text-sm text-green-600">
-                              Pago em: {formatDate(conta.paidDate)}
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               )}
             </CardContent>
           </Card>

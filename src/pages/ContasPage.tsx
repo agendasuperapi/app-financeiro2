@@ -155,7 +155,7 @@ const ContasPage = () => {
       <SubscriptionGuard>
         <div className="container mx-auto p-6 space-y-6">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-lg md:text-xl font-bold">Contas a Pagar</h1>
+            <h1 className="text-base md:text-xl font-bold">Contas a Pagar</h1>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="flex items-center gap-2">
@@ -195,7 +195,7 @@ const ContasPage = () => {
           </div>
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg md:text-2xl font-bold">Agendadas</CardTitle>
+              <CardTitle className="text-base md:text-2xl font-bold">Agendadas</CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -219,7 +219,7 @@ const ContasPage = () => {
                           {/* Primeira linha: Descrição e Status */}
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex-1">
-                              <h3 className="font-semibold text-sm md:text-lg">
+                              <h3 className="font-semibold text-xs md:text-lg">
                                 {conta.description || 'Conta sem descrição'}
                               </h3>
                             </div>
@@ -229,9 +229,9 @@ const ContasPage = () => {
                           </div>
 
                           {/* Segunda linha: Data, Recorrência e Categoria */}
-                          <div className="flex items-center gap-2 md:gap-4 mb-3 text-xs md:text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1 md:gap-4 mb-2 md:mb-3 text-[10px] md:text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3 md:h-4 md:w-4" />
+                              <Calendar className="h-2.5 w-2.5 md:h-4 md:w-4" />
                               <span>{formatDate(conta.scheduledDate)}</span>
                             </div>
                             <div className="flex items-center gap-1">
@@ -240,25 +240,25 @@ const ContasPage = () => {
                             </div>
                             <div className="flex items-center gap-1">
                               <span>•</span>
-                              <span>{conta.category}</span>
+                              <span className="truncate">{conta.category}</span>
                             </div>
                           </div>
 
                           {/* Terceira linha: Valor e Ações */}
                           <div className="flex items-center justify-between">
-                            <div className="font-bold text-lg md:text-xl">
+                            <div className="font-bold text-sm md:text-xl">
                               {formatCurrency(conta.amount)}
                             </div>
                             
-                            <div className="flex items-center gap-1 md:gap-2 flex-wrap">
+                            <div className="flex items-center gap-1 flex-wrap">
                               {!isPaid && (
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleMarkAsPaid(conta.id)}
-                                  className="text-green-600 border-green-600 hover:bg-green-50 text-xs px-2 py-1 h-7"
+                                  className="text-green-600 border-green-600 hover:bg-green-50 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7"
                                 >
-                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
                                   <span className="hidden sm:inline">Marcar como Pago</span>
                                   <span className="sm:hidden">Pago</span>
                                 </Button>
@@ -269,9 +269,9 @@ const ContasPage = () => {
                                   size="sm"
                                   variant="outline"
                                   disabled
-                                  className="text-green-600 border-green-600 text-xs px-2 py-1 h-7"
+                                  className="text-green-600 border-green-600 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7"
                                 >
-                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
                                   Pago
                                 </Button>
                               )}
@@ -280,18 +280,18 @@ const ContasPage = () => {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleEdit(conta)}
-                                className="h-7 w-7 p-0"
+                                className="h-6 md:h-7 w-6 md:w-7 p-0"
                               >
-                                <Edit className="h-3 w-3" />
+                                <Edit className="h-2.5 w-2.5 md:h-3 md:w-3" />
                               </Button>
                               
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleDelete(conta.id)}
-                                className="text-red-600 border-red-600 hover:bg-red-50 h-7 w-7 p-0"
+                                className="text-red-600 border-red-600 hover:bg-red-50 h-6 md:h-7 w-6 md:w-7 p-0"
                               >
-                                <Trash2 className="h-3 w-3" />
+                                <Trash2 className="h-2.5 w-2.5 md:h-3 md:w-3" />
                               </Button>
                             </div>
                           </div>

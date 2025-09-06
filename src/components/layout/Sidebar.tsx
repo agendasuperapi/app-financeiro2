@@ -164,6 +164,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
     },
     {
       icon: Clock,
+      label: 'Lembrar',
+      href: '/lembrar'
+    },
+    {
+      icon: Clock,
       label: 'Lembretes',
       href: '/lembretes'
     },

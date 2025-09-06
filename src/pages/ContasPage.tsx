@@ -99,7 +99,7 @@ const ContasPage = () => {
     const scheduledDate = new Date(conta.scheduledDate);
     const isOverdue = isAfter(new Date(), scheduledDate) && !isToday(scheduledDate);
     const isDueToday = isToday(scheduledDate);
-    const isPaid = conta.status === 'paid' || conta.description?.includes('[PAGO]') || false;
+    const isPaid = conta.description?.includes('[PAGO]') || false;
 
     if (isPaid) return { label: 'Pago', variant: 'default' as const };
     if (isDueToday) return { label: 'Vence Hoje', variant: 'destructive' as const };
@@ -151,7 +151,7 @@ const ContasPage = () => {
                 <div className="space-y-4">
                   {contas.map((conta) => {
                     const status = getStatus(conta);
-                    const isPaid = conta.status === 'paid' || conta.description?.includes('[PAGO]') || false;
+                    const isPaid = conta.description?.includes('[PAGO]') || false;
                     
                     return (
                       <Card key={conta.id} className="transition-all hover:shadow-md">

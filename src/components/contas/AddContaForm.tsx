@@ -17,7 +17,8 @@ const contaSchema = z.object({
   scheduled_date: z.date({
     required_error: 'Data é obrigatória'
   }),
-  recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly'])
+  recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly']),
+  webhookUrl: z.string().url().optional().or(z.literal(''))
 });
 
 type ContaFormValues = z.infer<typeof contaSchema>;
@@ -43,7 +44,8 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
     defaultValues: {
       description: initialData?.description || '',
       scheduled_date: initialData?.scheduledDate ? new Date(initialData.scheduledDate) : undefined,
-      recurrence: initialData?.recurrence || 'once'
+      recurrence: initialData?.recurrence || 'once',
+      webhookUrl: ''
     }
   });
 
@@ -115,6 +117,28 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
 
       if (result) {
         toast.success(mode === 'edit' ? 'Lembrete atualizado com sucesso!' : 'Lembrete adicionado com sucesso!');
+        
+        // Trigger Zapier webhook if URL is provided
+        if (data.webhookUrl && data.webhookUrl.trim()) {
+          try {
+            console.log('🔗 Triggering Zapier webhook...');
+            const { data: webhookData, error: webhookError } = await supabase.functions.invoke('trigger-zapier-webhook', {
+              body: {
+                webhookUrl: data.webhookUrl.trim(),
+                transactionData: transactionData
+              }
+            });
+            
+            if (webhookError) {
+              console.error('❌ Webhook error:', webhookError);
+            } else {
+              console.log('✅ Webhook triggered successfully:', webhookData);
+            }
+          } catch (webhookError) {
+            console.error('❌ Failed to trigger webhook:', webhookError);
+          }
+        }
+        
         onSuccess();
       } else {
         toast.error(mode === 'edit' ? 'Erro ao atualizar lembrete' : 'Erro ao adicionar lembrete');
@@ -199,6 +223,23 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
         </Select>
         {form.formState.errors.recurrence && (
           <p className="text-sm text-red-500">{form.formState.errors.recurrence.message}</p>
+        )}
+      </div>
+
+      {/* Webhook URL */}
+      <div className="space-y-2">
+        <Label htmlFor="webhookUrl">Webhook Zapier (Opcional)</Label>
+        <Input 
+          id="webhookUrl"
+          type="url"
+          {...form.register('webhookUrl')}
+          placeholder="https://hooks.zapier.com/hooks/catch/..."
+        />
+        <p className="text-xs text-muted-foreground">
+          Cole aqui a URL do seu webhook do Zapier para ser chamado quando o lembrete for criado
+        </p>
+        {form.formState.errors.webhookUrl && (
+          <p className="text-sm text-red-500">{form.formState.errors.webhookUrl.message}</p>
         )}
       </div>
 

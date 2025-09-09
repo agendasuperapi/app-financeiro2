@@ -22,4 +22,3 @@ Deploy the following functions:
 - update-plan-config
 - update-admin-email
 - update-user-email
-- trigger-zapier-webhook

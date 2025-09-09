@@ -53,7 +53,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
     scheduledDate: z.string().min(1, { message: t('validation.required') }),
     recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly']),
     goalId: z.string().optional().nullable(),
-    webhookUrl: z.string().url().optional().or(z.literal('')),
   });
 
   // Default form values
@@ -71,7 +70,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         })(),
     recurrence: (initialData?.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
     goalId: initialData?.goalId || undefined,
-    webhookUrl: '',
   };
 
   // Form setup
@@ -194,27 +192,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         console.log('📋 Creating transaction with data:', transactionData);
         const result = await addScheduledTransaction(transactionData);
         console.log('✅ Create request sent', result);
-        
-        // Trigger Zapier webhook if URL is provided
-        if (submitData.webhookUrl && submitData.webhookUrl.trim()) {
-          try {
-            console.log('🔗 Triggering Zapier webhook...');
-            const { data, error } = await supabase.functions.invoke('trigger-zapier-webhook', {
-              body: {
-                webhookUrl: submitData.webhookUrl.trim(),
-                transactionData: transactionData
-              }
-            });
-            
-            if (error) {
-              console.error('❌ Webhook error:', error);
-            } else {
-              console.log('✅ Webhook triggered successfully:', data);
-            }
-          } catch (webhookError) {
-            console.error('❌ Failed to trigger webhook:', webhookError);
-          }
-        }
       } else if (initialData) {
         console.log('✏️ Updating scheduled transaction...', initialData.id);
         // Find the selected category to get both name and id
@@ -254,27 +231,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         console.log('📋 Update data:', updateData);
         const result = await updateScheduledTransaction({ ...updateData, id: initialData.id });
         console.log('✅ Update request sent', result);
-        
-        // Trigger Zapier webhook if URL is provided
-        if (submitData.webhookUrl && submitData.webhookUrl.trim()) {
-          try {
-            console.log('🔗 Triggering Zapier webhook...');
-            const { data, error } = await supabase.functions.invoke('trigger-zapier-webhook', {
-              body: {
-                webhookUrl: submitData.webhookUrl.trim(),
-                transactionData: updateData
-              }
-            });
-            
-            if (error) {
-              console.error('❌ Webhook error:', error);
-            } else {
-              console.log('✅ Webhook triggered successfully:', data);
-            }
-          } catch (webhookError) {
-            console.error('❌ Failed to trigger webhook:', webhookError);
-          }
-        }
       }
       
       console.log('🎉 Closing dialog');
@@ -424,27 +380,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
                         <SelectItem value="yearly">{t('schedule.yearly')}</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="webhookUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Webhook Zapier (Opcional)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        placeholder="https://hooks.zapier.com/hooks/catch/..."
-                        type="url"
-                      />
-                    </FormControl>
-                    <p className="text-xs text-muted-foreground">
-                      Cole aqui a URL do seu webhook do Zapier para ser chamado quando a transação for criada
-                    </p>
                     <FormMessage />
                   </FormItem>
                 )}

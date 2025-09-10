@@ -292,10 +292,10 @@ const LembrarPage = () => {
                               </TableCell>
                               <TableCell>
                                 <div className="text-sm text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    <span>{formatDate(conta.scheduledDate)}</span>
-                                  </div>
+                                   <div className="flex items-center gap-1">
+                                     <Calendar className="h-3 w-3" />
+                                     <span>{formatDate(conta.scheduledDate, 'dd/MM/yyyy HH:mm')}</span>
+                                   </div>
                                   <div className="mt-1">
                                     {formatRecurrence(conta.recurrence)}
                                   </div>
@@ -353,7 +353,7 @@ const LembrarPage = () => {
                                   <div className="text-xs text-muted-foreground mt-1">
                                     <div className="flex items-center gap-1">
                                       <Calendar className="h-3 w-3" />
-                                      <span>{formatDate(conta.scheduledDate)}</span>
+                                       <span>{formatDate(conta.scheduledDate, 'dd/MM/yyyy HH:mm')}</span>
                                     </div>
                                     <div className="mt-1">
                                       {formatRecurrence(conta.recurrence)}
@@ -409,7 +409,7 @@ const LembrarPage = () => {
                                 </h3>
                                 <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                                   <Calendar className="h-3 w-3" />
-                                  <span>{formatDate(conta.scheduledDate)}</span>
+                                  <span>{formatDate(conta.scheduledDate, 'dd/MM/yyyy HH:mm')}</span>
                                 </div>
                                 <div className="text-xs text-muted-foreground mt-1">
                                   {formatRecurrence(conta.recurrence)}

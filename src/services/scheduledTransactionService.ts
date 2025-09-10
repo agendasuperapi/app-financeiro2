@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ScheduledTransaction } from "@/types";
 import { v4 as uuidv4 } from "uuid";
+import { getNextReferenceCode } from "@/utils/referenceCodeUtils";
 
 
 // Função para normalizar valores de recorrência
@@ -88,11 +89,6 @@ export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]
   }
 };
 
-import { getNextReferenceCode } from "@/utils/referenceCodeUtils";
-
-// Function to get next reference code for scheduled transactions
-const getNextScheduledReferenceCode = getNextReferenceCode;
-
 export const addScheduledTransaction = async (
   transaction: Omit<ScheduledTransaction, "id"> & {
     parcela?: string;
@@ -146,7 +142,7 @@ export const addScheduledTransaction = async (
     console.log('🎯 Final category_id for transaction:', categoryId);
     
     // Generate next reference code (shared for all installments)
-    const referenceCode = await getNextScheduledReferenceCode();
+    const referenceCode = await getNextReferenceCode();
     console.log("Generated reference code:", referenceCode);
     
     // Check if it's installments - create multiple records
@@ -397,14 +393,103 @@ export const markAsPaid = async (
   paidAmount?: number
 ): Promise<boolean> => {
   try {
-    const { error } = await supabase
+    // First, get the original transaction to check recurrence
+    const { data: originalTransaction, error: fetchError } = await supabase
+      .from("poupeja_transactions")
+      .select("*")
+      .eq("id", transactionId)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!originalTransaction) throw new Error("Transaction not found");
+
+    // Update the original transaction status to "paid"
+    const { error: updateError } = await supabase
       .from("poupeja_transactions")
       .update({
         status: "paid"
       } as any)
       .eq("id", transactionId);
 
-    if (error) throw error;
+    if (updateError) throw updateError;
+
+    // Check recurrence and create new record if needed
+    const recurrence = (originalTransaction as any).recurrence;
+    
+    // For "once" or "uma vez", just mark as paid - no new record needed
+    if (recurrence === "once" || recurrence === "uma vez" || !recurrence) {
+      return true;
+    }
+
+    // For other recurrence types, create a new record
+    const originalDate = new Date(originalTransaction.date);
+    let newDate: Date;
+
+    // Calculate new date based on recurrence type
+    switch (recurrence) {
+      case "daily":
+      case "diário":
+        newDate = new Date(originalDate);
+        newDate.setDate(originalDate.getDate() + 1);
+        break;
+        
+      case "weekly":
+      case "semanal":
+        newDate = new Date(originalDate);
+        newDate.setDate(originalDate.getDate() + 7);
+        break;
+        
+      case "monthly":
+      case "mensal":
+        newDate = new Date(originalDate);
+        newDate.setMonth(originalDate.getMonth() + 1);
+        // Handle month-end edge cases (e.g., Jan 31 -> Feb 28/29)
+        if (newDate.getDate() !== originalDate.getDate()) {
+          newDate.setDate(0); // Go to last day of previous month
+        }
+        break;
+        
+      case "yearly":
+      case "anual":
+        newDate = new Date(originalDate);
+        newDate.setFullYear(originalDate.getFullYear() + 1);
+        // Handle leap year edge case (Feb 29 -> Feb 28)
+        if (newDate.getDate() !== originalDate.getDate()) {
+          newDate.setDate(0); // Go to last day of previous month (Feb 28)
+        }
+        break;
+        
+      default:
+        // Unknown recurrence type, just mark as paid without creating new record
+        return true;
+    }
+
+    // Generate new reference code
+    const newReferenceCode = await getNextReferenceCode();
+
+    // Create new transaction record
+    const newTransactionData = {
+      type: originalTransaction.type,
+      amount: originalTransaction.amount,
+      category_id: originalTransaction.category_id,
+      description: originalTransaction.description,
+      date: newDate.toISOString(),
+      goal_id: originalTransaction.goal_id,
+      recurrence: (originalTransaction as any).recurrence,
+      status: "pending",
+      situacao: "ativo",
+      reference_code: newReferenceCode,
+      phone: (originalTransaction as any).phone,
+      parcela: (originalTransaction as any).parcela,
+      aba: (originalTransaction as any).aba,
+      user_id: originalTransaction.user_id
+    };
+
+    const { error: insertError } = await supabase
+      .from("poupeja_transactions")
+      .insert([newTransactionData]);
+
+    if (insertError) throw insertError;
 
     return true;
   } catch (error) {

@@ -12,7 +12,6 @@ import { Input } from '@/components/ui/input';
 import { ScheduledTransaction } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import ContaTransactionTypeSelector from './ContaTransactionTypeSelector';
 import { getCategoriesByType } from '@/services/categoryService';
 import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
@@ -23,14 +22,14 @@ interface ContaFormProps {
   initialData?: ScheduledTransaction | null;
   mode: 'create' | 'edit';
   onSuccess?: () => void;
-  defaultType?: 'income' | 'expense';
+  defaultType?: 'expense';
 }
 
-// Schema for the conta form (income/expense with amount)
+// Schema for the conta form (expense only with installments)
 const contaFormSchema = z.object({
-  type: z.enum(['income', 'expense']),
   description: z.string().min(1, 'Descrição é obrigatória'),
   amount: z.number().min(0.01, 'Valor deve ser maior que zero'),
+  installments: z.number().min(1, 'Número de parcelas deve ser maior que zero').int('Deve ser um número inteiro'),
   category: z.string().min(1, 'Categoria é obrigatória'),
   scheduledDate: z.string().min(1, 'Data é obrigatória'),
   recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly']),
@@ -48,17 +47,16 @@ const ContaForm: React.FC<ContaFormProps> = ({
   defaultType = 'expense',
 }) => {
   const { t } = usePreferences();
-  const [selectedType, setSelectedType] = useState<'income' | 'expense'>(initialData?.type as 'income' | 'expense' || defaultType);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isOnline] = useState(navigator.onLine);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
-  // Default form values for contas
+  // Default form values for contas (expense only)
   const defaultValues: Partial<ContaFormValues> = {
-    type: initialData?.type as 'income' | 'expense' || defaultType,
     description: initialData?.description || '',
     amount: initialData?.amount || 0,
+    installments: 1, // Default to 1 installment
     category: initialData?.category_id || '',
     scheduledDate: initialData?.scheduledDate 
       ? new Date(initialData.scheduledDate).toISOString().slice(0, 16)
@@ -77,13 +75,13 @@ const ContaForm: React.FC<ContaFormProps> = ({
     defaultValues,
   });
 
-  // Load categories when type changes
+  // Load categories for expense type only
   useEffect(() => {
     const loadCategories = async () => {
       setLoadingCategories(true);
       try {
-        const categoryData = await getCategoriesByType(selectedType);
-        console.log(`Loaded ${categoryData.length} categories for ${selectedType}:`, categoryData);
+        const categoryData = await getCategoriesByType('expense');
+        console.log(`Loaded ${categoryData.length} categories for expense:`, categoryData);
         setCategories(categoryData);
         
         // Set default category if none selected and categories are available
@@ -105,36 +103,27 @@ const ContaForm: React.FC<ContaFormProps> = ({
     };
 
     loadCategories();
-  }, [selectedType, form]);
+  }, [form]);
 
   // Reset form when opening/closing
   useEffect(() => {
     if (open && !initialData) {
       // Reset form to default values when creating new conta
       form.reset(defaultValues);
-      setSelectedType(defaultType);
     } else if (open && initialData) {
       // Populate form with initial data when editing
       const editValues: Partial<ContaFormValues> = {
-        type: initialData.type as 'income' | 'expense',
         description: initialData.description,
         amount: initialData.amount,
+        installments: 1, // Default since ScheduledTransaction doesn't have installments yet
         category: initialData.category_id || '',
         scheduledDate: new Date(initialData.scheduledDate).toISOString().slice(0, 16),
         recurrence: (initialData.recurrence || 'once') as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly',
         goalId: initialData.goalId,
       };
       form.reset(editValues);
-      setSelectedType(initialData.type as 'income' | 'expense');
     }
-  }, [open, initialData, form, defaultValues, defaultType]);
-
-  // Handle type change
-  const handleTypeChange = (type: 'income' | 'expense') => {
-    setSelectedType(type);
-    form.setValue('type', type);
-    form.setValue('category', ''); // Reset category when type changes
-  };
+  }, [open, initialData, form, defaultValues]);
 
   // Form submission handler
   const onSubmit = async (values: ContaFormValues) => {
@@ -163,9 +152,10 @@ const ContaForm: React.FC<ContaFormProps> = ({
         }
         
         const transactionData = {
-          type: values.type,
+          type: 'expense' as const,
           description: values.description,
           amount: values.amount,
+          installments: values.installments,
           category: selectedCategory?.name || 'Outros',
           category_id: values.category,
           scheduledDate: new Date(values.scheduledDate).toISOString(),
@@ -201,9 +191,10 @@ const ContaForm: React.FC<ContaFormProps> = ({
         }
         
         const updateData = {
-          type: values.type,
+          type: 'expense' as const,
           description: values.description,
           amount: values.amount,
+          installments: values.installments,
           category: selectedCategory?.name || 'Outros',
           category_id: values.category,
           scheduledDate: new Date(values.scheduledDate).toISOString(),
@@ -258,7 +249,21 @@ const ContaForm: React.FC<ContaFormProps> = ({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <ContaTransactionTypeSelector form={form} onTypeChange={handleTypeChange} />
+              
+              {/* Description Field - moved to top */}
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('common.description')}</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               {/* Amount Field */}
               <FormField
@@ -274,6 +279,26 @@ const ContaForm: React.FC<ContaFormProps> = ({
                         min="0.01"
                         {...field}
                         onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Installments Field */}
+              <FormField
+                control={form.control}
+                name="installments"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Parcelas</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="1"
+                        {...field}
+                        onChange={e => field.onChange(parseInt(e.target.value) || 1)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -308,20 +333,6 @@ const ContaForm: React.FC<ContaFormProps> = ({
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('common.description')}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

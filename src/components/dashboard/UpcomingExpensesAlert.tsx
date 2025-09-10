@@ -143,7 +143,7 @@ const UpcomingExpensesAlert: React.FC<UpcomingExpensesAlertProps> = ({
 
             {/* Link para página de contas */}
             <Button size="sm" variant="ghost" asChild className="h-8 px-2">
-              <Link to="/contas">
+              <Link to="/contas" onClick={() => console.log('Navegando para /contas')}>
                 <ChevronRight className="h-3 w-3" />
               </Link>
             </Button>

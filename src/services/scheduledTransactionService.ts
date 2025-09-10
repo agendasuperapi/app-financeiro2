@@ -140,6 +140,9 @@ export const addScheduledTransaction = async (
         const installmentDate = new Date(startDate);
         installmentDate.setMonth(installmentDate.getMonth() + i);
         
+        // Generate unique reference code for each installment
+        const uniqueReferenceCode = `${String.fromCharCode(65 + i)}${referenceCode}`;
+        
         const installmentData = {
           id: uuidv4(),
           user_id: session.user.id,
@@ -149,7 +152,7 @@ export const addScheduledTransaction = async (
           description: `${transaction.description} (${i + 1}/${numberOfInstallments})`,
           date: installmentDate.toISOString(),
           goal_id: transaction.goalId,
-          reference_code: referenceCode,
+          reference_code: uniqueReferenceCode,
           status: 'pending',
           parcela: `${i + 1}`,
           situacao: transaction.situacao || 'ativo',
@@ -157,6 +160,9 @@ export const addScheduledTransaction = async (
           aba: transaction.aba,
           recurrence: 'once'
         };
+        
+        // Ensure no unwanted properties are added
+        delete (installmentData as any).total_parcelas;
         
         installmentsData.push(installmentData);
       }

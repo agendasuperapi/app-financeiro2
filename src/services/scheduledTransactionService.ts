@@ -99,9 +99,10 @@ export const addScheduledTransaction = async (
     let categoryId = transaction.category_id;
     
     if (!categoryId) {
-      // For reminders/lembretes, use the default reminder category ID
+      // For reminders/lembretes, allow null category_id
       if (transaction.type === 'lembrete' || transaction.type === 'reminder') {
-        categoryId = 'reminder-default';
+        console.log('🔔 Setting null category_id for reminder/lembrete');
+        categoryId = null;
       } else {
         // Try to find by name if category_id is not provided
         const { data: categoryByName } = await supabase
@@ -120,6 +121,8 @@ export const addScheduledTransaction = async (
         }
       }
     }
+    
+    console.log('🎯 Final category_id for transaction:', categoryId);
     
     // Generate next reference code (shared for all installments)
     const referenceCode = await getNextScheduledReferenceCode();
@@ -288,20 +291,25 @@ export const updateScheduledTransaction = async (
     let categoryId = transaction.category_id;
     
     if (!categoryId) {
-      // Try to find by name if category_id is not provided
-      const { data: categoryByName } = await supabase
-        .from("poupeja_categories")
-        .select("id")
-        .eq("name", transaction.category)
-        .eq("type", transaction.type)
-        .single();
-      
-      if (categoryByName) {
-        categoryId = categoryByName.id;
+      // For reminders/lembretes, allow null category_id
+      if (transaction.type === 'lembrete' || transaction.type === 'reminder') {
+        categoryId = null;
       } else {
-        // Fallback to default "Outros" category
-        const defaultCategoryId = transaction.type === 'income' ? 'other-income' : 'other-expense';
-        categoryId = defaultCategoryId;
+        // Try to find by name if category_id is not provided
+        const { data: categoryByName } = await supabase
+          .from("poupeja_categories")
+          .select("id")
+          .eq("name", transaction.category)
+          .eq("type", transaction.type)
+          .single();
+        
+        if (categoryByName) {
+          categoryId = categoryByName.id;
+        } else {
+          // Fallback to default "Outros" category
+          const defaultCategoryId = transaction.type === 'income' ? 'other-income' : 'other-expense';
+          categoryId = defaultCategoryId;
+        }
       }
     }
 

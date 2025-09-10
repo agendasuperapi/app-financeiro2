@@ -4,6 +4,8 @@ import { ScheduledTransaction } from "@/types";
 import { v4 as uuidv4 } from "uuid";
 import { getNextReferenceCode } from "@/utils/referenceCodeUtils";
 
+console.log('📋 scheduledTransactionService loaded');
+
 
 // Função para normalizar valores de recorrência
 const normalizeRecurrence = (recurrence: string | null | undefined): 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | undefined => {

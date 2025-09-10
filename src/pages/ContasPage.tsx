@@ -84,6 +84,7 @@ const ContasPage = () => {
 
   const handleMarkAsPaid = async (id: string) => {
     console.log('🎯 handleMarkAsPaid called with ID:', id);
+    console.log('🔍 markAsPaid function:', typeof markAsPaid);
     try {
       const success = await markAsPaid(id);
       console.log('📊 markAsPaid result:', success);
@@ -94,8 +95,8 @@ const ContasPage = () => {
         toast.error('Erro ao marcar conta como paga');
       }
     } catch (error) {
-      console.error('Error marking as paid:', error);
-      toast.error('Erro ao marcar conta como paga');
+      console.error('❌ Error marking as paid:', error);
+      toast.error('Erro ao marcar conta como paga: ' + error);
     }
   };
 
@@ -256,11 +257,14 @@ const ContasPage = () => {
                             <div className="flex items-center gap-1 flex-wrap">
                               {!isPaid && (
                                 <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleMarkAsPaid(conta.id)}
-                                  className="text-green-600 border-green-600 hover:bg-green-50 text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7"
-                                >
+                                   size="sm"
+                                   variant="outline"
+                                   onClick={() => {
+                                     console.log('🖱️ Button clicked for ID:', conta.id);
+                                     handleMarkAsPaid(conta.id);
+                                   }}
+                                   className="text-green-600 border-green-600 hover:bg-green-50 text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7"
+                                 >
                                   <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
                                   Marcar como Pago
                                 </Button>

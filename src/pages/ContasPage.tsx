@@ -13,7 +13,7 @@ import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { isAfter, isToday } from 'date-fns';
 import { toast } from 'sonner';
-import ContaFormSimple from '@/components/contas/ContaFormSimple';
+import ContaForm from '@/components/contas/ContaForm';
 
 const ContasPage = () => {
   const [contas, setContas] = useState<ScheduledTransaction[]>([]);
@@ -167,7 +167,8 @@ const ContasPage = () => {
                 <DialogHeader>
                   <DialogTitle>Agendar Transação</DialogTitle>
                 </DialogHeader>
-                <ContaFormSimple
+                <ContaForm
+                  mode="create"
                   onSuccess={() => {
                     setIsAddDialogOpen(false);
                     loadContas();
@@ -317,7 +318,9 @@ const ContasPage = () => {
             <DialogHeader>
               <DialogTitle>Editar Conta</DialogTitle>
             </DialogHeader>
-            <ContaFormSimple
+            <ContaForm
+              mode="edit"
+              initialData={editingConta}
               onSuccess={() => {
                 setIsEditDialogOpen(false);
                 setEditingConta(null);

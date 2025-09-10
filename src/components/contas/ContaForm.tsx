@@ -54,38 +54,38 @@ const ContaForm: React.FC<ContaFormProps> = ({
     const now = new Date();
     now.setHours(now.getHours() + 1, 0, 0, 0);
     
+    if (mode === 'edit' && initialData) {
+      return {
+        description: initialData.description || '',
+        amount: initialData.amount || 100,
+        installments: parseInt(initialData.parcela || '1') || 1,
+        category: initialData.category_id || '',
+        scheduledDate: initialData.scheduledDate 
+          ? new Date(initialData.scheduledDate).toISOString().slice(0, 16)
+          : now.toISOString().slice(0, 16),
+        recurrence: (initialData.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
+        goalId: initialData.goalId || null,
+      };
+    }
+    
     return {
-      description: initialData?.description || '',
-      amount: initialData?.amount || 100, // Default to 100 to test
+      description: '',
+      amount: 100,
       installments: 1,
-      category: initialData?.category_id || '',
-      scheduledDate: initialData?.scheduledDate 
-        ? new Date(initialData.scheduledDate).toISOString().slice(0, 16)
-        : now.toISOString().slice(0, 16),
-      recurrence: (initialData?.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
-      goalId: initialData?.goalId || null,
+      category: '',
+      scheduledDate: now.toISOString().slice(0, 16),
+      recurrence: 'once',
+      goalId: null,
     };
   };
 
   const defaultFormValues = getDefaultValues();
-  console.log('🎯 Default form values:', defaultFormValues);
 
   // Form setup
   const form = useForm<ContaFormValues>({
     resolver: zodResolver(contaFormSchema),
     defaultValues: defaultFormValues,
     mode: 'onChange',
-  });
-
-  console.log('🔍 ContaForm Debug:', {
-    mode,
-    initialData,
-    defaultFormValues,
-    formValues: form.getValues(),
-    formState: form.formState,
-    categories: categories.length,
-    loadingCategories,
-    errors: form.formState.errors
   });
 
   // Load categories for expense type only
@@ -118,13 +118,13 @@ const ContaForm: React.FC<ContaFormProps> = ({
     loadCategories();
   }, [form]);
 
-  // Reset form when initialData changes
+  // Reset form when initialData changes (only for edit mode)
   useEffect(() => {
-    console.log('🔄 Form reset useEffect triggered:', { initialData, mode });
-    const newValues = getDefaultValues();
-    console.log('🔄 Resetting form with values:', newValues);
-    form.reset(newValues);
-  }, [initialData, form]);
+    if (mode === 'edit' && initialData) {
+      const newValues = getDefaultValues();
+      form.reset(newValues);
+    }
+  }, [initialData?.id, mode]);
 
   // Form submission handler
   const onSubmit = async (values: ContaFormValues) => {
@@ -165,6 +165,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
           situacao: 'ativo',
           phone: userPhone,
+          parcela: values.installments.toString(),
         };
         
         console.log('📋 Creating transaction with data:', transactionData);
@@ -204,6 +205,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           reference_code: initialData?.reference_code || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
           situacao: 'ativo',
           phone: userPhone,
+          parcela: values.installments.toString(),
         };
         
         console.log('📋 Updating transaction with ID:', initialData.id);
@@ -242,57 +244,42 @@ const ContaForm: React.FC<ContaFormProps> = ({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           
-          {/* Debug info */}
-          <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
-            Debug: Values = {JSON.stringify(form.getValues())}<br/>
-            Errors = {JSON.stringify(form.formState.errors)}<br/>
-            Categories = {categories.length} items
-          </div>
           
           {/* Description Field - moved to top */}
           <FormField
             control={form.control}
             name="description"
-            render={({ field }) => {
-              console.log('📝 Description field render:', { field, value: field.value });
-              return (
-                <FormItem>
-                  <FormLabel>{t('common.description')}</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Digite a descrição da transação..." />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('common.description')}</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Digite a descrição da transação..." />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
           
           {/* Amount Field */}
           <FormField
             control={form.control}
             name="amount"
-            render={({ field }) => {
-              console.log('💰 Amount field render:', { field, value: field.value });
-              return (
-                <FormItem>
-                  <FormLabel>{t('common.amount')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      {...field}
-                      onChange={e => {
-                        console.log('💰 Amount onChange:', e.target.value);
-                        field.onChange(parseFloat(e.target.value) || 0);
-                      }}
-                      placeholder="0,00"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('common.amount')}</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    {...field}
+                    onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                    placeholder="0,00"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
           {/* Installments Field */}
@@ -319,39 +306,33 @@ const ContaForm: React.FC<ContaFormProps> = ({
           <FormField
             control={form.control}
             name="category"
-            render={({ field }) => {
-              console.log('🏷️ Category field render:', { field, value: field.value, categories });
-              return (
-                <FormItem>
-                  <FormLabel>{t('common.category')}</FormLabel>
-                  <Select 
-                    onValueChange={(value) => {
-                      console.log('🏷️ Category onChange:', value);
-                      field.onChange(value);
-                    }} 
-                    value={field.value}
-                    disabled={loadingCategories}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={loadingCategories ? t('common.loading') : t('transactions.selectCategory')} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories.map(category => (
-                        <SelectItem key={category.id} value={category.id}>
-                          <div className="flex items-center gap-2">
-                            <CategoryIcon icon={category.icon} color={category.color} size={16} />
-                            <span>{category.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('common.category')}</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value}
+                  disabled={loadingCategories}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={loadingCategories ? t('common.loading') : t('transactions.selectCategory')} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {categories.map(category => (
+                      <SelectItem key={category.id} value={category.id}>
+                        <div className="flex items-center gap-2">
+                          <CategoryIcon icon={category.icon} color={category.color} size={16} />
+                          <span>{category.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
           />
           
           <FormField

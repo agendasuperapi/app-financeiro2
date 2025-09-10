@@ -18,6 +18,26 @@ import AddContaForm from '@/components/contas/AddContaForm';
 import { supabase } from '@/integrations/supabase/client';
 
 const LembrarPage = () => {
+  
+  // Função para normalizar valores de recorrência
+  const normalizeRecurrence = (recurrence: string | null | undefined): 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' => {
+    if (!recurrence) return 'once';
+    
+    const recurrenceMap: { [key: string]: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' } = {
+      'Uma vez': 'once',
+      'Diário': 'daily',
+      'Semanal': 'weekly',
+      'Mensal': 'monthly',
+      'Anual': 'yearly',
+      'once': 'once',
+      'daily': 'daily',
+      'weekly': 'weekly',
+      'monthly': 'monthly',
+      'yearly': 'yearly'
+    };
+    
+    return recurrenceMap[recurrence] || 'once';
+  };
   const [contas, setContas] = useState<ScheduledTransaction[]>([]);
   const [filteredContas, setFilteredContas] = useState<ScheduledTransaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +82,7 @@ const LembrarPage = () => {
         categoryColor: item.category?.color || "#607D8B",
         description: item.description || "",
         scheduledDate: item.date,
-        recurrence: item.recurrence || 'once',
+        recurrence: normalizeRecurrence(item.recurrence),
         goalId: item.goal_id,
         status: item.status || 'pending',
         situacao: item.situacao || 'pendente'

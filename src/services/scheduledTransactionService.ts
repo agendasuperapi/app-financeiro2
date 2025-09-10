@@ -75,7 +75,7 @@ export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]
       categoryColor: item.category?.color || "#607D8B",
       description: item.description || "",
       scheduledDate: item.date,
-      recurrence: 'once' as const,
+      recurrence: normalizeRecurrence(item.recurrence) || 'once',
       goalId: item.goal_id,
       status: (item.status as 'pending' | 'paid' | 'overdue' | 'upcoming') || 'pending',
       paidDate: undefined,

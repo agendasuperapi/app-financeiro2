@@ -152,7 +152,6 @@ export const addScheduledTransaction = async (
           reference_code: referenceCode,
           status: 'pending',
           parcela: `${i + 1}`,
-          total_parcelas: numberOfInstallments.toString(),
           situacao: transaction.situacao || 'ativo',
           phone: transaction.phone,
           aba: transaction.aba,

@@ -79,11 +79,10 @@ export const addScheduledTransaction = async (
     phone?: string;
     aba?: string;
     recurrence?: string;
+    installments?: number;
   }
 ): Promise<ScheduledTransaction | null> => {
   try {
-    const newId = uuidv4();
-    
     // Get the current user
     const { data: { session } } = await supabase.auth.getSession();
 
@@ -112,62 +111,135 @@ export const addScheduledTransaction = async (
       }
     }
     
-    // Generate next reference code
+    // Generate next reference code (shared for all installments)
     const referenceCode = await getNextScheduledReferenceCode();
     console.log("Generated reference code:", referenceCode);
     
-    // Prepare insert data with additional fields
-    const insertData: any = {
-      id: newId,
-      user_id: session.user.id,
-      type: transaction.type,
-      amount: transaction.amount,
-      category_id: categoryId,
-      description: transaction.description,
-      date: transaction.scheduledDate,
-      goal_id: transaction.goalId,
-      reference_code: referenceCode
-    };
-
-    // Add additional fields if they exist
-    if (transaction.parcela) insertData.parcela = transaction.parcela;
-    if (transaction.situacao) insertData.situacao = transaction.situacao;
-    if (transaction.phone) insertData.phone = transaction.phone;
-    if (transaction.aba) insertData.aba = transaction.aba;
-    if (transaction.recurrence) insertData.recurrence = transaction.recurrence;
-    if (transaction.status) insertData.status = transaction.status;
-
-    console.log('Insert data with all fields:', insertData);
+    // Check if it's installments - create multiple records
+    const numberOfInstallments = transaction.installments || 1;
+    const isInstallments = transaction.recurrence === 'installments' && numberOfInstallments > 1;
     
-    const { data, error } = await supabase
-      .from("poupeja_transactions")
-      .insert(insertData)
-      .select(`
-        *,
-        category:poupeja_categories(id, name, icon, color, type)
-      `)
-      .single();
+    if (isInstallments) {
+      console.log(`Creating ${numberOfInstallments} installments`);
+      
+      const installmentsData = [];
+      const startDate = new Date(transaction.scheduledDate);
+      
+      for (let i = 0; i < numberOfInstallments; i++) {
+        const installmentDate = new Date(startDate);
+        installmentDate.setMonth(installmentDate.getMonth() + i);
+        
+        const installmentData = {
+          id: uuidv4(),
+          user_id: session.user.id,
+          type: transaction.type,
+          amount: transaction.amount,
+          category_id: categoryId,
+          description: `${transaction.description} (${i + 1}/${numberOfInstallments})`,
+          date: installmentDate.toISOString(),
+          goal_id: transaction.goalId,
+          reference_code: referenceCode,
+          status: 'pending',
+          parcela: `${i + 1}`,
+          total_parcelas: numberOfInstallments.toString(),
+          situacao: transaction.situacao || 'ativo',
+          phone: transaction.phone,
+          aba: transaction.aba,
+          recurrence: 'once'
+        };
+        
+        installmentsData.push(installmentData);
+      }
+      
+      console.log('Creating installments:', installmentsData);
+      
+      const { data, error } = await supabase
+        .from("poupeja_transactions")
+        .insert(installmentsData)
+        .select(`
+          *,
+          category:poupeja_categories(id, name, icon, color, type)
+        `);
 
-    if (error) throw error;
+      if (error) throw error;
+      
+      // Return the first installment as the main transaction
+      const firstInstallment = data[0];
+      return {
+        id: firstInstallment.id,
+        type: firstInstallment.type as 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros',
+        amount: firstInstallment.amount,
+        category: firstInstallment.category?.name || "Outros",
+        category_id: firstInstallment.category_id,
+        categoryIcon: firstInstallment.category?.icon || "circle",
+        categoryColor: firstInstallment.category?.color || "#607D8B",
+        description: firstInstallment.description || "",
+        scheduledDate: firstInstallment.date,
+        recurrence: 'once' as const,
+        goalId: firstInstallment.goal_id,
+        status: 'pending',
+        paidDate: undefined,
+        paidAmount: undefined,
+        lastExecutionDate: undefined,
+        nextExecutionDate: undefined,
+      };
+    } else {
+      // Single transaction
+      const newId = uuidv4();
+      
+      // Prepare insert data with additional fields
+      const insertData: any = {
+        id: newId,
+        user_id: session.user.id,
+        type: transaction.type,
+        amount: transaction.amount,
+        category_id: categoryId,
+        description: transaction.description,
+        date: transaction.scheduledDate,
+        goal_id: transaction.goalId,
+        reference_code: referenceCode,
+        status: 'pending'
+      };
 
-    return {
-      id: data.id,
-      type: data.type as 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros',
-      amount: data.amount,
-      category: data.category?.name || "Outros",
-      category_id: data.category_id,
-      categoryIcon: data.category?.icon || "circle",
-      categoryColor: data.category?.color || "#607D8B",
-      description: data.description || "",
-      scheduledDate: data.date,
-      recurrence: 'once' as const,
-      goalId: data.goal_id,
-      status: ((data as any).status as 'pending' | 'paid' | 'overdue' | 'upcoming') || 'pending',
-      paidDate: undefined,
-      paidAmount: undefined,
-      lastExecutionDate: undefined,
-      nextExecutionDate: undefined,
-    };
+      // Add additional fields if they exist
+      if (transaction.parcela) insertData.parcela = transaction.parcela;
+      if (transaction.situacao) insertData.situacao = transaction.situacao;
+      if (transaction.phone) insertData.phone = transaction.phone;
+      if (transaction.aba) insertData.aba = transaction.aba;
+      if (transaction.recurrence) insertData.recurrence = transaction.recurrence;
+
+      console.log('Insert data with all fields:', insertData);
+      
+      const { data, error } = await supabase
+        .from("poupeja_transactions")
+        .insert(insertData)
+        .select(`
+          *,
+          category:poupeja_categories(id, name, icon, color, type)
+        `)
+        .single();
+
+      if (error) throw error;
+
+      return {
+        id: data.id,
+        type: data.type as 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros',
+        amount: data.amount,
+        category: data.category?.name || "Outros",
+        category_id: data.category_id,
+        categoryIcon: data.category?.icon || "circle",
+        categoryColor: data.category?.color || "#607D8B",
+        description: data.description || "",
+        scheduledDate: data.date,
+        recurrence: 'once' as const,
+        goalId: data.goal_id,
+        status: 'pending',
+        paidDate: undefined,
+        paidAmount: undefined,
+        lastExecutionDate: undefined,
+        nextExecutionDate: undefined,
+      };
+    }
   } catch (error) {
     console.error("Error adding scheduled transaction:", error);
     return null;

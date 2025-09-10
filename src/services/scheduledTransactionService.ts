@@ -122,8 +122,8 @@ export const addScheduledTransaction = async (
     if (!categoryId) {
       // For reminders/lembretes, allow null category_id
       if (transaction.type === 'lembrete' || transaction.type === 'reminder') {
-        console.log('🔔 Setting null category_id for reminder/lembrete');
-        categoryId = null;
+        console.log('🔔 Setting specific category_id for reminder/lembrete');
+        categoryId = 'd7ee2418-4782-48c9-8c03-d9699419cad2';
       } else {
         // Try to find by name if category_id is not provided
         const { data: categoryByName } = await supabase
@@ -315,7 +315,7 @@ export const updateScheduledTransaction = async (
     if (!categoryId) {
       // For reminders/lembretes, allow null category_id
       if (transaction.type === 'lembrete' || transaction.type === 'reminder') {
-        categoryId = null;
+        categoryId = 'd7ee2418-4782-48c9-8c03-d9699419cad2';
       } else {
         // Try to find by name if category_id is not provided
         const { data: categoryByName } = await supabase

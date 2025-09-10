@@ -182,7 +182,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
-              {mode === 'create' ? 'Agendar Lembrete' : 'Editar Lembrete'}
+              {mode === 'create' ? 'Agendar Conta' : 'Editar Conta'}
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>

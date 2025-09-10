@@ -119,8 +119,10 @@ export const addScheduledTransaction = async (
     const numberOfInstallments = transaction.installments || 1;
     const isInstallments = transaction.recurrence === 'installments' && numberOfInstallments > 1;
     
+    console.log(`🔍 Debug: numberOfInstallments=${numberOfInstallments}, recurrence=${transaction.recurrence}, isInstallments=${isInstallments}`);
+    
     if (isInstallments) {
-      console.log(`Creating ${numberOfInstallments} installments`);
+      console.log(`🆕 Creating ${numberOfInstallments} installments`);
       
       const installmentsData = [];
       const startDate = new Date(transaction.scheduledDate);
@@ -151,7 +153,7 @@ export const addScheduledTransaction = async (
         installmentsData.push(installmentData);
       }
       
-      console.log('Creating installments:', installmentsData);
+      console.log('🎯 Creating installments data:', installmentsData);
       
       const { data, error } = await supabase
         .from("poupeja_transactions")
@@ -161,7 +163,12 @@ export const addScheduledTransaction = async (
           category:poupeja_categories(id, name, icon, color, type)
         `);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error inserting installments:', error);
+        throw error;
+      }
+      
+      console.log('✅ Successfully created installments:', data);
       
       // Return the first installment as the main transaction
       const firstInstallment = data[0];
@@ -185,6 +192,7 @@ export const addScheduledTransaction = async (
       };
     } else {
       // Single transaction
+      console.log('🔴 Creating single transaction (not installments)');
       const newId = uuidv4();
       
       // Prepare insert data with additional fields

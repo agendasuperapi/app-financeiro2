@@ -392,6 +392,7 @@ export const markAsPaid = async (
   transactionId: string,
   paidAmount?: number
 ): Promise<boolean> => {
+  console.log('🔄 markAsPaid called with:', { transactionId, paidAmount });
   try {
     // First, get the original transaction to check recurrence
     const { data: originalTransaction, error: fetchError } = await supabase
@@ -402,6 +403,8 @@ export const markAsPaid = async (
 
     if (fetchError) throw fetchError;
     if (!originalTransaction) throw new Error("Transaction not found");
+
+    console.log('📋 Original transaction found:', originalTransaction);
 
     // Update the original transaction status to "paid"
     const { error: updateError } = await supabase
@@ -415,9 +418,11 @@ export const markAsPaid = async (
 
     // Check recurrence and create new record if needed
     const recurrence = (originalTransaction as any).recurrence;
+    console.log('🔁 Recurrence type:', recurrence);
     
     // For "once" or "uma vez", just mark as paid - no new record needed
     if (recurrence === "once" || recurrence === "uma vez" || !recurrence) {
+      console.log('✅ One-time transaction, no new record needed');
       return true;
     }
 
@@ -485,12 +490,14 @@ export const markAsPaid = async (
       user_id: originalTransaction.user_id
     };
 
+    console.log('📝 Creating new transaction:', newTransactionData);
     const { error: insertError } = await supabase
       .from("poupeja_transactions")
       .insert([newTransactionData]);
 
     if (insertError) throw insertError;
 
+    console.log('✅ New transaction created successfully');
     return true;
   } catch (error) {
     console.error("Error marking transaction as paid:", error);

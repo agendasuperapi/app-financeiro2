@@ -83,8 +83,10 @@ const ContasPage = () => {
   };
 
   const handleMarkAsPaid = async (id: string) => {
+    console.log('🎯 handleMarkAsPaid called with ID:', id);
     try {
       const success = await markAsPaid(id);
+      console.log('📊 markAsPaid result:', success);
       if (success) {
         toast.success('Conta marcada como paga');
         await loadContas();

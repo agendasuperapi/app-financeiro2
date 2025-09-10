@@ -83,12 +83,17 @@ export const addScheduledTransaction = async (
   }
 ): Promise<ScheduledTransaction | null> => {
   try {
+    console.log('🚀 Starting addScheduledTransaction with:', transaction);
+    
     // Get the current user
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) {
+      console.error('❌ User not authenticated');
       throw new Error("User not authenticated");
     }
+    
+    console.log('✅ User authenticated:', session.user.id);
 
     // Get category ID - if it's already an ID, use it directly, otherwise find by name
     let categoryId = transaction.category_id;
@@ -119,7 +124,11 @@ export const addScheduledTransaction = async (
     const numberOfInstallments = transaction.installments || 1;
     const isInstallments = transaction.recurrence === 'installments' && numberOfInstallments > 1;
     
-    console.log(`🔍 Debug: numberOfInstallments=${numberOfInstallments}, recurrence=${transaction.recurrence}, isInstallments=${isInstallments}`);
+    console.log(`🔍 Debug installments detection:`);
+    console.log(`- transaction.installments: ${transaction.installments}`);
+    console.log(`- numberOfInstallments: ${numberOfInstallments}`);
+    console.log(`- transaction.recurrence: ${transaction.recurrence}`);
+    console.log(`- isInstallments: ${isInstallments}`);
     
     if (isInstallments) {
       console.log(`🆕 Creating ${numberOfInstallments} installments`);
@@ -249,7 +258,8 @@ export const addScheduledTransaction = async (
       };
     }
   } catch (error) {
-    console.error("Error adding scheduled transaction:", error);
+    console.error("❌ Error in addScheduledTransaction:", error);
+    console.error("❌ Transaction data that failed:", transaction);
     return null;
   }
 };

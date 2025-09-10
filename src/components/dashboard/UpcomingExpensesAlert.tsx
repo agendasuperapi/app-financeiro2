@@ -141,9 +141,9 @@ const UpcomingExpensesAlert: React.FC<UpcomingExpensesAlertProps> = ({
               </Button>
             )}
 
-            {/* Link para página de agendamentos */}
+            {/* Link para página de contas */}
             <Button size="sm" variant="ghost" asChild className="h-8 px-2">
-              <Link to="/schedule">
+              <Link to="/contas">
                 <ChevronRight className="h-3 w-3" />
               </Link>
             </Button>

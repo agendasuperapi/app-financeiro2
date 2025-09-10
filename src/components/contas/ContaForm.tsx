@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,11 +16,10 @@ import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
 
 interface ContaFormProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   initialData?: ScheduledTransaction | null;
   mode: 'create' | 'edit';
   onSuccess?: () => void;
+  onCancel?: () => void;
   defaultType?: 'expense';
 }
 
@@ -39,11 +37,10 @@ const contaFormSchema = z.object({
 type ContaFormValues = z.infer<typeof contaFormSchema>;
 
 const ContaForm: React.FC<ContaFormProps> = ({
-  open,
-  onOpenChange,
   initialData,
   mode,
   onSuccess,
+  onCancel,
   defaultType = 'expense',
 }) => {
   const { t } = usePreferences();
@@ -105,12 +102,12 @@ const ContaForm: React.FC<ContaFormProps> = ({
     loadCategories();
   }, [form]);
 
-  // Reset form when opening/closing
+  // Reset form when initialData changes
   useEffect(() => {
-    if (open && !initialData) {
+    if (!initialData) {
       // Reset form to default values when creating new conta
       form.reset(defaultValues);
-    } else if (open && initialData) {
+    } else {
       // Populate form with initial data when editing
       const editValues: Partial<ContaFormValues> = {
         description: initialData.description,
@@ -123,7 +120,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
       };
       form.reset(editValues);
     }
-  }, [open, initialData, form, defaultValues]);
+  }, [initialData, form, defaultValues]);
 
   // Form submission handler
   const onSubmit = async (values: ContaFormValues) => {
@@ -211,8 +208,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
         console.log('✅ Update request sent', result);
       }
       
-      console.log('🎉 Closing dialog');
-      onOpenChange(false);
+      console.log('🎉 Form completed successfully');
       
       // Call onSuccess callback if provided
       if (onSuccess) {
@@ -229,7 +225,6 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const handleDelete = async () => {
     if (initialData) {
       await deleteScheduledTransaction(initialData.id);
-      onOpenChange(false);
       setDeleteDialogOpen(false);
       // Call onSuccess callback if provided
       if (onSuccess) {
@@ -240,186 +235,179 @@ const ContaForm: React.FC<ContaFormProps> = ({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>
-              {mode === 'create' ? 'Agendar Transação' : 'Editar Transação'}
-            </DialogTitle>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              
-              {/* Description Field - moved to top */}
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('common.description')}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              {/* Amount Field */}
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('common.amount')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        {...field}
-                        onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          
+          {/* Description Field - moved to top */}
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('common.description')}</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Digite a descrição da transação..." />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          {/* Amount Field */}
+          <FormField
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('common.amount')}</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    {...field}
+                    onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                    placeholder="0,00"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              {/* Installments Field */}
-              <FormField
-                control={form.control}
-                name="installments"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Parcelas</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="1"
-                        {...field}
-                        onChange={e => field.onChange(parseInt(e.target.value) || 1)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('common.category')}</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      value={field.value}
-                      disabled={loadingCategories}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={loadingCategories ? t('common.loading') : t('transactions.selectCategory')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map(category => (
-                          <SelectItem key={category.id} value={category.id} className="flex items-center gap-2">
-                            <div className="flex items-center gap-2">
-                              <CategoryIcon icon={category.icon} color={category.color} size={16} />
-                              <span>{category.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="scheduledDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('schedule.scheduledFor')}</FormLabel>
-                    <FormControl>
-                      <Input type="datetime-local" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="recurrence"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('schedule.recurrence')}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('schedule.recurrence')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="once">{t('schedule.once')}</SelectItem>
-                        <SelectItem value="daily">{t('schedule.daily')}</SelectItem>
-                        <SelectItem value="weekly">{t('schedule.weekly')}</SelectItem>
-                        <SelectItem value="monthly">{t('schedule.monthly')}</SelectItem>
-                        <SelectItem value="yearly">{t('schedule.yearly')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {/* Installments Field */}
+          <FormField
+            control={form.control}
+            name="installments"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Parcelas</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="1"
+                    {...field}
+                    onChange={e => field.onChange(parseInt(e.target.value) || 1)}
+                    placeholder="1"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('common.category')}</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value}
+                  disabled={loadingCategories}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={loadingCategories ? t('common.loading') : t('transactions.selectCategory')} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {categories.map(category => (
+                      <SelectItem key={category.id} value={category.id}>
+                        <div className="flex items-center gap-2">
+                          <CategoryIcon icon={category.icon} color={category.color} size={16} />
+                          <span>{category.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="scheduledDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('schedule.scheduledFor')}</FormLabel>
+                <FormControl>
+                  <Input type="datetime-local" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="recurrence"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('schedule.recurrence')}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('schedule.recurrence')} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="once">{t('schedule.once')}</SelectItem>
+                    <SelectItem value="daily">{t('schedule.daily')}</SelectItem>
+                    <SelectItem value="weekly">{t('schedule.weekly')}</SelectItem>
+                    <SelectItem value="monthly">{t('schedule.monthly')}</SelectItem>
+                    <SelectItem value="yearly">{t('schedule.yearly')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              <DialogFooter className="flex flex-col sm:flex-row gap-3 justify-between items-center">
-                {mode === 'edit' && (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setDeleteDialogOpen(true)}
-                    disabled={!isOnline}
-                    className="w-full sm:w-auto"
-                  >
-                    {t('common.delete')}
-                  </Button>
-                )}
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onOpenChange(false)}
-                    className="flex-1 sm:flex-initial min-w-20"
-                  >
-                    {t('common.cancel')}
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    variant="default"
-                    size="sm"
-                    disabled={!isOnline}
-                    className="flex-1 sm:flex-initial min-w-20"
-                  >
-                    {mode === 'create' ? t('common.create') : t('common.update')}
-                  </Button>
-                </div>
-              </DialogFooter>
-              {!isOnline && (
-                <p className="text-xs text-muted-foreground text-right mt-2">
-                  {t('schedule.editingRequiresConnection')}
-                </p>
-              )}
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+          <div className="flex flex-col sm:flex-row gap-3 justify-between items-center pt-4">
+            {mode === 'edit' && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => setDeleteDialogOpen(true)}
+                disabled={!isOnline}
+                className="w-full sm:w-auto"
+              >
+                {t('common.delete')}
+              </Button>
+            )}
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onCancel}
+                className="flex-1 sm:flex-initial min-w-20"
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button 
+                type="submit" 
+                variant="default"
+                size="sm"
+                disabled={!isOnline}
+                className="flex-1 sm:flex-initial min-w-20"
+              >
+                {mode === 'create' ? t('common.create') : t('common.update')}
+              </Button>
+            </div>
+          </div>
+          {!isOnline && (
+            <p className="text-xs text-muted-foreground text-right mt-2">
+              {t('schedule.editingRequiresConnection')}
+            </p>
+          )}
+        </form>
+      </Form>
       
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

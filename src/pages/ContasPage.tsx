@@ -168,13 +168,12 @@ const ContasPage = () => {
                   <DialogTitle>Agendar Transação</DialogTitle>
                 </DialogHeader>
                 <ContaForm
-                  open={true}
-                  onOpenChange={() => {}}
                   mode="create"
                   onSuccess={() => {
                     setIsAddDialogOpen(false);
                     loadContas();
                   }}
+                  onCancel={() => setIsAddDialogOpen(false)}
                 />
               </DialogContent>
             </Dialog>
@@ -320,14 +319,16 @@ const ContasPage = () => {
               <DialogTitle>Editar Conta</DialogTitle>
             </DialogHeader>
             <ContaForm
-              open={true}
-              onOpenChange={() => {}}
               initialData={editingConta}
               mode="edit"
               onSuccess={() => {
                 setIsEditDialogOpen(false);
                 setEditingConta(null);
                 loadContas();
+              }}
+              onCancel={() => {
+                setIsEditDialogOpen(false);
+                setEditingConta(null);
               }}
             />
           </DialogContent>

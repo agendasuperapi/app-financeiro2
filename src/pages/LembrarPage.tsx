@@ -190,7 +190,7 @@ const LembrarPage = () => {
         return { label: 'Ativo', variant: 'default' as const };
       case 'concluido':
       case 'concluído':
-        return { label: 'Concluído', variant: 'default' as const };
+        return { label: 'Concluído', variant: 'destructive' as const };
       case 'cancelado':
         return { label: 'Cancelado', variant: 'destructive' as const };
       case 'pendente':

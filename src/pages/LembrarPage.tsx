@@ -82,26 +82,46 @@ const LembrarPage = () => {
       return;
     }
 
-    const filtered = contas.filter((conta) => {
-      const status = getContaStatus(conta);
-      
-      switch (statusFilter) {
-        case 'pendente':
-          return status === 'Pendente';
-        case 'avisado':
-          return status === 'Avisado';
-        default:
-          return true;
-      }
-    });
+      const filtered = contas.filter((conta) => {
+        const status = getContaStatus(conta);
+        
+        switch (statusFilter) {
+          case 'pendente':
+            return status === 'Pendente';
+          case 'avisado':
+            return status === 'Avisado';
+          case 'ativo':
+            return status === 'Ativo';
+          case 'concluido':
+            return status === 'Concluído';
+          case 'cancelado':
+            return status === 'Cancelado';
+          default:
+            return true;
+        }
+      });
     
     setFilteredContas(filtered);
   };
 
   const getContaStatus = (conta: ScheduledTransaction): string => {
     // Use situacao field to determine status
-    if (conta.situacao === 'avisado') return 'Avisado';
-    return 'Pendente';
+    const situacao = conta.situacao?.toLowerCase() || 'pendente';
+    
+    switch (situacao) {
+      case 'avisado':
+        return 'Avisado';
+      case 'ativo':
+        return 'Ativo';
+      case 'concluido':
+      case 'concluído':
+        return 'Concluído';
+      case 'cancelado':
+        return 'Cancelado';
+      case 'pendente':
+      default:
+        return 'Pendente';
+    }
   };
 
   const handleMarkAsPaid = async (id: string) => {
@@ -159,10 +179,24 @@ const LembrarPage = () => {
     return recurrenceMap[recurrence || 'once'] || 'Uma vez';
   };
 
-  // Determinar status
+  // Determinar status baseado na coluna situacao do Supabase
   const getStatus = (conta: ScheduledTransaction) => {
-    if (conta.situacao === 'avisado') return { label: 'Avisado', variant: 'default' as const };
-    return { label: 'Pendente', variant: 'secondary' as const };
+    const situacao = conta.situacao?.toLowerCase() || 'pendente';
+    
+    switch (situacao) {
+      case 'avisado':
+        return { label: 'Avisado', variant: 'default' as const };
+      case 'ativo':
+        return { label: 'Ativo', variant: 'default' as const };
+      case 'concluido':
+      case 'concluído':
+        return { label: 'Concluído', variant: 'default' as const };
+      case 'cancelado':
+        return { label: 'Cancelado', variant: 'destructive' as const };
+      case 'pendente':
+      default:
+        return { label: 'Pendente', variant: 'secondary' as const };
+    }
   };
 
   return (
@@ -207,6 +241,9 @@ const LembrarPage = () => {
                 <SelectItem value="todos">Todos</SelectItem>
                 <SelectItem value="pendente">Pendente</SelectItem>
                 <SelectItem value="avisado">Avisado</SelectItem>
+                <SelectItem value="ativo">Ativo</SelectItem>
+                <SelectItem value="concluido">Concluído</SelectItem>
+                <SelectItem value="cancelado">Cancelado</SelectItem>
               </SelectContent>
             </Select>
           </div>

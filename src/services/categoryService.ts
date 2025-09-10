@@ -29,7 +29,7 @@ export const getCategories = async (): Promise<Category[]> => {
 export const getCategoriesByType = async (type: 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros'): Promise<Category[]> => {
   try {
     // Para lembretes e outros, retornamos uma categoria padrão
-    if (type === 'reminder') {
+    if (type === 'reminder' || type === 'lembrete') {
       return [{
         id: 'reminder-default',
         name: 'Lembretes',

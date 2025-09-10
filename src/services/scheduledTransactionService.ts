@@ -99,20 +99,25 @@ export const addScheduledTransaction = async (
     let categoryId = transaction.category_id;
     
     if (!categoryId) {
-      // Try to find by name if category_id is not provided
-      const { data: categoryByName } = await supabase
-        .from("poupeja_categories")
-        .select("id")
-        .eq("name", transaction.category)
-        .eq("type", transaction.type)
-        .single();
-      
-      if (categoryByName) {
-        categoryId = categoryByName.id;
+      // For reminders/lembretes, use the default reminder category ID
+      if (transaction.type === 'lembrete' || transaction.type === 'reminder') {
+        categoryId = 'reminder-default';
       } else {
-        // Fallback to default "Outros" category
-        const defaultCategoryId = transaction.type === 'income' ? 'other-income' : 'other-expense';
-        categoryId = defaultCategoryId;
+        // Try to find by name if category_id is not provided
+        const { data: categoryByName } = await supabase
+          .from("poupeja_categories")
+          .select("id")
+          .eq("name", transaction.category)
+          .eq("type", transaction.type)
+          .single();
+        
+        if (categoryByName) {
+          categoryId = categoryByName.id;
+        } else {
+          // Fallback to default "Outros" category
+          const defaultCategoryId = transaction.type === 'income' ? 'other-income' : 'other-expense';
+          categoryId = defaultCategoryId;
+        }
       }
     }
     

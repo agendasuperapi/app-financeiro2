@@ -433,7 +433,7 @@ export const markAsPaid = async (
     let newDate: Date;
 
     // Calculate new date based on recurrence type
-    switch (recurrence) {
+    switch (recurrence.toLowerCase()) {
       case "daily":
       case "diário":
         newDate = new Date(originalDate);

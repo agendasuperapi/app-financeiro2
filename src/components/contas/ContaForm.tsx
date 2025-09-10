@@ -27,10 +27,10 @@ interface ContaFormProps {
 const contaFormSchema = z.object({
   description: z.string().min(1, 'Descrição é obrigatória'),
   amount: z.number().min(0.01, 'Valor deve ser maior que zero'),
-  installments: z.number().min(1, 'Número de parcelas deve ser maior que zero').int('Deve ser um número inteiro'),
+  installments: z.number().min(1, 'Número de parcelas deve ser maior que zero').int('Deve ser um número inteiro').optional(),
   category: z.string().min(1, 'Categoria é obrigatória'),
   scheduledDate: z.string().min(1, 'Data é obrigatória'),
-  recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly']),
+  recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly', 'installments']),
   goalId: z.string().optional().nullable(),
 });
 
@@ -55,15 +55,16 @@ const ContaForm: React.FC<ContaFormProps> = ({
     now.setHours(now.getHours() + 1, 0, 0, 0);
     
     if (mode === 'edit' && initialData) {
+      const hasInstallments = initialData.parcela && parseInt(initialData.parcela) > 1;
       return {
         description: initialData.description || '',
         amount: initialData.amount || 100,
-        installments: parseInt(initialData.parcela || '1') || 1,
+        installments: hasInstallments ? parseInt(initialData.parcela || '1') : undefined,
         category: initialData.category_id || '',
         scheduledDate: initialData.scheduledDate 
           ? new Date(initialData.scheduledDate).toISOString().slice(0, 16)
           : now.toISOString().slice(0, 16),
-        recurrence: (initialData.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
+        recurrence: hasInstallments ? 'installments' : ((initialData.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once'),
         goalId: initialData.goalId || null,
       };
     }
@@ -71,7 +72,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
     return {
       description: '',
       amount: 100,
-      installments: 1,
+      installments: undefined,
       category: '',
       scheduledDate: now.toISOString().slice(0, 16),
       recurrence: 'once',
@@ -156,16 +157,16 @@ const ContaForm: React.FC<ContaFormProps> = ({
           type: 'expense' as const,
           description: values.description,
           amount: values.amount,
-          installments: values.installments,
+          installments: values.recurrence === 'installments' ? (values.installments || 1) : 1,
           category: selectedCategory?.name || 'Outros',
           category_id: values.category,
           scheduledDate: new Date(values.scheduledDate).toISOString(),
-          recurrence: values.recurrence,
+          recurrence: values.recurrence === 'installments' ? 'once' : values.recurrence,
           goalId: values.goalId,
           reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
           situacao: 'ativo',
           phone: userPhone,
-          parcela: values.installments.toString(),
+          parcela: values.recurrence === 'installments' ? (values.installments || 1).toString() : '1',
         };
         
         console.log('📋 Creating transaction with data:', transactionData);
@@ -196,16 +197,16 @@ const ContaForm: React.FC<ContaFormProps> = ({
           type: 'expense' as const,
           description: values.description,
           amount: values.amount,
-          installments: values.installments,
+          installments: values.recurrence === 'installments' ? (values.installments || 1) : 1,
           category: selectedCategory?.name || 'Outros',
           category_id: values.category,
           scheduledDate: new Date(values.scheduledDate).toISOString(),
-          recurrence: values.recurrence,
+          recurrence: values.recurrence === 'installments' ? 'once' : values.recurrence,
           goalId: values.goalId,
           reference_code: initialData?.reference_code || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
           situacao: 'ativo',
           phone: userPhone,
-          parcela: values.installments.toString(),
+          parcela: values.recurrence === 'installments' ? (values.installments || 1).toString() : '1',
         };
         
         console.log('📋 Updating transaction with ID:', initialData.id);
@@ -282,26 +283,55 @@ const ContaForm: React.FC<ContaFormProps> = ({
             )}
           />
 
-          {/* Installments Field */}
           <FormField
             control={form.control}
-            name="installments"
+            name="recurrence"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Parcelas</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min="1"
-                    {...field}
-                    onChange={e => field.onChange(parseInt(e.target.value) || 1)}
-                    placeholder="1"
-                  />
-                </FormControl>
+                <FormLabel>{t('schedule.recurrence')}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('schedule.recurrence')} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="once">{t('schedule.once')}</SelectItem>
+                    <SelectItem value="daily">{t('schedule.daily')}</SelectItem>
+                    <SelectItem value="weekly">{t('schedule.weekly')}</SelectItem>
+                    <SelectItem value="monthly">{t('schedule.monthly')}</SelectItem>
+                    <SelectItem value="yearly">{t('schedule.yearly')}</SelectItem>
+                    <SelectItem value="installments">Parcelas</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
+
+          {/* Conditional Installments Field - only show when recurrence is 'installments' */}
+          {form.watch('recurrence') === 'installments' && (
+            <FormField
+              control={form.control}
+              name="installments"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número de Parcelas</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="1"
+                      {...field}
+                      onChange={e => field.onChange(parseInt(e.target.value) || 1)}
+                      placeholder="1"
+                      value={field.value || ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
           
           <FormField
             control={form.control}
@@ -344,31 +374,6 @@ const ContaForm: React.FC<ContaFormProps> = ({
                 <FormControl>
                   <Input type="datetime-local" {...field} />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="recurrence"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('schedule.recurrence')}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('schedule.recurrence')} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="once">{t('schedule.once')}</SelectItem>
-                    <SelectItem value="daily">{t('schedule.daily')}</SelectItem>
-                    <SelectItem value="weekly">{t('schedule.weekly')}</SelectItem>
-                    <SelectItem value="monthly">{t('schedule.monthly')}</SelectItem>
-                    <SelectItem value="yearly">{t('schedule.yearly')}</SelectItem>
-                  </SelectContent>
-                </Select>
                 <FormMessage />
               </FormItem>
             )}

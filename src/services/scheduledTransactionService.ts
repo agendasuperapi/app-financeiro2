@@ -471,18 +471,8 @@ export const markAsPaid = async (
         return true;
     }
 
-    // Generate new reference code with format: Letter + original code + month + year
-    const originalReferenceCode = (originalTransaction as any).reference_code || '';
-    const currentDate = new Date();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // 01-12
-    const year = String(currentDate.getFullYear()).slice(-2); // last 2 digits
-    
-    // Generate letter sequence (A, B, C, etc.) - could be based on count or just increment
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const letterIndex = Math.floor(Math.random() * 26); // Random letter for now
-    const letter = letters[letterIndex];
-    
-    const newReferenceCode = `${letter}${originalReferenceCode}${month}${year}`;
+    // Generate new reference code
+    const newReferenceCode = await getNextReferenceCode();
 
     // Create new transaction record
     const newTransactionData = {

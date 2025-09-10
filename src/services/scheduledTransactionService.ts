@@ -26,6 +26,27 @@ const normalizeRecurrence = (recurrence: string | null | undefined): 'once' | 'd
   return recurrenceMap[recurrence] || 'once';
 };
 
+// Função para converter valores de inglês para português para salvar no banco
+const convertRecurrenceToPortuguese = (recurrence: string | null | undefined): string => {
+  if (!recurrence) return 'Uma vez';
+  
+  const recurrenceMap: { [key: string]: string } = {
+    'once': 'Uma vez',
+    'daily': 'Diário',
+    'weekly': 'Semanal',
+    'monthly': 'Mensal',
+    'yearly': 'Anual',
+    // Valores já em português permanecem iguais
+    'Uma vez': 'Uma vez',
+    'Diário': 'Diário', 
+    'Semanal': 'Semanal',
+    'Mensal': 'Mensal',
+    'Anual': 'Anual'
+  };
+  
+  return recurrenceMap[recurrence] || 'Uma vez';
+};
+
 export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]> => {
   try {
     const { data, error } = await supabase
@@ -166,7 +187,7 @@ export const addScheduledTransaction = async (
           situacao: transaction.situacao || 'ativo',
           phone: transaction.phone,
           aba: transaction.aba,
-          recurrence: 'once'
+          recurrence: 'Uma vez'
         };
         
         // Ensure no unwanted properties are added
@@ -236,7 +257,7 @@ export const addScheduledTransaction = async (
       if (transaction.situacao) insertData.situacao = transaction.situacao;
       if (transaction.phone) insertData.phone = transaction.phone;
       if (transaction.aba) insertData.aba = transaction.aba;
-      if (transaction.recurrence) insertData.recurrence = transaction.recurrence;
+      if (transaction.recurrence) insertData.recurrence = convertRecurrenceToPortuguese(transaction.recurrence);
 
       console.log('Insert data with all fields:', insertData);
       
@@ -328,7 +349,7 @@ export const updateScheduledTransaction = async (
     if (transaction.situacao) updateData.situacao = transaction.situacao;
     if (transaction.phone) updateData.phone = transaction.phone;
     if (transaction.aba) updateData.aba = transaction.aba;
-    if (transaction.recurrence) updateData.recurrence = transaction.recurrence;
+    if (transaction.recurrence) updateData.recurrence = convertRecurrenceToPortuguese(transaction.recurrence);
     if (transaction.status) updateData.status = transaction.status;
 
     console.log('Update data with all fields:', updateData);

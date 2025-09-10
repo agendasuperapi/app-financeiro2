@@ -207,6 +207,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           situacao: 'ativo',
           phone: userPhone,
           parcela: values.recurrence === 'installments' ? (values.installments || 1).toString() : '1',
+          status: 'pending' as const,
         };
         
         console.log('📋 Updating transaction with ID:', initialData.id);

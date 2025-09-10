@@ -233,7 +233,7 @@ const ContasPage = () => {
                           <div className="flex items-center gap-1 md:gap-4 mb-2 md:mb-3 text-[10px] md:text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Calendar className="h-2.5 w-2.5 md:h-4 md:w-4" />
-                              <span>{formatDate(conta.scheduledDate)}</span>
+                              <span>{formatDate(conta.scheduledDate, 'dd/MM/yyyy HH:mm')}</span>
                             </div>
                             <div className="flex items-center gap-1">
                               <span>•</span>

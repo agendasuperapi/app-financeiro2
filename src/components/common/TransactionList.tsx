@@ -281,29 +281,30 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
                   </TableCell>
                   <TableCell className="hidden md:table-cell pl-2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0 opacity-100 transition-opacity">
-                          <MoreHorizontal className="h-4 w-4" />
+                    <div className="flex gap-1">
+                      {onEdit && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-7 w-7 p-0"
+                          onClick={() => onEdit(transaction)}
+                        >
+                          <Edit className="h-3 w-3" />
                           <span className="sr-only">{t('common.edit')}</span>
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {onEdit && (
-                          <DropdownMenuItem onClick={() => onEdit(transaction)}>
-                            {t('common.edit')}
-                          </DropdownMenuItem>
-                        )}
-                        {onDelete && (
-                          <DropdownMenuItem 
-                            onClick={() => onDelete(transaction.id)}
-                            className="text-metacash-error"
-                          >
-                            {t('common.delete')}
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      )}
+                      {onDelete && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-7 w-7 p-0 text-metacash-error hover:text-metacash-error"
+                          onClick={() => onDelete(transaction.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          <span className="sr-only">{t('common.delete')}</span>
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </motion.tr>
               );

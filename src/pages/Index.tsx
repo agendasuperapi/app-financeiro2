@@ -206,7 +206,6 @@ const Index = () => {
           <DashboardContent
             filteredTransactions={monthlyData.monthTransactions}
             goals={monthlyGoals}
-            scheduledTransactions={scheduledTransactions}
             currentGoalIndex={currentGoalIndex}
             currentMonth={currentMonth}
             hideValues={hideValues}

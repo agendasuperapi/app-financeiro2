@@ -323,7 +323,7 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
               isActive
             }) => cn("flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground min-w-0", isActive ? "bg-green-600 text-white shadow-md" : "text-muted-foreground")}>
               <item.icon className="h-5 w-5 flex-shrink-0" />
-              <span className="truncate">{item.label}</span>
+              {item.label && <span className="truncate">{item.label}</span>}
             </NavLink>
           );
         })}

@@ -44,15 +44,15 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
-        <Table className="w-full min-w-[900px] table-fixed">
+        <Table className="w-full min-w-[760px] table-fixed">
           <TableHeader className="bg-muted/30">
             <TableRow>
               <TableHead className="w-[12%] min-w-[70px]">{t('common.type')}</TableHead>
               <TableHead className="w-[13%] min-w-[90px]">{t('common.date')}</TableHead>
               <TableHead className="w-[22%] min-w-[110px]">{t('common.category')}</TableHead>
               <TableHead className="w-[24%] hidden lg:table-cell">{t('common.description')}</TableHead>
+              <TableHead className="text-right w-[120px] min-w-[120px]">Ações</TableHead>
               <TableHead className="text-right w-[10%] min-w-[75px] hidden lg:table-cell">{t('common.amount')}</TableHead>
-              <TableHead className="text-right w-[120px] min-w-[120px] sticky right-0 bg-background">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -140,16 +140,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
                     <div className="truncate pr-2">{transaction.description}</div>
                   </TableCell>
-                  <TableCell
-                    className={cn(
-                      'text-right font-semibold text-[10px] md:text-xs hidden lg:table-cell',
-                      transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
-                    )}
-                  >
-                    {transaction.type === 'income' ? '+' : '-'}
-                    {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
-                  </TableCell>
-                  <TableCell className="pl-2 pr-2 w-[120px] min-w-[120px] sticky right-0 bg-background">
+                  <TableCell className="pl-2 pr-2 w-[120px] min-w-[120px]">
                     <div className="flex justify-end gap-1">
                       <Button
                         variant="ghost"
@@ -172,6 +163,15 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      'text-right font-semibold text-[10px] md:text-xs hidden lg:table-cell',
+                      transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
+                    )}
+                  >
+                    {transaction.type === 'income' ? '+' : '-'}
+                    {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
                   </TableCell>
                 </motion.tr>
               );

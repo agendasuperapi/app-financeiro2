@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
-import TransactionList from '@/components/common/TransactionList';
 import TransactionTable from '@/components/common/TransactionTable';
 import TransactionForm from '@/components/common/TransactionForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +10,6 @@ import { Plus } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
 import { Transaction } from '@/types';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { cn } from '@/lib/utils';
 
 const TransactionsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
@@ -45,7 +43,6 @@ const TransactionsPage = () => {
             <h1 className="text-xl md:text-2xl font-semibold">
               {isMobile ? 'Transações' : 'Transações Recentes'}
             </h1>
-            
             {/* Add Button - visible on tablet and desktop */}
             {!isMobile && (
               <Button onClick={handleAddTransaction} size="lg" className="shrink-0">
@@ -54,30 +51,22 @@ const TransactionsPage = () => {
               </Button>
             )}
           </div>
-          
+
           {/* Content Container */}
           <div className="space-y-4">
-            {/* Content */}
-            {isMobile ? (
-              <TransactionList 
-                transactions={filteredTransactions}
-                onEdit={handleEditTransaction}
-                onDelete={handleDeleteTransaction}
-              />
-            ) : (
-              <Card className="animate-fade-in p-1">
-                <CardHeader className="pb-6">
-                  <CardTitle className="text-xl">Lista de Transações</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0 px-8">
-                  <TransactionTable 
-                    transactions={filteredTransactions}
-                    onEdit={handleEditTransaction}
-                    onDelete={handleDeleteTransaction}
-                  />
-                </CardContent>
-              </Card>
-            )}
+            {/* Always render table (scrolls horizontally on small screens) */}
+            <Card className="animate-fade-in p-1">
+              <CardHeader className="pb-6">
+                <CardTitle className="text-xl">Lista de Transações</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0 px-8">
+                <TransactionTable 
+                  transactions={filteredTransactions}
+                  onEdit={handleEditTransaction}
+                  onDelete={handleDeleteTransaction}
+                />
+              </CardContent>
+            </Card>
           </div>
         </div>
 

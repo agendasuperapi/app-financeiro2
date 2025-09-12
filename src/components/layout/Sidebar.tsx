@@ -8,7 +8,7 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import { LayoutDashboard, Receipt, BarChart3, Target, User, Settings, FolderOpen, Calendar, Clock, Crown, LogOut, Shield, Users, FileText, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Receipt, BarChart3, Target, User, Settings, FolderOpen, Calendar, Clock, Crown, LogOut, Shield, Users, FileText, CreditCard, AlertTriangle } from 'lucide-react';
 
 interface SidebarProps {
   onProfileClick?: () => void;
@@ -156,6 +156,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       icon: Target,
       label: t('nav.goals'),
       href: '/goals'
+    },
+    {
+      icon: AlertTriangle,
+      label: 'Limites',
+      href: '/limits'
     },
     {
       icon: CreditCard,

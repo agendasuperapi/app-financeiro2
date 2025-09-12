@@ -35,6 +35,7 @@ import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import ThankYouPage from "./pages/ThankYouPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AchievementsPage from "./pages/AchievementsPage";
+import LimitsPage from "./pages/LimitsPage";
 import NotFound from "./pages/NotFound";
 import AdminRoute from "./components/admin/AdminRoute";
 import "./App.css";
@@ -78,6 +79,7 @@ function App() {
                         <Route path="/payment-success" element={<PaymentSuccessPage />} />
                         <Route path="/thank-you" element={<ThankYouPage />} />
                         <Route path="/achievements" element={<AchievementsPage />} />
+                        <Route path="/limits" element={<LimitsPage />} />
                         <Route 
                           path="/admin" 
                           element={

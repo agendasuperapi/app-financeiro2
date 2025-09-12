@@ -280,7 +280,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     {transaction.type === 'income' ? '+' : '-'}
                     {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell pl-2">
+                  <TableCell className="pl-2 w-[12%] min-w-[90px]">
                     <div className="flex gap-1">
                       {onEdit && (
                         <Button 

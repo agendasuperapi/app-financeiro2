@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Edit, Trash2, DollarSign } from 'lucide-react';
 import { Goal } from '@/types';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { useApp } from '@/contexts/AppContext';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +18,7 @@ interface LimiteCardProps {
 
 export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete }) => {
   const { currency } = usePreferences();
+  const { transactions } = useApp();
   const [spentAmount, setSpentAmount] = useState(0);
 
   // Get currency symbol with space
@@ -108,7 +110,7 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
     };
 
     fetchSpentAmount();
-  }, [limit]);
+  }, [limit, transactions]);
 
   // Calcular valores
   const limitAmount = limit.targetAmount || limit.target_amount || 0;

@@ -67,35 +67,30 @@ const PlanCard: React.FC<PlanCardProps> = ({
       console.log('subscription?.plan_type:', subscription?.plan_type);
       console.log('======================');
       
-      // Se possui assinatura ativa, redirecionar para Stripe billing portal
-      if (hasActiveSubscription) {
-        console.log('Redirecionando para portal de gerenciamento - plano atual/expirado');
-        if (subscription?.stripe_subscription_id) {
-          // Redirecionar para o portal de customer da Stripe
-          const { data, error } = await supabase.functions.invoke('customer-portal');
+      // Se já existe uma assinatura (atual ou expirada), sempre abrir o portal da Stripe
+      if (subscription?.stripe_subscription_id) {
+        console.log('Redirecionando para portal de gerenciamento - assinatura existente');
+        // Redirecionar para o portal de customer da Stripe
+        const { data, error } = await supabase.functions.invoke('customer-portal');
 
-          if (error) {
-            console.error('Error creating customer portal session:', error);
-            toast({
-              title: "Erro",
-              description: "Não foi possível abrir o portal de gerenciamento.",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          if (data?.url) {
-            // Adicionar o subscription ID para ir direto para a página de update
-            const updateUrl = `${data.url}/subscriptions/${subscription.stripe_subscription_id}/update`;
-            window.location.href = updateUrl;
-          }
-        } else {
+        if (error) {
+          console.error('Error creating customer portal session:', error);
           toast({
             title: "Erro",
-            description: "ID da assinatura não encontrado.",
+            description: "Não foi possível abrir o portal de gerenciamento.",
             variant: "destructive",
           });
+          return;
         }
+
+        if (data?.url) {
+          // Preferencialmente ir direto para a página de update da assinatura
+          const updateUrl = `${data.url}/subscriptions/${subscription.stripe_subscription_id}/update`;
+          window.location.href = updateUrl;
+          return;
+        }
+
+        // Fallback: se não houver URL, manter no fluxo (mas não ir ao checkout)
         return;
       }
       

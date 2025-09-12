@@ -194,7 +194,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                           <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-metacash-success flex items-center justify-center mr-2">
                             <ArrowUp className="w-3 h-3 md:w-4 md:h-4 text-white" />
                           </div>
-                          <span className="text-xs md:text-sm">{t('income.title')}</span>
+                          <span className="text-[10px] md:text-xs">{t('income.title')}</span>
                         </div>
                       </div>
                     ) : (
@@ -203,15 +203,15 @@ const TransactionList: React.FC<TransactionListProps> = ({
                           <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-metacash-error flex items-center justify-center mr-2">
                             <ArrowDown className="w-3 h-3 md:w-4 md:h-4 text-white" />
                           </div>
-                          <span className="text-xs md:text-sm">{t('expense.title')}</span>
+                          <span className="text-[10px] md:text-xs">{t('expense.title')}</span>
                         </div>
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="font-medium text-xs md:text-sm">
+                  <TableCell className="font-medium text-[10px] md:text-xs">
                     <div className="space-y-1">
                       <div className="font-medium">{formatDateTime(transaction.created_at || transaction.date)}</div>
-                      <div className="lg:hidden text-xs text-muted-foreground break-words">
+                      <div className="lg:hidden text-[10px] text-muted-foreground break-words">
                         {transaction.description}
                       </div>
                     </div>
@@ -225,7 +225,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                           size={14}
                         />
                         <Badge variant="outline" className={cn(
-                          "text-xs whitespace-nowrap max-w-[100px] md:max-w-[160px] truncate",
+                          "text-[10px] whitespace-nowrap max-w-[100px] md:max-w-[160px] truncate",
                           transaction.type === 'income' 
                             ? "bg-green-50 text-green-600 hover:bg-green-100 border-green-200"
                             : "bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
@@ -235,7 +235,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                       </div>
                       <div className="md:flex md:flex-col md:items-start md:gap-1 lg:hidden mt-1">
                         <div className={cn(
-                          "font-semibold text-sm",
+                          "font-semibold text-xs",
                           transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
                         )}>
                           {transaction.type === 'income' ? '+' : '-'}
@@ -268,13 +268,13 @@ const TransactionList: React.FC<TransactionListProps> = ({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-xs md:text-sm hidden lg:table-cell">
+                  <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
                     <div className="truncate pr-2">
                       {transaction.description}
                     </div>
                   </TableCell>
                   <TableCell className={cn(
-                    "text-right font-semibold text-xs md:text-sm hidden lg:table-cell",
+                    "text-right font-semibold text-[10px] md:text-xs hidden lg:table-cell",
                     transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
                   )}>
                     {transaction.type === 'income' ? '+' : '-'}

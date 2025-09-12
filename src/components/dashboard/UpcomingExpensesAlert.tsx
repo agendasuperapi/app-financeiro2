@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,40 +11,17 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { getScheduledTransactions, markAsPaid } from '@/services/scheduledTransactionService';
 
 interface UpcomingExpensesAlertProps {
+  scheduledTransactions: ScheduledTransaction[];
   onMarkAsPaid?: (transaction: ScheduledTransaction) => void;
 }
 
 const UpcomingExpensesAlert: React.FC<UpcomingExpensesAlertProps> = ({
+  scheduledTransactions,
   onMarkAsPaid
 }) => {
   const { t, currency } = usePreferences();
-  const [scheduledTransactions, setScheduledTransactions] = useState<ScheduledTransaction[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Buscar dados das contas
-  useEffect(() => {
-    const loadScheduledTransactions = async () => {
-      try {
-        setLoading(true);
-        const transactions = await getScheduledTransactions();
-        setScheduledTransactions(transactions);
-      } catch (error) {
-        console.error('Erro ao carregar transações agendadas:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadScheduledTransactions();
-  }, []);
-
-  // Não mostrar enquanto carrega
-  if (loading) {
-    return null;
-  }
 
   // Filtrar apenas despesas pendentes
   const pendingExpenses = scheduledTransactions.filter(

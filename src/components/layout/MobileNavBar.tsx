@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAppContext } from '@/contexts/AppContext';
-import { LayoutDashboard, Receipt, Settings, Crown, Plus, Calendar, Clock, Shield, User, FileText, Tag, Users, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, Receipt, Settings, Crown, Plus, Calendar, Clock, Shield, User, FileText, Tag, Users, AlertTriangle, CreditCard } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -38,16 +38,6 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
   const isAdminPage = location.pathname === '/admin';
 
   const quickActionItems = [
-    {
-      icon: AlertTriangle,
-      label: 'Metas/Limites',
-      action: () => {
-        navigate('/limits');
-        setIsQuickActionsOpen(false);
-      },
-      color: 'text-red-600',
-      bgColor: 'bg-red-50 hover:bg-red-100'
-    },
     {
       icon: Receipt,
       label: 'Transações',
@@ -205,6 +195,16 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       icon: Receipt,
       label: t('nav.transactions'),
       href: '/transactions'
+    },
+    {
+      icon: CreditCard,
+      label: 'Contas a Pagar',
+      href: '/contas'
+    },
+    {
+      icon: AlertTriangle,
+      label: 'Metas/Limites',
+      href: '/limits'
     },
     {
       type: 'quick-actions',

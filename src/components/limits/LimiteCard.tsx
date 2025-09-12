@@ -8,6 +8,7 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
 
 interface LimiteCardProps {
   limit: Goal;
@@ -28,16 +29,23 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
   useEffect(() => {
     const fetchSpentAmount = async () => {
       try {
+        const brazilTimezone = 'America/Sao_Paulo';
         const startDate = limit.startDate || limit.start_date;
         const endDate = limit.endDate || limit.end_date;
         
         console.log('🔍 Fetching spent amount for limit:', limit.name);
-        console.log('📅 Date range:', { startDate, endDate });
+        console.log('📅 Date range (original):', { startDate, endDate });
         
         if (!startDate) {
           console.log('❌ No start date found');
           return;
         }
+
+        // Convert dates to Brazil timezone for comparison
+        const startDateBR = formatInTimeZone(new Date(startDate), brazilTimezone, 'yyyy-MM-dd');
+        const endDateBR = endDate ? formatInTimeZone(new Date(endDate), brazilTimezone, 'yyyy-MM-dd') : null;
+        
+        console.log('📅 Date range (Brazil timezone):', { startDateBR, endDateBR });
 
         // Extract category name from limit name (format: "CategoryName - Period")
         const categoryName = limit.name.split(' - ')[0];
@@ -58,19 +66,19 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
           return;
         }
 
-        // Build query for transactions
+        // Build query for transactions with Brazil timezone dates
         let query = supabase
           .from('poupeja_transactions')
           .select('amount, date, description')
           .eq('category_id', category.id)
           .eq('type', 'expense');
 
-        // Add date filters
-        if (startDate) {
-          query = query.gte('date', startDate.split('T')[0]); // Use only date part
+        // Add date filters using Brazil timezone
+        if (startDateBR) {
+          query = query.gte('date', startDateBR);
         }
-        if (endDate) {
-          query = query.lte('date', endDate.split('T')[0]); // Use only date part
+        if (endDateBR) {
+          query = query.lte('date', endDateBR);
         }
 
         const { data: transactions, error } = await query;

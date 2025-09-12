@@ -275,9 +275,42 @@ const PlanCard: React.FC<PlanCardProps> = ({
         <Button 
           className="w-full" 
           size="lg"
-          onClick={() => {
+          onClick={async () => {
             console.log('BOTÃO CLICADO - PlanCard');
             console.log('planType recebido:', planType);
+            
+            // Se já existe uma assinatura, redirecionar direto para o portal da Stripe
+            if (subscription?.stripe_subscription_id) {
+              console.log('Redirecionando para portal da Stripe - assinatura existente');
+              try {
+                const { data, error } = await supabase.functions.invoke('customer-portal');
+                
+                if (error) {
+                  console.error('Error creating customer portal session:', error);
+                  toast({
+                    title: "Erro",
+                    description: "Não foi possível abrir o portal de gerenciamento.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+
+                if (data?.url) {
+                  const updateUrl = `${data.url}/subscriptions/${subscription.stripe_subscription_id}/update`;
+                  window.location.href = updateUrl;
+                }
+              } catch (error) {
+                console.error('Erro ao abrir portal:', error);
+                toast({
+                  title: "Erro",
+                  description: "Erro ao abrir portal de gerenciamento.",
+                  variant: "destructive",
+                });
+              }
+              return;
+            }
+            
+            // Se não tem assinatura, prosseguir com checkout normal
             handleCheckout();
           }}
           disabled={isLoading || (isCurrentPlan && !isExpiredCurrentPlan)}

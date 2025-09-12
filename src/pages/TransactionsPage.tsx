@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
 import TransactionList from '@/components/common/TransactionList';
+import TransactionTable from '@/components/common/TransactionTable';
 import TransactionForm from '@/components/common/TransactionForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -69,7 +70,7 @@ const TransactionsPage = () => {
                   <CardTitle className="text-xl">Lista de Transações</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0 px-8">
-                  <TransactionList 
+                  <TransactionTable 
                     transactions={filteredTransactions}
                     onEdit={handleEditTransaction}
                     onDelete={handleDeleteTransaction}

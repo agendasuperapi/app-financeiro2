@@ -160,11 +160,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       href: '/categories'
     },
     {
-      icon: Target,
-      label: t('nav.goals'),
-      href: '/goals'
-    },
-    {
       icon: AlertTriangle,
       label: 'Limites',
       href: '/limits'

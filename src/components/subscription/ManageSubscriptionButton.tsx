@@ -45,11 +45,10 @@ const ManageSubscriptionButton: React.FC = () => {
       }
 
       if (data?.url) {
-        window.location.href = data.url;
-        toast({
-          title: "Sucesso",
-          description: "Redirecionando para o portal de gerenciamento.",
-        });
+        window.location.assign(data.url);
+        // Nota: usamos assign para garantir navegação na mesma aba
+        // sem criar histórico adicional use replace se preferir
+        // window.location.replace(data.url);
       }
     } catch (error) {
       console.error('Customer portal error:', error);

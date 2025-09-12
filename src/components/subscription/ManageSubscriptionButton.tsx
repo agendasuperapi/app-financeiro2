@@ -54,8 +54,8 @@ const ManageSubscriptionButton: React.FC = () => {
             window.location.assign(url);
           }
         } catch (e) {
-          // Fallback seguro
-          window.location.href = url;
+          // Fallback: abre em nova aba (fora do iframe) para evitar bloqueios
+          window.open(url, '_blank', 'noopener,noreferrer');
         }
       }
     } catch (error) {

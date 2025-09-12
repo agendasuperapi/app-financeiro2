@@ -418,6 +418,12 @@ export const markAsPaid = async (
 
     if (updateError) throw updateError;
 
+    // Check if transaction is completed - if so, only change status, don't create new one
+    if ((originalTransaction as any).situacao === "concluido") {
+      console.log('✅ Transaction marked as completed, no new record needed');
+      return true;
+    }
+
     // Check recurrence and create new record if needed
     const recurrence = (originalTransaction as any).recurrence;
     console.log('🔁 Recurrence type:', recurrence);

@@ -44,6 +44,12 @@ const PlanCard: React.FC<PlanCardProps> = ({
   // Verifica se é o plano atual e se está ativo
   const isCurrentPlan = subscription?.plan_type === planType && hasActiveSubscription;
   
+  // Debug para verificar detecção do plano atual
+  console.log(`[PlanCard ${planType}] subscription?.plan_type:`, subscription?.plan_type);
+  console.log(`[PlanCard ${planType}] planType:`, planType);
+  console.log(`[PlanCard ${planType}] hasActiveSubscription:`, hasActiveSubscription);
+  console.log(`[PlanCard ${planType}] isCurrentPlan:`, isCurrentPlan);
+  
   // Verifica se é o plano atual mas está vencido (expirado)
   const isExpiredCurrentPlan = subscription?.plan_type === planType && !hasActiveSubscription;
   

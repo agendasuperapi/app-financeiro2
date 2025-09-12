@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -167,9 +168,9 @@ const AuthForm: React.FC<AuthFormProps> = ({
 
         {isLogin && showResetPassword && (
           <div className="flex justify-end">
-            <a href="/forgot-password" className="text-sm text-primary font-medium hover:underline">
+            <Link to="/forgot-password" className="text-sm text-primary font-medium hover:underline">
               {t('auth.forgotPassword')}
-            </a>
+            </Link>
           </div>
         )}
         

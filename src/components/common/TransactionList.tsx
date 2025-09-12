@@ -163,12 +163,12 @@ const TransactionList: React.FC<TransactionListProps> = ({
     <div className="space-y-4">
       <div className="border rounded-lg overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <Table className="w-full table-fixed">
+          <Table className="w-full table-auto lg:table-fixed">
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="w-[12%] min-w-[70px]">{t('common.type')}</TableHead>
-                <TableHead className="w-[18%] min-w-[90px]">{t('common.date')}</TableHead>
-                <TableHead className="w-[22%] min-w-[110px]">{t('common.category')}</TableHead>
+                <TableHead className="w-[12%] min-w-[70px] md:w-[20%] lg:w-[12%]">{t('common.type')}</TableHead>
+                <TableHead className="w-[18%] min-w-[90px] md:w-[30%] lg:w-[18%]">{t('common.date')}</TableHead>
+                <TableHead className="w-[22%] min-w-[110px] md:w-[50%] lg:w-[22%]">{t('common.category')}</TableHead>
                 <TableHead className="w-[28%] hidden lg:table-cell">{t('common.description')}</TableHead>
                 <TableHead className="text-right w-[14%] min-w-[75px] hidden lg:table-cell">{t('common.amount')}</TableHead>
                 <TableHead className="w-[6%] min-w-[45px] hidden lg:table-cell"></TableHead>

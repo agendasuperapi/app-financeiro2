@@ -94,20 +94,18 @@ const PlanCard: React.FC<PlanCardProps> = ({
       console.log('Usuário autenticado com sucesso');
       console.log('Token disponível:', !!session.access_token);
 
-        // Invocar a função com o token explícito
-        const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-          body: { 
-            planType,
-            priceId,
-            successUrl: `${window.location.origin}/payment-success?email=${encodeURIComponent(session.user.email)}`,
-            cancelUrl: `${window.location.origin}/plans?canceled=true`,
-            subscriptionUpdateUrl: subscription?.stripe_subscription_id ? 
-              `/subscriptions/${subscription.stripe_subscription_id}/update` : undefined
-          },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          }
-        });
+      // Invocar a função com o token explícito
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: { 
+          planType,
+          priceId,
+          successUrl: `${window.location.origin}/payment-success?email=${encodeURIComponent(session.user.email)}`,
+          cancelUrl: `${window.location.origin}/plans?canceled=true`
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        }
+      });
 
       if (error) {
         console.error('Error creating checkout session:', error);

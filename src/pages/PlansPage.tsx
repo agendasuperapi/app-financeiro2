@@ -9,7 +9,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { usePlanConfig } from '@/hooks/usePlanConfig';
+import { usePlansFromTable } from '@/hooks/usePlansFromTable';
 import { Loader2 } from 'lucide-react';
 
 const PlansPage = () => {
@@ -18,7 +18,7 @@ const PlansPage = () => {
   const { t } = usePreferences();
   const { toast } = useToast();
   const { hasActiveSubscription } = useSubscription();
-  const { config, isLoading: configLoading } = usePlanConfig();
+  const { plans: plansData, isLoading: configLoading } = usePlansFromTable();
 
   const success = searchParams.get('success');
   const canceled = searchParams.get('canceled');
@@ -56,45 +56,18 @@ const PlansPage = () => {
     );
   }
 
-  const plans = [
-    {
-      name: t('plans.monthly'),
-      price: config?.prices.monthly.displayPrice || 'R$ 29,90',
-      period: "/mês",
-      priceId: config?.prices.monthly.priceId,
-      description: "Para uso pessoal completo",
-      features: [
-        t('plans.features.unlimited'), 
-        t('plans.features.dashboard'), 
-        t('plans.features.reports'), 
-        t('plans.features.goals'), 
-        t('plans.features.schedules'), 
-        t('plans.features.support')
-      ],
-      planType: 'monthly' as const,
-    },
-    {
-      name: t('plans.annual'),
-      price: config?.prices.annual.displayPrice || 'R$ 177,00',
-      period: "/ano",
-      priceId: config?.prices.annual.priceId,
-      originalPrice: config?.prices.annual.displayOriginalPrice || 'R$ 238,80',
-      savings: config?.prices.annual.displaySavings || 'Economize 25%',
-      description: "Melhor custo-benefício",
-      features: [
-        t('plans.features.unlimited'), 
-        t('plans.features.dashboard'), 
-        t('plans.features.reports'), 
-        t('plans.features.goals'), 
-        t('plans.features.schedules'), 
-        t('plans.features.vipSupport'), 
-        t('plans.features.backup'), 
-        t('plans.features.analytics')
-      ],
-      popular: true,
-      planType: 'annual' as const,
-    }
-  ];
+  const plans = plansData.map(plan => ({
+    name: plan.name,
+    price: `R$ ${plan.price.toFixed(2).replace('.', ',')}`,
+    period: plan.period,
+    priceId: plan.price_id,
+    originalPrice: plan.original_price ? `R$ ${plan.original_price.toFixed(2).replace('.', ',')}` : undefined,
+    savings: plan.savings_percentage ? `Economize ${plan.savings_percentage}%` : undefined,
+    description: plan.description,
+    features: plan.features,
+    popular: plan.popular,
+    planType: plan.plan_type,
+  }));
 
   return (
     <MainLayout title={t('plans.title')}>

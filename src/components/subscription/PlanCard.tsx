@@ -57,6 +57,37 @@ const PlanCard: React.FC<PlanCardProps> = ({
     try {
       setIsLoading(true);
       
+      // Se é plano atual ou expirado, redirecionar para gerenciar assinatura
+      if (isCurrentPlan || isExpiredCurrentPlan) {
+        const { data, error } = await supabase.functions.invoke('customer-portal');
+
+        if (error) {
+          console.error('Error creating customer portal session:', error);
+          
+          let errorMessage = "Não foi possível abrir o portal de gerenciamento.";
+          
+          if (error.message?.includes("No active subscription")) {
+            errorMessage = "Assinatura não encontrada. Verifique se sua assinatura está ativa.";
+          } else if (error.message?.includes("Payment system not configured")) {
+            errorMessage = "Sistema de pagamento temporariamente indisponível. Contate o suporte.";
+          } else if (error.message?.includes("Database error")) {
+            errorMessage = "Erro de conexão. Tente novamente em alguns instantes.";
+          }
+          
+          toast({
+            title: "Erro",
+            description: errorMessage,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (data?.url) {
+          window.location.href = data.url;
+        }
+        return;
+      }
+      
       // Verificar se o usuário está autenticado
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {

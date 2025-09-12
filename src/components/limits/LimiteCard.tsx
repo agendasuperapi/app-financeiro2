@@ -163,7 +163,7 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-lg">{limit.name}</h3>
+            <h3 className="font-semibold text-lg">{limit.name.split(' - ')[0]}</h3>
           </div>
           <div className="flex gap-1">
             <Button

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAppContext } from '@/contexts/AppContext';
-import { LayoutDashboard, Receipt, Settings, Crown, Plus, Calendar, Clock, Shield, User, FileText, Tag, Users } from 'lucide-react';
+import { LayoutDashboard, Receipt, Settings, Crown, Plus, Calendar, Clock, Shield, User, FileText, Tag, Users, AlertTriangle } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -197,6 +197,11 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       href: '/transactions'
     },
     {
+      icon: AlertTriangle,
+      label: 'Metas/Limites',
+      href: '/limits'
+    },
+    {
       type: 'quick-actions',
       icon: Plus,
       label: '',
@@ -225,7 +230,7 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       href: '/admin'
     };
     
-    // Adicionar o item admin antes do último item (settings)
+    // Adicionar o item admin antes do último item (profile)
     menuItems = [...defaultMenuItems.slice(0, -1), adminMenuItem, defaultMenuItems[defaultMenuItems.length - 1]];
   }
 

@@ -1,91 +1,98 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Clock, Calendar, ChevronRight } from 'lucide-react';
-import { ScheduledTransaction } from '@/types';
+import { Transaction } from '@/types';
 import { formatCurrency } from '@/utils/transactionUtils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { getTransactions } from '@/services/transactionService';
 
-interface UpcomingExpensesAlertProps {
-  scheduledTransactions: ScheduledTransaction[];
-  onMarkAsPaid?: (transaction: ScheduledTransaction) => void;
-}
+interface UpcomingExpensesAlertProps {}
 
-const UpcomingExpensesAlert: React.FC<UpcomingExpensesAlertProps> = ({
-  scheduledTransactions,
-  onMarkAsPaid
-}) => {
+const UpcomingExpensesAlert: React.FC<UpcomingExpensesAlertProps> = () => {
   const { t, currency } = usePreferences();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  // Filtrar apenas despesas pendentes
-  const pendingExpenses = scheduledTransactions.filter(
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      const data = await getTransactions();
+      setTransactions(data);
+    };
+    
+    fetchTransactions();
+  }, []);
+
+  // Filtrar apenas despesas recentes (últimos 30 dias)
+  const today = new Date();
+  const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+  
+  const recentExpenses = transactions.filter(
     transaction => transaction.type === 'expense' && 
-    (!transaction.status || transaction.status === 'pending')
+    new Date(transaction.date) >= thirtyDaysAgo
   );
 
-  // Categorizar por urgência
-  const today = new Date();
-  const categorizedExpenses = pendingExpenses.reduce((acc, transaction) => {
-    const transactionDate = new Date(transaction.nextExecutionDate || transaction.scheduledDate);
-    const daysUntilDue = Math.ceil((transactionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  // Categorizar por data
+  const categorizedExpenses = recentExpenses.reduce((acc, transaction) => {
+    const transactionDate = new Date(transaction.date);
+    const daysFromToday = Math.ceil((today.getTime() - transactionDate.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (daysUntilDue < 0) {
-      acc.overdue.push(transaction);
-    } else if (daysUntilDue === 0) {
-      acc.dueToday.push(transaction);
-    } else if (daysUntilDue <= 3) {
-      acc.dueSoon.push(transaction);
+    if (daysFromToday === 0) {
+      acc.today.push(transaction);
+    } else if (daysFromToday <= 7) {
+      acc.thisWeek.push(transaction);
+    } else {
+      acc.thisMonth.push(transaction);
     }
 
     return acc;
   }, {
-    overdue: [] as ScheduledTransaction[],
-    dueToday: [] as ScheduledTransaction[],
-    dueSoon: [] as ScheduledTransaction[]
+    today: [] as Transaction[],
+    thisWeek: [] as Transaction[],
+    thisMonth: [] as Transaction[]
   });
 
-  const totalUrgentExpenses = categorizedExpenses.overdue.length + 
-                             categorizedExpenses.dueToday.length + 
-                             categorizedExpenses.dueSoon.length;
+  const totalRecentExpenses = categorizedExpenses.today.length + 
+                                 categorizedExpenses.thisWeek.length + 
+                                 categorizedExpenses.thisMonth.length;
 
-  // Não mostrar se não há despesas urgentes
-  if (totalUrgentExpenses === 0) {
+  // Não mostrar se não há despesas recentes
+  if (totalRecentExpenses === 0) {
     return null;
   }
 
   const totalAmount = [
-    ...categorizedExpenses.overdue,
-    ...categorizedExpenses.dueToday,
-    ...categorizedExpenses.dueSoon
+    ...categorizedExpenses.today,
+    ...categorizedExpenses.thisWeek,
+    ...categorizedExpenses.thisMonth
   ].reduce((sum, transaction) => sum + transaction.amount, 0);
 
   const getUrgencyData = () => {
-    if (categorizedExpenses.overdue.length > 0) {
+    if (categorizedExpenses.today.length > 0) {
       return {
         icon: <AlertTriangle className="h-4 w-4" />,
         color: 'bg-red-500',
         textColor: 'text-red-800 dark:text-red-200',
         bgColor: 'bg-red-50 dark:bg-red-950/20',
         borderColor: 'border-red-200 dark:border-red-800',
-        count: categorizedExpenses.overdue.length,
-        label: t('schedule.overdue')
+        count: categorizedExpenses.today.length,
+        label: 'hoje'
       };
     }
-    if (categorizedExpenses.dueToday.length > 0) {
+    if (categorizedExpenses.thisWeek.length > 0) {
       return {
         icon: <Clock className="h-4 w-4" />,
         color: 'bg-orange-500',
         textColor: 'text-orange-800 dark:text-orange-200',
         bgColor: 'bg-orange-50 dark:bg-orange-950/20',
         borderColor: 'border-orange-200 dark:border-orange-800',
-        count: categorizedExpenses.dueToday.length,
-        label: t('schedule.dueToday')
+        count: categorizedExpenses.thisWeek.length,
+        label: 'nesta semana'
       };
     }
     return {
@@ -94,8 +101,8 @@ const UpcomingExpensesAlert: React.FC<UpcomingExpensesAlertProps> = ({
       textColor: 'text-yellow-800 dark:text-yellow-200',
       bgColor: 'bg-yellow-50 dark:bg-yellow-950/20',
       borderColor: 'border-yellow-200 dark:border-yellow-800',
-      count: categorizedExpenses.dueSoon.length,
-      label: t('schedule.duesSoon')
+      count: categorizedExpenses.thisMonth.length,
+      label: 'neste mês'
     };
   };
 
@@ -115,7 +122,7 @@ const UpcomingExpensesAlert: React.FC<UpcomingExpensesAlertProps> = ({
             </div>
             <div>
               <p className={cn("font-semibold text-sm", urgencyData.textColor)}>
-                {totalUrgentExpenses} {totalUrgentExpenses === 1 ? 'despesa' : 'despesas'} {urgencyData.label.toLowerCase()}
+                {totalRecentExpenses} {totalRecentExpenses === 1 ? 'despesa' : 'despesas'} {urgencyData.label}
               </p>
               <p className="text-xs text-muted-foreground">
                 Total: {formatCurrency(totalAmount, currency)}
@@ -126,49 +133,37 @@ const UpcomingExpensesAlert: React.FC<UpcomingExpensesAlertProps> = ({
           <div className="flex items-center gap-2">
             {/* Badge com contagem */}
             <Badge variant="secondary" className={urgencyData.textColor}>
-              {totalUrgentExpenses}
+              {totalRecentExpenses}
             </Badge>
 
-            {/* Ação rápida para despesas vencidas */}
-            {categorizedExpenses.overdue.length > 0 && onMarkAsPaid && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onMarkAsPaid(categorizedExpenses.overdue[0])}
-                className="h-8 px-3 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-950/20"
-              >
-                <span className="text-xs">Pagar</span>
-              </Button>
-            )}
-
-            {/* Link para página de contas */}
+            {/* Link para página de transações */}
             <Button size="sm" variant="ghost" asChild className="h-8 px-2">
-              <Link to="/contas" onClick={() => console.log('Navegando para /contas')}>
+              <Link to="/expenses">
                 <ChevronRight className="h-3 w-3" />
               </Link>
             </Button>
           </div>
         </div>
 
-        {/* Detalhes expandidos para casos mais urgentes */}
-        {(categorizedExpenses.overdue.length > 0 || categorizedExpenses.dueToday.length > 0) && (
+        {/* Detalhes expandidos para casos mais recentes */}
+        {(categorizedExpenses.today.length > 0 || categorizedExpenses.thisWeek.length > 0) && (
           <div className="mt-3 pt-3 border-t border-current opacity-20">
             <div className="space-y-1">
-              {categorizedExpenses.overdue.slice(0, 2).map(transaction => (
+              {categorizedExpenses.today.slice(0, 2).map(transaction => (
                 <div key={transaction.id} className="flex justify-between items-center text-xs">
                   <span className="truncate max-w-[150px]">{transaction.description}</span>
                   <span className="font-medium">{formatCurrency(transaction.amount, currency)}</span>
                 </div>
               ))}
-              {categorizedExpenses.dueToday.slice(0, 2).map(transaction => (
+              {categorizedExpenses.thisWeek.slice(0, 2).map(transaction => (
                 <div key={transaction.id} className="flex justify-between items-center text-xs">
                   <span className="truncate max-w-[150px]">{transaction.description}</span>
                   <span className="font-medium">{formatCurrency(transaction.amount, currency)}</span>
                 </div>
               ))}
-              {totalUrgentExpenses > 2 && (
+              {totalRecentExpenses > 2 && (
                 <div className="text-xs text-muted-foreground text-center pt-1">
-                  +{totalUrgentExpenses - 2} outras
+                  +{totalRecentExpenses - 2} outras
                 </div>
               )}
             </div>

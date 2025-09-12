@@ -53,10 +53,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     <>
       {/* Alerta de despesas próximas */}
       <motion.div variants={itemVariants}>
-        <UpcomingExpensesAlert 
-          scheduledTransactions={scheduledTransactions} 
-          onMarkAsPaid={onMarkScheduledAsPaid}
-        />
+        <UpcomingExpensesAlert />
       </motion.div>
       
       {/* Progresso das metas */}

@@ -69,16 +69,6 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       bgColor: 'bg-purple-50 hover:bg-purple-100'
     },
     {
-      icon: CreditCard,
-      label: 'Contas a Pagar',
-      action: () => {
-        navigate('/expenses');
-        setIsQuickActionsOpen(false);
-      },
-      color: 'text-red-600',
-      bgColor: 'bg-red-50 hover:bg-red-100'
-    },
-    {
       icon: AlertTriangle,
       label: 'Metas/Limites',
       action: () => {

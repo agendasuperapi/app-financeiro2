@@ -49,9 +49,9 @@ const ManageSubscriptionButton: React.FC = () => {
         try {
           // Se estiver em um iframe (ambiente de preview), força navegação no topo
           if (window.top && window.top !== window.self) {
-            window.top.location.assign(url);
+            window.top.location.replace(url);
           } else {
-            window.location.assign(url);
+            window.location.replace(url);
           }
         } catch (e) {
           // Fallback: abre em nova aba (fora do iframe) para evitar bloqueios

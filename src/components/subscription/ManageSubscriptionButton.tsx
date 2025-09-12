@@ -45,10 +45,10 @@ const ManageSubscriptionButton: React.FC = () => {
       }
 
       if (data?.url) {
-        window.open(data.url, '_blank');
+        window.location.href = data.url;
         toast({
           title: "Sucesso",
-          description: "Portal de gerenciamento aberto em nova aba.",
+          description: "Redirecionando para o portal de gerenciamento.",
         });
       }
     } catch (error) {

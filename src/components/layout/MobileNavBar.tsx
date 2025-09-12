@@ -39,6 +39,16 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
 
   const quickActionItems = [
     {
+      icon: AlertTriangle,
+      label: 'Metas/Limites',
+      action: () => {
+        navigate('/limits');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-red-600',
+      bgColor: 'bg-red-50 hover:bg-red-100'
+    },
+    {
       icon: Receipt,
       label: 'Transações',
       action: () => {
@@ -195,11 +205,6 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       icon: Receipt,
       label: t('nav.transactions'),
       href: '/transactions'
-    },
-    {
-      icon: AlertTriangle,
-      label: 'Metas/Limites',
-      href: '/limits'
     },
     {
       type: 'quick-actions',

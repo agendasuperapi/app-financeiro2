@@ -4,6 +4,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useAppContext } from '@/contexts/AppContext';
 import { LayoutDashboard, Receipt, Settings, Crown, Plus, Target, Calendar, Clock, Shield, User, FileText, Tag, Users } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -22,8 +23,16 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { isAdmin } = useUserRole();
+  const { user } = useAppContext();
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
   const [activeAdminSection, setActiveAdminSection] = useState<string>('gestao');
+  
+  // Redirecionar para login se não estiver logado
+  React.useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
   
   // Verificar se estamos na página de administração
   const isAdminPage = location.pathname === '/admin';

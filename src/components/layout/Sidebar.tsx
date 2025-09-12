@@ -23,6 +23,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
   const navigate = useNavigate();
   const location = useLocation();
   
+  // Redirecionar para login se não estiver logado
+  React.useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+  
   // Verificar se estamos na página de administração
   const isAdminPage = location.pathname === '/admin';
   

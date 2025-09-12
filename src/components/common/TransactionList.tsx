@@ -163,7 +163,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
     <div className="space-y-4">
       <div className="border rounded-lg overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <Table className="w-full table-auto lg:table-fixed">
+          <Table className="w-full table-fixed">
             <TableHeader className="bg-muted/30">
               <TableRow>
                 <TableHead className="w-[12%] min-w-[70px] md:w-[20%] lg:w-[12%]">{t('common.type')}</TableHead>
@@ -171,7 +171,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 <TableHead className="w-[22%] min-w-[110px] md:w-[50%] lg:w-[22%]">{t('common.category')}</TableHead>
                 <TableHead className="w-[24%] hidden lg:table-cell">{t('common.description')}</TableHead>
                 <TableHead className="text-right w-[10%] min-w-[75px] hidden lg:table-cell">{t('common.amount')}</TableHead>
-                <TableHead className="w-[12%] min-w-[90px]"></TableHead>
+                <TableHead className="w-[12%] min-w-[90px]">{t('common.actions') || 'Ações'}</TableHead>
               </TableRow>
             </TableHeader>
           <TableBody>
@@ -280,8 +280,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     {transaction.type === 'income' ? '+' : '-'}
                     {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
                   </TableCell>
-                  <TableCell className="pl-2 w-[12%] min-w-[90px]">
-                    <div className="flex gap-1">
+                  <TableCell className="pl-2 pr-2 w-[12%] min-w-[90px]">
+                    <div className="flex justify-end gap-1">
                       {onEdit && (
                         <Button 
                           variant="ghost" 

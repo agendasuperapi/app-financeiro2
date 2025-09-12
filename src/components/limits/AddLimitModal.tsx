@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -38,6 +38,7 @@ import { z } from 'zod';
 import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const limitFormSchema = z.object({
   categoryId: z.string().min(1, 'Selecione uma categoria'),
@@ -71,9 +72,41 @@ export const AddLimitModal: React.FC<AddLimitModalProps> = ({
   onOpenChange,
   onSuccess,
 }) => {
-  const { categories, addGoal } = useAppContext();
+  const { addGoal } = useAppContext();
   const { currency } = usePreferences();
   const [isLoading, setIsLoading] = useState(false);
+  const [categories, setCategories] = useState<Array<{
+    id: string;
+    name: string;
+    color: string;
+    type: string;
+  }>>([]);
+
+  // Fetch categories from database
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('poupeja_categories')
+          .select('id, name, color, type')
+          .eq('type', 'expense')
+          .order('name');
+
+        if (error) {
+          console.error('Error fetching categories:', error);
+          return;
+        }
+
+        setCategories(data || []);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    if (open) {
+      fetchCategories();
+    }
+  }, [open]);
 
   // Get currency symbol with space
   const getCurrencySymbol = () => {
@@ -184,7 +217,7 @@ export const AddLimitModal: React.FC<AddLimitModalProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categories.filter(cat => cat.type === 'expense').map((category) => (
+                      {categories.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
                           <div className="flex items-center gap-2">
                             <div 

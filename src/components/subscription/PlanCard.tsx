@@ -57,8 +57,19 @@ const PlanCard: React.FC<PlanCardProps> = ({
     try {
       setIsLoading(true);
       
+      // Debug logs
+      console.log('=== DEBUG PLAN CARD ===');
+      console.log('subscription:', subscription);
+      console.log('planType:', planType);
+      console.log('hasActiveSubscription:', hasActiveSubscription);
+      console.log('isCurrentPlan:', isCurrentPlan);
+      console.log('isExpiredCurrentPlan:', isExpiredCurrentPlan);
+      console.log('subscription?.plan_type:', subscription?.plan_type);
+      console.log('======================');
+      
       // Se é plano atual ou expirado, redirecionar para Stripe billing portal
       if (isCurrentPlan || isExpiredCurrentPlan) {
+        console.log('Redirecionando para portal de gerenciamento - plano atual/expirado');
         if (subscription?.stripe_subscription_id) {
           // Redirecionar para o portal de customer da Stripe
           const { data, error } = await supabase.functions.invoke('customer-portal');
@@ -87,6 +98,8 @@ const PlanCard: React.FC<PlanCardProps> = ({
         }
         return;
       }
+      
+      console.log('Redirecionando para checkout - nova assinatura');
       
       // Verificar se o usuário está autenticado
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();

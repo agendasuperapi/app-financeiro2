@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAppContext } from '@/contexts/AppContext';
-import { LayoutDashboard, Receipt, Settings, Crown, Plus, Calendar, Clock, Shield, User, FileText, Tag, Users, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, Receipt, Settings, Crown, Plus, Calendar, Clock, Shield, User, FileText, Tag, Users, AlertTriangle, CreditCard } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -67,6 +67,26 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       },
       color: 'text-purple-600',
       bgColor: 'bg-purple-50 hover:bg-purple-100'
+    },
+    {
+      icon: CreditCard,
+      label: 'Contas a Pagar',
+      action: () => {
+        navigate('/expenses');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-red-600',
+      bgColor: 'bg-red-50 hover:bg-red-100'
+    },
+    {
+      icon: AlertTriangle,
+      label: 'Metas/Limites',
+      action: () => {
+        navigate('/limits');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-50 hover:bg-yellow-100'
     },
     {
       icon: Clock,
@@ -195,11 +215,6 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       icon: Receipt,
       label: t('nav.transactions'),
       href: '/transactions'
-    },
-    {
-      icon: AlertTriangle,
-      label: 'Metas/Limites',
-      href: '/limits'
     },
     {
       type: 'quick-actions',

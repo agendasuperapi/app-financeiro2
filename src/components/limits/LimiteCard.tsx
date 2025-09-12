@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Edit, Trash2, DollarSign } from 'lucide-react';
 import { Goal } from '@/types';
 import { usePreferences } from '@/contexts/PreferencesContext';
-import { format, addDays } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -121,14 +121,32 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
   
   const formatPeriod = () => {
     if (!startDate) return 'Período não definido';
-    
-    const start = new Date(startDate);
-    
-    if (endDate) {
-      const end = new Date(endDate);
+
+    const toLocalDate = (val: string | Date) => {
+      if (!val) return null as unknown as Date;
+      if (val instanceof Date) return val;
+      const s = normalizeDateString(val);
+      if (!s) return null as unknown as Date;
+      if (s.length === 10) {
+        // Parse 'yyyy-MM-dd' as local date to avoid timezone shift
+        return parse(s, 'yyyy-MM-dd', new Date());
+      }
+      return new Date(val);
+    };
+
+    const start = toLocalDate(startDate as any);
+    const end = endDate ? toLocalDate(endDate as any) : null;
+
+    if (!start || isNaN(start.getTime())) return 'Período não definido';
+
+    if (end && !isNaN(end.getTime())) {
+      const sameMonthYear = start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
+      if (sameMonthYear) {
+        return format(start, 'MMM/yyyy', { locale: ptBR });
+      }
       return `${format(start, 'MMM/yyyy', { locale: ptBR })} - ${format(end, 'MMM/yyyy', { locale: ptBR })}`;
     }
-    
+
     return format(start, 'MMM/yyyy', { locale: ptBR });
   };
 

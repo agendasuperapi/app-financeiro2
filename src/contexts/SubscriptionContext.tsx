@@ -8,6 +8,7 @@ interface Subscription {
   plan_type: string;
   current_period_end: string | null;
   cancel_at_period_end: boolean | null;
+  stripe_subscription_id?: string;
 }
 
 interface SubscriptionContextType {
@@ -46,7 +47,6 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
           .from('poupeja_subscriptions')
           .select('*')
           .eq('user_id', user.id)
-          .eq('status', 'active')
           .single();
 
         if (fallbackError && fallbackError.code !== 'PGRST116') {

@@ -44,12 +44,6 @@ const PlanCard: React.FC<PlanCardProps> = ({
   // Verifica se é o plano atual e se está ativo
   const isCurrentPlan = subscription?.plan_type === planType && hasActiveSubscription;
   
-  // Debug para verificar detecção do plano atual
-  console.log(`[PlanCard ${planType}] subscription?.plan_type:`, subscription?.plan_type);
-  console.log(`[PlanCard ${planType}] planType:`, planType);
-  console.log(`[PlanCard ${planType}] hasActiveSubscription:`, hasActiveSubscription);
-  console.log(`[PlanCard ${planType}] isCurrentPlan:`, isCurrentPlan);
-  
   // Verifica se é o plano atual mas está vencido (expirado)
   const isExpiredCurrentPlan = subscription?.plan_type === planType && !hasActiveSubscription;
   
@@ -62,45 +56,6 @@ const PlanCard: React.FC<PlanCardProps> = ({
   const handleCheckout = async () => {
     try {
       setIsLoading(true);
-      
-      // Debug logs
-      console.log('=== DEBUG PLAN CARD ===');
-      console.log('subscription:', subscription);
-      console.log('planType:', planType);
-      console.log('hasActiveSubscription:', hasActiveSubscription);
-      console.log('isCurrentPlan:', isCurrentPlan);
-      console.log('isExpiredCurrentPlan:', isExpiredCurrentPlan);
-      console.log('subscription?.plan_type:', subscription?.plan_type);
-      console.log('======================');
-      
-      // Se já existe uma assinatura (atual ou expirada), sempre abrir o portal da Stripe
-      if (subscription?.stripe_subscription_id) {
-        console.log('Redirecionando para portal de gerenciamento - assinatura existente');
-        // Redirecionar para o portal de customer da Stripe
-        const { data, error } = await supabase.functions.invoke('customer-portal');
-
-        if (error) {
-          console.error('Error creating customer portal session:', error);
-          toast({
-            title: "Erro",
-            description: "Não foi possível abrir o portal de gerenciamento.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        if (data?.url) {
-          // Preferencialmente ir direto para a página de update da assinatura
-          const updateUrl = `${data.url}/subscriptions/${subscription.stripe_subscription_id}/update`;
-          window.location.href = updateUrl;
-          return;
-        }
-
-        // Fallback: se não houver URL, manter no fluxo (mas não ir ao checkout)
-        return;
-      }
-      
-      console.log('Redirecionando para checkout - nova assinatura');
       
       // Verificar se o usuário está autenticado
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -281,45 +236,8 @@ const PlanCard: React.FC<PlanCardProps> = ({
         <Button 
           className="w-full" 
           size="lg"
-          onClick={async () => {
-            console.log('BOTÃO CLICADO - PlanCard');
-            console.log('planType recebido:', planType);
-            
-            // Se já existe uma assinatura, redirecionar direto para o portal da Stripe
-            if (subscription?.stripe_subscription_id) {
-              console.log('Redirecionando para portal da Stripe - assinatura existente');
-              try {
-                const { data, error } = await supabase.functions.invoke('customer-portal');
-                
-                if (error) {
-                  console.error('Error creating customer portal session:', error);
-                  toast({
-                    title: "Erro",
-                    description: "Não foi possível abrir o portal de gerenciamento.",
-                    variant: "destructive",
-                  });
-                  return;
-                }
-
-                if (data?.url) {
-                  const updateUrl = `${data.url}/subscriptions/${subscription.stripe_subscription_id}/update`;
-                  window.location.href = updateUrl;
-                }
-              } catch (error) {
-                console.error('Erro ao abrir portal:', error);
-                toast({
-                  title: "Erro",
-                  description: "Erro ao abrir portal de gerenciamento.",
-                  variant: "destructive",
-                });
-              }
-              return;
-            }
-            
-            // Se não tem assinatura, prosseguir com checkout normal
-            handleCheckout();
-          }}
-          disabled={isLoading}
+          onClick={handleCheckout}
+          disabled={isLoading || (isCurrentPlan && !isExpiredCurrentPlan)}
           variant={getButtonVariant()}
         >
           {isLoading ? (

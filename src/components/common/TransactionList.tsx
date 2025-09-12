@@ -171,7 +171,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 <TableHead className="w-[22%] min-w-[110px] md:w-[50%] lg:w-[22%]">{t('common.category')}</TableHead>
                 <TableHead className="w-[24%] hidden lg:table-cell">{t('common.description')}</TableHead>
                 <TableHead className="text-right w-[10%] min-w-[75px] hidden lg:table-cell">{t('common.amount')}</TableHead>
-                <TableHead className="w-[8%] min-w-[56px] hidden lg:table-cell"></TableHead>
+                <TableHead className="w-[8%] min-w-[56px] hidden md:table-cell"></TableHead>
               </TableRow>
             </TableHeader>
           <TableBody>
@@ -241,7 +241,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                           {transaction.type === 'income' ? '+' : '-'}
                           {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
                         </div>
-                        <div className="flex gap-1">
+                        <div className="hidden md:hidden">
                           {onEdit && (
                             <Button 
                               variant="ghost" 
@@ -280,7 +280,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     {transaction.type === 'income' ? '+' : '-'}
                     {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell pl-2">
+                  <TableCell className="hidden md:table-cell pl-2">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0 opacity-100 transition-opacity">

@@ -86,6 +86,13 @@ const SubscriptionStatusCard: React.FC = () => {
             </div>
           )}
         </div>
+        {subscription?.cancel_at_period_end && (
+          <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <p className="text-sm text-destructive">
+              Seu plano foi cancelado, para seguir com o plano clique em <strong>Gerenciar Assinatura</strong> e depois em <strong>Atualizar assinatura</strong>.
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -280,7 +280,11 @@ const PlanCard: React.FC<PlanCardProps> = ({
         <Button 
           className="w-full" 
           size="lg"
-          onClick={handleCheckout}
+          onClick={() => {
+            console.log('BOTÃO CLICADO - PlanCard');
+            console.log('planType recebido:', planType);
+            handleCheckout();
+          }}
           disabled={isLoading || (isCurrentPlan && !isExpiredCurrentPlan)}
           variant={getButtonVariant()}
         >

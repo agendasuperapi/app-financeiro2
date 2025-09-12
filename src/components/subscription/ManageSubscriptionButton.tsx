@@ -45,11 +45,7 @@ const ManageSubscriptionButton: React.FC = () => {
       }
 
       if (data?.url) {
-        window.open(data.url, '_blank');
-        toast({
-          title: "Sucesso",
-          description: "Portal de gerenciamento aberto em nova aba.",
-        });
+        window.location.href = data.url;
       }
     } catch (error) {
       console.error('Customer portal error:', error);

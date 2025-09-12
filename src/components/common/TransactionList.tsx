@@ -167,10 +167,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
             <TableHeader className="bg-muted/30">
               <TableRow>
                 <TableHead className="w-[12%] min-w-[70px] md:w-[20%] lg:w-[12%]">{t('common.type')}</TableHead>
-                <TableHead className="w-[18%] min-w-[90px] md:w-[30%] lg:w-[18%]">{t('common.date')}</TableHead>
+                <TableHead className="w-[13%] min-w-[90px] md:w-[30%] lg:w-[13%]">{t('common.date')}</TableHead>
                 <TableHead className="w-[22%] min-w-[110px] md:w-[50%] lg:w-[22%]">{t('common.category')}</TableHead>
                 <TableHead className="w-[24%] hidden lg:table-cell">{t('common.description')}</TableHead>
-                <TableHead className="text-right w-[14%] min-w-[75px] hidden lg:table-cell">{t('common.amount')}</TableHead>
+                <TableHead className="text-right w-[10%] min-w-[75px] hidden lg:table-cell">{t('common.amount')}</TableHead>
                 <TableHead className="w-[8%] min-w-[56px] hidden lg:table-cell"></TableHead>
               </TableRow>
             </TableHeader>

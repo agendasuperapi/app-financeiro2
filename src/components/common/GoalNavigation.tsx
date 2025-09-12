@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
@@ -7,6 +7,7 @@ import { formatCurrency } from '@/utils/transactionUtils';
 import { Goal } from '@/types';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { motion } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GoalNavigationProps {
   goals: Goal[];
@@ -20,6 +21,7 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
   onGoalChange 
 }) => {
   const { t, currency } = usePreferences();
+  const [actualAmount, setActualAmount] = useState(0);
   
   if (goals.length === 0) {
     return (
@@ -32,7 +34,92 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
   }
 
   const currentGoal = goals[currentGoalIndex];
-  const progress = Math.min(Math.round((currentGoal.currentAmount / currentGoal.targetAmount) * 100), 100);
+
+  // Get currency symbol with space
+  const getCurrencySymbol = () => {
+    return currency === 'USD' ? '$ ' : 'R$ ';
+  };
+
+  // Normalize date to 'YYYY-MM-DD' string (strip time/zone)
+  const normalizeDateString = (value?: string) => {
+    if (!value) return undefined;
+    return value.includes('T') ? value.split('T')[0] : value;
+  };
+
+  // Calculate actual amount from transactions
+  useEffect(() => {
+    const fetchActualAmount = async () => {
+      try {
+        const startDate = currentGoal.startDate || currentGoal.start_date;
+        const endDate = currentGoal.endDate || currentGoal.end_date;
+        
+        const startStr = normalizeDateString(startDate);
+        const endStr = normalizeDateString(endDate);
+        
+        if (!startStr) {
+          setActualAmount(currentGoal.currentAmount);
+          return;
+        }
+
+        // Extract category name from goal name (format: "CategoryName - Period")
+        const categoryName = currentGoal.name.split(' - ')[0];
+
+        // Get the category ID from the category name
+        const { data: category, error: categoryError } = await supabase
+          .from('poupeja_categories')
+          .select('id, name')
+          .eq('name', categoryName)
+          .single();
+
+        if (!category || categoryError) {
+          setActualAmount(currentGoal.currentAmount);
+          return;
+        }
+
+        // Helper to get next day string (YYYY-MM-DD)
+        const getNextDayStr = (dateStr: string) => {
+          const [y, m, d] = dateStr.split('-').map(Number);
+          const next = new Date(Date.UTC(y, (m || 1) - 1, (d || 1) + 1));
+          return next.toISOString().slice(0, 10);
+        };
+
+        // Build query for transactions (both income and expense)
+        let query = supabase
+          .from('poupeja_transactions')
+          .select('amount, date, description, type')
+          .eq('category_id', category.id)
+          .gte('date', startStr);
+
+        // Use exclusive upper bound for end date: < next day
+        if (endStr) {
+          query = query.lt('date', getNextDayStr(endStr));
+        }
+
+        const { data: transactions, error } = await query;
+
+        if (error) {
+          console.error('Error fetching transactions:', error);
+          setActualAmount(currentGoal.currentAmount);
+          return;
+        }
+
+        // Calculate net balance (income - expenses)
+        const totalIncome = transactions?.filter(t => t.type === 'income').reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
+        const totalExpenses = transactions?.filter(t => t.type === 'expense').reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
+        const netBalance = totalIncome - totalExpenses;
+        
+        setActualAmount(netBalance);
+
+      } catch (error) {
+        console.error('Error calculating actual amount:', error);
+        setActualAmount(currentGoal.currentAmount);
+      }
+    };
+
+    fetchActualAmount();
+  }, [currentGoal]);
+
+  const progress = Math.min(Math.round((Math.abs(actualAmount) / currentGoal.targetAmount) * 100), 100);
   
   const handlePreviousGoal = () => {
     onGoalChange(currentGoalIndex > 0 ? currentGoalIndex - 1 : goals.length - 1);
@@ -86,8 +173,8 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
         <Progress value={progress} className="h-2" />
         
         <div className="flex justify-between mt-2 text-sm">
-          <span className="text-metacash-success">
-            {formatCurrency(currentGoal.currentAmount, currency)}
+          <span className={`${actualAmount < 0 ? 'text-red-600' : 'text-green-600'} font-semibold`}>
+            {getCurrencySymbol()}{actualAmount.toFixed(2)}
           </span>
           <span className="text-muted-foreground">
             {t('goals.of')} {formatCurrency(currentGoal.targetAmount, currency)}

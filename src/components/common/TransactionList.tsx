@@ -163,15 +163,15 @@ const TransactionList: React.FC<TransactionListProps> = ({
     <div className="space-y-4">
       <div className="border rounded-lg overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <Table className="w-full table-fixed">
+          <Table>
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="w-[15%] min-w-[80px]">{t('common.type')}</TableHead>
-                <TableHead className="w-[20%] min-w-[100px]">{t('common.date')}</TableHead>
-                <TableHead className="w-[20%] min-w-[120px]">{t('common.category')}</TableHead>
-                <TableHead className="w-[25%] hidden md:table-cell">{t('common.description')}</TableHead>
-                <TableHead className="text-right w-[15%] min-w-[80px] hidden md:table-cell">{t('common.amount')}</TableHead>
-                <TableHead className="w-[5%] min-w-[40px]"></TableHead>
+                <TableHead className="min-w-[120px]">{t('common.type')}</TableHead>
+                <TableHead className="min-w-[140px]">{t('common.date')}</TableHead>
+                <TableHead className="min-w-[160px]">{t('common.category')}</TableHead>
+                <TableHead className="min-w-[180px] hidden md:table-cell">{t('common.description')}</TableHead>
+                <TableHead className="text-right min-w-[120px] hidden md:table-cell">{t('common.amount')}</TableHead>
+                <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
           <TableBody>
@@ -225,7 +225,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                           size={14}
                         />
                         <Badge variant="outline" className={cn(
-                          "text-xs whitespace-nowrap max-w-[100px] truncate",
+                          "text-xs whitespace-nowrap",
                           transaction.type === 'income' 
                             ? "bg-green-50 text-green-600 hover:bg-green-100 border-green-200"
                             : "bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
@@ -245,8 +245,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     </div>
                   </TableCell>
                   <TableCell className="text-xs md:text-sm hidden md:table-cell">
-                    <div className="truncate pr-2">
-                      {transaction.description}
+                    <div className="max-w-[200px]">
+                      <p className="break-words leading-relaxed">
+                        {transaction.description}
+                      </p>
                     </div>
                   </TableCell>
                   <TableCell className={cn(

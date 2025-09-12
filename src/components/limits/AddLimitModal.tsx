@@ -150,18 +150,18 @@ export const AddLimitModal: React.FC<AddLimitModalProps> = ({
       let limitName: string;
 
       if (data.periodType === 'monthly' && data.monthYear) {
-        // Para período mensal
+        // Para período mensal (usar strings de data para evitar problemas de fuso)
         const [year, month] = data.monthYear.split('-');
         const start = new Date(parseInt(year), parseInt(month) - 1, 1);
-        const end = new Date(parseInt(year), parseInt(month), 0); // Último dia do mês
+        const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
         
-        startDate = start.toISOString();
-        endDate = end.toISOString();
+        startDate = `${year}-${month}-01`;
+        endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
         limitName = `${selectedCategory?.name || 'Limite'} - ${format(start, 'MMM/yyyy', { locale: ptBR })}`;
       } else if (data.startDate && data.endDate) {
         // Para período específico
-        startDate = data.startDate.toISOString();
-        endDate = data.endDate.toISOString();
+        startDate = format(data.startDate, 'yyyy-MM-dd');
+        endDate = format(data.endDate, 'yyyy-MM-dd');
         limitName = `${selectedCategory?.name || 'Limite'} - ${format(data.startDate, 'dd/MM')} a ${format(data.endDate, 'dd/MM/yyyy')}`;
       } else {
         throw new Error('Dados de período inválidos');

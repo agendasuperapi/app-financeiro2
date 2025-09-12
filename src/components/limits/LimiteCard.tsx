@@ -5,10 +5,9 @@ import { Progress } from '@/components/ui/progress';
 import { Edit, Trash2, DollarSign } from 'lucide-react';
 import { Goal } from '@/types';
 import { usePreferences } from '@/contexts/PreferencesContext';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
-import { toZonedTime, formatInTimeZone } from 'date-fns-tz';
 
 interface LimiteCardProps {
   limit: Goal;
@@ -25,27 +24,29 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
     return currency === 'USD' ? '$ ' : 'R$ ';
   };
 
+  // Normalize date to 'YYYY-MM-DD' string (strip time/zone)
+  const normalizeDateString = (value?: string) => {
+    if (!value) return undefined;
+    return value.includes('T') ? value.split('T')[0] : value;
+  };
+
   // Calculate spent amount from transactions
   useEffect(() => {
     const fetchSpentAmount = async () => {
       try {
-        const brazilTimezone = 'America/Sao_Paulo';
         const startDate = limit.startDate || limit.start_date;
         const endDate = limit.endDate || limit.end_date;
         
         console.log('🔍 Fetching spent amount for limit:', limit.name);
-        console.log('📅 Date range (original):', { startDate, endDate });
+        console.log('📅 Date range (raw):', { startDate, endDate });
         
-        if (!startDate) {
+        const startStr = normalizeDateString(startDate);
+        const endStr = normalizeDateString(endDate);
+        
+        if (!startStr) {
           console.log('❌ No start date found');
           return;
         }
-
-        // Convert dates to Brazil timezone for comparison
-        const startDateBR = formatInTimeZone(new Date(startDate), brazilTimezone, 'yyyy-MM-dd');
-        const endDateBR = endDate ? formatInTimeZone(new Date(endDate), brazilTimezone, 'yyyy-MM-dd') : null;
-        
-        console.log('📅 Date range (Brazil timezone):', { startDateBR, endDateBR });
 
         // Extract category name from limit name (format: "CategoryName - Period")
         const categoryName = limit.name.split(' - ')[0];
@@ -66,19 +67,24 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
           return;
         }
 
-        // Build query for transactions with Brazil timezone dates
+        // Helper to get next day string (YYYY-MM-DD)
+        const getNextDayStr = (dateStr: string) => {
+          const [y, m, d] = dateStr.split('-').map(Number);
+          const next = new Date(Date.UTC(y, (m || 1) - 1, (d || 1) + 1));
+          return next.toISOString().slice(0, 10);
+        };
+
+        // Build query for transactions
         let query = supabase
           .from('poupeja_transactions')
           .select('amount, date, description')
           .eq('category_id', category.id)
-          .eq('type', 'expense');
+          .eq('type', 'expense')
+          .gte('date', startStr);
 
-        // Add date filters using Brazil timezone
-        if (startDateBR) {
-          query = query.gte('date', startDateBR);
-        }
-        if (endDateBR) {
-          query = query.lte('date', endDateBR);
+        // Use exclusive upper bound for end date: < next day
+        if (endStr) {
+          query = query.lt('date', getNextDayStr(endStr));
         }
 
         const { data: transactions, error } = await query;

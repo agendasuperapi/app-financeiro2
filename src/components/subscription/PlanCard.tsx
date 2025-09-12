@@ -319,7 +319,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
             // Se não tem assinatura, prosseguir com checkout normal
             handleCheckout();
           }}
-          disabled={isLoading || (isCurrentPlan && !isExpiredCurrentPlan)}
+          disabled={isLoading}
           variant={getButtonVariant()}
         >
           {isLoading ? (

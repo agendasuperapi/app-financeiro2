@@ -161,7 +161,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
     },
     {
       icon: AlertTriangle,
-      label: 'Metas',
+      label: 'Metas/Limites',
       href: '/limits'
     },
     {

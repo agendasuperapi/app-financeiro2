@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/pagination';
 import { Transaction } from '@/types';
 import { formatCurrency, formatDateTime } from '@/utils/transactionUtils';
-import { MoreHorizontal, TrendingUp, TrendingDown, Target, ArrowUp, ArrowDown } from 'lucide-react';
+import { MoreHorizontal, TrendingUp, TrendingDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -48,7 +48,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
   onDelete,
   hideValues = false
 }) => {
-  const { goals } = useAppContext();
   const { t, currency } = usePreferences();
   const isMobile = useIsMobile();
 
@@ -67,12 +66,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
     setCurrentPage(1);
   }, [transactions.length]);
 
-  // Helper to get goal name
-  const getGoalName = (goalId?: string) => {
-    if (!goalId) return null;
-    const goal = goals.find(g => g.id === goalId);
-    return goal ? goal.name : null;
-  };
 
   // Helper to render masked values
   const renderHiddenValue = () => {
@@ -175,7 +168,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
               <TableHead>{t('common.date')}</TableHead>
               <TableHead>{t('common.category')}</TableHead>
               <TableHead>{t('common.description')}</TableHead>
-              <TableHead>{t('nav.goals')}</TableHead>
               <TableHead className="text-right">{t('common.amount')}</TableHead>
               <TableHead className="w-10"></TableHead>
             </TableRow>
@@ -232,14 +224,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   </TableCell>
                   <TableCell className="text-xs md:text-sm">
                     {transaction.description}
-                  </TableCell>
-                  <TableCell>
-                    {transaction.goalId && (
-                      <div className="flex items-center gap-1">
-                        <Target className="h-3 w-3 text-metacash-blue" />
-                        <span className="text-xs">{getGoalName(transaction.goalId)}</span>
-                      </div>
-                    )}
                   </TableCell>
                   <TableCell className={cn(
                     "text-right font-semibold text-xs md:text-sm",

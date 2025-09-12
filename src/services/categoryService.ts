@@ -151,6 +151,25 @@ export const updateCategory = async (category: Category): Promise<Category | nul
   }
 };
 
+export const updateCategoryPercentage = async (categoryId: string, porcentagemMeta: number): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from("poupeja_categories")
+      .update({ 
+        porcetagem_meta: porcentagemMeta 
+      } as any)
+      .eq("id", categoryId);
+
+    if (error) throw error;
+
+    console.log(`Category percentage updated successfully: ${categoryId} -> ${porcentagemMeta}%`);
+    return true;
+  } catch (error) {
+    console.error("Error updating category percentage:", error);
+    return false;
+  }
+};
+
 export const deleteCategory = async (id: string): Promise<boolean> => {
   try {
     // First check if this is a default category

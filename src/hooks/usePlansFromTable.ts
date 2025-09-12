@@ -45,7 +45,7 @@ export const usePlansFromTable = () => {
             {
               id: '1',
               name: 'Plano Mensal',
-              price: 29.90,
+              price: 279.90,
               period: '/mês',
               price_id: 'price_monthly',
               description: 'Para uso pessoal completo',

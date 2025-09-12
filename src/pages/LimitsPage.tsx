@@ -4,12 +4,16 @@ import { Plus } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import { LimiteCard } from '@/components/limits/LimiteCard';
 import { AddLimitModal } from '@/components/limits/AddLimitModal';
+import { EditLimitModal } from '@/components/limits/EditLimitModal';
 import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { Goal } from '@/types';
 
 const LimitsPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const { goals, getGoals } = useAppContext();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingLimit, setEditingLimit] = useState<Goal | null>(null);
+  const { goals, getGoals, deleteGoal } = useAppContext();
   const { t } = usePreferences();
 
   // Filtrar apenas os goals que são limites (poderemos adicionar um campo type futuramente)
@@ -22,6 +26,27 @@ const LimitsPage: React.FC = () => {
   const handleLimitAdded = async () => {
     await getGoals();
     setIsAddModalOpen(false);
+  };
+
+  const handleEditLimit = (id: string) => {
+    const limit = limits.find(l => l.id === id);
+    if (limit) {
+      setEditingLimit(limit);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleLimitUpdated = async () => {
+    await getGoals();
+    setIsEditModalOpen(false);
+    setEditingLimit(null);
+  };
+
+  const handleDeleteLimit = async (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este limite?')) {
+      await deleteGoal(id);
+      await getGoals();
+    }
   };
 
   return (
@@ -43,14 +68,8 @@ const LimitsPage: React.FC = () => {
               <LimiteCard
                 key={limit.id}
                 limit={limit}
-                onEdit={(id) => {
-                  // TODO: Implementar edição
-                  console.log('Edit limit:', id);
-                }}
-                onDelete={(id) => {
-                  // TODO: Implementar exclusão
-                  console.log('Delete limit:', id);
-                }}
+                onEdit={handleEditLimit}
+                onDelete={handleDeleteLimit}
               />
             ))}
           </div>
@@ -73,6 +92,14 @@ const LimitsPage: React.FC = () => {
         open={isAddModalOpen}
         onOpenChange={setIsAddModalOpen}
         onSuccess={handleLimitAdded}
+      />
+
+      {/* Modal de Edição */}
+      <EditLimitModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        onSuccess={handleLimitUpdated}
+        limit={editingLimit}
       />
     </MainLayout>
   );

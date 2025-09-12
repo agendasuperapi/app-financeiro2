@@ -89,7 +89,6 @@ export const AddLimitModal: React.FC<AddLimitModalProps> = ({
         const { data, error } = await supabase
           .from('poupeja_categories')
           .select('id, name, color, type')
-          .eq('type', 'expense')
           .order('name');
 
         if (error) {

@@ -29,7 +29,7 @@ import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
@@ -127,17 +127,22 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
   // Update form when limit changes
   useEffect(() => {
     if (limit && categories.length > 0) {
-      const startDate = new Date(limit.startDate || limit.start_date || '');
-      const endDate = limit.endDate || limit.end_date ? new Date(limit.endDate || limit.end_date || '') : null;
+      const startStr = (limit.startDate || limit.start_date || '').split('T')[0];
+      const endStrRaw = (limit.endDate || limit.end_date || '');
+      const endStr = endStrRaw ? endStrRaw.split('T')[0] : '';
+
+      // Parse as local dates to avoid timezone shifts
+      const startDate = startStr ? parse(startStr, 'yyyy-MM-dd', new Date()) : null;
+      const endDate = endStr ? parse(endStr, 'yyyy-MM-dd', new Date()) : null;
       
       // Find category by name
       const category = categories.find(cat => cat.name === limit.name.split(' - ')[0]);
       
-      // Determine period type
-      const isMonthly = endDate && 
-        startDate.getDate() === 1 && 
-        endDate.getMonth() === startDate.getMonth() && 
-        endDate.getFullYear() === startDate.getFullYear();
+      // Determine period type (same month/year and starts on day 1)
+      const isMonthly = !!(startDate && endDate &&
+        startDate.getDate() === 1 &&
+        endDate.getMonth() === startDate.getMonth() &&
+        endDate.getFullYear() === startDate.getFullYear());
 
       form.reset({
         categoryId: category?.id || '',

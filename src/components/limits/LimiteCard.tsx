@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -7,6 +7,7 @@ import { Goal } from '@/types';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LimiteCardProps {
   limit: Goal;
@@ -16,15 +17,67 @@ interface LimiteCardProps {
 
 export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete }) => {
   const { currency } = usePreferences();
+  const [spentAmount, setSpentAmount] = useState(0);
 
   // Get currency symbol with space
   const getCurrencySymbol = () => {
     return currency === 'USD' ? '$ ' : 'R$ ';
   };
 
+  // Calculate spent amount from transactions
+  useEffect(() => {
+    const fetchSpentAmount = async () => {
+      try {
+        const startDate = limit.startDate || limit.start_date;
+        const endDate = limit.endDate || limit.end_date;
+        
+        if (!startDate) return;
+
+        // Get the category ID from the goal name (assuming the goal name matches category name)
+        const { data: category } = await supabase
+          .from('poupeja_categories')
+          .select('id')
+          .eq('name', limit.name)
+          .single();
+
+        if (!category) return;
+
+        // Build query for transactions
+        let query = supabase
+          .from('poupeja_transactions')
+          .select('amount')
+          .eq('category_id', category.id)
+          .eq('type', 'expense');
+
+        // Add date filters
+        if (startDate) {
+          query = query.gte('date', startDate);
+        }
+        if (endDate) {
+          query = query.lte('date', endDate);
+        }
+
+        const { data: transactions, error } = await query;
+
+        if (error) {
+          console.error('Error fetching transactions:', error);
+          return;
+        }
+
+        // Calculate total spent amount
+        const total = transactions?.reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
+        setSpentAmount(total);
+
+      } catch (error) {
+        console.error('Error calculating spent amount:', error);
+      }
+    };
+
+    fetchSpentAmount();
+  }, [limit]);
+
   // Calcular valores
   const limitAmount = limit.targetAmount || limit.target_amount || 0;
-  const spentAmount = limit.currentAmount || limit.current_amount || 0;
   const remainingAmount = limitAmount - spentAmount;
   const progressPercentage = limitAmount > 0 ? (spentAmount / limitAmount) * 100 : 0;
 

@@ -31,33 +31,52 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
         const startDate = limit.startDate || limit.start_date;
         const endDate = limit.endDate || limit.end_date;
         
-        if (!startDate) return;
+        console.log('🔍 Fetching spent amount for limit:', limit.name);
+        console.log('📅 Date range:', { startDate, endDate });
+        
+        if (!startDate) {
+          console.log('❌ No start date found');
+          return;
+        }
 
-        // Get the category ID from the goal name (assuming the goal name matches category name)
-        const { data: category } = await supabase
+        // Extract category name from limit name (format: "CategoryName - Period")
+        const categoryName = limit.name.split(' - ')[0];
+        console.log('🏷️ Looking for category:', categoryName);
+
+        // Get the category ID from the category name
+        const { data: category, error: categoryError } = await supabase
           .from('poupeja_categories')
-          .select('id')
-          .eq('name', limit.name)
+          .select('id, name')
+          .eq('name', categoryName)
           .single();
 
-        if (!category) return;
+        console.log('🏷️ Category found:', category);
+        console.log('🏷️ Category error:', categoryError);
+
+        if (!category) {
+          console.log('❌ Category not found for name:', categoryName);
+          return;
+        }
 
         // Build query for transactions
         let query = supabase
           .from('poupeja_transactions')
-          .select('amount')
+          .select('amount, date, description')
           .eq('category_id', category.id)
           .eq('type', 'expense');
 
         // Add date filters
         if (startDate) {
-          query = query.gte('date', startDate);
+          query = query.gte('date', startDate.split('T')[0]); // Use only date part
         }
         if (endDate) {
-          query = query.lte('date', endDate);
+          query = query.lte('date', endDate.split('T')[0]); // Use only date part
         }
 
         const { data: transactions, error } = await query;
+
+        console.log('💰 Transactions found:', transactions);
+        console.log('💰 Transactions error:', error);
 
         if (error) {
           console.error('Error fetching transactions:', error);
@@ -66,6 +85,7 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
 
         // Calculate total spent amount
         const total = transactions?.reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
+        console.log('💰 Total spent amount:', total);
         setSpentAmount(total);
 
       } catch (error) {

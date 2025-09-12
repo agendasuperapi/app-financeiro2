@@ -64,11 +64,11 @@ const TransactionsPage = () => {
                 onDelete={handleDeleteTransaction}
               />
             ) : (
-              <Card className="animate-fade-in">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg">Lista de Transações</CardTitle>
+              <Card className="animate-fade-in p-1">
+                <CardHeader className="pb-6">
+                  <CardTitle className="text-xl">Lista de Transações</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-0">
+                <CardContent className="pt-0 px-8">
                   <TransactionList 
                     transactions={filteredTransactions}
                     onEdit={handleEditTransaction}

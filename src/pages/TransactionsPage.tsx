@@ -57,7 +57,7 @@ const TransactionsPage = () => {
             {/* Always render table (scrolls horizontally on small screens) */}
             <Card className="animate-fade-in p-1">
               <CardHeader className="pb-6">
-                <CardTitle className="text-xl">Lista de Transações</CardTitle>
+                <CardTitle className="text-xl">Lista de Transações (com Ações)</CardTitle>
               </CardHeader>
               <CardContent className="pt-0 px-8">
                 <TransactionTable 

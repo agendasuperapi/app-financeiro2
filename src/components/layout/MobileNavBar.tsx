@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAppContext } from '@/contexts/AppContext';
-import { LayoutDashboard, Receipt, Settings, Crown, Plus, Calendar, Clock, Shield, User, FileText, Tag, Users, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, Receipt, Settings, Crown, Plus, Calendar, Clock, Shield, User, FileText, Tag, Users, AlertTriangle, CreditCard } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -38,6 +38,16 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
   const isAdminPage = location.pathname === '/admin';
 
   const quickActionItems = [
+    {
+      icon: CreditCard,
+      label: 'Contas a Pagar',
+      action: () => {
+        navigate('/contas');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50 hover:bg-orange-100'
+    },
     {
       icon: AlertTriangle,
       label: 'Metas/Limites',

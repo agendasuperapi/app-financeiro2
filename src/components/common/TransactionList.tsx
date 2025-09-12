@@ -169,7 +169,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 <TableHead className="w-[15%] min-w-[80px]">{t('common.type')}</TableHead>
                 <TableHead className="w-[20%] min-w-[100px]">{t('common.date')}</TableHead>
                 <TableHead className="w-[20%] min-w-[120px]">{t('common.category')}</TableHead>
-                <TableHead className="w-[25%] hidden md:table-cell">{t('common.description')}</TableHead>
+                <TableHead className="w-[25%] hidden lg:table-cell">{t('common.description')}</TableHead>
                 <TableHead className="text-right w-[15%] min-w-[80px] hidden lg:table-cell">{t('common.amount')}</TableHead>
                 <TableHead className="w-[5%] min-w-[40px] hidden lg:table-cell"></TableHead>
               </TableRow>
@@ -211,7 +211,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   <TableCell className="font-medium text-xs md:text-sm">
                     <div className="space-y-1">
                       <div className="font-medium">{formatDateTime(transaction.created_at || transaction.date)}</div>
-                      <div className="md:hidden text-xs text-muted-foreground break-words">
+                      <div className="lg:hidden text-xs text-muted-foreground break-words">
                         {transaction.description}
                       </div>
                     </div>
@@ -225,7 +225,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                           size={14}
                         />
                         <Badge variant="outline" className={cn(
-                          "text-xs whitespace-nowrap max-w-[100px] truncate",
+                          "text-xs whitespace-nowrap max-w-[100px] md:max-w-[160px] truncate",
                           transaction.type === 'income' 
                             ? "bg-green-50 text-green-600 hover:bg-green-100 border-green-200"
                             : "bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
@@ -233,7 +233,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                           {transaction.category}
                         </Badge>
                       </div>
-                      <div className="md:flex lg:hidden items-center justify-between mt-1">
+                      <div className="md:flex md:flex-col md:items-start md:gap-1 lg:hidden mt-1">
                         <div className={cn(
                           "font-semibold text-sm",
                           transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
@@ -269,7 +269,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-xs md:text-sm hidden md:table-cell">
+                  <TableCell className="text-xs md:text-sm hidden lg:table-cell">
                     <div className="truncate pr-2">
                       {transaction.description}
                     </div>

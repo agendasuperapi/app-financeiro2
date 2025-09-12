@@ -98,6 +98,16 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       },
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-50 hover:bg-indigo-100'
+    },
+    {
+      icon: Settings,
+      label: t('nav.settings'),
+      action: () => {
+        navigate('/settings');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-50 hover:bg-gray-100'
     }
   ];
 
@@ -199,9 +209,9 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       href: '/plans'
     },
     {
-      icon: Settings,
-      label: t('nav.settings'),
-      href: '/settings'
+      icon: User,
+      label: t('nav.profile'),
+      href: '/profile'
     }
   ];
   

@@ -45,18 +45,8 @@ const ManageSubscriptionButton: React.FC = () => {
       }
 
       if (data?.url) {
-        const url = data.url as string;
-        try {
-          // Se estiver em um iframe (ambiente de preview), força navegação no topo
-          if (window.top && window.top !== window.self) {
-            window.top.location.replace(url);
-          } else {
-            window.location.replace(url);
-          }
-        } catch (e) {
-          // Fallback: abre em nova aba (fora do iframe) para evitar bloqueios
-          window.open(url, '_blank', 'noopener,noreferrer');
-        }
+        // Força navegação na janela atual
+        window.location.href = data.url;
       }
     } catch (error) {
       console.error('Customer portal error:', error);

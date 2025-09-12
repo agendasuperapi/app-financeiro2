@@ -14,7 +14,6 @@ import { motion } from 'framer-motion';
 interface DashboardContentProps {
   filteredTransactions: any[];
   goals: Goal[];
-  scheduledTransactions: ScheduledTransaction[];
   currentGoalIndex: number;
   currentMonth: Date;
   hideValues: boolean;
@@ -27,7 +26,6 @@ interface DashboardContentProps {
 const DashboardContent: React.FC<DashboardContentProps> = ({
   filteredTransactions,
   goals,
-  scheduledTransactions,
   currentGoalIndex,
   currentMonth,
   hideValues,
@@ -54,7 +52,6 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       {/* Alerta de despesas próximas */}
       <motion.div variants={itemVariants}>
         <UpcomingExpensesAlert 
-          scheduledTransactions={scheduledTransactions} 
           onMarkAsPaid={onMarkScheduledAsPaid}
         />
       </motion.div>

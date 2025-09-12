@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAppContext } from '@/contexts/AppContext';
-import { LayoutDashboard, Receipt, Settings, Crown, Plus, Target, Calendar, Clock, Shield, User, FileText, Tag, Users } from 'lucide-react';
+import { LayoutDashboard, Receipt, Settings, Crown, Plus, Calendar, Clock, Shield, User, FileText, Tag, Users } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -57,16 +57,6 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       },
       color: 'text-green-600',
       bgColor: 'bg-green-50 hover:bg-green-100'
-    },
-    {
-      icon: Target,
-      label: t('nav.goals') || 'Metas',
-      action: () => {
-        navigate('/goals');
-        setIsQuickActionsOpen(false);
-      },
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50 hover:bg-blue-100'
     },
     {
       icon: Calendar,

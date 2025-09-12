@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAppContext } from '@/contexts/AppContext';
-import { LayoutDashboard, Receipt, Settings, Crown, Plus, Calendar, Clock, Shield, User, FileText, Tag, Users, AlertTriangle, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Receipt, Settings, Crown, Plus, Calendar, Clock, Shield, User, FileText, Tag, Users, AlertTriangle } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -47,46 +47,6 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       },
       color: 'text-blue-600',
       bgColor: 'bg-blue-50 hover:bg-blue-100'
-    },
-    {
-      icon: FileText,
-      label: 'Anotações',
-      action: () => {
-        navigate('/notes');
-        setIsQuickActionsOpen(false);
-      },
-      color: 'text-green-600',
-      bgColor: 'bg-green-50 hover:bg-green-100'
-    },
-    {
-      icon: Calendar,
-      label: t('schedule.title'),
-      action: () => {
-        navigate('/schedule');
-        setIsQuickActionsOpen(false);
-      },
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50 hover:bg-purple-100'
-    },
-    {
-      icon: Clock,
-      label: 'Lembrar',
-      action: () => {
-        navigate('/lembrar');
-        setIsQuickActionsOpen(false);
-      },
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50 hover:bg-amber-100'
-    },
-    {
-      icon: AlertTriangle,
-      label: 'Metas/Limites',
-      action: () => {
-        navigate('/limits');
-        setIsQuickActionsOpen(false);
-      },
-      color: 'text-red-600',
-      bgColor: 'bg-red-50 hover:bg-red-100'
     },
     {
       icon: FileText,
@@ -235,6 +195,11 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       icon: Receipt,
       label: t('nav.transactions'),
       href: '/transactions'
+    },
+    {
+      icon: AlertTriangle,
+      label: 'Metas/Limites',
+      href: '/limits'
     },
     {
       type: 'quick-actions',

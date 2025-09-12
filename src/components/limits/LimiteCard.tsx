@@ -76,12 +76,11 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
           return next.toISOString().slice(0, 10);
         };
 
-        // Build query for transactions
+        // Build query for transactions (both income and expense)
         let query = supabase
           .from('poupeja_transactions')
-          .select('amount, date, description')
+          .select('amount, date, description, type')
           .eq('category_id', category.id)
-          .eq('type', 'expense')
           .gte('date', startStr);
 
         // Use exclusive upper bound for end date: < next day
@@ -99,10 +98,15 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
           return;
         }
 
-        // Calculate total spent amount
-        const total = transactions?.reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
-        console.log('💰 Total spent amount:', total);
-        setSpentAmount(total);
+        // Calculate net balance (income - expenses)
+        const totalIncome = transactions?.filter(t => t.type === 'income').reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
+        const totalExpenses = transactions?.filter(t => t.type === 'expense').reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
+        const netBalance = totalIncome - totalExpenses;
+        
+        console.log('💰 Total income:', totalIncome);
+        console.log('💰 Total expenses:', totalExpenses);
+        console.log('💰 Net balance:', netBalance);
+        setSpentAmount(netBalance);
 
       } catch (error) {
         console.error('Error calculating spent amount:', error);
@@ -114,8 +118,8 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
 
   // Calcular valores
   const limitAmount = limit.targetAmount || limit.target_amount || 0;
-  const remainingAmount = limitAmount - spentAmount;
-  const progressPercentage = limitAmount > 0 ? (spentAmount / limitAmount) * 100 : 0;
+  const remainingAmount = limitAmount - Math.abs(spentAmount); // Use absolute value for remaining calculation
+  const progressPercentage = limitAmount > 0 ? (Math.abs(spentAmount) / limitAmount) * 100 : 0;
 
   // Formatação de período
   const startDate = limit.startDate || limit.start_date;
@@ -203,8 +207,8 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="font-medium">Gasto:</span>
-            <span className={progressPercentage >= 90 ? 'text-red-600 font-semibold' : ''}>
+            <span className="font-medium">Saldo Líquido:</span>
+            <span className={`${spentAmount < 0 ? 'text-red-600' : 'text-green-600'} font-semibold`}>
               {getCurrencySymbol()}{spentAmount.toFixed(2)}
             </span>
           </div>

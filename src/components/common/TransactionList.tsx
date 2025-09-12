@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/pagination';
 import { Transaction } from '@/types';
 import { formatCurrency, formatDateTime } from '@/utils/transactionUtils';
-import { MoreHorizontal, TrendingUp, TrendingDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { MoreHorizontal, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -241,30 +241,29 @@ const TransactionList: React.FC<TransactionListProps> = ({
                           {transaction.type === 'income' ? '+' : '-'}
                           {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
                         </div>
-                        <div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">{t('common.edit')}</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="z-50">
-                              {onEdit && (
-                                <DropdownMenuItem onClick={() => onEdit(transaction)}>
-                                  {t('common.edit')}
-                                </DropdownMenuItem>
-                              )}
-                              {onDelete && (
-                                <DropdownMenuItem 
-                                  onClick={() => onDelete(transaction.id)}
-                                  className="text-metacash-error"
-                                >
-                                  {t('common.delete')}
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                        <div className="flex gap-1">
+                          {onEdit && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-7 w-7 p-0"
+                              onClick={() => onEdit(transaction)}
+                            >
+                              <Edit className="h-3 w-3" />
+                              <span className="sr-only">{t('common.edit')}</span>
+                            </Button>
+                          )}
+                          {onDelete && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-7 w-7 p-0 text-metacash-error hover:text-metacash-error"
+                              onClick={() => onDelete(transaction.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              <span className="sr-only">{t('common.delete')}</span>
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -38,28 +38,24 @@ const TransactionsPage = () => {
   return (
     <MainLayout>
       <SubscriptionGuard feature="movimentações ilimitadas">
-        <div className="w-full px-4 py-4 md:py-8 pb-20 md:pb-8 min-h-0">
-          {/* Desktop Add Button */}
-          {!isMobile && (
-            <div className="mb-6">
-              <Button onClick={handleAddTransaction} size="lg">
+        <div className="w-full px-4 md:px-6 py-4 md:py-6 lg:py-8 pb-20 md:pb-8 min-h-0">
+          {/* Header and Add Button */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+            <h1 className="text-xl md:text-2xl font-semibold">
+              {isMobile ? 'Transações' : 'Transações Recentes'}
+            </h1>
+            
+            {/* Add Button - visible on tablet and desktop */}
+            {!isMobile && (
+              <Button onClick={handleAddTransaction} size="lg" className="shrink-0">
                 <Plus className="mr-2 h-4 w-4" />
                 Adicionar Transação
               </Button>
-            </div>
-          )}
+            )}
+          </div>
           
           {/* Content Container */}
-          <div className={cn(
-            isMobile ? "space-y-4" : ""
-          )}>
-            {/* Header for Mobile */}
-            {isMobile && (
-              <div className="flex items-center justify-between">
-                <h1 className="text-xl font-semibold">Transações</h1>
-              </div>
-            )}
-            
+          <div className="space-y-4">
             {/* Content */}
             {isMobile ? (
               <TransactionList 
@@ -68,11 +64,11 @@ const TransactionsPage = () => {
                 onDelete={handleDeleteTransaction}
               />
             ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Transações Recentes</CardTitle>
+              <Card className="animate-fade-in">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg">Lista de Transações</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   <TransactionList 
                     transactions={filteredTransactions}
                     onEdit={handleEditTransaction}

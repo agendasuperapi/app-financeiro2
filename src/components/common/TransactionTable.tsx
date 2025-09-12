@@ -32,27 +32,20 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 }) => {
   const { t, currency } = usePreferences();
 
-  // Debug: confirm component render and props
-  console.log('[TransactionTable] render', {
-    rows: transactions.length,
-    hasEdit: !!onEdit,
-    hasDelete: !!onDelete,
-  });
-
   const renderHiddenValue = () => '******';
 
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
-        <Table className="w-full min-w-[760px] table-fixed">
+        <Table className="w-full table-fixed">
           <TableHeader className="bg-muted/30">
             <TableRow>
               <TableHead className="w-[12%] min-w-[70px]">{t('common.type')}</TableHead>
               <TableHead className="w-[13%] min-w-[90px]">{t('common.date')}</TableHead>
               <TableHead className="w-[22%] min-w-[110px]">{t('common.category')}</TableHead>
               <TableHead className="w-[24%] hidden lg:table-cell">{t('common.description')}</TableHead>
-              <TableHead className="text-right w-[120px] min-w-[120px]">Ações</TableHead>
               <TableHead className="text-right w-[10%] min-w-[75px] hidden lg:table-cell">{t('common.amount')}</TableHead>
+              <TableHead className="w-[12%] min-w-[90px]">{t('common.actions') || 'Ações'}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -140,30 +133,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
                     <div className="truncate pr-2">{transaction.description}</div>
                   </TableCell>
-                  <TableCell className="pl-2 pr-2 w-[120px] min-w-[120px]">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        disabled={!onEdit}
-                        onClick={onEdit ? () => onEdit(transaction) : undefined}
-                        aria-label={t('common.edit') || 'Editar'}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 text-metacash-error hover:text-metacash-error disabled:text-muted-foreground"
-                        disabled={!onDelete}
-                        onClick={onDelete ? () => onDelete(transaction.id) : undefined}
-                        aria-label={t('common.delete') || 'Excluir'}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
                   <TableCell
                     className={cn(
                       'text-right font-semibold text-[10px] md:text-xs hidden lg:table-cell',
@@ -172,6 +141,32 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   >
                     {transaction.type === 'income' ? '+' : '-'}
                     {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
+                  </TableCell>
+                  <TableCell className="pl-2 pr-2 w-[12%] min-w-[90px]">
+                    <div className="flex justify-end gap-1">
+                      {onEdit && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={() => onEdit(transaction)}
+                        >
+                          <Edit className="h-3 w-3" />
+                          <span className="sr-only">{t('common.edit')}</span>
+                        </Button>
+                      )}
+                      {onDelete && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-metacash-error hover:text-metacash-error"
+                          onClick={() => onDelete(transaction.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          <span className="sr-only">{t('common.delete')}</span>
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </motion.tr>
               );

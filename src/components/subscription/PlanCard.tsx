@@ -57,33 +57,33 @@ const PlanCard: React.FC<PlanCardProps> = ({
     try {
       setIsLoading(true);
       
-      // Se é plano atual ou expirado, redirecionar para gerenciar assinatura
+      // Se é plano atual ou expirado, redirecionar para Stripe billing portal
       if (isCurrentPlan || isExpiredCurrentPlan) {
-        const { data, error } = await supabase.functions.invoke('customer-portal');
+        if (subscription?.stripe_subscription_id) {
+          // Redirecionar para o portal de customer da Stripe
+          const { data, error } = await supabase.functions.invoke('customer-portal');
 
-        if (error) {
-          console.error('Error creating customer portal session:', error);
-          
-          let errorMessage = "Não foi possível abrir o portal de gerenciamento.";
-          
-          if (error.message?.includes("No active subscription")) {
-            errorMessage = "Assinatura não encontrada. Verifique se sua assinatura está ativa.";
-          } else if (error.message?.includes("Payment system not configured")) {
-            errorMessage = "Sistema de pagamento temporariamente indisponível. Contate o suporte.";
-          } else if (error.message?.includes("Database error")) {
-            errorMessage = "Erro de conexão. Tente novamente em alguns instantes.";
+          if (error) {
+            console.error('Error creating customer portal session:', error);
+            toast({
+              title: "Erro",
+              description: "Não foi possível abrir o portal de gerenciamento.",
+              variant: "destructive",
+            });
+            return;
           }
-          
+
+          if (data?.url) {
+            // Adicionar o subscription ID para ir direto para a página de update
+            const updateUrl = `${data.url}/subscriptions/${subscription.stripe_subscription_id}/update`;
+            window.location.href = updateUrl;
+          }
+        } else {
           toast({
             title: "Erro",
-            description: errorMessage,
+            description: "ID da assinatura não encontrado.",
             variant: "destructive",
           });
-          return;
-        }
-
-        if (data?.url) {
-          window.location.href = data.url;
         }
         return;
       }

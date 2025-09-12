@@ -170,8 +170,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 <TableHead className="w-[20%] min-w-[100px]">{t('common.date')}</TableHead>
                 <TableHead className="w-[20%] min-w-[120px]">{t('common.category')}</TableHead>
                 <TableHead className="w-[25%] hidden md:table-cell">{t('common.description')}</TableHead>
-                <TableHead className="text-right w-[15%] min-w-[80px] hidden md:table-cell">{t('common.amount')}</TableHead>
-                <TableHead className="w-[5%] min-w-[40px]"></TableHead>
+                <TableHead className="text-right w-[15%] min-w-[80px] hidden lg:table-cell">{t('common.amount')}</TableHead>
+                <TableHead className="w-[5%] min-w-[40px] hidden lg:table-cell"></TableHead>
               </TableRow>
             </TableHeader>
           <TableBody>
@@ -233,13 +233,38 @@ const TransactionList: React.FC<TransactionListProps> = ({
                           {transaction.category}
                         </Badge>
                       </div>
-                      <div className="md:hidden">
+                      <div className="md:flex lg:hidden items-center justify-between mt-1">
                         <div className={cn(
-                          "text-right font-semibold text-sm",
+                          "font-semibold text-sm",
                           transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
                         )}>
                           {transaction.type === 'income' ? '+' : '-'}
                           {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
+                        </div>
+                        <div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">{t('common.edit')}</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="z-50">
+                              {onEdit && (
+                                <DropdownMenuItem onClick={() => onEdit(transaction)}>
+                                  {t('common.edit')}
+                                </DropdownMenuItem>
+                              )}
+                              {onDelete && (
+                                <DropdownMenuItem 
+                                  onClick={() => onDelete(transaction.id)}
+                                  className="text-metacash-error"
+                                >
+                                  {t('common.delete')}
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
                     </div>
@@ -250,13 +275,13 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     </div>
                   </TableCell>
                   <TableCell className={cn(
-                    "text-right font-semibold text-xs md:text-sm hidden md:table-cell",
+                    "text-right font-semibold text-xs md:text-sm hidden lg:table-cell",
                     transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
                   )}>
                     {transaction.type === 'income' ? '+' : '-'}
                     {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">

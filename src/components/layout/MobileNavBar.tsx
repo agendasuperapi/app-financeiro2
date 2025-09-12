@@ -39,14 +39,44 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
 
   const quickActionItems = [
     {
-      icon: CreditCard,
-      label: 'Contas a Pagar',
+      icon: Receipt,
+      label: 'Transações',
       action: () => {
-        navigate('/contas');
+        navigate('/transactions');
         setIsQuickActionsOpen(false);
       },
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50 hover:bg-orange-100'
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50 hover:bg-blue-100'
+    },
+    {
+      icon: FileText,
+      label: 'Anotações',
+      action: () => {
+        navigate('/notes');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-green-600',
+      bgColor: 'bg-green-50 hover:bg-green-100'
+    },
+    {
+      icon: Calendar,
+      label: t('schedule.title'),
+      action: () => {
+        navigate('/schedule');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50 hover:bg-purple-100'
+    },
+    {
+      icon: Clock,
+      label: 'Lembrar',
+      action: () => {
+        navigate('/lembrar');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50 hover:bg-amber-100'
     },
     {
       icon: AlertTriangle,
@@ -57,16 +87,6 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       },
       color: 'text-red-600',
       bgColor: 'bg-red-50 hover:bg-red-100'
-    },
-    {
-      icon: Receipt,
-      label: 'Transações',
-      action: () => {
-        navigate('/transactions');
-        setIsQuickActionsOpen(false);
-      },
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50 hover:bg-blue-100'
     },
     {
       icon: FileText,

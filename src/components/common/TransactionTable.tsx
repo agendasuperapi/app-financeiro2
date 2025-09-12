@@ -37,7 +37,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
-        <Table className="w-full table-fixed">
+        <Table className="w-full min-w-[900px] table-fixed">
           <TableHeader className="bg-muted/30">
             <TableRow>
               <TableHead className="w-[12%] min-w-[70px]">{t('common.type')}</TableHead>
@@ -45,7 +45,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               <TableHead className="w-[22%] min-w-[110px]">{t('common.category')}</TableHead>
               <TableHead className="w-[24%] hidden lg:table-cell">{t('common.description')}</TableHead>
               <TableHead className="text-right w-[10%] min-w-[75px] hidden lg:table-cell">{t('common.amount')}</TableHead>
-              <TableHead className="w-[12%] min-w-[90px]">{t('common.actions') || 'Ações'}</TableHead>
+              <TableHead className="text-right w-[12%] min-w-[90px]">{t('common.actions') || 'Ações'}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

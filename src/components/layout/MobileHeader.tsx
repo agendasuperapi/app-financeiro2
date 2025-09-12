@@ -24,7 +24,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/');
+      navigate('/login');
     } catch (error) {
       console.error('Error during logout:', error);
     }

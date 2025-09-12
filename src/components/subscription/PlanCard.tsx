@@ -67,8 +67,8 @@ const PlanCard: React.FC<PlanCardProps> = ({
       console.log('subscription?.plan_type:', subscription?.plan_type);
       console.log('======================');
       
-      // Se é plano atual ou expirado, redirecionar para Stripe billing portal
-      if (isCurrentPlan || isExpiredCurrentPlan) {
+      // Se possui assinatura ativa, redirecionar para Stripe billing portal
+      if (hasActiveSubscription) {
         console.log('Redirecionando para portal de gerenciamento - plano atual/expirado');
         if (subscription?.stripe_subscription_id) {
           // Redirecionar para o portal de customer da Stripe

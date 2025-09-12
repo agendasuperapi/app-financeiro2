@@ -166,11 +166,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
           <Table>
             <TableHeader className="bg-muted/30">
               <TableRow>
-                <TableHead className="min-w-[100px]">{t('common.type')}</TableHead>
-                <TableHead className="min-w-[120px]">{t('common.date')}</TableHead>
-                <TableHead className="min-w-[130px]">{t('common.category')}</TableHead>
-                <TableHead className="min-w-[150px] hidden md:table-cell">{t('common.description')}</TableHead>
-                <TableHead className="text-right min-w-[100px]">{t('common.amount')}</TableHead>
+                <TableHead className="min-w-[120px]">{t('common.type')}</TableHead>
+                <TableHead className="min-w-[140px]">{t('common.date')}</TableHead>
+                <TableHead className="min-w-[160px]">{t('common.category')}</TableHead>
+                <TableHead className="min-w-[180px] hidden md:table-cell">{t('common.description')}</TableHead>
+                <TableHead className="text-right min-w-[120px] hidden md:table-cell">{t('common.amount')}</TableHead>
                 <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
@@ -189,29 +189,35 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 >
                   <TableCell>
                     {transaction.type === 'income' ? (
-                      <div className="flex items-center">
-                        <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-metacash-success flex items-center justify-center mr-2">
-                          <ArrowUp className="w-3 h-3 md:w-4 md:h-4 text-white" />
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center">
+                          <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-metacash-success flex items-center justify-center mr-2">
+                            <ArrowUp className="w-3 h-3 md:w-4 md:h-4 text-white" />
+                          </div>
+                          <span className="text-xs md:text-sm">{t('income.title')}</span>
                         </div>
-                        <span className="text-xs md:text-sm hidden sm:inline">{t('income.title')}</span>
                       </div>
                     ) : (
-                      <div className="flex items-center">
-                        <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-metacash-error flex items-center justify-center mr-2">
-                          <ArrowDown className="w-3 h-3 md:w-4 md:h-4 text-white" />
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center">
+                          <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-metacash-error flex items-center justify-center mr-2">
+                            <ArrowDown className="w-3 h-3 md:w-4 md:h-4 text-white" />
+                          </div>
+                          <span className="text-xs md:text-sm">{t('expense.title')}</span>
                         </div>
-                        <span className="text-xs md:text-sm hidden sm:inline">{t('expense.title')}</span>
                       </div>
                     )}
                   </TableCell>
                   <TableCell className="font-medium text-xs md:text-sm">
                     <div className="space-y-1">
-                      <div>{formatDateTime(transaction.created_at || transaction.date)}</div>
-                      <div className="md:hidden text-xs text-muted-foreground">{transaction.description}</div>
+                      <div className="font-medium">{formatDateTime(transaction.created_at || transaction.date)}</div>
+                      <div className="md:hidden text-xs text-muted-foreground break-words">
+                        {transaction.description}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <CategoryIcon 
                           icon={transaction.type === 'income' ? 'trending-up' : transaction.type === 'expense' ? transaction.category.toLowerCase().includes('food') ? 'utensils' : 'shopping-bag' : 'circle'} 
@@ -219,7 +225,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                           size={14}
                         />
                         <Badge variant="outline" className={cn(
-                          "text-xs",
+                          "text-xs whitespace-nowrap",
                           transaction.type === 'income' 
                             ? "bg-green-50 text-green-600 hover:bg-green-100 border-green-200"
                             : "bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
@@ -227,15 +233,26 @@ const TransactionList: React.FC<TransactionListProps> = ({
                           {transaction.category}
                         </Badge>
                       </div>
+                      <div className="md:hidden">
+                        <div className={cn(
+                          "text-right font-semibold text-sm",
+                          transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
+                        )}>
+                          {transaction.type === 'income' ? '+' : '-'}
+                          {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
+                        </div>
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell className="text-xs md:text-sm hidden md:table-cell">
-                    <div className="max-w-[200px] truncate">
-                      {transaction.description}
+                    <div className="max-w-[200px]">
+                      <p className="break-words leading-relaxed">
+                        {transaction.description}
+                      </p>
                     </div>
                   </TableCell>
                   <TableCell className={cn(
-                    "text-right font-semibold text-xs md:text-sm",
+                    "text-right font-semibold text-xs md:text-sm hidden md:table-cell",
                     transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
                   )}>
                     {transaction.type === 'income' ? '+' : '-'}

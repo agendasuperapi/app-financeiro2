@@ -53,7 +53,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
   // Verifica se pode fazer downgrade (está no plano anual e visualizando o mensal)
   const canDowngrade = subscription?.plan_type === 'annual' && planType === 'monthly' && hasActiveSubscription;
   
-  const handleCheckout = async () => {
+  const handleStripePortal = async () => {
     try {
       setIsLoading(true);
       
@@ -67,10 +67,9 @@ const PlanCard: React.FC<PlanCardProps> = ({
       console.log('subscription?.plan_type:', subscription?.plan_type);
       console.log('======================');
       
-      // Se já existe uma assinatura (atual ou expirada), sempre abrir o portal da Stripe
+      // Todos os usuários nesta tela têm assinatura - sempre abrir o portal da Stripe
       if (subscription?.stripe_subscription_id) {
         console.log('Redirecionando para portal de gerenciamento - assinatura existente');
-        // Redirecionar para o portal de customer da Stripe
         const { data, error } = await supabase.functions.invoke('customer-portal');
 
         if (error) {
@@ -90,99 +89,26 @@ const PlanCard: React.FC<PlanCardProps> = ({
           return;
         }
 
-        // Fallback: se não houver URL, manter no fluxo (mas não ir ao checkout)
+        // Fallback: se não houver URL, mostrar erro
+        toast({
+          title: "Erro",
+          description: "Não foi possível abrir o portal de gerenciamento.",
+          variant: "destructive",
+        });
         return;
       }
       
-      console.log('Redirecionando para checkout - nova assinatura');
-      
-      // Verificar se o usuário está autenticado
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        console.error('Erro ao obter sessão:', sessionError);
-        toast({
-          title: "Erro de autenticação",
-          description: "Erro ao verificar sua sessão. Tente fazer login novamente.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!session?.user) {
-        toast({
-          title: "Login necessário",
-          description: "Você precisa estar logado para fazer uma assinatura.",
-          variant: "destructive",
-        });
-        // Redirecionar para página de registro com o priceId
-        navigate(`/register?priceId=${priceId}`);
-        return;
-      }
-
-      // Verificar se o token está válido
-      if (!session.access_token) {
-        toast({
-          title: "Sessão inválida",
-          description: "Sua sessão expirou. Faça login novamente.",
-          variant: "destructive",
-        });
-        navigate('/login');
-        return;
-      }
-
-      console.log('Usuário autenticado com sucesso');
-      console.log('Token disponível:', !!session.access_token);
-
-      // Invocar a função com o token explícito
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: { 
-          planType,
-          priceId,
-          successUrl: `${window.location.origin}/payment-success?email=${encodeURIComponent(session.user.email)}`,
-          cancelUrl: `${window.location.origin}/plans?canceled=true`
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        }
-      });
-
-      if (error) {
-        console.error('Error creating checkout session:', error);
-        
-        // Verificar se é erro de autenticação
-        if (error.message?.includes('Token de autenticação inválido') || 
-            error.message?.includes('User not authenticated') ||
-            error.message?.includes('invalid claim')) {
-          toast({
-            title: "Sessão expirada",
-            description: "Sua sessão expirou. Redirecionando para login...",
-            variant: "destructive",
-          });
-          navigate('/login');
-          return;
-        }
-        
-        toast({
-          title: "Erro no checkout",
-          description: `Erro: ${error.message}. Verifique se suas chaves do Stripe estão configuradas.`,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (data?.url) {
-        console.log('Redirecting to Stripe checkout:', data.url);
-        
-        // Redirecionar para Stripe na mesma aba
-        window.location.href = data.url;
-      } else {
-        throw new Error('URL de checkout não retornada');
-      }
-    } catch (error) {
-      console.error('Checkout error:', error);
+      // Se chegou aqui sem subscription ID, algo está errado
       toast({
-        title: "Erro no checkout",
-        description: "Algo deu errado. Verifique suas configurações do Stripe.",
+        title: "Erro",
+        description: "Assinatura não encontrada. Recarregue a página.",
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error('Portal error:', error);
+      toast({
+        title: "Erro no portal",
+        description: "Algo deu errado ao abrir o portal de gerenciamento.",
         variant: "destructive",
       });
     } finally {
@@ -275,43 +201,12 @@ const PlanCard: React.FC<PlanCardProps> = ({
         <Button 
           className="w-full" 
           size="lg"
-          onClick={async () => {
+          onClick={() => {
             console.log('BOTÃO CLICADO - PlanCard');
             console.log('planType recebido:', planType);
             
-            // Se já existe uma assinatura, redirecionar direto para o portal da Stripe
-            if (subscription?.stripe_subscription_id) {
-              console.log('Redirecionando para portal da Stripe - assinatura existente');
-              try {
-                const { data, error } = await supabase.functions.invoke('customer-portal');
-                
-                if (error) {
-                  console.error('Error creating customer portal session:', error);
-                  toast({
-                    title: "Erro",
-                    description: "Não foi possível abrir o portal de gerenciamento.",
-                    variant: "destructive",
-                  });
-                  return;
-                }
-
-                if (data?.url) {
-                  const updateUrl = `${data.url}/subscriptions/${subscription.stripe_subscription_id}/update`;
-                  window.location.href = updateUrl;
-                }
-              } catch (error) {
-                console.error('Erro ao abrir portal:', error);
-                toast({
-                  title: "Erro",
-                  description: "Erro ao abrir portal de gerenciamento.",
-                  variant: "destructive",
-                });
-              }
-              return;
-            }
-            
-            // Se não tem assinatura, prosseguir com checkout normal
-            handleCheckout();
+            // Todos os usuários nesta tela têm assinatura - sempre redirecionar para o portal da Stripe
+            handleStripePortal();
           }}
           disabled={isLoading || (isCurrentPlan && !isExpiredCurrentPlan)}
           variant={getButtonVariant()}

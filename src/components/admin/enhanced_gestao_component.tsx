@@ -42,6 +42,11 @@ export const EnhancedGestaoComponent = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [expirationDate, setExpirationDate] = useState<Date | undefined>();
   const [editingEmail, setEditingEmail] = useState('');
+  const [editingName, setEditingName] = useState('');
+  const [editingPhone, setEditingPhone] = useState('');
+  const [editingPlanId, setEditingPlanId] = useState('');
+  const [editingCoupon, setEditingCoupon] = useState('');
+  const [editingStatus, setEditingStatus] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
   const [newClientName, setNewClientName] = useState('');
@@ -193,6 +198,11 @@ export const EnhancedGestaoComponent = () => {
     setSelectedUser(user);
     setExpirationDate(user.current_period_end ? new Date(user.current_period_end) : undefined);
     setEditingEmail(user.email || '');
+    setEditingName(user.name || '');
+    setEditingPhone(user.phone || '');
+    setEditingPlanId('49'); // Valor padrão, pois não temos esse campo na UserData
+    setEditingCoupon('0'); // Valor padrão, pois não temos esse campo na UserData
+    setEditingStatus(user.status || 'active');
     setNewPassword('');
     setIsEditDialogOpen(true);
   };
@@ -203,31 +213,52 @@ export const EnhancedGestaoComponent = () => {
       try {
         console.log('Salvando alterações:', {
           userId: selectedUser.id,
-          newExpirationDate: expirationDate,
+          newName: editingName,
+          newPhone: editingPhone,
           newEmail: editingEmail,
+          newPlanId: editingPlanId,
+          newCoupon: editingCoupon,
+          newStatus: editingStatus,
+          newExpirationDate: expirationDate,
           hasNewPassword: !!newPassword
         });
 
-        // Atualizar a data de vencimento no Supabase
-        await UserManagementService.updateSubscriptionExpirationDate(selectedUser.id, expirationDate);
-        
-        // Atualizar o email se foi alterado
-        if (editingEmail && editingEmail !== selectedUser.email) {
-          const { error: emailError } = await supabase
-            .from('poupeja_users')
-            .update({ email: editingEmail })
-            .eq('id', selectedUser.id);
-            
-          if (emailError) {
-            console.error('Erro ao atualizar email:', emailError);
-            alert('Data de vencimento atualizada, mas erro ao atualizar email: ' + emailError.message);
-          }
+        // Atualizar dados do usuário na tabela poupeja_users
+        const { error: userUpdateError } = await supabase
+          .from('poupeja_users')
+          .update({
+            name: editingName,
+            phone: editingPhone,
+            email: editingEmail,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedUser.id);
+
+        if (userUpdateError) {
+          console.error('Erro ao atualizar dados do usuário:', userUpdateError);
+          alert('Erro ao atualizar dados do usuário: ' + userUpdateError.message);
+          return;
+        }
+
+        // Atualizar a data de vencimento e status na assinatura
+        const { error: subscriptionError } = await supabase
+          .from('poupeja_subscriptions')
+          .update({
+            current_period_end: expirationDate.toISOString(),
+            status: editingStatus,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', selectedUser.id);
+
+        if (subscriptionError) {
+          console.error('Erro ao atualizar assinatura:', subscriptionError);
+          alert('Dados do usuário atualizados, mas erro na assinatura: ' + subscriptionError.message);
         }
         
         // Atualizar a senha se foi informada
         if (newPassword && newPassword.trim() !== '') {
           const { error: passwordError } = await supabase.auth.resetPasswordForEmail(
-            editingEmail || selectedUser.email,
+            editingEmail,
             {
               redirectTo: `${window.location.origin}/reset-password`
             }
@@ -237,8 +268,10 @@ export const EnhancedGestaoComponent = () => {
             console.error('Erro ao enviar reset de senha:', passwordError);
             alert('Outras alterações salvas, mas erro ao enviar email de reset: ' + passwordError.message);
           } else {
-            alert('Email de redefinição de senha enviado para o usuário!');
+            alert('Dados atualizados! Email de redefinição de senha enviado para o usuário!');
           }
+        } else {
+          alert('Dados do usuário atualizados com sucesso!');
         }
         
         // Recarregar os dados para refletir as mudanças
@@ -249,6 +282,11 @@ export const EnhancedGestaoComponent = () => {
         setSelectedUser(null);
         setExpirationDate(undefined);
         setEditingEmail('');
+        setEditingName('');
+        setEditingPhone('');
+        setEditingPlanId('');
+        setEditingCoupon('');
+        setEditingStatus('');
         setNewPassword('');
 
         console.log('✅ Alterações salvas com sucesso');
@@ -650,22 +688,62 @@ export const EnhancedGestaoComponent = () => {
               {selectedUser && (
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <h4 className="font-medium">Usuário:</h4>
-                    <p className="text-sm text-muted-foreground">{selectedUser.name}</p>
+                    <label htmlFor="editName" className="text-sm font-medium">
+                      Nome do Cliente *
+                    </label>
+                    <Input
+                      id="editName"
+                      type="text"
+                      placeholder="Digite o nome completo"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      className="w-full"
+                    />
                   </div>
                   
                   <div className="space-y-2">
-                    <h4 className="font-medium">Email Atual:</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedUser.email || 'Sem email definido'}
-                    </p>
+                    <label htmlFor="editPhone" className="text-sm font-medium">
+                      Telefone *
+                    </label>
+                    <Input
+                      id="editPhone"
+                      type="tel"
+                      placeholder="(00) 00000-0000"
+                      maxLength={15}
+                      value={editingPhone}
+                      onChange={(e) => {
+                        let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                        
+                        // Limita a 11 dígitos
+                        if (value.length > 11) {
+                          value = value.slice(0, 11);
+                        }
+                        
+                        // Formata automaticamente
+                        if (value.length >= 11) {
+                          value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                        } else if (value.length >= 7) {
+                          value = value.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3');
+                        } else if (value.length >= 3) {
+                          value = value.replace(/(\d{2})(\d+)/, '($1) $2');
+                        } else if (value.length >= 1) {
+                          value = value.replace(/(\d+)/, '($1');
+                        }
+                        
+                        setEditingPhone(value);
+                      }}
+                      className="w-full"
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <h4 className="font-medium">Novo Email:</h4>
+                    <label htmlFor="editEmail" className="text-sm font-medium">
+                      Email *
+                    </label>
                     <Input
+                      id="editEmail"
                       type="email"
-                      placeholder="Digite o novo email"
+                      placeholder="cliente@email.com"
                       value={editingEmail}
                       onChange={(e) => setEditingEmail(e.target.value)}
                       className="w-full"
@@ -673,36 +751,37 @@ export const EnhancedGestaoComponent = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <h4 className="font-medium">Redefinir Senha:</h4>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Marque esta opção para enviar um email de redefinição de senha para o usuário.
-                    </p>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="resetPassword"
-                        checked={newPassword === 'reset'}
-                        onChange={(e) => setNewPassword(e.target.checked ? 'reset' : '')}
-                        className="rounded border-gray-300"
-                      />
-                      <label htmlFor="resetPassword" className="text-sm">
-                        Enviar email de redefinição de senha
-                      </label>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Data de Vencimento Atual:</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedUser.current_period_end 
-                        ? UserManagementService.formatDate(selectedUser.current_period_end)
-                        : 'Sem data definida'
-                      }
-                    </p>
+                    <label htmlFor="editPlanId" className="text-sm font-medium">
+                      ID do Plano
+                    </label>
+                    <Input
+                      id="editPlanId"
+                      type="text"
+                      placeholder="49"
+                      value={editingPlanId}
+                      onChange={(e) => setEditingPlanId(e.target.value)}
+                      className="w-full"
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <h4 className="font-medium">Nova Data de Vencimento:</h4>
+                    <label htmlFor="editCoupon" className="text-sm font-medium">
+                      UUID do Cupom
+                    </label>
+                    <Input
+                      id="editCoupon"
+                      type="text"
+                      placeholder="0"
+                      value={editingCoupon}
+                      onChange={(e) => setEditingCoupon(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Data de Vencimento *
+                    </label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -728,6 +807,42 @@ export const EnhancedGestaoComponent = () => {
                     </Popover>
                   </div>
 
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Status *
+                    </label>
+                    <Select value={editingStatus} onValueChange={setEditingStatus}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecionar status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>  
+                        <SelectItem value="disabled">Disabled</SelectItem>
+                        <SelectItem value="canceled">Canceled</SelectItem>
+                        <SelectItem value="past_due">Past Due</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Redefinir Senha</label>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Marque esta opção para enviar um email de redefinição de senha para o usuário.
+                    </p>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="resetPassword"
+                        checked={newPassword === 'reset'}
+                        onChange={(e) => setNewPassword(e.target.checked ? 'reset' : '')}
+                        className="rounded border-gray-300"
+                      />
+                      <label htmlFor="resetPassword" className="text-sm">
+                        Enviar email de redefinição de senha
+                      </label>
+                    </div>
+                  </div>
+
                   <div className="flex justify-end gap-2 pt-4">
                     <Button
                       variant="outline"
@@ -736,6 +851,11 @@ export const EnhancedGestaoComponent = () => {
                         setSelectedUser(null);
                         setExpirationDate(undefined);
                         setEditingEmail('');
+                        setEditingName('');
+                        setEditingPhone('');
+                        setEditingPlanId('');
+                        setEditingCoupon('');
+                        setEditingStatus('');
                         setNewPassword('');
                       }}
                     >
@@ -743,9 +863,9 @@ export const EnhancedGestaoComponent = () => {
                     </Button>
                     <Button
                       onClick={handleSaveChanges}
-                      disabled={!expirationDate || !editingEmail.trim()}
+                      disabled={!expirationDate || !editingEmail.trim() || !editingName.trim() || !editingPhone.trim()}
                     >
-                      Salvar
+                      Salvar Alterações
                     </Button>
                   </div>
                 </div>

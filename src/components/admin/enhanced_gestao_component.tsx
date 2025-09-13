@@ -956,29 +956,68 @@ export const EnhancedGestaoComponent = () => {
                     <label className="text-sm font-medium">
                       Data de Vencimento *
                     </label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !expirationDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {expirationDate ? format(expirationDate, "dd/MM/yyyy") : "Selecionar data"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={expirationDate}
-                          onSelect={setExpirationDate}
-                          initialFocus
-                          className={cn("p-3 pointer-events-auto")}
+                    <div className="space-y-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !expirationDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {expirationDate ? format(expirationDate, "dd/MM/yyyy") : "Selecionar data"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={expirationDate}
+                            onSelect={setExpirationDate}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      
+                      <div className="relative">
+                        <Input
+                          placeholder="ou digite: DD/MM/AAAA"
+                          value={expirationDate ? format(expirationDate, "dd/MM/yyyy") : ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Formatar automaticamente enquanto digita
+                            let formatted = value.replace(/\D/g, '');
+                            if (formatted.length >= 2) {
+                              formatted = formatted.slice(0, 2) + '/' + formatted.slice(2);
+                            }
+                            if (formatted.length >= 5) {
+                              formatted = formatted.slice(0, 5) + '/' + formatted.slice(5, 9);
+                            }
+                            
+                            // Tentar converter para data quando completo
+                            if (formatted.length === 10) {
+                              const [day, month, year] = formatted.split('/');
+                              const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                              
+                              // Verificar se a data é válida
+                              if (!isNaN(date.getTime()) && 
+                                  date.getDate() === parseInt(day) &&
+                                  date.getMonth() === parseInt(month) - 1 &&
+                                  date.getFullYear() === parseInt(year)) {
+                                setExpirationDate(date);
+                              }
+                            }
+                            
+                            // Atualizar o valor do input (mesmo que temporariamente para formatação)
+                            e.target.value = formatted;
+                          }}
+                          className="w-full text-sm"
+                          maxLength={10}
                         />
-                      </PopoverContent>
-                    </Popover>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -1177,29 +1216,68 @@ export const EnhancedGestaoComponent = () => {
                   <label className="text-sm font-medium">
                     Data de Vencimento
                   </label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !newClientDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {newClientDate ? format(newClientDate, "dd/MM/yyyy") : "Selecionar data"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={newClientDate}
-                        onSelect={setNewClientDate}
-                        initialFocus
-                        className={cn("p-3 pointer-events-auto")}
+                  <div className="space-y-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !newClientDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {newClientDate ? format(newClientDate, "dd/MM/yyyy") : "Selecionar data"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={newClientDate}
+                          onSelect={setNewClientDate}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    
+                    <div className="relative">
+                      <Input
+                        placeholder="ou digite: DD/MM/AAAA"
+                        value={newClientDate ? format(newClientDate, "dd/MM/yyyy") : ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Formatar automaticamente enquanto digita
+                          let formatted = value.replace(/\D/g, '');
+                          if (formatted.length >= 2) {
+                            formatted = formatted.slice(0, 2) + '/' + formatted.slice(2);
+                          }
+                          if (formatted.length >= 5) {
+                            formatted = formatted.slice(0, 5) + '/' + formatted.slice(5, 9);
+                          }
+                          
+                          // Tentar converter para data quando completo
+                          if (formatted.length === 10) {
+                            const [day, month, year] = formatted.split('/');
+                            const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                            
+                            // Verificar se a data é válida
+                            if (!isNaN(date.getTime()) && 
+                                date.getDate() === parseInt(day) &&
+                                date.getMonth() === parseInt(month) - 1 &&
+                                date.getFullYear() === parseInt(year)) {
+                              setNewClientDate(date);
+                            }
+                          }
+                          
+                          // Atualizar o valor do input (mesmo que temporariamente para formatação)
+                          e.target.value = formatted;
+                        }}
+                        className="w-full text-sm"
+                        maxLength={10}
                       />
-                    </PopoverContent>
-                  </Popover>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-2">

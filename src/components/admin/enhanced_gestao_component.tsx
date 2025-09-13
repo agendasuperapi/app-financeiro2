@@ -272,7 +272,7 @@ export const EnhancedGestaoComponent = () => {
     }
   };
 
-  // Função para adicionar novo cliente
+  // Função para adicionar novo cliente via Supabase Auth API
   const handleAddClient = async () => {
     if (!newClientName.trim() || !newClientPhone.trim()) {
       alert('Nome e telefone são obrigatórios');
@@ -280,48 +280,77 @@ export const EnhancedGestaoComponent = () => {
     }
 
     try {
-      // Gerar UUID válido e email único
-      const clientId = uuidv4();
+      // Gerar email único e senha padrão
       const tempEmail = `cliente_${Date.now()}@poupeja.local`;
+      const defaultPassword = '1234567';
 
-      // Inserir na tabela poupeja_users
-      const { data, error } = await supabase
-        .from('poupeja_users')
-        .insert({
-          id: clientId,
-          name: newClientName.trim(),
-          phone: newClientPhone.trim(),
+      console.log('Criando usuário via Supabase Auth API...');
+
+      // Criar usuário via Supabase Auth API
+      const response = await fetch('https://gpttodmpflpzhbgzagcc.supabase.co/auth/v1/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwdHRvZG1wZmxwemhiZ3phZ2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNzU2MTcsImV4cCI6MjA3MDg1MTYxN30.Ro2k_slVwV7hsGDM1YNcNP3csi876LPuAwFSBpxJN2I'
+        },
+        body: JSON.stringify({
           email: tempEmail,
-          created_at: newClientDate ? newClientDate.toISOString() : new Date().toISOString()
+          password: defaultPassword,
+          data: {
+            full_name: newClientName.trim(),
+            phone: newClientPhone.trim(),
+            id_plano_preco: '49',
+            uuid_cupom: '0'
+          }
         })
-        .select();
+      });
 
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Erro na API: ${errorData.msg || response.statusText}`);
       }
 
-      // Criar entrada na tabela de assinaturas
-      if (data && data[0]) {
-        const subscriptionData = {
-          user_id: data[0].id,
-          status: newClientStatus,
-          plan_type: 'basic',
-          current_period_start: new Date().toISOString(),
-          current_period_end: newClientDate ? newClientDate.toISOString() : null,
-          created_at: new Date().toISOString()
-        };
+      const authData = await response.json();
+      console.log('Usuário criado via Auth API:', authData);
 
-        const { error: subError } = await supabase
-          .from('poupeja_subscriptions')
-          .insert(subscriptionData);
+      if (authData.user?.id) {
+        // Inserir dados adicionais na tabela poupeja_users
+        const { error: userError } = await supabase
+          .from('poupeja_users')
+          .insert({
+            id: authData.user.id,
+            name: newClientName.trim(),
+            phone: newClientPhone.trim(),
+            email: tempEmail,
+            created_at: newClientDate ? newClientDate.toISOString() : new Date().toISOString()
+          });
 
-        if (subError) {
-          console.error('Erro ao criar assinatura:', subError);
-          alert('Cliente criado, mas erro ao criar assinatura: ' + subError.message);
+        if (userError) {
+          console.error('Erro ao inserir na tabela poupeja_users:', userError);
+        }
+
+        // Criar assinatura se especificada
+        if (newClientDate) {
+          const subscriptionData = {
+            user_id: authData.user.id,
+            status: newClientStatus,
+            plan_type: 'basic',
+            current_period_start: new Date().toISOString(),
+            current_period_end: newClientDate.toISOString(),
+            created_at: new Date().toISOString()
+          };
+
+          const { error: subError } = await supabase
+            .from('poupeja_subscriptions')
+            .insert(subscriptionData);
+
+          if (subError) {
+            console.error('Erro ao criar assinatura:', subError);
+          }
         }
       }
 
-      alert('Cliente adicionado com sucesso!');
+      alert('Cliente adicionado com sucesso via Auth API!');
       
       // Limpar formulário e fechar dialog
       setNewClientName('');

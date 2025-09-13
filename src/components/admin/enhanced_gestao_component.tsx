@@ -639,7 +639,7 @@ export const EnhancedGestaoComponent = () => {
                             Status
                           </div>
                         </TableHead>
-                        <TableHead className="min-w-[80px]">
+                        <TableHead className="min-w-[120px]">
                           Ações
                         </TableHead>
                       </TableRow>
@@ -672,26 +672,28 @@ export const EnhancedGestaoComponent = () => {
                               {user.status || 'Sem assinatura'}
                             </Badge>
                           </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
-                                onClick={() => handleEditUser(user)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 hover:bg-orange-50 hover:text-orange-600"
-                                onClick={() => handleToggleStatus(user)}
-                              >
-                                <UserX className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
+                           <TableCell className="min-w-[120px]">
+                             <div className="flex items-center justify-center gap-1">
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600 border-blue-200"
+                                 onClick={() => handleEditUser(user)}
+                                 title="Editar usuário"
+                               >
+                                 <Pencil className="h-4 w-4" />
+                               </Button>
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 border-red-200"
+                                 onClick={() => handleToggleStatus(user)}
+                                 title="Alterar status"
+                               >
+                                 <UserX className="h-4 w-4" />
+                               </Button>
+                             </div>
+                           </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

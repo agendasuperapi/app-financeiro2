@@ -37,6 +37,7 @@ export const EnhancedGestaoComponent = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchField, setSearchField] = useState<'all' | 'name' | 'phone' | 'email'>('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -116,32 +117,28 @@ export const EnhancedGestaoComponent = () => {
 
   // Filtrar dados baseado na busca e filtro de status
   useEffect(() => {
-    console.log('🔍 Aplicando filtros:', { searchTerm, statusFilter, totalUsers: userData.length });
+    const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     let filtered = userData;
 
-    // Filtro por termo de busca (nome, telefone ou email)
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase().trim();
-      console.log('🔍 Buscando por:', searchLower);
-      
+      const searchNormalized = normalize(searchLower);
+
       filtered = filtered.filter(user => {
-        const nameMatch = user.name && user.name.toLowerCase().includes(searchLower);
-        const phoneMatch = user.phone && user.phone.replace(/\D/g, '').includes(searchTerm.replace(/\D/g, ''));
-        const emailMatch = user.email && user.email.toLowerCase().includes(searchLower);
-        
-        const matches = nameMatch || phoneMatch || emailMatch;
-        if (matches) {
-          console.log('✅ Usuário encontrado:', user.name, user.phone, user.email);
-        }
-        return matches;
+        const nameNorm = user.name ? normalize(user.name) : '';
+        const emailNorm = user.email ? normalize(user.email) : '';
+        const phoneDigits = (user.phone || '').replace(/\D/g, '');
+        const termDigits = searchTerm.replace(/\D/g, '');
+
+        const byName = (searchField === 'all' || searchField === 'name') && nameNorm.includes(searchNormalized);
+        const byEmail = (searchField === 'all' || searchField === 'email') && emailNorm.includes(searchNormalized);
+        const byPhone = (searchField === 'all' || searchField === 'phone') && (termDigits.length > 0 ? phoneDigits.includes(termDigits) : false);
+
+        return byName || byEmail || byPhone;
       });
-      
-      console.log('🔍 Resultados da busca:', filtered.length);
     }
 
-    // Filtro por status de assinatura
     if (statusFilter !== 'all') {
-      console.log('📊 Aplicando filtro de status:', statusFilter);
       filtered = filtered.filter(user => {
         switch (statusFilter) {
           case 'sem_assinatura':
@@ -158,10 +155,9 @@ export const EnhancedGestaoComponent = () => {
       });
     }
 
-    console.log('📋 Dados finais filtrados:', filtered.length);
     setFilteredData(filtered);
-    setCurrentPage(1); // Reset para primeira página quando filtros mudam
-  }, [searchTerm, statusFilter, userData]);
+    setCurrentPage(1);
+  }, [searchTerm, searchField, statusFilter, userData]);
 
   // Exportação CSV com dados corretos das tabelas
   const exportToCSV = () => {
@@ -604,6 +600,20 @@ export const EnhancedGestaoComponent = () => {
                   </div>
                 </div>
                 
+                <div className="w-full sm:w-40 lg:w-48">
+                  <Select value={searchField} onValueChange={(v) => setSearchField(v as any)}>
+                    <SelectTrigger className="h-8 lg:h-10 text-sm">
+                      <SelectValue placeholder="Campo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="name">Nome</SelectItem>
+                      <SelectItem value="phone">Telefone</SelectItem>
+                      <SelectItem value="email">Email</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
                 <div className="w-full sm:w-40 lg:w-56">
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="h-8 lg:h-10 text-sm">
@@ -611,16 +621,11 @@ export const EnhancedGestaoComponent = () => {
                       <SelectValue placeholder="Filtrar por status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todos os Status</SelectItem>
-                      <SelectItem value="sem_assinatura">Sem Assinatura</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       <SelectItem value="ativo">Ativo</SelectItem>
                       <SelectItem value="cancelado">Cancelado</SelectItem>
                       <SelectItem value="expirado">Vencido</SelectItem>
-                      {getUniqueStatuses().map(statusObj => (
-                        <SelectItem key={statusObj.value} value={statusObj.value}>
-                          {statusObj.label}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="sem_assinatura">Sem assinatura</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

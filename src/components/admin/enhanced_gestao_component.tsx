@@ -59,6 +59,10 @@ export const EnhancedGestaoComponent = () => {
   const [newClientStatus, setNewClientStatus] = useState('active');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [isInspectDialogOpen, setIsInspectDialogOpen] = useState(false);
+  const [inspectedUser, setInspectedUser] = useState<UserData | null>(null);
+  const [userTransactions, setUserTransactions] = useState<any[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
 
   // Paginação
   const totalItems = filteredData.length;
@@ -342,6 +346,34 @@ export const EnhancedGestaoComponent = () => {
       console.log('✅ Status alternado com sucesso');
     } catch (error) {
       console.error('❌ Erro ao alternar status:', error);
+    }
+  };
+
+  // Função para inspecionar usuário e buscar suas transações
+  const handleInspectUser = async (user: UserData) => {
+    setInspectedUser(user);
+    setIsInspectDialogOpen(true);
+    setLoadingTransactions(true);
+
+    try {
+      // Buscar transações do usuário
+      const { data: transactions, error } = await supabase
+        .from('poupeja_transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar transações:', error);
+        setUserTransactions([]);
+      } else {
+        setUserTransactions(transactions || []);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar transações:', error);
+      setUserTransactions([]);
+    } finally {
+      setLoadingTransactions(false);
     }
   };
 
@@ -675,6 +707,15 @@ export const EnhancedGestaoComponent = () => {
                             </TableCell>
                             <TableCell className="text-center">
                               <div className="flex items-center justify-center gap-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 w-7 p-0 hover:bg-green-50 hover:text-green-600 border-green-200"
+                                  onClick={() => handleInspectUser(user)}
+                                  title="Inspecionar usuário"
+                                >
+                                  <Search className="h-3 w-3" />
+                                </Button>
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -1187,6 +1228,157 @@ export const EnhancedGestaoComponent = () => {
                   </Button>
                 </div>
               </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Dialog para inspecionar usuário e suas transações */}
+          <Dialog open={isInspectDialogOpen} onOpenChange={setIsInspectDialogOpen}>
+            <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Search className="h-5 w-5" />
+                  Inspeção de Conta - {inspectedUser?.name}
+                </DialogTitle>
+              </DialogHeader>
+              
+              {inspectedUser && (
+                <div className="space-y-6">
+                  {/* Informações do Cliente */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Informações do Cliente</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Nome</label>
+                        <p className="text-sm">{inspectedUser.name || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Telefone</label>
+                        <p className="text-sm">{inspectedUser.phone || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Email</label>
+                        <p className="text-sm">{inspectedUser.email || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Status</label>
+                        <Badge 
+                          variant="outline" 
+                          className={`${UserManagementService.getStatusColor(inspectedUser.status || 'Sem assinatura')}`}
+                        >
+                          {inspectedUser.status || 'Sem assinatura'}
+                        </Badge>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Data de Cadastro</label>
+                        <p className="text-sm">{UserManagementService.formatDate(inspectedUser.created_at)}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Vencimento</label>
+                        <p className="text-sm">{UserManagementService.formatDate(inspectedUser.current_period_end)}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Lançamentos/Transações */}
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <CardTitle className="text-lg">Lançamentos ({userTransactions.length})</CardTitle>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleInspectUser(inspectedUser)}
+                        disabled={loadingTransactions}
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-2 ${loadingTransactions ? 'animate-spin' : ''}`} />
+                        Atualizar
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      {loadingTransactions ? (
+                        <div className="text-center py-8">
+                          <RefreshCw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground mt-2">Carregando transações...</p>
+                        </div>
+                      ) : userTransactions.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <CreditCard className="h-12 w-12 mx-auto text-muted-foreground" />
+                          <p className="text-sm mt-2">Nenhuma transação encontrada</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Descrição</TableHead>
+                                  <TableHead>Tipo</TableHead>
+                                  <TableHead>Valor</TableHead>
+                                  <TableHead>Data</TableHead>
+                                  <TableHead>Categoria</TableHead>
+                                  <TableHead className="w-[100px]">Ações</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {userTransactions.map((transaction) => (
+                                  <TableRow key={transaction.id}>
+                                    <TableCell className="font-medium">
+                                      {transaction.description || 'Sem descrição'}
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge variant={transaction.type === 'income' ? 'default' : 'destructive'}>
+                                        {transaction.type === 'income' ? 'Receita' : 'Despesa'}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className={`font-medium ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                                      R$ {Number(transaction.amount || 0).toFixed(2)}
+                                    </TableCell>
+                                    <TableCell>
+                                      {transaction.date ? new Date(transaction.date).toLocaleDateString('pt-BR') : 'N/A'}
+                                    </TableCell>
+                                    <TableCell>
+                                      {transaction.category_name || 'Sem categoria'}
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="flex gap-1">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-8 w-8 p-0"
+                                          onClick={() => {
+                                            // Aqui você pode adicionar a lógica para editar a transação
+                                            console.log('Editar transação:', transaction.id);
+                                          }}
+                                        >
+                                          <Pencil className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsInspectDialogOpen(false);
+                        setInspectedUser(null);
+                        setUserTransactions([]);
+                      }}
+                    >
+                      Fechar
+                    </Button>
+                  </div>
+                </div>
+              )}
             </DialogContent>
           </Dialog>
         </div>

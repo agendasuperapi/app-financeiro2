@@ -782,8 +782,29 @@ export const EnhancedGestaoComponent = () => {
                     id="clientPhone"
                     type="tel"
                     placeholder="(00) 00000-0000"
+                    maxLength={15}
                     value={newClientPhone}
-                    onChange={(e) => setNewClientPhone(e.target.value)}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                      
+                      // Limita a 11 dígitos
+                      if (value.length > 11) {
+                        value = value.slice(0, 11);
+                      }
+                      
+                      // Formata automaticamente
+                      if (value.length >= 11) {
+                        value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                      } else if (value.length >= 7) {
+                        value = value.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3');
+                      } else if (value.length >= 3) {
+                        value = value.replace(/(\d{2})(\d+)/, '($1) $2');
+                      } else if (value.length >= 1) {
+                        value = value.replace(/(\d+)/, '($1');
+                      }
+                      
+                      setNewClientPhone(value);
+                    }}
                     className="w-full"
                   />
                 </div>

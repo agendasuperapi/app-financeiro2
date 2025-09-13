@@ -365,21 +365,41 @@ export const EnhancedGestaoComponent = () => {
     setLoadingTransactions(true);
 
     try {
+      console.log('🔍 Buscando transações para usuário:', user.id, user.name);
+      
       // Buscar transações do usuário
       const { data: transactions, error } = await supabase
         .from('poupeja_transactions')
-        .select('*')
+        .select(`
+          id,
+          description,
+          type,
+          amount,
+          date,
+          created_at,
+          category_id,
+          categories:category_id(name)
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
+      console.log('📊 Resultado da busca de transações:', { transactions, error, count: transactions?.length });
+
       if (error) {
-        console.error('Erro ao buscar transações:', error);
+        console.error('❌ Erro ao buscar transações:', error);
         setUserTransactions([]);
       } else {
-        setUserTransactions(transactions || []);
+        // Transformar os dados para incluir category_name
+        const formattedTransactions = (transactions || []).map(transaction => ({
+          ...transaction,
+          category_name: transaction.categories?.name || 'Sem categoria'
+        }));
+        
+        console.log('✅ Transações formatadas:', formattedTransactions);
+        setUserTransactions(formattedTransactions);
       }
     } catch (error) {
-      console.error('Erro ao carregar transações:', error);
+      console.error('❌ Erro ao carregar transações:', error);
       setUserTransactions([]);
     } finally {
       setLoadingTransactions(false);

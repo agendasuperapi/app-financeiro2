@@ -10,6 +10,7 @@ export interface UserData {
   email: string;
   current_period_end?: string | null;
   status?: string;
+  cancel_at_period_end?: boolean;
 }
 
 export interface UserStats {
@@ -26,61 +27,47 @@ export class UserManagementService {
  */
 static async getAllUsersWithSubscriptions(): Promise<UserData[]> {
   try {
-    console.log('Buscando dados das tabelas com permissões configuradas...');
+    console.log('🔄 Buscando dados de usuários via função admin...');
 
-    // Query direta para usuários
-    const { data: users, error: usersError } = await supabase
-      .from('poupeja_users')
-      .select('id, name, phone, created_at, email, updated_at')
-      .order('created_at', { ascending: false });
-
-    if (usersError) {
-      console.error('Erro ao buscar usuários:', usersError);
-      
-      // Usar dados do usuário atual como fallback
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (currentUser) {
-        console.log('Usando dados do usuário atual como fallback');
-        return [
-          {
-            id: currentUser.id,
-            name: currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'Admin',
-            phone: currentUser.user_metadata?.phone || null,
-            created_at: currentUser.created_at || new Date().toISOString(),
-            email: currentUser.email || '',
-            current_period_end: null,
-            status: 'Admin'
-          }
-        ];
-      }
-      
-      throw new Error('Não foi possível acessar os dados de usuários');
+    // Get current user session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('Usuário não autenticado');
     }
 
-    console.log(`✅ ${users?.length || 0} usuários encontrados`);
+    // Call admin function to get all users (bypasses RLS)
+    const { data, error } = await supabase.functions.invoke('admin-get-all-users', {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
 
-    // Buscar assinaturas separadamente
-    const { data: subscriptions, error: subscriptionsError } = await supabase
-      .from('poupeja_subscriptions')
-      .select('user_id, current_period_end, status, plan_type');
-
-    if (subscriptionsError) {
-      console.log('Erro ao buscar assinaturas, continuando sem elas:', subscriptionsError);
-    } else {
-      console.log(`✅ ${subscriptions?.length || 0} assinaturas encontradas`);
+    if (error) {
+      console.error('Erro ao buscar usuários via função admin:', error);
+      throw new Error(`Erro na função admin: ${error.message}`);
     }
 
-    // Combinar dados
-    const combinedData: UserData[] = users?.map(user => {
-      const subscription = subscriptions?.find(sub => sub.user_id === user.id);
-      return {
-        ...user,
-        current_period_end: subscription?.current_period_end || null,
-        status: subscription?.status || 'Sem assinatura'
-      };
-    }) || [];
+    if (!data?.success) {
+      console.error('Função admin retornou erro:', data);
+      throw new Error(data?.error || 'Erro desconhecido na função admin');
+    }
 
-    console.log(`✅ Dados combinados: ${combinedData.length} usuários com assinaturas`);
+    const users = data.users || [];
+    console.log(`✅ ${users.length} usuários encontrados via função admin`);
+
+    // Convert the data to the expected format
+    const combinedData: UserData[] = users.map((user: any) => ({
+      id: user.id,
+      name: user.name,
+      phone: user.phone,
+      created_at: user.created_at,
+      email: user.email,
+      current_period_end: user.current_period_end,
+      status: user.status,
+      cancel_at_period_end: user.cancel_at_period_end
+    }));
+
+    console.log(`✅ Dados processados: ${combinedData.length} usuários com assinaturas`);
     return combinedData;
   } catch (error) {
     console.error('❌ Erro no serviço de usuários:', error);
@@ -222,6 +209,12 @@ static async getAllUsersWithSubscriptions(): Promise<UserData[]> {
   static async updateSubscriptionExpirationDate(userId: string, newExpirationDate: Date): Promise<boolean> {
     try {
       console.log(`Atualizando data de vencimento para usuário ${userId}:`, newExpirationDate.toISOString());
+
+      // Get current user session for admin function
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Usuário não autenticado');
+      }
 
       const { error } = await supabase
         .from('poupeja_subscriptions')

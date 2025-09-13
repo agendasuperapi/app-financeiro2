@@ -1,0 +1,2 @@
+[function.admin-get-all-users]
+verify_jwt = false

@@ -46,6 +46,10 @@ export const EnhancedGestaoComponent = () => {
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
   const [newClientName, setNewClientName] = useState('');
   const [newClientPhone, setNewClientPhone] = useState('');
+  const [newClientEmail, setNewClientEmail] = useState('');
+  const [newClientPassword, setNewClientPassword] = useState('1234567');
+  const [newClientPlanId, setNewClientPlanId] = useState('49');
+  const [newClientCoupon, setNewClientCoupon] = useState('0');
   const [newClientDate, setNewClientDate] = useState<Date | undefined>();
   const [newClientStatus, setNewClientStatus] = useState('active');
 
@@ -274,16 +278,12 @@ export const EnhancedGestaoComponent = () => {
 
   // Função para adicionar novo cliente via Supabase Auth API
   const handleAddClient = async () => {
-    if (!newClientName.trim() || !newClientPhone.trim()) {
-      alert('Nome e telefone são obrigatórios');
+    if (!newClientName.trim() || !newClientPhone.trim() || !newClientEmail.trim()) {
+      alert('Nome, telefone e email são obrigatórios');
       return;
     }
 
     try {
-      // Gerar email único e senha padrão
-      const tempEmail = `cliente_${Date.now()}@poupeja.local`;
-      const defaultPassword = '1234567';
-
       console.log('Criando usuário via Supabase Auth API...');
 
       // Criar usuário via Supabase Auth API
@@ -294,13 +294,13 @@ export const EnhancedGestaoComponent = () => {
           'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwdHRvZG1wZmxwemhiZ3phZ2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNzU2MTcsImV4cCI6MjA3MDg1MTYxN30.Ro2k_slVwV7hsGDM1YNcNP3csi876LPuAwFSBpxJN2I'
         },
         body: JSON.stringify({
-          email: tempEmail,
-          password: defaultPassword,
+          email: newClientEmail.trim(),
+          password: newClientPassword,
           data: {
             full_name: newClientName.trim(),
             phone: newClientPhone.trim(),
-            id_plano_preco: '49',
-            uuid_cupom: '0'
+            id_plano_preco: newClientPlanId,
+            uuid_cupom: newClientCoupon
           }
         })
       });
@@ -321,7 +321,7 @@ export const EnhancedGestaoComponent = () => {
             id: authData.user.id,
             name: newClientName.trim(),
             phone: newClientPhone.trim(),
-            email: tempEmail,
+            email: newClientEmail.trim(),
             created_at: newClientDate ? newClientDate.toISOString() : new Date().toISOString()
           });
 
@@ -355,6 +355,10 @@ export const EnhancedGestaoComponent = () => {
       // Limpar formulário e fechar dialog
       setNewClientName('');
       setNewClientPhone('');
+      setNewClientEmail('');
+      setNewClientPassword('1234567');
+      setNewClientPlanId('49');
+      setNewClientCoupon('0');
       setNewClientDate(undefined);
       setNewClientStatus('active');
       setIsAddClientDialogOpen(false);
@@ -785,6 +789,62 @@ export const EnhancedGestaoComponent = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <label htmlFor="clientEmail" className="text-sm font-medium">
+                    Email *
+                  </label>
+                  <Input
+                    id="clientEmail"
+                    type="email"
+                    placeholder="cliente@email.com"
+                    value={newClientEmail}
+                    onChange={(e) => setNewClientEmail(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="clientPassword" className="text-sm font-medium">
+                    Senha
+                  </label>
+                  <Input
+                    id="clientPassword"
+                    type="text"
+                    placeholder="Senha padrão"
+                    value={newClientPassword}
+                    onChange={(e) => setNewClientPassword(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="clientPlanId" className="text-sm font-medium">
+                    ID do Plano
+                  </label>
+                  <Input
+                    id="clientPlanId"
+                    type="text"
+                    placeholder="49"
+                    value={newClientPlanId}
+                    onChange={(e) => setNewClientPlanId(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="clientCoupon" className="text-sm font-medium">
+                    UUID do Cupom
+                  </label>
+                  <Input
+                    id="clientCoupon"
+                    type="text"
+                    placeholder="0"
+                    value={newClientCoupon}
+                    onChange={(e) => setNewClientCoupon(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <label className="text-sm font-medium">
                     Data de Vencimento
                   </label>
@@ -835,6 +895,10 @@ export const EnhancedGestaoComponent = () => {
                       setIsAddClientDialogOpen(false);
                       setNewClientName('');
                       setNewClientPhone('');
+                      setNewClientEmail('');
+                      setNewClientPassword('1234567');
+                      setNewClientPlanId('49');
+                      setNewClientCoupon('0');
                       setNewClientDate(undefined);
                       setNewClientStatus('active');
                     }}

@@ -15,6 +15,7 @@ const SubscriptionStatusCard: React.FC = () => {
   const locale = language === 'pt' ? ptBR : enUS;
 
   const getStatusVariant = () => {
+    if (subscription?.cancel_at_period_end) return 'destructive';
     if (isSubscriptionExpired) return 'destructive';
     if (!hasActiveSubscription) return 'destructive';
     if (isSubscriptionExpiring) return 'outline';

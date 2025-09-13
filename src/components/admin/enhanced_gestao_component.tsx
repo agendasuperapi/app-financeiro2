@@ -484,18 +484,20 @@ export const EnhancedGestaoComponent = () => {
               <div className="overflow-x-auto">
                 {userData.length === 0 && !loading && (
                   <div className="text-center py-8 space-y-4">
-                    <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto" />
+                    <UserX className="h-12 w-12 text-muted-foreground mx-auto" />
                     <div>
-                      <h3 className="text-lg font-semibold text-muted-foreground">Configuração Necessária</h3>
+                      <h3 className="text-lg font-semibold text-muted-foreground">Nenhum usuário encontrado</h3>
                       <p className="text-sm text-muted-foreground mt-2">
-                        Para exibir dados das tabelas, configure as políticas RLS no Supabase:
+                        Não foi possível carregar os dados dos usuários. Verifique sua conexão ou tente atualizar.
                       </p>
-                      <div className="bg-muted p-4 rounded-lg mt-4 text-left">
-                        <p className="text-xs font-mono">
-                          CREATE POLICY "Admins can view all users" ON poupeja_users<br/>
-                          FOR SELECT USING (EXISTS (SELECT 1 FROM user_roles WHERE user_roles.user_id = auth.uid() AND user_roles.role = 'admin'));
-                        </p>
-                      </div>
+                      <Button 
+                        onClick={fetchUserData} 
+                        variant="outline" 
+                        className="mt-4"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Tentar Novamente
+                      </Button>
                     </div>
                   </div>
                 )}

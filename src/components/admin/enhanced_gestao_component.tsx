@@ -57,6 +57,15 @@ export const EnhancedGestaoComponent = () => {
   const [newClientCoupon, setNewClientCoupon] = useState('0');
   const [newClientDate, setNewClientDate] = useState<Date | undefined>();
   const [newClientStatus, setNewClientStatus] = useState('active');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Paginação
+  const totalItems = filteredData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
 
   const fetchUserData = async () => {
     setLoading(true);
@@ -134,6 +143,7 @@ export const EnhancedGestaoComponent = () => {
     }
 
     setFilteredData(filtered);
+    setCurrentPage(1); // Reset para primeira página quando filtros mudam
   }, [searchTerm, statusFilter, userData]);
 
   // Exportação CSV com dados corretos das tabelas
@@ -635,7 +645,7 @@ export const EnhancedGestaoComponent = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredData.map((user) => (
+                      {paginatedData.map((user) => (
                         <TableRow key={user.id} className="hover:bg-muted/50">
                            <TableCell className="font-medium">
                              <div className="flex flex-col">
@@ -688,6 +698,81 @@ export const EnhancedGestaoComponent = () => {
                   </Table>
                 )}
               </div>
+              
+              {/* Controles de Paginação */}
+              {filteredData.length > 0 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-3 lg:px-6 py-4 border-t">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Itens por página:</span>
+                    <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                      setItemsPerPage(Number(value));
+                      setCurrentPage(1);
+                    }}>
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5</SelectItem>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>
+                      Mostrando {startIndex + 1} a {Math.min(endIndex, totalItems)} de {totalItems} itens
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="h-8 w-8 p-0"
+                    >
+                      ‹
+                    </Button>
+                    
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                      // Mostrar apenas páginas próximas à atual
+                      if (
+                        page === 1 || 
+                        page === totalPages || 
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className="h-8 w-8 p-0"
+                          >
+                            {page}
+                          </Button>
+                        );
+                      } else if (page === currentPage - 2 || page === currentPage + 2) {
+                        return <span key={page} className="px-1">...</span>;
+                      }
+                      return null;
+                    })}
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                      className="h-8 w-8 p-0"
+                    >
+                      ›
+                    </Button>
+                  </div>
+                </div>
+              )}
               
               {filteredData.length === 0 && !loading && userData.length > 0 && (
                 <div className="text-center py-8 text-muted-foreground">

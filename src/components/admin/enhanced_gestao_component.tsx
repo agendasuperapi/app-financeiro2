@@ -256,7 +256,28 @@ export const EnhancedGestaoComponent = () => {
         }
         
         // Atualizar a senha se foi informada
-        if (newPassword && newPassword.trim() !== '') {
+        if (newPassword && newPassword.trim() !== '' && newPassword !== 'reset') {
+          // Alterar senha diretamente via Auth API  
+          const response = await fetch('https://gpttodmpflpzhbgzagcc.supabase.co/auth/v1/admin/users/' + selectedUser.id, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwdHRvZG1wZmxwemhiZ3phZ2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNzU2MTcsImV4cCI6MjA3MDg1MTYxN30.Ro2k_slVwV7hsGDM1YNcNP3csi876LPuAwFSBpxJN2I'
+            },
+            body: JSON.stringify({
+              password: newPassword.trim()
+            })
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Erro ao alterar senha via API:', errorData);
+            alert('Outras alterações salvas, mas erro ao alterar senha: ' + (errorData.msg || response.statusText));
+          } else {
+            alert('Dados atualizados e senha alterada com sucesso!');
+          }
+        } else if (newPassword === 'reset') {
+          // Enviar email de reset de senha
           const { error: passwordError } = await supabase.auth.resetPasswordForEmail(
             editingEmail,
             {
@@ -825,21 +846,35 @@ export const EnhancedGestaoComponent = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Redefinir Senha</label>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Marque esta opção para enviar um email de redefinição de senha para o usuário.
-                    </p>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="resetPassword"
-                        checked={newPassword === 'reset'}
-                        onChange={(e) => setNewPassword(e.target.checked ? 'reset' : '')}
-                        className="rounded border-gray-300"
-                      />
-                      <label htmlFor="resetPassword" className="text-sm">
-                        Enviar email de redefinição de senha
-                      </label>
+                    <label className="text-sm font-medium">Alterar Senha</label>
+                    <div className="space-y-3">
+                      <div>
+                        <Input
+                          type="password"
+                          placeholder="Nova senha (deixe em branco para não alterar)"
+                          value={newPassword !== 'reset' ? newPassword : ''}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+                      
+                      <div className="border-t pt-3">
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Ou envie um email de redefinição de senha:
+                        </p>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="resetPassword"
+                            checked={newPassword === 'reset'}
+                            onChange={(e) => setNewPassword(e.target.checked ? 'reset' : '')}
+                            className="rounded border-gray-300"
+                          />
+                          <label htmlFor="resetPassword" className="text-sm">
+                            Enviar email de redefinição de senha
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   </div>
 

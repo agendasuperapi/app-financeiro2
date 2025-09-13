@@ -27,36 +27,59 @@ export class UserManagementService {
  */
 static async getAllUsersWithSubscriptions(): Promise<UserData[]> {
   try {
-    console.log('🔄 Buscando dados de usuários via função admin...');
+    console.log('🔄 Buscando dados de usuários (RLS para admin)...');
 
-    // Get current user session
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      throw new Error('Usuário não autenticado');
+    // 1) Tentativa direta via RLS (com políticas para admin)
+    const { data: users, error: usersError } = await supabase
+      .from('poupeja_users')
+      .select('id, name, phone, created_at, email, updated_at')
+      .order('created_at', { ascending: false });
+
+    if (!usersError && users) {
+      // Buscar assinaturas
+      const { data: subscriptions, error: subsError } = await supabase
+        .from('poupeja_subscriptions')
+        .select('user_id, current_period_end, status, plan_type, cancel_at_period_end');
+
+      if (subsError) {
+        console.warn('Assinaturas indisponíveis, continuando sem:', subsError);
+      }
+
+      const combinedData: UserData[] = users.map(u => {
+        const sub = subscriptions?.find(s => s.user_id === u.id);
+        return {
+          ...u,
+          current_period_end: sub?.current_period_end || null,
+          status: sub?.status || 'Sem assinatura',
+          cancel_at_period_end: sub?.cancel_at_period_end ?? false
+        };
+      });
+
+      console.log(`✅ ${combinedData.length} usuários encontrados via RLS`);
+      return combinedData;
     }
 
-    // Call admin function to get all users (bypasses RLS)
+    console.warn('RLS falhou ou sem dados, tentando função admin...', usersError);
+
+    // 2) Fallback: função Edge admin
+    const { data: sessionData } = await supabase.auth.getSession();
+    const session = sessionData?.session;
+    if (!session) throw new Error('Usuário não autenticado');
+
     const { data, error } = await supabase.functions.invoke('admin-get-all-users', {
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
+      headers: { Authorization: `Bearer ${session.access_token}` },
     });
 
     if (error) {
       console.error('Erro ao buscar usuários via função admin:', error);
       throw new Error(`Erro na função admin: ${error.message}`);
     }
-
     if (!data?.success) {
-      console.error('Função admin retornou erro:', data);
       throw new Error(data?.error || 'Erro desconhecido na função admin');
     }
 
-    const users = data.users || [];
-    console.log(`✅ ${users.length} usuários encontrados via função admin`);
-
-    // Convert the data to the expected format
-    const combinedData: UserData[] = users.map((user: any) => ({
+    const usersFromFn = data.users || [];
+    const combinedData: UserData[] = usersFromFn.map((user: any) => ({
       id: user.id,
       name: user.name,
       phone: user.phone,
@@ -67,7 +90,7 @@ static async getAllUsersWithSubscriptions(): Promise<UserData[]> {
       cancel_at_period_end: user.cancel_at_period_end
     }));
 
-    console.log(`✅ Dados processados: ${combinedData.length} usuários com assinaturas`);
+    console.log(`✅ ${combinedData.length} usuários via função admin`);
     return combinedData;
   } catch (error) {
     console.error('❌ Erro no serviço de usuários:', error);

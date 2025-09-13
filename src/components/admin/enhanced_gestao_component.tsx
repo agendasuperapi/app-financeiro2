@@ -704,18 +704,23 @@ export const EnhancedGestaoComponent = () => {
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-3 lg:px-6 py-4 border-t">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span>Itens por página:</span>
-                    <Select value={itemsPerPage.toString()} onValueChange={(value) => {
-                      setItemsPerPage(Number(value));
+                    <Select value={itemsPerPage === filteredData.length ? 'all' : itemsPerPage.toString()} onValueChange={(value) => {
+                      if (value === 'all') {
+                        setItemsPerPage(filteredData.length || 1);
+                      } else {
+                        setItemsPerPage(Number(value));
+                      }
                       setCurrentPage(1);
                     }}>
                       <SelectTrigger className="w-20">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="5">5</SelectItem>
                         <SelectItem value="10">10</SelectItem>
-                        <SelectItem value="20">20</SelectItem>
                         <SelectItem value="50">50</SelectItem>
+                        <SelectItem value="100">100</SelectItem>
+                        <SelectItem value="500">500</SelectItem>
+                        <SelectItem value="all">Todos</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

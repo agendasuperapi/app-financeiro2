@@ -365,21 +365,21 @@ export const EnhancedGestaoComponent = () => {
     setLoadingTransactions(true);
 
     try {
-      // Buscar transações do usuário
+      // Buscar lançamentos/histórico de subscriptions do usuário
       const { data: transactions, error } = await supabase
-        .from('poupeja_transactions')
+        .from('poupeja_subscriptions')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Erro ao buscar transações:', error);
+        console.error('Erro ao buscar lançamentos:', error);
         setUserTransactions([]);
       } else {
         setUserTransactions(transactions || []);
       }
     } catch (error) {
-      console.error('Erro ao carregar transações:', error);
+      console.error('Erro ao carregar lançamentos:', error);
       setUserTransactions([]);
     } finally {
       setLoadingTransactions(false);
@@ -1370,7 +1370,7 @@ export const EnhancedGestaoComponent = () => {
                   {/* Lançamentos/Transações */}
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
-                      <CardTitle className="text-lg">Lançamentos ({userTransactions.length})</CardTitle>
+                      <CardTitle className="text-lg">Histórico de Assinaturas ({userTransactions.length})</CardTitle>
                       <Button
                         variant="outline"
                         size="sm"
@@ -1390,7 +1390,7 @@ export const EnhancedGestaoComponent = () => {
                       ) : userTransactions.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">
                           <CreditCard className="h-12 w-12 mx-auto text-muted-foreground" />
-                          <p className="text-sm mt-2">Nenhuma transação encontrada</p>
+                          <p className="text-sm mt-2">Nenhuma assinatura encontrada</p>
                         </div>
                       ) : (
                         <div className="space-y-4">
@@ -1398,33 +1398,40 @@ export const EnhancedGestaoComponent = () => {
                             <Table>
                               <TableHeader>
                                 <TableRow>
-                                  <TableHead>Descrição</TableHead>
-                                  <TableHead>Tipo</TableHead>
-                                  <TableHead>Valor</TableHead>
-                                  <TableHead>Data</TableHead>
-                                  <TableHead>Categoria</TableHead>
+                                  <TableHead>Status</TableHead>
+                                  <TableHead>Tipo de Plano</TableHead>
+                                  <TableHead>Início</TableHead>
+                                  <TableHead>Vencimento</TableHead>
+                                  <TableHead>Cancelar no Fim</TableHead>
                                   <TableHead className="w-[100px]">Ações</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {userTransactions.map((transaction) => (
-                                  <TableRow key={transaction.id}>
+                                {userTransactions.map((subscription) => (
+                                  <TableRow key={subscription.id}>
                                     <TableCell className="font-medium">
-                                      {transaction.description || 'Sem descrição'}
-                                    </TableCell>
-                                    <TableCell>
-                                      <Badge variant={transaction.type === 'income' ? 'default' : 'destructive'}>
-                                        {transaction.type === 'income' ? 'Receita' : 'Despesa'}
+                                      <Badge 
+                                        variant={subscription.status === 'active' ? 'default' : 'destructive'}
+                                        className={UserManagementService.getStatusColor(subscription.status || 'inactive')}
+                                      >
+                                        {subscription.status || 'Inativo'}
                                       </Badge>
                                     </TableCell>
-                                    <TableCell className={`font-medium ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                                      R$ {Number(transaction.amount || 0).toFixed(2)}
+                                    <TableCell>
+                                      {subscription.plan_type || 'N/A'}
                                     </TableCell>
                                     <TableCell>
-                                      {transaction.date ? new Date(transaction.date).toLocaleDateString('pt-BR') : 'N/A'}
+                                      {subscription.current_period_start ? 
+                                        new Date(subscription.current_period_start).toLocaleDateString('pt-BR') : 'N/A'}
                                     </TableCell>
                                     <TableCell>
-                                      {transaction.category_name || 'Sem categoria'}
+                                      {subscription.current_period_end ? 
+                                        new Date(subscription.current_period_end).toLocaleDateString('pt-BR') : 'N/A'}
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge variant={subscription.cancel_at_period_end ? 'destructive' : 'secondary'}>
+                                        {subscription.cancel_at_period_end ? 'Sim' : 'Não'}
+                                      </Badge>
                                     </TableCell>
                                     <TableCell>
                                       <div className="flex gap-1">
@@ -1433,8 +1440,8 @@ export const EnhancedGestaoComponent = () => {
                                           size="sm"
                                           className="h-8 w-8 p-0"
                                           onClick={() => {
-                                            // Aqui você pode adicionar a lógica para editar a transação
-                                            console.log('Editar transação:', transaction.id);
+                                            // Aqui você pode adicionar a lógica para editar a subscription
+                                            console.log('Editar subscription:', subscription.id);
                                           }}
                                         >
                                           <Pencil className="h-3 w-3" />

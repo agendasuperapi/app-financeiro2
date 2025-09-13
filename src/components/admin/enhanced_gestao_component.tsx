@@ -956,18 +956,50 @@ export const EnhancedGestaoComponent = () => {
                     <label className="text-sm font-medium">
                       Data de Vencimento *
                     </label>
-                    <div className="space-y-2">
+                    <div className="relative">
+                      <Input
+                        placeholder="DD/MM/AAAA"
+                        value={expirationDate ? format(expirationDate, "dd/MM/yyyy") : ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // Formatar automaticamente enquanto digita
+                          let formatted = value.replace(/\D/g, '');
+                          if (formatted.length >= 2) {
+                            formatted = formatted.slice(0, 2) + '/' + formatted.slice(2);
+                          }
+                          if (formatted.length >= 5) {
+                            formatted = formatted.slice(0, 5) + '/' + formatted.slice(5, 9);
+                          }
+                          
+                          // Tentar converter para data quando completo
+                          if (formatted.length === 10) {
+                            const [day, month, year] = formatted.split('/');
+                            const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                            
+                            // Verificar se a data é válida
+                            if (!isNaN(date.getTime()) && 
+                                date.getDate() === parseInt(day) &&
+                                date.getMonth() === parseInt(month) - 1 &&
+                                date.getFullYear() === parseInt(year)) {
+                              setExpirationDate(date);
+                            }
+                          }
+                          
+                          // Atualizar o valor do input (mesmo que temporariamente para formatação)
+                          e.target.value = formatted;
+                        }}
+                        className="w-full pr-10"
+                        maxLength={10}
+                      />
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !expirationDate && "text-muted-foreground"
-                            )}
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
                           >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {expirationDate ? format(expirationDate, "dd/MM/yyyy") : "Selecionar data"}
+                            <CalendarIcon className="h-4 w-4" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
@@ -980,43 +1012,6 @@ export const EnhancedGestaoComponent = () => {
                           />
                         </PopoverContent>
                       </Popover>
-                      
-                      <div className="relative">
-                        <Input
-                          placeholder="ou digite: DD/MM/AAAA"
-                          value={expirationDate ? format(expirationDate, "dd/MM/yyyy") : ""}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            // Formatar automaticamente enquanto digita
-                            let formatted = value.replace(/\D/g, '');
-                            if (formatted.length >= 2) {
-                              formatted = formatted.slice(0, 2) + '/' + formatted.slice(2);
-                            }
-                            if (formatted.length >= 5) {
-                              formatted = formatted.slice(0, 5) + '/' + formatted.slice(5, 9);
-                            }
-                            
-                            // Tentar converter para data quando completo
-                            if (formatted.length === 10) {
-                              const [day, month, year] = formatted.split('/');
-                              const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                              
-                              // Verificar se a data é válida
-                              if (!isNaN(date.getTime()) && 
-                                  date.getDate() === parseInt(day) &&
-                                  date.getMonth() === parseInt(month) - 1 &&
-                                  date.getFullYear() === parseInt(year)) {
-                                setExpirationDate(date);
-                              }
-                            }
-                            
-                            // Atualizar o valor do input (mesmo que temporariamente para formatação)
-                            e.target.value = formatted;
-                          }}
-                          className="w-full text-sm"
-                          maxLength={10}
-                        />
-                      </div>
                     </div>
                   </div>
 
@@ -1216,18 +1211,50 @@ export const EnhancedGestaoComponent = () => {
                   <label className="text-sm font-medium">
                     Data de Vencimento
                   </label>
-                  <div className="space-y-2">
+                  <div className="relative">
+                    <Input
+                      placeholder="DD/MM/AAAA"
+                      value={newClientDate ? format(newClientDate, "dd/MM/yyyy") : ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Formatar automaticamente enquanto digita
+                        let formatted = value.replace(/\D/g, '');
+                        if (formatted.length >= 2) {
+                          formatted = formatted.slice(0, 2) + '/' + formatted.slice(2);
+                        }
+                        if (formatted.length >= 5) {
+                          formatted = formatted.slice(0, 5) + '/' + formatted.slice(5, 9);
+                        }
+                        
+                        // Tentar converter para data quando completo
+                        if (formatted.length === 10) {
+                          const [day, month, year] = formatted.split('/');
+                          const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                          
+                          // Verificar se a data é válida
+                          if (!isNaN(date.getTime()) && 
+                              date.getDate() === parseInt(day) &&
+                              date.getMonth() === parseInt(month) - 1 &&
+                              date.getFullYear() === parseInt(year)) {
+                            setNewClientDate(date);
+                          }
+                        }
+                        
+                        // Atualizar o valor do input (mesmo que temporariamente para formatação)
+                        e.target.value = formatted;
+                      }}
+                      className="w-full pr-10"
+                      maxLength={10}
+                    />
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !newClientDate && "text-muted-foreground"
-                          )}
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-muted"
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {newClientDate ? format(newClientDate, "dd/MM/yyyy") : "Selecionar data"}
+                          <CalendarIcon className="h-4 w-4" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -1240,43 +1267,6 @@ export const EnhancedGestaoComponent = () => {
                         />
                       </PopoverContent>
                     </Popover>
-                    
-                    <div className="relative">
-                      <Input
-                        placeholder="ou digite: DD/MM/AAAA"
-                        value={newClientDate ? format(newClientDate, "dd/MM/yyyy") : ""}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          // Formatar automaticamente enquanto digita
-                          let formatted = value.replace(/\D/g, '');
-                          if (formatted.length >= 2) {
-                            formatted = formatted.slice(0, 2) + '/' + formatted.slice(2);
-                          }
-                          if (formatted.length >= 5) {
-                            formatted = formatted.slice(0, 5) + '/' + formatted.slice(5, 9);
-                          }
-                          
-                          // Tentar converter para data quando completo
-                          if (formatted.length === 10) {
-                            const [day, month, year] = formatted.split('/');
-                            const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                            
-                            // Verificar se a data é válida
-                            if (!isNaN(date.getTime()) && 
-                                date.getDate() === parseInt(day) &&
-                                date.getMonth() === parseInt(month) - 1 &&
-                                date.getFullYear() === parseInt(year)) {
-                              setNewClientDate(date);
-                            }
-                          }
-                          
-                          // Atualizar o valor do input (mesmo que temporariamente para formatação)
-                          e.target.value = formatted;
-                        }}
-                        className="w-full text-sm"
-                        maxLength={10}
-                      />
-                    </div>
                   </div>
                 </div>
 

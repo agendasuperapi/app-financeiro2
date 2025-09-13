@@ -605,99 +605,101 @@ export const EnhancedGestaoComponent = () => {
                 )}
                 
                 {userData.length > 0 && (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="min-w-[120px]">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4" />
-                            <span className="hidden sm:inline">Nome</span>
-                            <span className="sm:hidden">Usuário</span>
-                          </div>
-                        </TableHead>
-                        <TableHead className="min-w-[120px] hidden sm:table-cell">
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4" />
-                            Telefone
-                          </div>
-                        </TableHead>
-                        <TableHead className="min-w-[100px] hidden md:table-cell">
-                          <div className="flex items-center gap-2">
-                            <CalendarIcon className="h-4 w-4" />
-                            Ativação
-                          </div>
-                        </TableHead>
-                        <TableHead className="min-w-[100px] hidden lg:table-cell">
-                          <div className="flex items-center gap-2">
-                            <CalendarIcon className="h-4 w-4" />
-                            Vencimento
-                          </div>
-                        </TableHead>
-                        <TableHead className="min-w-[100px]">
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="h-4 w-4" />
-                            Status
-                          </div>
-                        </TableHead>
-                        <TableHead className="min-w-[120px]">
-                          Ações
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedData.map((user) => (
-                        <TableRow key={user.id} className="hover:bg-muted/50">
-                           <TableCell className="font-medium">
-                             <div className="flex flex-col">
-                               <span className="font-semibold">{user.name || 'N/A'}</span>
-                               <span className="text-sm text-muted-foreground sm:hidden">
-                                 {user.phone || 'N/A'}
-                               </span>
-                             </div>
-                           </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            {user.phone || 'N/A'}
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {UserManagementService.formatDate(user.created_at)}
-                          </TableCell>
-                          <TableCell className="hidden lg:table-cell">
-                            {UserManagementService.formatDate(user.current_period_end)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge 
-                              variant="outline" 
-                              className={`${UserManagementService.getStatusColor(user.status || 'Sem assinatura')} text-xs`}
-                            >
-                              {user.status || 'Sem assinatura'}
-                            </Badge>
-                          </TableCell>
-                           <TableCell className="min-w-[120px]">
-                             <div className="flex items-center justify-center gap-1">
-                               <Button
-                                 variant="outline"
-                                 size="sm"
-                                 className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600 border-blue-200"
-                                 onClick={() => handleEditUser(user)}
-                                 title="Editar usuário"
-                               >
-                                 <Pencil className="h-4 w-4" />
-                               </Button>
-                               <Button
-                                 variant="outline"
-                                 size="sm"
-                                 className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 border-red-200"
-                                 onClick={() => handleToggleStatus(user)}
-                                 title="Alterar status"
-                               >
-                                 <UserX className="h-4 w-4" />
-                               </Button>
-                             </div>
-                           </TableCell>
+                  <div className="min-w-full">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[150px] sm:w-[180px]">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4" />
+                              <span className="hidden sm:inline">Nome</span>
+                              <span className="sm:hidden">Usuário</span>
+                            </div>
+                          </TableHead>
+                          <TableHead className="w-[120px] hidden sm:table-cell">
+                            <div className="flex items-center gap-2">
+                              <Phone className="h-4 w-4" />
+                              Telefone
+                            </div>
+                          </TableHead>
+                          <TableHead className="w-[100px] hidden md:table-cell">
+                            <div className="flex items-center gap-2">
+                              <CalendarIcon className="h-4 w-4" />
+                              Ativação
+                            </div>
+                          </TableHead>
+                          <TableHead className="w-[100px] hidden lg:table-cell">
+                            <div className="flex items-center gap-2">
+                              <CalendarIcon className="h-4 w-4" />
+                              Vencimento
+                            </div>
+                          </TableHead>
+                          <TableHead className="w-[100px]">
+                            <div className="flex items-center gap-2">
+                              <CreditCard className="h-4 w-4" />
+                              Status
+                            </div>
+                          </TableHead>
+                          <TableHead className="w-[100px] text-center">
+                            Ações
+                          </TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedData.map((user) => (
+                          <TableRow key={user.id} className="hover:bg-muted/50">
+                             <TableCell className="font-medium">
+                               <div className="flex flex-col">
+                                 <span className="font-semibold text-sm">{user.name || 'N/A'}</span>
+                                 <span className="text-xs text-muted-foreground sm:hidden">
+                                   {user.phone || 'N/A'}
+                                 </span>
+                               </div>
+                             </TableCell>
+                            <TableCell className="hidden sm:table-cell text-sm">
+                              {user.phone || 'N/A'}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell text-sm">
+                              {UserManagementService.formatDate(user.created_at)}
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell text-sm">
+                              {UserManagementService.formatDate(user.current_period_end)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant="outline" 
+                                className={`${UserManagementService.getStatusColor(user.status || 'Sem assinatura')} text-xs`}
+                              >
+                                {user.status || 'Sem assinatura'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 w-7 p-0 hover:bg-blue-50 hover:text-blue-600 border-blue-200"
+                                  onClick={() => handleEditUser(user)}
+                                  title="Editar usuário"
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 w-7 p-0 hover:bg-red-50 hover:text-red-600 border-red-200"
+                                  onClick={() => handleToggleStatus(user)}
+                                  title="Alterar status"
+                                >
+                                  <UserX className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
               </div>
               

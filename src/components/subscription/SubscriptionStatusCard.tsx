@@ -22,6 +22,7 @@ const SubscriptionStatusCard: React.FC = () => {
   };
 
   const getStatusText = () => {
+    if (subscription?.cancel_at_period_end) return 'Cancelamento Solicitado';
     if (isSubscriptionExpired) return 'Plano Vencido';
     if (!hasActiveSubscription) return t('plans.status.inactive');
     if (isSubscriptionExpiring) return t('plans.status.expiring');
@@ -69,7 +70,7 @@ const SubscriptionStatusCard: React.FC = () => {
             {subscription?.current_period_end && (
               <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
                 <Calendar className="h-4 w-4" />
-                {isSubscriptionExpired ? 'Vencido em' : hasActiveSubscription ? t('plans.renewsOn') : t('plans.expiresOn')}: {formatDate(subscription.current_period_end)}
+                {subscription?.cancel_at_period_end ? 'Válido até' : isSubscriptionExpired ? 'Vencido em' : hasActiveSubscription ? t('plans.renewsOn') : t('plans.expiresOn')}: {formatDate(subscription.current_period_end)}
               </div>
             )}
           </div>

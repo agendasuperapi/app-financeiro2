@@ -116,20 +116,32 @@ export const EnhancedGestaoComponent = () => {
 
   // Filtrar dados baseado na busca e filtro de status
   useEffect(() => {
+    console.log('🔍 Aplicando filtros:', { searchTerm, statusFilter, totalUsers: userData.length });
     let filtered = userData;
 
     // Filtro por termo de busca (nome, telefone ou email)
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(user => 
-        (user.name && user.name.toLowerCase().includes(searchLower)) ||
-        (user.phone && user.phone.replace(/\D/g, '').includes(searchTerm.replace(/\D/g, ''))) ||
-        (user.email && user.email.toLowerCase().includes(searchLower))
-      );
+      console.log('🔍 Buscando por:', searchLower);
+      
+      filtered = filtered.filter(user => {
+        const nameMatch = user.name && user.name.toLowerCase().includes(searchLower);
+        const phoneMatch = user.phone && user.phone.replace(/\D/g, '').includes(searchTerm.replace(/\D/g, ''));
+        const emailMatch = user.email && user.email.toLowerCase().includes(searchLower);
+        
+        const matches = nameMatch || phoneMatch || emailMatch;
+        if (matches) {
+          console.log('✅ Usuário encontrado:', user.name, user.phone, user.email);
+        }
+        return matches;
+      });
+      
+      console.log('🔍 Resultados da busca:', filtered.length);
     }
 
     // Filtro por status de assinatura
     if (statusFilter !== 'all') {
+      console.log('📊 Aplicando filtro de status:', statusFilter);
       filtered = filtered.filter(user => {
         switch (statusFilter) {
           case 'sem_assinatura':
@@ -146,6 +158,7 @@ export const EnhancedGestaoComponent = () => {
       });
     }
 
+    console.log('📋 Dados finais filtrados:', filtered.length);
     setFilteredData(filtered);
     setCurrentPage(1); // Reset para primeira página quando filtros mudam
   }, [searchTerm, statusFilter, userData]);

@@ -26,7 +26,8 @@ import {
   AlertCircle,
   UserX,
   Pencil,
-  Plus
+  Plus,
+  LogIn
 } from 'lucide-react';
 import { UserManagementService, UserData, UserStats } from '../../services/api_service';
 import { supabase } from '@/integrations/supabase/client';
@@ -355,6 +356,29 @@ export const EnhancedGestaoComponent = () => {
       console.log('✅ Status alternado com sucesso');
     } catch (error) {
       console.error('❌ Erro ao alternar status:', error);
+    }
+  };
+
+  // Função para fazer login como outro usuário
+  const handleLoginAsUser = async (user: UserData) => {
+    if (!user.email) {
+      alert('Email não encontrado para este usuário');
+      return;
+    }
+
+    const confirmation = confirm(`Deseja fazer login como ${user.name || user.email}?`);
+    if (!confirmation) return;
+
+    try {
+      console.log('🔐 Fazendo login como usuário:', user.email);
+      
+      // Aqui você implementaria a lógica para logar como outro usuário
+      // Por segurança, redirecionamos para a tela de login com o email preenchido
+      window.location.href = `/login?email=${encodeURIComponent(user.email)}`;
+      
+    } catch (error) {
+      console.error('❌ Erro ao fazer login como usuário:', error);
+      alert('Erro ao fazer login como usuário: ' + (error as Error).message);
     }
   };
 
@@ -745,6 +769,15 @@ export const EnhancedGestaoComponent = () => {
                             </TableCell>
                             <TableCell className="text-center">
                                <div className="flex items-center justify-center gap-1">
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                   className="h-7 w-7 p-0 hover:bg-green-50 hover:text-green-600 border-green-200"
+                                   onClick={() => handleLoginAsUser(user)}
+                                   title="Logar como este usuário"
+                                 >
+                                   <LogIn className="h-3 w-3" />
+                                 </Button>
                                  <Button
                                    variant="outline"
                                    size="sm"

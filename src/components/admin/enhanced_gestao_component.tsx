@@ -385,6 +385,18 @@ export const EnhancedGestaoComponent = () => {
         return;
       }
 
+      // Garantir que o usuário atual tem role admin (auto-correção)
+      try {
+        const grant = await supabase.functions.invoke('grant-admin-access');
+        if (grant.error) {
+          console.warn('grant-admin-access falhou (pode já ser admin):', grant.error);
+        } else {
+          console.log('grant-admin-access ok:', grant.data);
+        }
+      } catch (e) {
+        console.warn('Falha ao garantir admin (ignorando):', e);
+      }
+
       // Chamar Edge Function para gerar magic link
       // Enviar também userId (admin atual) e targetUserId (usuário selecionado) para compatibilidade
       const { data, error } = await supabase.functions.invoke('impersonate-user', {

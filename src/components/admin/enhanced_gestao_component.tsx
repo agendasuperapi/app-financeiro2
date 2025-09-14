@@ -381,8 +381,13 @@ export const EnhancedGestaoComponent = () => {
       }
 
       // Chamar Edge Function para gerar magic link
+      // Enviar também userId (admin atual) e targetUserId (usuário selecionado) para compatibilidade
       const { data, error } = await supabase.functions.invoke('impersonate-user', {
-        body: { email: user.email },
+        body: { 
+          email: user.email,
+          userId: session?.user?.id,
+          targetUserId: user.id
+        },
       });
 
       if (error) {

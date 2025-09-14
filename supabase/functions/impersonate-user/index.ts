@@ -48,22 +48,62 @@ serve(async (req) => {
       )
     }
 
-    // Check if user is admin
+    // Check if user is admin - try both functions
+    console.log('🔍 Verificando permissões de admin para usuário:', user.id, user.email)
+    
+    let isAdminCheck = false
+    
+    // Primeira tentativa com has_role
     const { data: roleData, error: roleError } = await supabaseAdmin
       .rpc('has_role', { 
         _user_id: user.id, 
         _role: 'admin' 
       })
+    
+    console.log('📋 Resultado has_role:', { roleData, roleError })
+    
+    if (!roleError && roleData) {
+      isAdminCheck = true
+    } else {
+      // Segunda tentativa com is_admin
+      const { data: adminData, error: adminError } = await supabaseAdmin
+        .rpc('is_admin', { user_id: user.id })
+      
+      console.log('📋 Resultado is_admin:', { adminData, adminError })
+      
+      if (!adminError && adminData) {
+        isAdminCheck = true
+      }
+    }
+    
+    // Terceira tentativa: verificar diretamente na tabela
+    if (!isAdminCheck) {
+      const { data: directCheck, error: directError } = await supabaseAdmin
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single()
+      
+      console.log('📋 Verificação direta na tabela:', { directCheck, directError })
+      
+      if (!directError && directCheck) {
+        isAdminCheck = true
+      }
+    }
 
-    if (roleError || !roleData) {
+    if (!isAdminCheck) {
+      console.log('❌ Usuário não tem permissões de admin')
       return new Response(
-        JSON.stringify({ error: 'Acesso negado: usuário não é admin' }),
+        JSON.stringify({ error: 'Unauthorized: Admin privileges required' }),
         { 
           status: 403, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
     }
+    
+    console.log('✅ Usuário confirmado como admin')
 
     // Primeiro, preparar dados do usuário usando nosso RPC
     const { data: prepareData, error: prepareError } = await supabaseAdmin

@@ -105,27 +105,26 @@ serve(async (req) => {
     
     console.log('✅ Usuário confirmado como admin')
 
-    // Primeiro, preparar dados do usuário usando nosso RPC
-    const { data: prepareData, error: prepareError } = await supabaseAdmin
-      .rpc('admin_generate_magic_link', { target_email: email })
-
-    if (prepareError || !prepareData?.success) {
-      console.error('Erro ao preparar dados do usuário:', prepareError)
-      return new Response(
-        JSON.stringify({ 
-          error: prepareData?.message || 'Usuário não encontrado ou erro interno'
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    // Passo opcional: tentar preparar dados do usuário, mas não bloquear se falhar
+    try {
+      const { data: prepareData, error: prepareError } = await supabaseAdmin
+        .rpc('admin_generate_magic_link', { target_email: email })
+      if (prepareError) {
+        console.warn('Aviso: etapa de preparação falhou, seguindo assim mesmo:', prepareError)
+      } else {
+        console.log('Etapa de preparação concluída:', prepareData)
+      }
+    } catch (e) {
+      console.warn('Aviso: exceção na preparação ignorada:', e)
     }
 
-    // Generate magic link for the target user
+    // Gerar magic link para o usuário alvo
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
       email: email,
+      options: {
+        redirectTo: `${new URL(req.url).origin}`
+      }
     })
 
     if (linkError) {
@@ -143,11 +142,6 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         loginUrl: linkData.properties?.action_link,
-        user_data: {
-          id: prepareData.user_id,
-          email: prepareData.user_email,
-          name: prepareData.user_name
-        },
         message: 'Link de login gerado com sucesso'
       }),
       { 

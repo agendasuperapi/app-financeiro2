@@ -27,10 +27,12 @@ import {
   UserX,
   Pencil,
   Plus,
-  LogIn
+  LogIn,
+  Loader2
 } from 'lucide-react';
 import { UserManagementService, UserData, UserStats } from '../../services/api_service';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const EnhancedGestaoComponent = () => {
   const [userData, setUserData] = useState<UserData[]>([]);
@@ -65,6 +67,7 @@ export const EnhancedGestaoComponent = () => {
   const [inspectedUser, setInspectedUser] = useState<UserData | null>(null);
   const [userTransactions, setUserTransactions] = useState<any[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [impersonatingUserId, setImpersonatingUserId] = useState<string | null>(null);
 
   // Paginação
   const totalItems = filteredData.length;
@@ -370,13 +373,15 @@ export const EnhancedGestaoComponent = () => {
     if (!confirmation) return;
 
     try {
+      setImpersonatingUserId(user.id);
+      const toastId = toast.loading('Gerando link de login...');
       console.log('🔐 Fazendo login como usuário:', user.email);
       
       // Obter token atual
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.access_token) {
-        alert('Você precisa estar logado como admin');
+        toast.error('Você precisa estar logado como admin', { id: toastId });
         return;
       }
 
@@ -391,21 +396,25 @@ export const EnhancedGestaoComponent = () => {
       });
 
       if (error) {
+        console.error('Erro da Edge Function:', error);
         throw new Error(error.message || 'Erro ao gerar link de login');
       }
 
-      const result = data as { loginUrl?: string };
+      const result = data as { loginUrl?: string, error?: string };
 
       if (result?.loginUrl) {
         console.log('✅ Magic link gerado, redirecionando...');
+        toast.success('Link de login gerado. Abrindo...', { id: toastId });
         window.open(result.loginUrl, '_blank', 'noopener,noreferrer');
       } else {
-        throw new Error('Link de login não foi gerado');
+        throw new Error(result?.error || 'Link de login não foi gerado');
       }
       
     } catch (error) {
       console.error('❌ Erro ao fazer login como usuário:', error);
-      alert('Erro ao fazer login como usuário: ' + (error as Error).message);
+      toast.error('Erro ao fazer login como usuário: ' + (error as Error).message);
+    } finally {
+      setImpersonatingUserId(null);
     }
   };
 
@@ -802,8 +811,13 @@ export const EnhancedGestaoComponent = () => {
                                    className="h-7 w-7 p-0 hover:bg-green-50 hover:text-green-600 border-green-200"
                                    onClick={() => handleLoginAsUser(user)}
                                    title="Logar como este usuário"
-                                 >
-                                   <LogIn className="h-3 w-3" />
+                                  disabled={impersonatingUserId === user.id}
+                                  >
+                                    {impersonatingUserId === user.id ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <LogIn className="h-3 w-3" />
+                                    )}
                                  </Button>
                                  <Button
                                    variant="outline"

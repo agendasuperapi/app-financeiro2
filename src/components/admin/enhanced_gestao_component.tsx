@@ -26,13 +26,10 @@ import {
   AlertCircle,
   UserX,
   Pencil,
-  Plus,
-  LogIn,
-  Loader2
+  Plus
 } from 'lucide-react';
 import { UserManagementService, UserData, UserStats } from '../../services/api_service';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 export const EnhancedGestaoComponent = () => {
   const [userData, setUserData] = useState<UserData[]>([]);
@@ -67,7 +64,6 @@ export const EnhancedGestaoComponent = () => {
   const [inspectedUser, setInspectedUser] = useState<UserData | null>(null);
   const [userTransactions, setUserTransactions] = useState<any[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
-  const [impersonatingUserId, setImpersonatingUserId] = useState<string | null>(null);
 
   // Paginação
   const totalItems = filteredData.length;
@@ -359,74 +355,6 @@ export const EnhancedGestaoComponent = () => {
       console.log('✅ Status alternado com sucesso');
     } catch (error) {
       console.error('❌ Erro ao alternar status:', error);
-    }
-  };
-
-  // Função para fazer login como outro usuário
-  const handleLoginAsUser = async (user: UserData) => {
-    if (!user.email) {
-      alert('Email não encontrado para este usuário');
-      return;
-    }
-
-    const confirmation = confirm(`Deseja fazer login como ${user.name || user.email}?`);
-    if (!confirmation) return;
-
-    try {
-      setImpersonatingUserId(user.id);
-      const toastId = toast.loading('Gerando link de login...');
-      console.log('🔐 Fazendo login como usuário:', user.email);
-      
-      // Obter token atual
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.access_token) {
-        toast.error('Você precisa estar logado como admin', { id: toastId });
-        return;
-      }
-
-      // Garantir que o usuário atual tem role admin (auto-correção)
-      try {
-        const grant = await supabase.functions.invoke('grant-admin-access');
-        if (grant.error) {
-          console.warn('grant-admin-access falhou (pode já ser admin):', grant.error);
-        } else {
-          console.log('grant-admin-access ok:', grant.data);
-        }
-      } catch (e) {
-        console.warn('Falha ao garantir admin (ignorando):', e);
-      }
-
-      // Chamar Edge Function para gerar magic link
-      // Enviar também userId (admin atual) e targetUserId (usuário selecionado) para compatibilidade
-      const { data, error } = await supabase.functions.invoke('impersonate-user', {
-        body: { 
-          email: user.email,
-          userId: session?.user?.id,
-          targetUserId: user.id
-        },
-      });
-
-      if (error) {
-        console.error('Erro da Edge Function:', error);
-        throw new Error(error.message || 'Erro ao gerar link de login');
-      }
-
-      const result = data as { loginUrl?: string, error?: string };
-
-      if (result?.loginUrl) {
-        console.log('✅ Magic link gerado, redirecionando...');
-        toast.success('Link de login gerado. Abrindo...', { id: toastId });
-        window.open(result.loginUrl, '_blank', 'noopener,noreferrer');
-      } else {
-        throw new Error(result?.error || 'Link de login não foi gerado');
-      }
-      
-    } catch (error) {
-      console.error('❌ Erro ao fazer login como usuário:', error);
-      toast.error('Erro ao fazer login como usuário: ' + (error as Error).message);
-    } finally {
-      setImpersonatingUserId(null);
     }
   };
 
@@ -817,20 +745,6 @@ export const EnhancedGestaoComponent = () => {
                             </TableCell>
                             <TableCell className="text-center">
                                <div className="flex items-center justify-center gap-1">
-                                 <Button
-                                   variant="outline"
-                                   size="sm"
-                                   className="h-7 w-7 p-0 hover:bg-green-50 hover:text-green-600 border-green-200"
-                                   onClick={() => handleLoginAsUser(user)}
-                                   title="Logar como este usuário"
-                                  disabled={impersonatingUserId === user.id}
-                                  >
-                                    {impersonatingUserId === user.id ? (
-                                      <Loader2 className="h-3 w-3 animate-spin" />
-                                    ) : (
-                                      <LogIn className="h-3 w-3" />
-                                    )}
-                                 </Button>
                                  <Button
                                    variant="outline"
                                    size="sm"

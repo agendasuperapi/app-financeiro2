@@ -1,6 +1,9 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
@@ -10,11 +13,6 @@
         { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
       ]
-    },
-    { "source": "/(.*\\.js)$", "has": [{"type":"header","key":"Accept","value":".*javascript.*"}],
-      "headers": [ { "key": "Content-Type", "value": "application/javascript; charset=utf-8" } ]
-    },
-    { "source": "/(.*\\.(mjs|jsx))$", "headers": [ { "key": "Content-Type", "value": "application/javascript; charset=utf-8" } ] },
-    { "source": "/(.*\\.(ts|tsx))$", "headers": [ { "key": "Content-Type", "value": "application/typescript; charset=utf-8" } ] }
+    }
   ]
 }

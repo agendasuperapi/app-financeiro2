@@ -744,35 +744,26 @@ export const EnhancedGestaoComponent = () => {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-center">
-                              <div className="flex items-center justify-center gap-1">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-7 w-7 p-0 hover:bg-green-50 hover:text-green-600 border-green-200"
-                                  onClick={() => handleInspectUser(user)}
-                                  title="Inspecionar usuário"
-                                >
-                                  <Search className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-7 w-7 p-0 hover:bg-blue-50 hover:text-blue-600 border-blue-200"
-                                  onClick={() => handleEditUser(user)}
-                                  title="Editar usuário"
-                                >
-                                  <Pencil className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-7 w-7 p-0 hover:bg-red-50 hover:text-red-600 border-red-200"
-                                  onClick={() => handleToggleStatus(user)}
-                                  title="Alterar status"
-                                >
-                                  <UserX className="h-3 w-3" />
-                                </Button>
-                              </div>
+                               <div className="flex items-center justify-center gap-1">
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                   className="h-7 w-7 p-0 hover:bg-blue-50 hover:text-blue-600 border-blue-200"
+                                   onClick={() => handleEditUser(user)}
+                                   title="Editar usuário"
+                                 >
+                                   <Pencil className="h-3 w-3" />
+                                 </Button>
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                   className="h-7 w-7 p-0 hover:bg-red-50 hover:text-red-600 border-red-200"
+                                   onClick={() => handleToggleStatus(user)}
+                                   title="Alterar status"
+                                 >
+                                   <UserX className="h-3 w-3" />
+                                 </Button>
+                               </div>
                             </TableCell>
                           </TableRow>
                         ))}

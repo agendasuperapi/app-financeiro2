@@ -38,13 +38,9 @@ serve(async (req) => {
       }
     })
 
-    // Create client for user verification
-    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey.replace('service_role', 'anon'))
-
-    // Verify the requesting user is authenticated and is admin
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    )
+    // Verify the requesting user is authenticated
+    const accessToken = authHeader?.replace('Bearer ', '') || ''
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(accessToken)
 
     if (authError || !user) {
       return new Response(

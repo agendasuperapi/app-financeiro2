@@ -381,25 +381,19 @@ export const EnhancedGestaoComponent = () => {
       }
 
       // Chamar Edge Function para gerar magic link
-      const response = await fetch(`https://gpttodmpflpzhbgzagcc.supabase.co/functions/v1/impersonate-user`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: user.email }),
+      const { data, error } = await supabase.functions.invoke('impersonate-user', {
+        body: { email: user.email },
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Erro ao gerar link de login');
+      if (error) {
+        throw new Error(error.message || 'Erro ao gerar link de login');
       }
 
-      if (result.loginUrl) {
+      const result = data as { loginUrl?: string };
+
+      if (result?.loginUrl) {
         console.log('✅ Magic link gerado, redirecionando...');
-        // Redirecionar para o magic link em nova aba
-        window.open(result.loginUrl, '_blank');
+        window.open(result.loginUrl, '_blank', 'noopener,noreferrer');
       } else {
         throw new Error('Link de login não foi gerado');
       }

@@ -372,9 +372,37 @@ export const EnhancedGestaoComponent = () => {
     try {
       console.log('🔐 Fazendo login como usuário:', user.email);
       
-      // Aqui você implementaria a lógica para logar como outro usuário
-      // Por segurança, redirecionamos para a tela de login com o email preenchido
-      window.location.href = `/login?email=${encodeURIComponent(user.email)}`;
+      // Obter token atual
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        alert('Você precisa estar logado como admin');
+        return;
+      }
+
+      // Chamar Edge Function para gerar magic link
+      const response = await fetch(`https://gpttodmpflpzhbgzagcc.supabase.co/functions/v1/impersonate-user`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: user.email }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao gerar link de login');
+      }
+
+      if (result.loginUrl) {
+        console.log('✅ Magic link gerado, redirecionando...');
+        // Redirecionar para o magic link em nova aba
+        window.open(result.loginUrl, '_blank');
+      } else {
+        throw new Error('Link de login não foi gerado');
+      }
       
     } catch (error) {
       console.error('❌ Erro ao fazer login como usuário:', error);

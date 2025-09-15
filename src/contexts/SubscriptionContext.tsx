@@ -27,22 +27,27 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [isLoading, setIsLoading] = useState(true);
 
   const checkSubscription = async () => {
+    console.log('SubscriptionContext: Starting subscription check...');
     try {
       setIsLoading(true);
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
-        console.log('User not authenticated:', userError?.message);
+        console.log('SubscriptionContext: User not authenticated:', userError?.message);
         setSubscription(null);
+        setIsLoading(false);
         return;
       }
+
+      console.log('SubscriptionContext: User authenticated, checking subscription...');
 
       // Usar a nova edge function para verificar assinatura
       const { data, error } = await supabase.functions.invoke('check-subscription-status');
 
       if (error) {
-        console.error('Error checking subscription via edge function:', error);
+        console.error('SubscriptionContext: Error with edge function:', error);
         // Fallback: tentar busca direta na tabela
+        console.log('SubscriptionContext: Trying direct database query as fallback...');
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('poupeja_subscriptions')
           .select('id, status, plan_type, current_period_end, cancel_at_period_end, stripe_subscription_id')
@@ -51,19 +56,22 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
           .single();
 
         if (fallbackError && fallbackError.code !== 'PGRST116') {
-          console.error('Error fetching subscription directly:', fallbackError);
-          return;
+          console.error('SubscriptionContext: Error with direct query:', fallbackError);
+          setSubscription(null);
+        } else {
+          console.log('SubscriptionContext: Fallback query result:', fallbackData);
+          setSubscription(fallbackData);
         }
-
-        setSubscription(fallbackData);
       } else {
         // Usar dados da edge function
-        console.log('Subscription check result:', data);
-        setSubscription(data.subscription);
+        console.log('SubscriptionContext: Edge function result:', data);
+        setSubscription(data?.subscription || null);
       }
     } catch (error) {
-      console.error('Error checking subscription:', error);
+      console.error('SubscriptionContext: Unexpected error:', error);
+      setSubscription(null);
     } finally {
+      console.log('SubscriptionContext: Subscription check completed');
       setIsLoading(false);
     }
   };
@@ -83,20 +91,38 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     : false;
 
   useEffect(() => {
-    checkSubscription();
+    console.log('SubscriptionContext: Starting initial subscription check...');
+    
+    // Timeout fallback - se a verificação demorar mais de 10 segundos, pare o loading
+    const timeoutId = setTimeout(() => {
+      console.warn('SubscriptionContext: Subscription check timed out, stopping loading...');
+      setIsLoading(false);
+      setSubscription(null);
+    }, 10000);
+    
+    checkSubscription().then(() => {
+      clearTimeout(timeoutId);
+    }).catch(() => {
+      clearTimeout(timeoutId);
+    });
 
     const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('SubscriptionContext: Auth state changed:', event);
         if (event === 'SIGNED_IN') {
           // Verificação imediata após login
           checkSubscription();
         } else if (event === 'SIGNED_OUT') {
           setSubscription(null);
+          setIsLoading(false);
         }
       }
     );
 
-    return () => authListener?.unsubscribe();
+    return () => {
+      authListener?.unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return (

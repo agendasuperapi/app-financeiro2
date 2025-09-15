@@ -56,9 +56,42 @@ const Index = () => {
     scheduledTransactionsCount: scheduledTransactions.length
   });
   
-  // NEW: Calculate month-specific financial data using the new utility
-  const monthlyData = calculateMonthlyFinancialData(transactions, currentMonth);
-  const monthlyGoals = getGoalsForMonth(goals, currentMonth);
+  // NEW: Calculate month-specific financial data using the new utility with error handling
+  const monthlyData = React.useMemo(() => {
+    try {
+      if (!transactions || !Array.isArray(transactions)) {
+        console.warn('Dashboard: Invalid transactions data, using fallback');
+        return {
+          monthTransactions: [],
+          monthlyIncome: 0,
+          monthlyExpenses: 0,
+          accumulatedBalance: 0
+        };
+      }
+      return calculateMonthlyFinancialData(transactions, currentMonth);
+    } catch (error) {
+      console.error('Dashboard: Error calculating monthly data:', error);
+      return {
+        monthTransactions: [],
+        monthlyIncome: 0,
+        monthlyExpenses: 0,
+        accumulatedBalance: 0
+      };
+    }
+  }, [transactions, currentMonth]);
+
+  const monthlyGoals = React.useMemo(() => {
+    try {
+      if (!goals || !Array.isArray(goals)) {
+        console.warn('Dashboard: Invalid goals data, using fallback');
+        return [];
+      }
+      return getGoalsForMonth(goals, currentMonth);
+    } catch (error) {
+      console.error('Dashboard: Error calculating monthly goals:', error);
+      return [];
+    }
+  }, [goals, currentMonth]);
   
   const totalIncome = monthlyData.monthlyIncome;
   const totalExpenses = monthlyData.monthlyExpenses;
@@ -187,12 +220,7 @@ const Index = () => {
   return (
     <MainLayout title={t('dashboard.title')} onAddTransaction={handleAddTransaction}>
       <SubscriptionGuard feature="o dashboard completo">
-        <motion.div 
-          className="space-y-8 min-h-0"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
+        <div className="space-y-8 min-h-0">
           {/* Indicador de visualização de cliente */}
           {isClientView && selectedUser && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -204,6 +232,7 @@ const Index = () => {
               </div>
             </div>
           )}
+          
           {/* Header com navegação de mês e toggle de visibilidade */}
           <DashboardHeader
             currentMonth={currentMonth}
@@ -214,20 +243,18 @@ const Index = () => {
           />
           
           {/* 3 Cards principais na mesma linha */}
-          <motion.div variants={itemVariants}>
-            <DashboardStatCards
-              totalIncome={totalIncome}
-              totalExpenses={totalExpenses}
-              balance={balance}
-              hideValues={hideValues}
-              onNavigateToTransactionType={navigateToTransactionType}
-            />
-          </motion.div>
+          <DashboardStatCards
+            totalIncome={totalIncome}
+            totalExpenses={totalExpenses}
+            balance={balance}
+            hideValues={hideValues}
+            onNavigateToTransactionType={navigateToTransactionType}
+          />
 
-          {/* Conteúdo do dashboard */}
+          {/* Conteúdo do dashboard - com fallback para evitar erro */}
           <DashboardContent
-            filteredTransactions={monthlyData.monthTransactions}
-            goals={monthlyGoals}
+            filteredTransactions={monthlyData?.monthTransactions || []}
+            goals={monthlyGoals || []}
             currentGoalIndex={currentGoalIndex}
             currentMonth={currentMonth}
             hideValues={hideValues}
@@ -236,7 +263,7 @@ const Index = () => {
             onDeleteTransaction={handleDeleteTransaction}
             onMarkScheduledAsPaid={handleMarkScheduledAsPaid}
           />
-        </motion.div>
+        </div>
       </SubscriptionGuard>
 
       {/* Dialog do formulário de transação */}

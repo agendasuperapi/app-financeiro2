@@ -712,12 +712,12 @@ export const EnhancedGestaoComponent = () => {
                               Telefone
                             </div>
                           </TableHead>
-                          <TableHead className="w-[100px] hidden md:table-cell">
-                            <div className="flex items-center gap-2">
-                              <CalendarIcon className="h-4 w-4" />
-                              Ativação
-                            </div>
-                          </TableHead>
+                           <TableHead className="w-[100px] hidden md:table-cell">
+                             <div className="flex items-center gap-2">
+                               <CalendarIcon className="h-4 w-4" />
+                               Data de vencimento
+                             </div>
+                           </TableHead>
                           <TableHead className="w-[100px] hidden lg:table-cell">
                             <div className="flex items-center gap-2">
                               <CalendarIcon className="h-4 w-4" />

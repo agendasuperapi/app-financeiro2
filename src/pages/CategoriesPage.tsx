@@ -41,14 +41,14 @@ const CategoriesPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   // Client view indicator
-  const { isClientView, selectedUser } = useClientAwareData();
+  const { isClientView, selectedUser, targetUserId } = useClientAwareData();
 
   useEffect(() => {
     // Load categories from Supabase on mount and whenever they change
     const loadCategories = async () => {
       setLoading(true);
       try {
-        const loadedCategories = await getCategoriesByType(categoryType);
+        const loadedCategories = await getCategoriesByType(categoryType, targetUserId);
         setCategories(loadedCategories);
       } catch (error) {
         console.error('Error loading categories:', error);
@@ -63,7 +63,7 @@ const CategoriesPage: React.FC = () => {
     };
 
     loadCategories();
-  }, [categoryType, toast, t]);
+  }, [categoryType, targetUserId, toast, t]);
 
   const handleAddCategory = () => {
     setEditingCategory(null);
@@ -85,7 +85,7 @@ const CategoriesPage: React.FC = () => {
       try {
         const success = await deleteCategory(categoryToDelete.id);
         if (success) {
-          const updatedCategories = await getCategoriesByType(categoryType);
+          const updatedCategories = await getCategoriesByType(categoryType, targetUserId);
           setCategories(updatedCategories);
           toast({
             title: t('categories.deleted'),
@@ -138,7 +138,7 @@ const CategoriesPage: React.FC = () => {
       }
       
       // Refresh categories list
-      const updatedCategories = await getCategoriesByType(categoryType);
+      const updatedCategories = await getCategoriesByType(categoryType, targetUserId);
       setCategories(updatedCategories);
       setCategoryFormOpen(false);
     } catch (error) {

@@ -26,7 +26,7 @@ export const getCategories = async (): Promise<Category[]> => {
   }
 };
 
-export const getCategoriesByType = async (type: 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros'): Promise<Category[]> => {
+export const getCategoriesByType = async (type: 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros', userId?: string): Promise<Category[]> => {
   try {
     // Para lembretes e outros, retornamos uma categoria padrão
     if (type === 'reminder' || type === 'lembrete') {
@@ -51,11 +51,17 @@ export const getCategoriesByType = async (type: 'income' | 'expense' | 'reminder
       }];
     }
     
-    const { data, error } = await supabase
+    let query = supabase
       .from("poupeja_categories")
       .select("*")
-      .eq("type", type)
-      .order("name");
+      .eq("type", type);
+    
+    // Filter by userId if provided
+    if (userId) {
+      query = query.eq("user_id", userId);
+    }
+    
+    const { data, error } = await query.order("name");
 
     if (error) throw error;
 

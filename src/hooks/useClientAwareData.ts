@@ -3,13 +3,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { useClientView } from '@/contexts/ClientViewContext';
 import { useAppContext } from '@/contexts/AppContext';
 
+// Safe hook to check if ClientViewContext is available
+const useSafeClientView = () => {
+  try {
+    return useClientView();
+  } catch {
+    return { selectedUser: null, setSelectedUser: () => {} };
+  }
+};
+
 /**
  * Hook que automaticamente busca dados do usuário correto
  * Se estiver na visualização de cliente, busca dados do usuário selecionado
  * Caso contrário, usa dados do contexto normal (usuário logado)
  */
 export const useClientAwareData = () => {
-  const { selectedUser } = useClientView();
+  const { selectedUser } = useSafeClientView();
   const appContext = useAppContext();
   const [clientTransactions, setClientTransactions] = useState<any[]>([]);
   const [clientGoals, setClientGoals] = useState<any[]>([]);

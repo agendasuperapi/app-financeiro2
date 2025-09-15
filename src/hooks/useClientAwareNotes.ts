@@ -3,11 +3,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { useClientView } from '@/contexts/ClientViewContext';
 import { NotesService, Note } from '@/services/notesService';
 
+// Safe hook to check if ClientViewContext is available
+const useSafeClientView = () => {
+  try {
+    return useClientView();
+  } catch {
+    return { selectedUser: null, setSelectedUser: () => {} };
+  }
+};
+
 /**
  * Hook específico para notas que considera visualização de cliente
  */
 export const useClientAwareNotes = () => {
-  const { selectedUser } = useClientView();
+  const { selectedUser } = useSafeClientView();
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(false);
   

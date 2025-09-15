@@ -30,7 +30,7 @@ CREATE POLICY "Admin can view all notes" ON public.financeiro_notas
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid()::text
+      WHERE user_id = auth.uid()
       AND role = 'admin'
     )
   );
@@ -41,7 +41,7 @@ CREATE POLICY "Users can insert own notes" ON public.financeiro_notas
     auth.uid() = user_id
     OR EXISTS (
       SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid()::text
+      WHERE user_id = auth.uid()
       AND role = 'admin'
     )
   );
@@ -52,7 +52,7 @@ CREATE POLICY "Users can update own notes" ON public.financeiro_notas
     auth.uid() = user_id
     OR EXISTS (
       SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid()::text
+      WHERE user_id = auth.uid()
       AND role = 'admin'
     )
   );
@@ -63,7 +63,7 @@ CREATE POLICY "Users can delete own notes" ON public.financeiro_notas
     auth.uid() = user_id
     OR EXISTS (
       SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid()::text
+      WHERE user_id = auth.uid()
       AND role = 'admin'
     )
   );
@@ -93,7 +93,7 @@ CREATE POLICY "Admin can view all goals" ON public.poupeja_goals
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid()::text 
+      WHERE user_id = auth.uid() 
       AND role = 'admin'
     )
   );
@@ -104,7 +104,7 @@ CREATE POLICY "Users can insert own goals" ON public.poupeja_goals
     auth.uid() = user_id
     OR EXISTS (
       SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid()::text 
+      WHERE user_id = auth.uid() 
       AND role = 'admin'
     )
   );
@@ -115,7 +115,7 @@ CREATE POLICY "Users can update own goals" ON public.poupeja_goals
     auth.uid() = user_id
     OR EXISTS (
       SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid()::text 
+      WHERE user_id = auth.uid() 
       AND role = 'admin'
     )
   );
@@ -126,15 +126,14 @@ CREATE POLICY "Users can delete own goals" ON public.poupeja_goals
     auth.uid() = user_id
     OR EXISTS (
       SELECT 1 FROM user_roles 
-      WHERE user_id = auth.uid()::text 
+      WHERE user_id = auth.uid() 
       AND role = 'admin'
     )
   );
 
 -- Observações:
--- 1) Estas políticas assumem que existe a tabela user_roles(user_id text, role text)
+-- 1) Estas políticas assumem que existe a tabela user_roles(user_id UUID, role app_role)
 --    e que o usuário administrador possui um registro com role = 'admin'.
--- 2) Caso os tipos de user_id nas tabelas sejam UUID, as comparações com auth.uid()
---    funcionam diretamente; se algum user_id for text, já convertemos auth.uid() via ::text.
+-- 2) As colunas user_id em financeiro_notas, poupeja_goals e user_roles são UUID, então use auth.uid() sem cast.
 -- 3) Após executar, teste no painel SQL com SELECTs filtrando por user_id e
 --    com um usuário admin para garantir o acesso de cliente no modo administrador.

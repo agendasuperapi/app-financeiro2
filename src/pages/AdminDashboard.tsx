@@ -14,7 +14,6 @@ import { AdminOptimizedProvider } from '@/contexts/AdminOptimizedContext';
 import { EnhancedGestaoComponent } from '@/components/admin/enhanced_gestao_component';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import { ClientViewProvider } from '@/contexts/ClientViewContext';
 import { ClientView } from '@/components/admin/ClientView';
 
 const AdminDashboard: React.FC = () => {
@@ -103,7 +102,7 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <AdminOptimizedProvider>
-      <ClientViewProvider>
+      
         <div className="min-h-screen bg-background w-full">
       {isMobile ? (
         <div className="flex flex-col h-screen w-full">
@@ -311,7 +310,7 @@ const AdminDashboard: React.FC = () => {
         </div>
        )}
        </div>
-      </ClientViewProvider>
+      
     </AdminOptimizedProvider>
   );
 };

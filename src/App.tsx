@@ -39,6 +39,7 @@ import LimitsPage from "./pages/LimitsPage";
 import NotFound from "./pages/NotFound";
 import AdminRoute from "./components/admin/AdminRoute";
 import "./App.css";
+import { ClientViewProvider } from '@/contexts/ClientViewContext';
 
 const queryClient = new QueryClient();
 
@@ -51,7 +52,8 @@ function App() {
             <PreferencesProvider>
               <SubscriptionProvider>
                 <AppProvider>
-                  <SupabaseInitializer>
+                  <ClientViewProvider>
+                    <SupabaseInitializer>
                     <BrowserRouter>
                       <Routes>
                         <Route path="/" element={<LandingPage />} />
@@ -93,7 +95,8 @@ function App() {
                     </BrowserRouter>
                     <Toaster />
                     <Sonner />
-                  </SupabaseInitializer>
+                    </SupabaseInitializer>
+                  </ClientViewProvider>
                 </AppProvider>
               </SubscriptionProvider>
             </PreferencesProvider>

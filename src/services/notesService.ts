@@ -28,9 +28,14 @@ export class NotesService {
    */
   static async getUserNotes(): Promise<Note[]> {
     try {
+      // Garantir que buscamos apenas as notas do usuário autenticado
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error('Usuário não autenticado');
+
       const { data, error } = await (supabase as any)
         .from('financeiro_notas')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -124,9 +129,13 @@ export class NotesService {
    */
   static async searchNotes(searchTerm: string): Promise<Note[]> {
     try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error('Usuário não autenticado');
+
       const { data, error } = await (supabase as any)
         .from('financeiro_notas')
         .select('*')
+        .eq('user_id', user.id)
         .or(`descricao.ilike.%${searchTerm}%,notas.ilike.%${searchTerm}%`)
         .order('created_at', { ascending: false });
 

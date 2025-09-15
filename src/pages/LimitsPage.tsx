@@ -13,7 +13,7 @@ const LimitsPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingLimit, setEditingLimit] = useState<Goal | null>(null);
-  const { goals, getGoals, deleteGoal, isClientView, selectedUser } = useClientAwareData();
+  const { goals, getGoals, deleteGoal, isClientView, selectedUser, refetchClientData } = useClientAwareData();
   const { t } = usePreferences();
 
   // Filtrar apenas os goals que são limites (poderemos adicionar um campo type futuramente)
@@ -24,7 +24,11 @@ const LimitsPage: React.FC = () => {
   };
 
   const handleLimitAdded = async () => {
-    await getGoals();
+    if (isClientView) {
+      await refetchClientData();
+    } else {
+      await getGoals();
+    }
     setIsAddModalOpen(false);
   };
 
@@ -37,7 +41,11 @@ const LimitsPage: React.FC = () => {
   };
 
   const handleLimitUpdated = async () => {
-    await getGoals();
+    if (isClientView) {
+      await refetchClientData();
+    } else {
+      await getGoals();
+    }
     setIsEditModalOpen(false);
     setEditingLimit(null);
   };
@@ -45,7 +53,11 @@ const LimitsPage: React.FC = () => {
   const handleDeleteLimit = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este limite?')) {
       await deleteGoal(id);
-      await getGoals();
+      if (isClientView) {
+        await refetchClientData();
+      } else {
+        await getGoals();
+      }
     }
   };
 

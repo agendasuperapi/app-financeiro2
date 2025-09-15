@@ -7,26 +7,37 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardStatCards from '@/components/dashboard/DashboardStatCards';
 import DashboardContent from '@/components/dashboard/DashboardContent';
 import { useAppContext } from '@/contexts/AppContext';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { calculateTotalIncome, calculateTotalExpenses, calculateMonthlyFinancialData, getGoalsForMonth } from '@/utils/transactionUtils';
 import { useToast } from '@/components/ui/use-toast';
 import { markAsPaid } from '@/services/scheduledTransactionService';
 import { ScheduledTransaction } from '@/types';
 import { motion } from 'framer-motion';
+import { User } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Use client-aware data para suportar visualização de clientes
+  const {
+    transactions,
+    goals,
+    deleteTransaction,
+    getGoals,
+    isClientView,
+    selectedUser,
+    targetUserId
+  } = useClientAwareData();
+  
+  // Use app context apenas para funcionalidades gerais
   const {
     filteredTransactions,
-    transactions,
     setCustomDateRange,
-    goals,
     hideValues,
     toggleHideValues,
     getTransactions,
-    getGoals,
-    deleteTransaction,
     scheduledTransactions
   } = useAppContext();
   const { t } = usePreferences();
@@ -182,6 +193,17 @@ const Index = () => {
           initial="hidden"
           animate="visible"
         >
+          {/* Indicador de visualização de cliente */}
+          {isClientView && selectedUser && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-2 text-blue-800">
+                <User className="h-4 w-4" />
+                <span className="font-medium">
+                  Visualizando dashboard de: {selectedUser.name} ({selectedUser.email})
+                </span>
+              </div>
+            </div>
+          )}
           {/* Header com navegação de mês e toggle de visibilidade */}
           <DashboardHeader
             currentMonth={currentMonth}

@@ -50,9 +50,16 @@ const convertRecurrenceToPortuguese = (recurrence: string | null | undefined): s
   return recurrenceMap[recurrence] || 'Uma vez';
 };
 
-export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]> => {
+export const getScheduledTransactions = async (userId?: string): Promise<ScheduledTransaction[]> => {
   try {
-    const { data, error } = await supabase
+    // Determine target user: explicit userId or current session user
+    let targetUserId = userId;
+    if (!targetUserId) {
+      const { data: { session } } = await supabase.auth.getSession();
+      targetUserId = session?.user?.id;
+    }
+
+    let query = supabase
       .from("poupeja_transactions")
       .select(`
         *,
@@ -60,10 +67,16 @@ export const getScheduledTransactions = async (): Promise<ScheduledTransaction[]
       `)
       .order("date", { ascending: true });
 
+    if (targetUserId) {
+      query = query.eq('user_id', targetUserId);
+    }
+
+    const { data, error } = await query;
+
     if (error) throw error;
 
     // Filtrar apenas transações com status pending ou paid e amount > 0
-    const filteredData = data.filter((item: any) => 
+    const filteredData = (data || []).filter((item: any) => 
       (item.status === 'pending' || item.status === 'paid') && item.amount > 0
     );
 

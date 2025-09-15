@@ -12,6 +12,7 @@ import { ptBR } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { getScheduledTransactions, markAsPaid } from '@/services/scheduledTransactionService';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
 
 interface UpcomingExpensesAlertProps {
   onMarkAsPaid?: (transaction: ScheduledTransaction) => void;
@@ -25,11 +26,12 @@ const UpcomingExpensesAlert: React.FC<UpcomingExpensesAlertProps> = ({
   const [loading, setLoading] = useState(true);
 
   // Buscar dados das contas
+  const { targetUserId } = useClientAwareData();
   useEffect(() => {
     const loadScheduledTransactions = async () => {
       try {
         setLoading(true);
-        const transactions = await getScheduledTransactions();
+        const transactions = await getScheduledTransactions(targetUserId);
         setScheduledTransactions(transactions);
       } catch (error) {
         console.error('Erro ao carregar transações agendadas:', error);
@@ -38,8 +40,10 @@ const UpcomingExpensesAlert: React.FC<UpcomingExpensesAlertProps> = ({
       }
     };
 
-    loadScheduledTransactions();
-  }, []);
+    if (targetUserId) {
+      loadScheduledTransactions();
+    }
+  }, [targetUserId]);
 
   // Não mostrar enquanto carrega
   if (loading) {

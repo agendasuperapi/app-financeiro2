@@ -85,7 +85,7 @@ const PlansPage = () => {
           </div>
         )}
         {/* Subscription Status Card */}
-        <SubscriptionStatusCard />
+        <SubscriptionStatusCard userId={isClientView && selectedUser ? selectedUser.id : undefined} />
 
         {/* Page Header */}
         <div className="text-center mb-8">
@@ -113,7 +113,7 @@ const PlansPage = () => {
         </div>
 
         {/* Manage Subscription Section */}
-        {hasActiveSubscription && (
+        {!isClientView && hasActiveSubscription && (
           <div className="text-center space-y-4">
             <h3 className="text-lg font-semibold">{t('plans.manageSubscription')}</h3>
             <p className="text-muted-foreground mb-4">

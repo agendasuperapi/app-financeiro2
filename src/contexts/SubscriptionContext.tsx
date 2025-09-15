@@ -91,27 +91,30 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     : false;
 
   useEffect(() => {
-    console.log('SubscriptionContext: Starting initial subscription check...');
+    let isMounted = true;
     
-    // Timeout fallback - se a verificação demorar mais de 10 segundos, pare o loading
-    const timeoutId = setTimeout(() => {
-      console.warn('SubscriptionContext: Subscription check timed out, stopping loading...');
-      setIsLoading(false);
-      setSubscription(null);
-    }, 10000);
-    
-    checkSubscription().then(() => {
-      clearTimeout(timeoutId);
-    }).catch(() => {
-      clearTimeout(timeoutId);
-    });
+    const loadSubscription = async () => {
+      if (!isMounted) return;
+      
+      try {
+        await checkSubscription();
+      } catch (error) {
+        console.error('SubscriptionContext: Error loading subscription:', error);
+        if (isMounted) {
+          setSubscription(null);
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadSubscription();
 
     const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('SubscriptionContext: Auth state changed:', event);
+        if (!isMounted) return;
+        
         if (event === 'SIGNED_IN') {
-          // Verificação imediata após login
-          checkSubscription();
+          loadSubscription();
         } else if (event === 'SIGNED_OUT') {
           setSubscription(null);
           setIsLoading(false);
@@ -120,8 +123,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     );
 
     return () => {
+      isMounted = false;
       authListener?.unsubscribe();
-      clearTimeout(timeoutId);
     };
   }, []);
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Calendar, FileText, Trash2 } from 'lucide-react';
+import { Search, Plus, Calendar, FileText, Trash2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,8 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { NotesService } from '@/services/notesService';
+import { useClientAwareNotes } from '@/hooks/useClientAwareNotes';
 import MainLayout from '@/components/layout/MainLayout';
 import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
+import { cn } from '@/lib/utils';
 
 interface Note {
   id: string;
@@ -22,8 +24,7 @@ interface Note {
 }
 
 const NotesPage: React.FC = () => {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { notes, loading, isClientView, selectedUser, loadNotes, deleteNote } = useClientAwareNotes();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [newNote, setNewNote] = useState({
@@ -35,25 +36,8 @@ const NotesPage: React.FC = () => {
 
   // Carregar notas do Supabase
   useEffect(() => {
-    loadNotes();
+    // As notas já são carregadas pelo hook useClientAwareNotes
   }, []);
-
-  const loadNotes = async () => {
-    try {
-      setLoading(true);
-      const data = await NotesService.getUserNotes();
-      setNotes(data);
-    } catch (error) {
-      console.error('Erro ao carregar notas:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar as notas.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filteredNotes = notes.filter(note =>
     note.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -61,6 +45,16 @@ const NotesPage: React.FC = () => {
   );
 
   const handleAddNote = async () => {
+    // Desabilitar criação de novas notas na visualização de cliente
+    if (isClientView) {
+      toast({
+        title: "Operação não permitida",
+        description: "Não é possível criar notas na visualização de cliente.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!newNote.descricao || !newNote.notas) {
       toast({
         title: "Erro",
@@ -102,8 +96,20 @@ const NotesPage: React.FC = () => {
   };
 
   const handleDeleteNote = async (id: string) => {
+    // Desabilitar exclusão na visualização de cliente
+    if (isClientView) {
+      toast({
+        title: "Operação não permitida",
+        description: "Não é possível excluir notas na visualização de cliente.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      await NotesService.deleteNote(id);
+      if (deleteNote) {
+        await deleteNote(id);
+      }
       toast({
         title: "Sucesso",
         description: "Nota excluída com sucesso!"
@@ -134,60 +140,74 @@ const NotesPage: React.FC = () => {
       <SubscriptionGuard feature="notas ilimitadas">
         <div className="w-full px-4 py-4 md:py-8 pb-20 md:pb-8 min-h-0">
           <div className="container mx-auto space-y-6">
+            {/* Indicador de visualização de cliente */}
+            {isClientView && selectedUser && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center gap-2 text-blue-800">
+                  <User className="h-4 w-4" />
+                  <span className="font-medium">
+                    Visualizando notas de: {selectedUser.name} ({selectedUser.email})
+                  </span>
+                </div>
+              </div>
+            )}
+            
             <div className="flex items-center justify-between">
               <h1 className="text-lg md:text-3xl font-bold text-foreground">Minhas Notas</h1>
               
-              <Dialog open={isAddingNote} onOpenChange={setIsAddingNote}>
-                <DialogTrigger asChild>
-                  <Button className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Adicionar Nota
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[525px]">
-                  <DialogHeader>
-                    <DialogTitle>Adicionar Nova Nota</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="data">Data</Label>
-                      <Input
-                        id="data"
-                        type="date"
-                        value={newNote.data}
-                        onChange={(e) => setNewNote(prev => ({ ...prev, data: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="descricao">Descrição</Label>
-                      <Input
-                        id="descricao"
-                        placeholder="Digite a descrição da nota..."
-                        value={newNote.descricao}
-                        onChange={(e) => setNewNote(prev => ({ ...prev, descricao: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="notas">Notas</Label>
-                      <Textarea
-                        id="notas"
-                        placeholder="Digite suas notas aqui..."
-                        value={newNote.notas}
-                        onChange={(e) => setNewNote(prev => ({ ...prev, notas: e.target.value }))}
-                        className="min-h-[100px]"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setIsAddingNote(false)}>
-                      Cancelar
+              {!isClientView && (
+                <Dialog open={isAddingNote} onOpenChange={setIsAddingNote}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Adicionar Nota
                     </Button>
-                    <Button onClick={handleAddNote}>
-                      Salvar Nota
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[525px]">
+                    <DialogHeader>
+                      <DialogTitle>Adicionar Nova Nota</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="data">Data</Label>
+                        <Input
+                          id="data"
+                          type="date"
+                          value={newNote.data}
+                          onChange={(e) => setNewNote(prev => ({ ...prev, data: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="descricao">Descrição</Label>
+                        <Input
+                          id="descricao"
+                          placeholder="Digite a descrição da nota..."
+                          value={newNote.descricao}
+                          onChange={(e) => setNewNote(prev => ({ ...prev, descricao: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="notas">Notas</Label>
+                        <Textarea
+                          id="notas"
+                          placeholder="Digite suas notas aqui..."
+                          value={newNote.notas}
+                          onChange={(e) => setNewNote(prev => ({ ...prev, notas: e.target.value }))}
+                          className="min-h-[100px]"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setIsAddingNote(false)}>
+                        Cancelar
+                      </Button>
+                      <Button onClick={handleAddNote}>
+                        Salvar Nota
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
 
             {/* Campo de pesquisa */}
@@ -239,11 +259,15 @@ const NotesPage: React.FC = () => {
                             {formatDate(note.data)}
                           </div>
                         </div>
-                        <Button
+                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteNote(note.id)}
-                          className="text-destructive hover:text-destructive"
+                          className={cn(
+                            "text-destructive hover:text-destructive",
+                            isClientView && "opacity-50 cursor-not-allowed"
+                          )}
+                          disabled={isClientView}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

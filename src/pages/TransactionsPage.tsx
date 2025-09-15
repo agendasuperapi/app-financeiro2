@@ -7,8 +7,8 @@ import TransactionTable from '@/components/common/TransactionTable';
 import TransactionForm from '@/components/common/TransactionForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { useAppContext } from '@/contexts/AppContext';
+import { Plus, User } from 'lucide-react';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { Transaction } from '@/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 const TransactionsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const { transactions, deleteTransaction } = useAppContext();
+  const { transactions, deleteTransaction, isClientView, selectedUser } = useClientAwareData();
   const isMobile = useIsMobile();
 
   // Filter out transactions with zero amount
@@ -40,6 +40,18 @@ const TransactionsPage = () => {
     <MainLayout>
       <SubscriptionGuard feature="movimentações ilimitadas">
         <div className="w-full px-4 md:px-6 py-4 md:py-6 lg:py-8 pb-20 md:pb-8 min-h-0">
+          {/* Indicador de visualização de cliente */}
+          {isClientView && selectedUser && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-2 text-blue-800">
+                <User className="h-4 w-4" />
+                <span className="font-medium">
+                  Visualizando transações de: {selectedUser.name} ({selectedUser.email})
+                </span>
+              </div>
+            </div>
+          )}
+          
           {/* Header and Add Button */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
             <h1 className="text-xl md:text-2xl font-semibold">
@@ -47,7 +59,7 @@ const TransactionsPage = () => {
             </h1>
             
             {/* Add Button - visible on tablet and desktop */}
-            {!isMobile && (
+            {!isMobile && !isClientView && (
               <Button onClick={handleAddTransaction} size="lg" className="shrink-0">
                 <Plus className="mr-2 h-4 w-4" />
                 Adicionar Transação
@@ -82,7 +94,7 @@ const TransactionsPage = () => {
         </div>
 
         {/* Mobile Floating Action Button */}
-        {isMobile && (
+        {isMobile && !isClientView && (
           <div className="fixed bottom-20 right-4 z-50">
             <Button 
               onClick={handleAddTransaction}
@@ -95,12 +107,14 @@ const TransactionsPage = () => {
           </div>
         )}
 
-        <TransactionForm
-          open={formOpen}
-          onOpenChange={setFormOpen}
-          initialData={editingTransaction}
-          mode={editingTransaction ? 'edit' : 'create'}
-        />
+        {!isClientView && (
+          <TransactionForm
+            open={formOpen}
+            onOpenChange={setFormOpen}
+            initialData={editingTransaction}
+            mode={editingTransaction ? 'edit' : 'create'}
+          />
+        )}
       </SubscriptionGuard>
     </MainLayout>
   );

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, User } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import { LimiteCard } from '@/components/limits/LimiteCard';
 import { AddLimitModal } from '@/components/limits/AddLimitModal';
 import { EditLimitModal } from '@/components/limits/EditLimitModal';
-import { useAppContext } from '@/contexts/AppContext';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { Goal } from '@/types';
 
@@ -13,7 +13,7 @@ const LimitsPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingLimit, setEditingLimit] = useState<Goal | null>(null);
-  const { goals, getGoals, deleteGoal } = useAppContext();
+  const { goals, getGoals, deleteGoal, isClientView, selectedUser } = useClientAwareData();
   const { t } = usePreferences();
 
   // Filtrar apenas os goals que são limites (poderemos adicionar um campo type futuramente)
@@ -52,13 +52,27 @@ const LimitsPage: React.FC = () => {
   return (
     <MainLayout>
       <div className="space-y-6">
+        {/* Indicador de visualização de cliente */}
+        {isClientView && selectedUser && (
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2 text-blue-800">
+              <User className="h-4 w-4" />
+              <span className="font-medium">
+                Visualizando limites de: {selectedUser.name} ({selectedUser.email})
+              </span>
+            </div>
+          </div>
+        )}
+        
         {/* Cabeçalho */}
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">Limites</h1>
-          <Button onClick={handleAddLimit} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Adicionar
-          </Button>
+          {!isClientView && (
+            <Button onClick={handleAddLimit} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Adicionar
+            </Button>
+          )}
         </div>
 
         {/* Grid de Limites */}

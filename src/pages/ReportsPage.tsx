@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import MainLayout from '../components/layout/MainLayout';
 import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
 import { usePreferences } from '@/contexts/PreferencesContext';
-import { useAppContext } from '@/contexts/AppContext';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { ReportFormat } from '@/types';
 import { useBrandingConfig } from '@/hooks/useBrandingConfig';
 import { calculateTotalIncome, calculateTotalExpenses } from '@/utils/transactionUtils';
@@ -11,10 +11,11 @@ import { generateReportData, downloadCSV, downloadPDF } from '@/utils/reportUtil
 import ReportFilters from '@/components/reports/ReportFilters';
 import ReportSummary from '@/components/reports/ReportSummary';
 import TransactionsTable from '@/components/reports/TransactionsTable';
+import { User } from 'lucide-react';
 
 const ReportsPage = () => {
   const { t } = usePreferences();
-  const { transactions } = useAppContext();
+  const { transactions, isClientView, selectedUser } = useClientAwareData();
   const { companyName } = useBrandingConfig();
   const [reportType, setReportType] = useState<string>('all');
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -45,6 +46,18 @@ const ReportsPage = () => {
     <MainLayout>
       <SubscriptionGuard feature="relatórios detalhados">
         <div className="w-full max-w-full px-4 py-6 lg:py-8 overflow-hidden">
+          {/* Indicador de visualização de cliente */}
+          {isClientView && selectedUser && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-2 text-blue-800">
+                <User className="h-4 w-4" />
+                <span className="font-medium">
+                  Visualizando relatórios de: {selectedUser.name} ({selectedUser.email})
+                </span>
+              </div>
+            </div>
+          )}
+          
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-6 lg:mb-8">{t('reports.title')}</h1>
           
           <ReportFilters 

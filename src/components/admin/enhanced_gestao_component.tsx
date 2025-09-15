@@ -749,9 +749,9 @@ export const EnhancedGestaoComponent = () => {
                             <TableCell className="hidden sm:table-cell text-sm">
                               {user.phone || 'N/A'}
                             </TableCell>
-                            <TableCell className="hidden md:table-cell text-sm">
-                              {UserManagementService.formatDate(user.created_at)}
-                            </TableCell>
+                             <TableCell className="hidden md:table-cell text-sm">
+                               {user.current_period_end ? UserManagementService.formatDate(user.current_period_end) : 'N/A'}
+                             </TableCell>
                             <TableCell className="hidden lg:table-cell text-sm">
                               {UserManagementService.formatDate(user.current_period_end)}
                             </TableCell>

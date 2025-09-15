@@ -8,15 +8,17 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import { LayoutDashboard, Receipt, BarChart3, Target, User, Settings, FolderOpen, Calendar, Clock, Crown, LogOut, Shield, Users, FileText, CreditCard, AlertTriangle } from 'lucide-react';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { LayoutDashboard, Receipt, BarChart3, Target, User, Settings, FolderOpen, Calendar, Clock, Crown, LogOut, Shield, Users, FileText, CreditCard, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface SidebarProps {
   onProfileClick?: () => void;
   onConfigClick?: () => void;
   onGestaoClick?: () => void;
+  onClientClick?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGestaoClick }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGestaoClick, onClientClick }) => {
   const { user, logout } = useAppContext();
   const { t } = usePreferences();
   const { isAdmin } = useUserRole();
@@ -35,6 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
   
   // Estado para rastrear qual seção admin está ativa
   const [activeAdminSection, setActiveAdminSection] = React.useState<string>('gestao');
+  const [clientSectionOpen, setClientSectionOpen] = React.useState<boolean>(false);
 
   const handleLogout = async () => {
     await logout();
@@ -76,6 +79,54 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       }
     ];
 
+    const clientMenuItems = [
+      {
+        icon: LayoutDashboard,
+        label: t('nav.dashboard'),
+        href: '/dashboard'
+      },
+      {
+        icon: Receipt,
+        label: t('nav.transactions'),
+        href: '/transactions'
+      },
+      {
+        icon: FolderOpen,
+        label: t('nav.categories'),
+        href: '/categories'
+      },
+      {
+        icon: AlertTriangle,
+        label: 'Metas/Limites',
+        href: '/limits'
+      },
+      {
+        icon: CreditCard,
+        label: 'Contas a Pagar',
+        href: '/contas'
+      },
+      {
+        icon: Clock,
+        label: 'Lembretes',
+        href: '/lembrar'
+      },
+      {
+        icon: BarChart3,
+        label: t('nav.reports'),
+        href: '/reports'
+      },
+      {
+        icon: FileText,
+        label: 'Anotações',
+        href: '/notes'
+      },
+      {
+        icon: Crown,
+        label: t('nav.plans'),
+        href: '/plans'
+      },
+    ];
+
     return (
       <div className="hidden md:flex h-screen w-64 lg:w-64 xl:w-72 flex-col bg-background border-r">
         {/* Logo/Header */}
@@ -84,7 +135,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {adminMenuItems.map((item) => (
             <Button
               key={item.id}
@@ -102,6 +153,56 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
               {item.label}
             </Button>
           ))}
+          
+          {/* Seção Cliente com sub-abas */}
+          <Collapsible open={clientSectionOpen} onOpenChange={setClientSectionOpen}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-3 px-4 py-3 font-medium transition-colors",
+                  "hover:bg-accent hover:text-accent-foreground",
+                  activeAdminSection === 'client'
+                    ? "bg-green-600 text-white shadow-md"
+                    : "text-muted-foreground"
+                )}
+                onClick={() => {
+                  setActiveAdminSection('client');
+                  if (onClientClick) {
+                    onClientClick();
+                  }
+                }}
+              >
+                <User className="h-5 w-5" />
+                Cliente
+                {clientSectionOpen ? (
+                  <ChevronDown className="h-4 w-4 ml-auto" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 ml-auto" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 mt-1">
+              {clientMenuItems.map((item) => (
+                <NavLink
+                  key={item.href}
+                  to={item.href}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 px-8 py-2 rounded-lg text-sm font-medium transition-colors",
+                      "hover:bg-accent hover:text-accent-foreground",
+                      isActive 
+                        ? "bg-green-500 text-white shadow-sm" 
+                        : "text-muted-foreground"
+                    )
+                  }
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </NavLink>
+              ))}
+            </CollapsibleContent>
+          </Collapsible>
           
           {/* Botão Perfil que executa função ao invés de navegar */}
           <Button

@@ -9,7 +9,7 @@ import MobileNavBar from '@/components/layout/MobileNavBar';
 import MobileHeader from '@/components/layout/MobileHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAppContext } from '@/contexts/AppContext';
-import { Shield, AlertTriangle, Eye, EyeOff, LogOut } from 'lucide-react';
+import { Shield, AlertTriangle, Eye, EyeOff, LogOut, User } from 'lucide-react';
 import { AdminOptimizedProvider } from '@/contexts/AdminOptimizedContext';
 import { EnhancedGestaoComponent } from '@/components/admin/enhanced_gestao_component';
 import { BrandLogo } from '@/components/common/BrandLogo';
@@ -18,22 +18,32 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle';
 const AdminDashboard: React.FC = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [showGestao, setShowGestao] = useState(true); // Iniciar com Gestão ativa
+  const [showClient, setShowClient] = useState(false);
   const isMobile = useIsMobile();
   const { hideValues, toggleHideValues, logout } = useAppContext();
 
   const handleProfileClick = () => {
     setShowProfile(true);
     setShowGestao(false);
+    setShowClient(false);
   };
 
   const handleConfigClick = () => {
     setShowProfile(false);
     setShowGestao(false);
+    setShowClient(false);
   };
 
   const handleGestaoClick = () => {
     setShowGestao(true);
     setShowProfile(false);
+    setShowClient(false);
+  };
+
+  const handleClientClick = () => {
+    setShowClient(true);
+    setShowProfile(false);
+    setShowGestao(false);
   };
 
   const handleLogout = async () => {
@@ -111,6 +121,20 @@ const AdminDashboard: React.FC = () => {
                     </p>
                   </div>
                   <AdminProfileConfig />
+                </div>
+              ) : showClient ? (
+                <div className="w-full">
+                  <div className="mb-8">
+                    <div className="flex items-center gap-3 mb-2">
+                      <User className="h-8 w-8 text-blue-600" />
+                      <h1 className="text-3xl font-bold text-gray-900">
+                        Visualização Cliente
+                      </h1>
+                    </div>
+                    <p className="text-gray-600">
+                      Navegue pelo sistema com a perspectiva do usuário final
+                    </p>
+                  </div>
                 </div>
               ) : showGestao ? (
                 <div className="w-full">
@@ -193,7 +217,7 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          <Sidebar onProfileClick={handleProfileClick} onConfigClick={handleConfigClick} onGestaoClick={handleGestaoClick} />
+          <Sidebar onProfileClick={handleProfileClick} onConfigClick={handleConfigClick} onGestaoClick={handleGestaoClick} onClientClick={handleClientClick} />
           <main className="flex-1 overflow-auto w-full pt-16 md:pt-20">
             <div className="w-full p-6">
               {showProfile ? (
@@ -210,6 +234,20 @@ const AdminDashboard: React.FC = () => {
                     </p>
                   </div>
                   <AdminProfileConfig />
+                </div>
+              ) : showClient ? (
+                <div className="w-full max-w-6xl mx-auto">
+                  <div className="mb-8">
+                     <div className="flex items-center gap-3 mb-2">
+                       <User className="h-8 w-8 text-blue-600" />
+                       <h1 className="text-3xl font-bold text-gray-900">
+                         Visualização Cliente
+                       </h1>
+                     </div>
+                    <p className="text-gray-600">
+                      Navegue pelo sistema com a perspectiva do usuário final
+                    </p>
+                  </div>
                 </div>
               ) : showGestao ? (
                 <div className="w-full max-w-6xl mx-auto">

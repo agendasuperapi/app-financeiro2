@@ -48,11 +48,11 @@ const LembrarPage = () => {
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
   const { formatDate } = useDateFormat();
   const { currency } = usePreferences();
-  const { isClientView, selectedUser } = useClientAwareData();
+  const { isClientView, selectedUser, targetUserId } = useClientAwareData();
 
   useEffect(() => {
     loadContas();
-  }, []);
+  }, [targetUserId]);
 
   useEffect(() => {
     applyStatusFilter();
@@ -61,7 +61,7 @@ const LembrarPage = () => {
   const loadContas = async () => {
     setLoading(true);
     try {
-      // Buscar diretamente da tabela poupeja_transactions
+      // Buscar diretamente da tabela poupeja_transactions para o usuário específico
       const { data, error } = await supabase
         .from("poupeja_transactions")
         .select(`
@@ -69,6 +69,7 @@ const LembrarPage = () => {
           category:poupeja_categories(id, name, icon, color, type)
         `)
         .eq('type', 'lembrete')
+        .eq('user_id', targetUserId)
         .order("date", { ascending: true });
 
       if (error) throw error;

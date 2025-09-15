@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
+import { supabase } from '@/integrations/supabase/client';
 import { ScheduledTransaction } from '@/types';
 import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
@@ -26,11 +27,11 @@ const ContasPage = () => {
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
   const { formatDate } = useDateFormat();
   const { currency } = usePreferences();
-  const { isClientView, selectedUser } = useClientAwareData();
+  const { isClientView, selectedUser, targetUserId } = useClientAwareData();
 
   useEffect(() => {
     loadContas();
-  }, []);
+  }, [targetUserId]);
 
   useEffect(() => {
     applyStatusFilter();
@@ -39,8 +40,34 @@ const ContasPage = () => {
   const loadContas = async () => {
     setLoading(true);
     try {
-      const data = await getScheduledTransactions();
-      setContas(data);
+      // Use client-aware data fetching
+      const { data, error } = await supabase
+        .from('poupeja_scheduled_transactions')
+        .select(`
+          *,
+          category:poupeja_categories(id, name, icon, color, type)
+        `)
+        .eq('user_id', targetUserId)
+        .order('scheduledDate', { ascending: true });
+
+      if (error) throw error;
+      
+      // Transform data to match ScheduledTransaction interface
+      const transformedData = (data || []).map((item: any) => ({
+        id: item.id,
+        type: item.type || 'expense' as const,
+        amount: item.amount,
+        category: item.category?.name || 'Outros',
+        category_id: item.category_id,
+        description: item.description,
+        scheduledDate: item.scheduledDate,
+        recurrence: item.recurrence,
+        status: item.status,
+        paidDate: item.paidDate,
+        userId: item.user_id
+      }));
+      
+      setContas(transformedData);
     } catch (error) {
       console.error('Error loading contas:', error);
     } finally {

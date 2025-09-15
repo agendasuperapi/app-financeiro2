@@ -10,7 +10,8 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { usePlansFromTable } from '@/hooks/usePlansFromTable';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User } from 'lucide-react';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
 
 const PlansPage = () => {
   const [searchParams] = useSearchParams();
@@ -19,6 +20,7 @@ const PlansPage = () => {
   const { toast } = useToast();
   const { hasActiveSubscription } = useSubscription();
   const { plans: plansData, isLoading: configLoading } = usePlansFromTable();
+  const { isClientView, selectedUser } = useClientAwareData();
 
   const success = searchParams.get('success');
   const canceled = searchParams.get('canceled');
@@ -72,6 +74,16 @@ const PlansPage = () => {
   return (
     <MainLayout title={t('plans.title')}>
       <div className="max-w-6xl mx-auto">
+        {isClientView && selectedUser && (
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+            <div className="flex items-center gap-2 text-blue-800">
+              <User className="h-4 w-4" />
+              <span className="font-medium">
+                Visualizando relatórios de: {selectedUser.name} ({selectedUser.email})
+              </span>
+            </div>
+          </div>
+        )}
         {/* Subscription Status Card */}
         <SubscriptionStatusCard />
 

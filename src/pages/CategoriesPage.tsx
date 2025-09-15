@@ -4,9 +4,10 @@ import MainLayout from '@/components/layout/MainLayout';
 import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Trash2, Edit, MoreVertical } from 'lucide-react';
+import { Plus, Trash2, Edit, MoreVertical, User } from 'lucide-react';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { Category } from '@/types/categories';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { getCategoriesByType, addCategory, updateCategory, deleteCategory } from '@/services/categoryService';
 import { useToast } from "@/hooks/use-toast";
 import CategoryForm from '@/components/categories/CategoryForm';
@@ -38,6 +39,9 @@ const CategoriesPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Client view indicator
+  const { isClientView, selectedUser } = useClientAwareData();
 
   useEffect(() => {
     // Load categories from Supabase on mount and whenever they change
@@ -160,7 +164,17 @@ const CategoriesPage: React.FC = () => {
   return (
     <MainLayout title={t('categories.title')}>
       <SubscriptionGuard feature="categorias personalizadas">
-        <div className="space-y-4">
+          <div className="space-y-4">
+            {isClientView && selectedUser && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center gap-2 text-blue-800">
+                  <User className="h-4 w-4" />
+                  <span className="font-medium">
+                    Visualizando relatórios de: {selectedUser.name} ({selectedUser.email})
+                  </span>
+                </div>
+              </div>
+            )}
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">{t('categories.title')}</h1>
             <Button onClick={handleAddCategory}>

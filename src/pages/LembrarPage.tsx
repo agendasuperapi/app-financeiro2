@@ -9,9 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
 import { ScheduledTransaction } from '@/types';
-import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter } from 'lucide-react';
+import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { isAfter, isToday } from 'date-fns';
 import { toast } from 'sonner';
 import AddContaForm from '@/components/contas/AddContaForm';
@@ -47,6 +48,7 @@ const LembrarPage = () => {
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
   const { formatDate } = useDateFormat();
   const { currency } = usePreferences();
+  const { isClientView, selectedUser } = useClientAwareData();
 
   useEffect(() => {
     loadContas();
@@ -222,7 +224,17 @@ const LembrarPage = () => {
   return (
     <MainLayout>
       <SubscriptionGuard>
-        <div className="container mx-auto p-3 md:p-4 lg:p-6 space-y-4 lg:space-y-6">
+          <div className="container mx-auto p-3 md:p-4 lg:p-6 space-y-4 lg:space-y-6">
+            {isClientView && selectedUser && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center gap-2 text-blue-800">
+                  <User className="h-4 w-4" />
+                  <span className="font-medium">
+                    Visualizando relatórios de: {selectedUser.name} ({selectedUser.email})
+                  </span>
+                </div>
+              </div>
+            )}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4 mb-4 lg:mb-6">
             <h1 className="text-xl md:text-2xl lg:text-3xl font-bold">Lembrar</h1>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>

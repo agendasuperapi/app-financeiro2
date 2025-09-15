@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
 import { ScheduledTransaction } from '@/types';
-import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter } from 'lucide-react';
+import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { isAfter, isToday } from 'date-fns';
 import { toast } from 'sonner';
 import ContaForm from '@/components/contas/ContaForm';
@@ -25,6 +26,7 @@ const ContasPage = () => {
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
   const { formatDate } = useDateFormat();
   const { currency } = usePreferences();
+  const { isClientView, selectedUser } = useClientAwareData();
 
   useEffect(() => {
     loadContas();
@@ -156,7 +158,17 @@ const ContasPage = () => {
   return (
     <MainLayout>
       <SubscriptionGuard>
-        <div className="container mx-auto p-2 md:p-6 space-y-4 md:space-y-6">
+          <div className="container mx-auto p-2 md:p-6 space-y-4 md:space-y-6">
+            {isClientView && selectedUser && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center gap-2 text-blue-800">
+                  <User className="h-4 w-4" />
+                  <span className="font-medium">
+                    Visualizando relatórios de: {selectedUser.name} ({selectedUser.email})
+                  </span>
+                </div>
+              </div>
+            )}
           <div className="flex items-center justify-between mb-4 md:mb-6">
             <h1 className="text-base md:text-xl font-bold">Contas a Pagar</h1>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>

@@ -26,10 +26,13 @@ import {
   AlertCircle,
   UserX,
   Pencil,
-  Plus
+  Plus,
+  Eye
 } from 'lucide-react';
 import { UserManagementService, UserData, UserStats } from '../../services/api_service';
 import { supabase } from '@/integrations/supabase/client';
+import { useClientView } from '@/contexts/ClientViewContext';
+import { toast } from 'sonner';
 
 export const EnhancedGestaoComponent = () => {
   const [userData, setUserData] = useState<UserData[]>([]);
@@ -64,6 +67,9 @@ export const EnhancedGestaoComponent = () => {
   const [inspectedUser, setInspectedUser] = useState<UserData | null>(null);
   const [userTransactions, setUserTransactions] = useState<any[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
+  
+  // Hook do contexto de visualização do cliente
+  const { selectedUser: clientViewUser, setSelectedUser: setClientViewUser } = useClientView();
 
   // Paginação
   const totalItems = filteredData.length;
@@ -356,6 +362,20 @@ export const EnhancedGestaoComponent = () => {
     } catch (error) {
       console.error('❌ Erro ao alternar status:', error);
     }
+  };
+
+  // Função para visualizar como cliente
+  const handleViewAsClient = (user: UserData) => {
+    setClientViewUser({
+      id: user.id,
+      name: user.name || 'Usuário sem nome',
+      email: user.email || 'Email não informado',
+      phone: user.phone,
+      status: user.status
+    });
+    
+    toast.success(`Visualizando como: ${user.name || user.email}`);
+    console.log('👤 Visualizando como cliente:', user.name, user.email);
   };
 
   // Função para inspecionar usuário e buscar suas transações
@@ -743,28 +763,37 @@ export const EnhancedGestaoComponent = () => {
                                 {user.status || 'Sem assinatura'}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-center">
-                               <div className="flex items-center justify-center gap-1">
-                                 <Button
-                                   variant="outline"
-                                   size="sm"
-                                   className="h-7 w-7 p-0 hover:bg-blue-50 hover:text-blue-600 border-blue-200"
-                                   onClick={() => handleEditUser(user)}
-                                   title="Editar usuário"
-                                 >
-                                   <Pencil className="h-3 w-3" />
-                                 </Button>
-                                 <Button
-                                   variant="outline"
-                                   size="sm"
-                                   className="h-7 w-7 p-0 hover:bg-red-50 hover:text-red-600 border-red-200"
-                                   onClick={() => handleToggleStatus(user)}
-                                   title="Alterar status"
-                                 >
-                                   <UserX className="h-3 w-3" />
-                                 </Button>
-                               </div>
-                            </TableCell>
+                             <TableCell className="text-center">
+                                <div className="flex items-center justify-center gap-1">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 w-7 p-0 hover:bg-green-50 hover:text-green-600 border-green-200"
+                                    onClick={() => handleViewAsClient(user)}
+                                    title="Visualizar como cliente"
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 w-7 p-0 hover:bg-blue-50 hover:text-blue-600 border-blue-200"
+                                    onClick={() => handleEditUser(user)}
+                                    title="Editar usuário"
+                                  >
+                                    <Pencil className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 w-7 p-0 hover:bg-red-50 hover:text-red-600 border-red-200"
+                                    onClick={() => handleToggleStatus(user)}
+                                    title="Alterar status"
+                                  >
+                                    <UserX className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                             </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

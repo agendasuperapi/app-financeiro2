@@ -14,6 +14,8 @@ import { AdminOptimizedProvider } from '@/contexts/AdminOptimizedContext';
 import { EnhancedGestaoComponent } from '@/components/admin/enhanced_gestao_component';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { ClientViewProvider } from '@/contexts/ClientViewContext';
+import { ClientView } from '@/components/admin/ClientView';
 
 const AdminDashboard: React.FC = () => {
   const [showProfile, setShowProfile] = useState(false);
@@ -101,7 +103,8 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <AdminOptimizedProvider>
-      <div className="min-h-screen bg-background w-full">
+      <ClientViewProvider>
+        <div className="min-h-screen bg-background w-full">
       {isMobile ? (
         <div className="flex flex-col h-screen w-full">
           <MobileHeader hideValues={hideValues} toggleHideValues={toggleHideValues} />
@@ -235,7 +238,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <AdminProfileConfig />
                 </div>
-              ) : showClient ? (
+               ) : showClient ? (
                 <div className="w-full max-w-6xl mx-auto">
                   <div className="mb-8">
                      <div className="flex items-center gap-3 mb-2">
@@ -248,8 +251,9 @@ const AdminDashboard: React.FC = () => {
                       Navegue pelo sistema com a perspectiva do usuário final
                     </p>
                   </div>
+                  <ClientView />
                 </div>
-              ) : showGestao ? (
+               ) : showGestao ? (
                 <div className="w-full max-w-6xl mx-auto">
                   <div className="mb-8">
                      <div className="flex items-center gap-3 mb-2">
@@ -305,8 +309,9 @@ const AdminDashboard: React.FC = () => {
             </div>
           </main>
         </div>
-      )}
-      </div>
+       )}
+       </div>
+      </ClientViewProvider>
     </AdminOptimizedProvider>
   );
 };

@@ -132,7 +132,7 @@ export const addScheduledTransaction = async (
     const targetUserId = transaction.user_id || session.user.id;
     
     // Check if we need to use admin function for different user_id
-    const needsAdminFunction = targetUserId !== session.user.id;
+    const needsAdminFunction = false; // Always insert directly; RLS allows admin to insert for any user
 
     // Function to create transaction via admin endpoint
     const createViaAdminFunction = async (transactionData: any) => {

@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 const TransactionsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const { transactions, deleteTransaction, isClientView, selectedUser } = useClientAwareData();
+  const { transactions, deleteTransaction, isClientView, selectedUser, targetUserId } = useClientAwareData();
   const isMobile = useIsMobile();
 
   // Filter out transactions with zero amount
@@ -59,10 +59,10 @@ const TransactionsPage = () => {
             </h1>
             
             {/* Add Button - visible on tablet and desktop */}
-            {!isMobile && !isClientView && (
+            {!isMobile && (
               <Button onClick={handleAddTransaction} size="lg" className="shrink-0">
                 <Plus className="mr-2 h-4 w-4" />
-                Adicionar Transação
+                {isClientView ? 'Adicionar para Cliente' : 'Adicionar Transação'}
               </Button>
             )}
           </div>
@@ -94,7 +94,7 @@ const TransactionsPage = () => {
         </div>
 
         {/* Mobile Floating Action Button */}
-        {isMobile && !isClientView && (
+        {isMobile && (
           <div className="fixed bottom-20 right-4 z-50">
             <Button 
               onClick={handleAddTransaction}
@@ -102,19 +102,18 @@ const TransactionsPage = () => {
               className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow bg-primary hover:bg-primary/90"
             >
               <Plus className="h-6 w-6" />
-              <span className="sr-only">Adicionar Transação</span>
+              <span className="sr-only">{isClientView ? 'Adicionar para Cliente' : 'Adicionar Transação'}</span>
             </Button>
           </div>
         )}
 
-        {!isClientView && (
-          <TransactionForm
-            open={formOpen}
-            onOpenChange={setFormOpen}
-            initialData={editingTransaction}
-            mode={editingTransaction ? 'edit' : 'create'}
-          />
-        )}
+        <TransactionForm
+          open={formOpen}
+          onOpenChange={setFormOpen}
+          initialData={editingTransaction}
+          mode={editingTransaction ? 'edit' : 'create'}
+          targetUserId={targetUserId}
+        />
       </SubscriptionGuard>
     </MainLayout>
   );

@@ -4,8 +4,9 @@ import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PieChart, BarChart, Filter, Plus } from 'lucide-react';
+import { PieChart, BarChart, Filter, Plus, User } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import TransactionList from '@/components/common/TransactionList';
 import TransactionForm from '@/components/common/TransactionForm';
@@ -15,10 +16,15 @@ import { formatCurrency } from '@/utils/transactionUtils';
 import { useToast } from '@/components/ui/use-toast';
 
 const ExpensesPage = () => {
-  const { filteredTransactions, deleteTransaction } = useAppContext();
+  const { filteredTransactions } = useAppContext();
+  const { transactions, deleteTransaction, isClientView, selectedUser, targetUserId } = useClientAwareData();
   const { t, currency } = usePreferences();
   const { toast } = useToast();
-  const expenses = filteredTransactions.filter(t => t.type === 'expense');
+  
+  // Use client-aware transactions if in client view, otherwise use filtered transactions
+  const expenseTransactions = isClientView ? transactions : filteredTransactions;
+  const expenses = expenseTransactions.filter(t => t.type === 'expense');
+  
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
 
@@ -68,12 +74,24 @@ const ExpensesPage = () => {
   return (
     <MainLayout title={t('expenses.title')}>
       <div className="space-y-6 min-h-0">
+        {/* Indicador de visualização de cliente */}
+        {isClientView && selectedUser && (
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2 text-blue-800">
+              <User className="h-4 w-4" />
+              <span className="font-medium">
+                Visualizando despesas de: {selectedUser.name} ({selectedUser.email})
+              </span>
+            </div>
+          </div>
+        )}
+        
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="text-2xl font-bold">{t('expenses.title')}</h2>
           <div className="flex gap-2 items-center">
             <TimeRangeSelector />
             <Button onClick={handleAddExpense}>
-              <Plus className="mr-2 h-4 w-4" /> {t('expenses.add')}
+              <Plus className="mr-2 h-4 w-4" /> {isClientView ? 'Adicionar para Cliente' : t('expenses.add')}
             </Button>
           </div>
         </div>
@@ -168,6 +186,7 @@ const ExpensesPage = () => {
         initialData={selectedTransaction}
         mode={selectedTransaction?.id ? 'edit' : 'create'}
         defaultType="expense"
+        targetUserId={targetUserId}
       />
     </MainLayout>
   );

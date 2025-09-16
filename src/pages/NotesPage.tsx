@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -171,6 +171,9 @@ const NotesPage: React.FC = () => {
                   <DialogContent className="sm:max-w-[525px]">
                     <DialogHeader>
                       <DialogTitle>Adicionar Nova Nota</DialogTitle>
+                      <DialogDescription>
+                        Preencha os campos abaixo para adicionar uma nova nota.
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">

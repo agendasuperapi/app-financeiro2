@@ -223,6 +223,8 @@ export default {
     selectCategory: 'Selecione uma categoria',
     account: 'Conta',
     accountPlaceholder: 'Digite o nome da conta',
+    added: 'Transação Adicionada',
+    updated: 'Transação Atualizada',
     addSuccess: 'Transação adicionada com sucesso!',
     updateSuccess: 'Transação atualizada com sucesso!',
     amountPlaceholder: 'Digite o valor',

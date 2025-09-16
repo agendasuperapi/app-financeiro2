@@ -130,6 +130,21 @@ export const addScheduledTransaction = async (
 
     // Determine correct user id (client view or current user)
     const targetUserId = transaction.user_id || session.user.id;
+    
+    // Check if we need to use admin function for different user_id
+    const needsAdminFunction = targetUserId !== session.user.id;
+
+    // Function to create transaction via admin endpoint
+    const createViaAdminFunction = async (transactionData: any) => {
+      const { data, error } = await supabase.functions.invoke('create-transaction-admin', {
+        body: transactionData
+      });
+      
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+      
+      return data.data;
+    };
 
     // Get category ID - if it's already an ID, use it directly, otherwise find by name
     let categoryId = transaction.category_id;
@@ -213,17 +228,32 @@ export const addScheduledTransaction = async (
       
       console.log('🎯 Creating installments data:', installmentsData);
       
-      const { data, error } = await supabase
-        .from("poupeja_transactions")
-        .insert(installmentsData)
-        .select(`
-          *,
-          category:poupeja_categories(id, name, icon, color, type)
-        `);
-
-      if (error) {
-        console.error('❌ Error inserting installments:', error);
-        throw error;
+      let data, error;
+      
+      if (needsAdminFunction) {
+        console.log('🔐 Using admin function for installments');
+        // Insert each installment via admin function
+        const results = [];
+        for (const installment of installmentsData) {
+          const result = await createViaAdminFunction(installment);
+          results.push(result);
+        }
+        data = results;
+      } else {
+        // Regular insert
+        const result = await supabase
+          .from("poupeja_transactions")
+          .insert(installmentsData)
+          .select(`
+            *,
+            category:poupeja_categories(id, name, icon, color, type)
+          `);
+        
+        if (result.error) {
+          console.error('❌ Error inserting installments:', result.error);
+          throw result.error;
+        }
+        data = result.data;
       }
       
       console.log('✅ Successfully created installments:', data);
@@ -277,16 +307,25 @@ export const addScheduledTransaction = async (
 
       console.log('Insert data with all fields:', insertData);
       
-      const { data, error } = await supabase
-        .from("poupeja_transactions")
-        .insert(insertData)
-        .select(`
-          *,
-          category:poupeja_categories(id, name, icon, color, type)
-        `)
-        .single();
+      let data;
+      
+      if (needsAdminFunction) {
+        console.log('🔐 Using admin function for single transaction');
+        data = await createViaAdminFunction(insertData);
+      } else {
+        // Regular insert
+        const result = await supabase
+          .from("poupeja_transactions")
+          .insert(insertData)
+          .select(`
+            *,
+            category:poupeja_categories(id, name, icon, color, type)
+          `)
+          .single();
 
-      if (error) throw error;
+        if (result.error) throw result.error;
+        data = result.data;
+      }
 
       return {
         id: data.id,

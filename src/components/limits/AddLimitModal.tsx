@@ -39,6 +39,7 @@ import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useClientView } from '@/contexts/ClientViewContext';
 
 const limitFormSchema = z.object({
   categoryId: z.string().min(1, 'Selecione uma categoria'),
@@ -74,6 +75,7 @@ export const AddLimitModal: React.FC<AddLimitModalProps> = ({
 }) => {
   const { addGoal } = useAppContext();
   const { currency } = usePreferences();
+  const { selectedUser } = useClientView();
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState<Array<{
     id: string;
@@ -177,7 +179,27 @@ export const AddLimitModal: React.FC<AddLimitModalProps> = ({
         transactions: [], // Propriedade obrigatória do tipo Goal
       };
 
-      await addGoal(newLimit);
+      if (selectedUser?.id) {
+        // Inserir diretamente para o cliente visualizado
+        const { error } = await supabase
+          .from('poupeja_goals')
+          .insert({
+            name: newLimit.name,
+            target_amount: newLimit.targetAmount,
+            current_amount: newLimit.currentAmount || 0,
+            start_date: newLimit.startDate,
+            end_date: newLimit.endDate,
+            color: newLimit.color,
+            user_id: selectedUser.id,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+      } else {
+        // Fluxo normal: cria para o usuário logado
+        await addGoal(newLimit);
+      }
       
       toast.success('Limite adicionado com sucesso!');
       form.reset();

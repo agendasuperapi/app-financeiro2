@@ -74,8 +74,10 @@ export const useTransactionForm = ({
     console.log("Target User ID for transaction:", targetUserId);
     
     // Convert "none" value and null back to undefined for goalId
+    // Make amount negative for expenses
     const processedValues = {
       ...values,
+      amount: values.type === 'expense' ? -Math.abs(values.amount) : values.amount,
       goalId: values.goalId === "none" || values.goalId === null ? undefined : values.goalId
     };
     

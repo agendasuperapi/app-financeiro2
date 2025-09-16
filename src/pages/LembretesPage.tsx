@@ -20,6 +20,7 @@ import { formatCurrency } from '@/utils/transactionUtils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
 
 const LembretesPage = () => {
   const { scheduledTransactions } = useAppContext();
@@ -38,6 +39,7 @@ const LembretesPage = () => {
   const { t, currency } = usePreferences();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { isClientView, targetUserId } = useClientAwareData();
   
   // Check if it's tablet (md breakpoint: 768px to 1023px)
   const [isTablet, setIsTablet] = React.useState(false);
@@ -426,6 +428,7 @@ const LembretesPage = () => {
           onOpenChange={setIsTransactionFormOpen}
           mode="create"
           defaultType={transactionFormType}
+          targetUserId={isClientView ? targetUserId : undefined}
         />
       </SubscriptionGuard>
     </MainLayout>

@@ -13,6 +13,7 @@ import TimeRangeSelector from '@/components/common/TimeRangeSelector';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { formatCurrency } from '@/utils/transactionUtils';
 import { useToast } from '@/components/ui/use-toast';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
 
 const ExpensesPage = () => {
   const { filteredTransactions, deleteTransaction } = useAppContext();
@@ -21,6 +22,7 @@ const ExpensesPage = () => {
   const expenses = filteredTransactions.filter(t => t.type === 'expense');
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const { isClientView, targetUserId } = useClientAwareData();
 
   // Calculate expenses by category
   const categoryData = React.useMemo(() => {
@@ -168,6 +170,7 @@ const ExpensesPage = () => {
         initialData={selectedTransaction}
         mode={selectedTransaction?.id ? 'edit' : 'create'}
         defaultType="expense"
+        targetUserId={isClientView ? targetUserId : undefined}
       />
     </MainLayout>
   );

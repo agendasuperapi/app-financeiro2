@@ -20,6 +20,7 @@ import { formatCurrency } from '@/utils/transactionUtils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
 
 const SchedulePage = () => {
   const { scheduledTransactions } = useAppContext();
@@ -38,6 +39,7 @@ const SchedulePage = () => {
   const { t, currency } = usePreferences();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { isClientView, targetUserId } = useClientAwareData();
   
   // Check if it's tablet (md breakpoint: 768px to 1023px)
   const [isTablet, setIsTablet] = React.useState(false);
@@ -429,6 +431,7 @@ const SchedulePage = () => {
           onOpenChange={setIsTransactionFormOpen}
           mode="create"
           defaultType={transactionFormType}
+          targetUserId={isClientView ? targetUserId : undefined}
         />
       </SubscriptionGuard>
     </MainLayout>

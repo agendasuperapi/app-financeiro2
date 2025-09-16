@@ -112,6 +112,7 @@ export const addScheduledTransaction = async (
     aba?: string;
     recurrence?: string;
     installments?: number;
+    user_id?: string;
   }
 ): Promise<ScheduledTransaction | null> => {
   try {
@@ -126,6 +127,9 @@ export const addScheduledTransaction = async (
     }
     
     console.log('✅ User authenticated:', session.user.id);
+
+    // Determine correct user id (client view or current user)
+    const targetUserId = transaction.user_id || session.user.id;
 
     // Get category ID - if it's already an ID, use it directly, otherwise find by name
     let categoryId = transaction.category_id;
@@ -185,7 +189,7 @@ export const addScheduledTransaction = async (
         
         const installmentData = {
           id: uuidv4(),
-          user_id: session.user.id,
+          user_id: targetUserId,
           type: transaction.type,
           amount: transaction.amount,
           category_id: categoryId,
@@ -252,7 +256,7 @@ export const addScheduledTransaction = async (
       // Prepare insert data with additional fields
       const insertData: any = {
         id: newId,
-        user_id: session.user.id,
+        user_id: targetUserId,
         type: transaction.type,
         amount: transaction.amount,
         category_id: categoryId,
@@ -317,6 +321,7 @@ export const updateScheduledTransaction = async (
     phone?: string;
     aba?: string;
     recurrence?: string;
+    user_id?: string;
   }
 ): Promise<ScheduledTransaction | null> => {
   try {

@@ -504,6 +504,7 @@ const LembrarPage = () => {
                 setIsEditDialogOpen(false);
                 setEditingConta(null);
               }}
+              targetUserId={targetUserId}
             />
           </DialogContent>
         </Dialog>

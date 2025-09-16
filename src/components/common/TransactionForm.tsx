@@ -9,6 +9,7 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { useTransactionForm } from '@/hooks/useTransactionForm';
 import TransactionTypeSelector from './TransactionTypeSelector';
 import AmountInput from './AmountInput';
+import ContaInput from './ContaInput';
 import CategoryDateFields from './CategoryDateFields';
 import DescriptionField from './DescriptionField';
 import GoalSelector from './GoalSelector';
@@ -99,6 +100,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <TransactionTypeSelector form={form} onTypeChange={handleTypeChange} />
               <AmountInput form={form} />
+              <ContaInput form={form} />
               <CategoryDateFields form={form} transactionType={selectedType} />
               <DescriptionField form={form} />
               

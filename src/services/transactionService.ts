@@ -50,7 +50,8 @@ export const addTransaction = async (transaction: Omit<Transaction, "id">): Prom
       description: transaction.description,
       date: transaction.date,
       goalId: transaction.goalId,
-      user_id: userId 
+      user_id: userId,
+      conta: (transaction as any).conta || ''
     });
   } catch (error) {
     console.error("Error adding transaction:", error);
@@ -66,6 +67,7 @@ export const createTransactionForUser = async (transactionData: {
   date: string;
   goalId?: string;
   user_id: string;
+  conta: string;
 }): Promise<Transaction | null> => {
   try {
     const newId = uuidv4();
@@ -113,7 +115,8 @@ export const createTransactionForUser = async (transactionData: {
         date: transactionData.date,
         goal_id: transactionData.goalId,
         user_id: transactionData.user_id,
-        reference_code: referenceCode
+        reference_code: referenceCode,
+        conta: transactionData.conta
       })
       .select(`
         *,
@@ -201,6 +204,7 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
         description: transaction.description,
         date: transaction.date,
         goal_id: transaction.goalId,
+        conta: transaction.conta,
         reference_code: await getNextReferenceCode() // Generate new reference code for updates
       })
       .eq("id", transaction.id)

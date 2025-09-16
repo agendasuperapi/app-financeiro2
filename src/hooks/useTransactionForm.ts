@@ -45,6 +45,7 @@ export const useTransactionForm = ({
     defaultValues: {
       type: initialData?.type || defaultType,
       amount: initialData?.amount || 0,
+      conta: initialData?.conta || '',
       category: initialData?.category_id || '',
       description: initialData?.description || '',
       date: initialData?.date 
@@ -92,7 +93,8 @@ export const useTransactionForm = ({
             description: processedValues.description || '',
             date: new Date(processedValues.date).toISOString(),
             goalId: processedValues.goalId,
-            user_id: targetUserId
+            user_id: targetUserId,
+            conta: processedValues.conta
           });
         } else {
           // Usar método normal do contexto para o usuário logado
@@ -104,6 +106,7 @@ export const useTransactionForm = ({
             date: new Date(processedValues.date).toISOString(),
             goalId: processedValues.goalId,
             category: '',
+            conta: processedValues.conta,
           });
         }
         
@@ -119,6 +122,7 @@ export const useTransactionForm = ({
           description: processedValues.description || '',
           date: new Date(processedValues.date).toISOString(),
           goalId: processedValues.goalId,
+          conta: processedValues.conta,
         });
         
         console.log("Transaction updated successfully, refreshing data...");
@@ -155,6 +159,7 @@ export const useTransactionForm = ({
       form.reset({
         type: initialData.type,
         amount: initialData.amount,
+        conta: initialData.conta || '',
         category: initialData.category_id || '',
         description: initialData.description || '',
         date: new Date(initialData.date).toISOString().split('T')[0],
@@ -165,6 +170,7 @@ export const useTransactionForm = ({
       form.reset({
         type: defaultType,
         amount: 0,
+        conta: '',
         category: '',
         description: '',
         date: new Date().toISOString().split('T')[0],

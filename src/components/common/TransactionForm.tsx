@@ -13,6 +13,7 @@ import CategoryDateFields from './CategoryDateFields';
 import DescriptionField from './DescriptionField';
 import GoalSelector from './GoalSelector';
 import { useToast } from '@/hooks/use-toast';
+import { useClientView } from '@/contexts/ClientViewContext';
 
 interface TransactionFormProps {
   open: boolean;
@@ -34,12 +35,13 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const { t } = usePreferences();
   const { setCustomDateRange, getTransactions, getGoals } = useAppContext();
   const { toast } = useToast();
+  const { selectedUser } = useClientView();
   
   // Initialize form
   const { form, selectedType, handleTypeChange, onSubmit } = useTransactionForm({
     initialData: initialData || undefined,
     mode,
-    targetUserId,
+    targetUserId: selectedUser?.id || targetUserId,
     onComplete: async () => {
       console.log("TransactionForm: Transaction completed successfully");
       

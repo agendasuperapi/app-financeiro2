@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { useClientView } from '@/contexts/ClientViewContext';
 import { supabase } from '@/integrations/supabase/client';
 import { addScheduledTransaction, updateScheduledTransaction, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
 import { z } from 'zod';
@@ -44,6 +45,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
   defaultType = 'expense',
 }) => {
   const { t } = usePreferences();
+  const { selectedUser } = useClientView();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isOnline] = useState(navigator.onLine);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -143,7 +145,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
         const { data: userData } = await supabase
           .from('poupeja_users')
           .select('phone')
-          .eq('id', user?.id)
+          .eq('id', selectedUser?.id || user?.id)
           .single();
         
         // Add Brazilian country code 55 if not already present
@@ -152,6 +154,9 @@ const ContaForm: React.FC<ContaFormProps> = ({
           const rawPhone = userData.phone;
           userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
         }
+        
+        // Determine target user id (admin visualizando um cliente)
+        const targetUserId = selectedUser?.id || user?.id || undefined;
         
         const transactionData = {
           type: 'expense' as const,
@@ -167,6 +172,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           situacao: 'ativo',
           phone: userPhone,
           parcela: values.recurrence === 'installments' ? (values.installments || 1).toString() : '1',
+          user_id: targetUserId,
         };
         
         console.log('📋 Creating transaction with data:', transactionData);
@@ -183,7 +189,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
         const { data: userData } = await supabase
           .from('poupeja_users')
           .select('phone')
-          .eq('id', user?.id)
+          .eq('id', selectedUser?.id || user?.id)
           .single();
         
         // Add Brazilian country code 55 if not already present
@@ -192,6 +198,9 @@ const ContaForm: React.FC<ContaFormProps> = ({
           const rawPhone = userData.phone;
           userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
         }
+        
+        // Determine target user id (admin visualizando um cliente)
+        const targetUserId = selectedUser?.id || user?.id || undefined;
         
         const updateData = {
           type: 'expense' as const,
@@ -208,6 +217,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           phone: userPhone,
           parcela: values.recurrence === 'installments' ? (values.installments || 1).toString() : '1',
           status: 'pending' as const,
+          user_id: targetUserId,
         };
         
         console.log('📋 Updating transaction with ID:', initialData.id);

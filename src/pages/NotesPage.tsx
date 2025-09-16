@@ -14,6 +14,7 @@ import { useClientAwareNotes } from '@/hooks/useClientAwareNotes';
 import MainLayout from '@/components/layout/MainLayout';
 import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Note {
   id: string;
@@ -45,16 +46,6 @@ const NotesPage: React.FC = () => {
   );
 
   const handleAddNote = async () => {
-    // Desabilitar criação de novas notas na visualização de cliente
-    if (isClientView) {
-      toast({
-        title: "Operação não permitida",
-        description: "Não é possível criar notas na visualização de cliente.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (!newNote.descricao || !newNote.notas) {
       toast({
         title: "Erro",
@@ -65,11 +56,26 @@ const NotesPage: React.FC = () => {
     }
 
     try {
-      await NotesService.createNote({
-        data: newNote.data,
-        descricao: newNote.descricao,
-        notas: newNote.notas
-      });
+      if (isClientView && selectedUser) {
+        // Criar nota para o cliente selecionado
+        const { error } = await (supabase as any)
+          .from('financeiro_notas')
+          .insert({
+            user_id: selectedUser.id,
+            data: newNote.data,
+            descricao: newNote.descricao,
+            notas: newNote.notas
+          });
+
+        if (error) throw error;
+      } else {
+        // Criar nota para o usuário logado
+        await NotesService.createNote({
+          data: newNote.data,
+          descricao: newNote.descricao,
+          notas: newNote.notas
+        });
+      }
 
       setNewNote({
         data: format(new Date(), 'yyyy-MM-dd'),
@@ -80,7 +86,7 @@ const NotesPage: React.FC = () => {
 
       toast({
         title: "Sucesso",
-        description: "Nota adicionada com sucesso!"
+        description: isClientView ? `Nota adicionada para ${selectedUser?.name}!` : "Nota adicionada com sucesso!"
       });
 
       // Recarregar notas
@@ -155,14 +161,13 @@ const NotesPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <h1 className="text-lg md:text-3xl font-bold text-foreground">Minhas Notas</h1>
               
-              {!isClientView && (
-                <Dialog open={isAddingNote} onOpenChange={setIsAddingNote}>
-                  <DialogTrigger asChild>
-                    <Button className="gap-2">
-                      <Plus className="h-4 w-4" />
-                      Adicionar Nota
-                    </Button>
-                  </DialogTrigger>
+              <Dialog open={isAddingNote} onOpenChange={setIsAddingNote}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    {isClientView ? `Adicionar Nota para ${selectedUser?.name}` : 'Adicionar Nota'}
+                  </Button>
+                </DialogTrigger>
                   <DialogContent className="sm:max-w-[525px]">
                     <DialogHeader>
                       <DialogTitle>Adicionar Nova Nota</DialogTitle>
@@ -207,7 +212,6 @@ const NotesPage: React.FC = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
-              )}
             </div>
 
             {/* Campo de pesquisa */}

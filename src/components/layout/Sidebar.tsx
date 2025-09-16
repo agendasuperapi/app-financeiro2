@@ -107,7 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       },
       {
         icon: Wallet,
-        label: 'Saldo',
+        label: 'Contas&Cartões',
         href: '/saldo'
       },
       {
@@ -277,7 +277,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
     },
     {
       icon: Wallet,
-      label: 'Saldo',
+      label: 'Contas&Cartões',
       href: '/saldo'
     },
     {

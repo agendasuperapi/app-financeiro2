@@ -34,7 +34,7 @@ export const useClientAwareData = () => {
           *,
           categories:category_id(name, icon, color)
         `)
-        .eq('user_id', targetUserId)
+        .eq('poupeja_transactions.user_id', targetUserId)
         .order('date', { ascending: false });
 
       if (error) throw error;

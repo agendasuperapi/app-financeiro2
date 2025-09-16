@@ -672,6 +672,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           description: transaction.description,
           date: transaction.date,
           goal_id: transaction.goalId,
+          user_id: transaction.user_id,
         })
         .eq('id', id)
         .select(`

@@ -36,6 +36,7 @@ import ThankYouPage from "./pages/ThankYouPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AchievementsPage from "./pages/AchievementsPage";
 import LimitsPage from "./pages/LimitsPage";
+import SaldoPage from "./pages/SaldoPage";
 import NotFound from "./pages/NotFound";
 import AdminRoute from "./components/admin/AdminRoute";
 import "./App.css";
@@ -82,6 +83,7 @@ function App() {
                         <Route path="/thank-you" element={<ThankYouPage />} />
                         <Route path="/achievements" element={<AchievementsPage />} />
                         <Route path="/limits" element={<LimitsPage />} />
+                        <Route path="/saldo" element={<SaldoPage />} />
                         <Route 
                           path="/admin" 
                           element={

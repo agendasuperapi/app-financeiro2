@@ -9,7 +9,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
-import { LayoutDashboard, Receipt, BarChart3, Target, User, Settings, FolderOpen, Calendar, Clock, Crown, LogOut, Shield, Users, FileText, CreditCard, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Receipt, BarChart3, Target, User, Settings, FolderOpen, Calendar, Clock, Crown, LogOut, Shield, Users, FileText, CreditCard, AlertTriangle, ChevronDown, ChevronRight, Wallet } from 'lucide-react';
 
 interface SidebarProps {
   onProfileClick?: () => void;
@@ -104,6 +104,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
         icon: CreditCard,
         label: 'Contas a Pagar',
         href: '/contas'
+      },
+      {
+        icon: Wallet,
+        label: 'Saldo',
+        href: '/saldo'
       },
       {
         icon: Clock,
@@ -269,6 +274,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       icon: CreditCard,
       label: 'Contas a Pagar',
       href: '/contas'
+    },
+    {
+      icon: Wallet,
+      label: 'Saldo',
+      href: '/saldo'
     },
     {
       icon: Clock,

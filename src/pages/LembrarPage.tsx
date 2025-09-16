@@ -255,6 +255,7 @@ const LembrarPage = () => {
                     loadContas();
                   }}
                   onCancel={() => setIsAddDialogOpen(false)}
+                  targetUserId={targetUserId}
                 />
               </DialogContent>
             </Dialog>

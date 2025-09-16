@@ -6,13 +6,15 @@ interface AddContaFormProps {
   onCancel: () => void;
   initialData?: any;
   mode?: 'create' | 'edit';
+  targetUserId?: string;
 }
 
 const AddContaForm: React.FC<AddContaFormProps> = ({
   onSuccess,
   onCancel,
   initialData,
-  mode = 'create'
+  mode = 'create',
+  targetUserId
 }) => {
   return (
     <ReminderForm
@@ -21,6 +23,7 @@ const AddContaForm: React.FC<AddContaFormProps> = ({
       initialData={initialData}
       mode={mode}
       onSuccess={onSuccess}
+      targetUserId={targetUserId}
     />
   );
 };

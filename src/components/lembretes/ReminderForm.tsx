@@ -19,6 +19,7 @@ interface ReminderFormProps {
   initialData?: ScheduledTransaction | null;
   mode: 'create' | 'edit';
   onSuccess?: () => void;
+  targetUserId?: string;
 }
 
 const ReminderForm: React.FC<ReminderFormProps> = ({
@@ -27,6 +28,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
   initialData,
   mode,
   onSuccess,
+  targetUserId,
 }) => {
   const { t } = usePreferences();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -93,12 +95,13 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
       if (mode === 'create') {
         console.log('➕ Creating reminder...');
         
-        // Get current user for phone number
+        // Get user data for phone number - use targetUserId if provided (admin creating for client)
         const { data: { user } } = await supabase.auth.getUser();
+        const userId = targetUserId || user?.id;
         const { data: userData } = await supabase
           .from('poupeja_users')
           .select('phone')
-          .eq('id', user?.id)
+          .eq('id', userId)
           .single();
         
         // Add Brazilian country code 55 if not already present
@@ -113,6 +116,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
           situacao: 'ativo',
           phone: userPhone,
+          user_id: userId, // Use targetUserId when creating for client
         };
         
         console.log('📋 Creating reminder with data:', reminderData);
@@ -121,12 +125,13 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
       } else if (initialData) {
         console.log('✏️ Updating reminder...', initialData.id);
         
-        // Get current user for phone number
+        // Get user data for phone number - use targetUserId if provided (admin creating for client)
         const { data: { user } } = await supabase.auth.getUser();
+        const userId = targetUserId || user?.id;
         const { data: userData } = await supabase
           .from('poupeja_users')
           .select('phone')
-          .eq('id', user?.id)
+          .eq('id', userId)
           .single();
         
         // Add Brazilian country code 55 if not already present
@@ -141,6 +146,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           reference_code: initialData?.reference_code || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
           situacao: 'ativo',
           phone: userPhone,
+          user_id: userId, // Use targetUserId when updating for client
         };
         
         console.log('📋 Updating reminder with ID:', initialData.id);

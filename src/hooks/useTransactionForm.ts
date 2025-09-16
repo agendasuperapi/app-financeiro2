@@ -7,19 +7,22 @@ import { createTransactionSchema, TransactionFormValues } from '@/schemas/transa
 import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { getCategoriesByType } from '@/services/categoryService';
+import { createTransactionForUser } from '@/services/transactionService';
 
 interface UseTransactionFormProps {
   initialData?: Transaction;
   mode: 'create' | 'edit';
   onComplete: () => void;
   defaultType?: 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros';
+  targetUserId?: string; // Para suportar criação de transações para outros usuários (cliente view)
 }
 
 export const useTransactionForm = ({ 
   initialData, 
   mode, 
   onComplete, 
-  defaultType = 'expense' 
+  defaultType = 'expense',
+  targetUserId
 }: UseTransactionFormProps) => {
   const { addTransaction, updateTransaction, getTransactions, getGoals } = useAppContext();
   const { t } = usePreferences();
@@ -67,6 +70,7 @@ export const useTransactionForm = ({
   const onSubmit = async (values: TransactionFormValues) => {
     console.log("Form submitted with values:", values);
     console.log("Form validation state:", form.formState);
+    console.log("Target User ID for transaction:", targetUserId);
     
     // Convert "none" value and null back to undefined for goalId
     const processedValues = {
@@ -77,19 +81,37 @@ export const useTransactionForm = ({
     try {
       if (mode === 'create') {
         console.log("Creating transaction...");
-        await addTransaction({
-          type: processedValues.type,
-          amount: processedValues.amount,
-          category_id: processedValues.category,
-          description: processedValues.description || '',
-          date: new Date(processedValues.date).toISOString(),
-          goalId: processedValues.goalId,
-          category: '',
-        });
+        
+        // Se temos um targetUserId, precisamos criar a transação diretamente no banco
+        if (targetUserId) {
+          console.log("Creating transaction for client:", targetUserId);
+          await createTransactionForUser({
+            type: processedValues.type as 'income' | 'expense',
+            amount: processedValues.amount,
+            category_id: processedValues.category,
+            description: processedValues.description || '',
+            date: new Date(processedValues.date).toISOString(),
+            goalId: processedValues.goalId,
+            user_id: targetUserId
+          });
+        } else {
+          // Usar método normal do contexto para o usuário logado
+          await addTransaction({
+            type: processedValues.type,
+            amount: processedValues.amount,
+            category_id: processedValues.category,
+            description: processedValues.description || '',
+            date: new Date(processedValues.date).toISOString(),
+            goalId: processedValues.goalId,
+            category: '',
+          });
+        }
         
         console.log("Transaction created successfully, refreshing data...");
       } else if (initialData) {
         console.log("Updating transaction...");
+        
+        // Para edição, usar método normal (transações só podem ser editadas pelo próprio usuário)
         await updateTransaction(initialData.id, {
           type: processedValues.type,
           amount: processedValues.amount,

@@ -272,7 +272,8 @@ const Index = () => {
         onOpenChange={setTransactionDialogOpen} 
         initialData={selectedTransaction} 
         mode={formMode} 
-        defaultType={transactionType} 
+        defaultType={transactionType}
+        targetUserId={isClientView ? targetUserId : undefined}
       />
     </MainLayout>
   );

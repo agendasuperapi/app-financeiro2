@@ -20,6 +20,7 @@ interface TransactionFormProps {
   initialData?: Transaction | null;
   mode: 'create' | 'edit';
   defaultType?: 'income' | 'expense';
+  targetUserId?: string; // Para suportar criação para outros usuários
 }
 
 const TransactionForm: React.FC<TransactionFormProps> = ({
@@ -28,6 +29,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   initialData,
   mode,
   defaultType = 'expense',
+  targetUserId
 }) => {
   const { t } = usePreferences();
   const { setCustomDateRange, getTransactions, getGoals } = useAppContext();
@@ -37,6 +39,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const { form, selectedType, handleTypeChange, onSubmit } = useTransactionForm({
     initialData: initialData || undefined,
     mode,
+    targetUserId,
     onComplete: async () => {
       console.log("TransactionForm: Transaction completed successfully");
       

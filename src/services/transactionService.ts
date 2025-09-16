@@ -41,6 +41,33 @@ export const addTransaction = async (transaction: Omit<Transaction, "id">): Prom
     }
 
     const userId = authData.user.id;
+    
+    // Map the Transaction interface to the createTransactionForUser interface
+    return await createTransactionForUser({ 
+      type: transaction.type,
+      amount: transaction.amount,
+      category_id: transaction.category_id || transaction.category,
+      description: transaction.description,
+      date: transaction.date,
+      goalId: transaction.goalId,
+      user_id: userId 
+    });
+  } catch (error) {
+    console.error("Error adding transaction:", error);
+    return null;
+  }
+};
+
+export const createTransactionForUser = async (transactionData: {
+  type: 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros';
+  amount: number;
+  category_id: string;
+  description?: string;
+  date: string;
+  goalId?: string;
+  user_id: string;
+}): Promise<Transaction | null> => {
+  try {
     const newId = uuidv4();
 
     // Generate next reference code
@@ -48,13 +75,13 @@ export const addTransaction = async (transaction: Omit<Transaction, "id">): Prom
     console.log("Generated reference code:", referenceCode);
 
     // Get category ID - if it's already an ID, use it directly, otherwise find by name
-    let categoryId = transaction.category;
+    let categoryId = transactionData.category_id;
     
     // Check if the category is actually a category ID by trying to find it
     const { data: categoryCheck } = await supabase
       .from("poupeja_categories")
       .select("id")
-      .eq("id", transaction.category)
+      .eq("id", transactionData.category_id)
       .single();
     
     if (!categoryCheck) {
@@ -62,15 +89,15 @@ export const addTransaction = async (transaction: Omit<Transaction, "id">): Prom
       const { data: categoryByName } = await supabase
         .from("poupeja_categories")
         .select("id")
-        .eq("name", transaction.category)
-        .eq("type", transaction.type)
+        .eq("name", transactionData.category_id)
+        .eq("type", transactionData.type)
         .single();
       
       if (categoryByName) {
         categoryId = categoryByName.id;
       } else {
         // Fallback to default "Outros" category
-        const defaultCategoryId = transaction.type === 'income' ? 'other-income' : 'other-expense';
+        const defaultCategoryId = transactionData.type === 'income' ? 'other-income' : 'other-expense';
         categoryId = defaultCategoryId;
       }
     }
@@ -79,13 +106,13 @@ export const addTransaction = async (transaction: Omit<Transaction, "id">): Prom
       .from("poupeja_transactions")
       .insert({
         id: newId,
-        type: transaction.type,
-        amount: transaction.amount,
+        type: transactionData.type,
+        amount: transactionData.amount,
         category_id: categoryId,
-        description: transaction.description,
-        date: transaction.date,
-        goal_id: transaction.goalId,
-        user_id: userId,
+        description: transactionData.description || '',
+        date: transactionData.date,
+        goal_id: transactionData.goalId,
+        user_id: transactionData.user_id,
         reference_code: referenceCode
       })
       .select(`
@@ -97,11 +124,11 @@ export const addTransaction = async (transaction: Omit<Transaction, "id">): Prom
     if (error) throw error;
 
     // If this is an income transaction linked to a goal, update the goal's current amount
-    if (transaction.type === 'income' && transaction.goalId) {
+    if (transactionData.type === 'income' && transactionData.goalId) {
       console.log("Updating goal current amount for income transaction");
       const { error: goalError } = await supabase.rpc('update_goal_amount', {
-        p_goal_id: transaction.goalId,
-        p_amount_change: transaction.amount
+        p_goal_id: transactionData.goalId,
+        p_amount_change: transactionData.amount
       });
       
       if (goalError) {
@@ -123,7 +150,7 @@ export const addTransaction = async (transaction: Omit<Transaction, "id">): Prom
       goalId: data.goal_id || undefined
     };
   } catch (error) {
-    console.error("Error adding transaction:", error);
+    console.error("Error creating transaction for user:", error);
     return null;
   }
 };

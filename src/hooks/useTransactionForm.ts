@@ -119,7 +119,6 @@ export const useTransactionForm = ({
           description: processedValues.description || '',
           date: new Date(processedValues.date).toISOString(),
           goalId: processedValues.goalId,
-          user_id: targetUserId,
         });
         
         console.log("Transaction updated successfully, refreshing data...");

@@ -20,7 +20,7 @@ const TransactionsPage = () => {
   const isMobile = useIsMobile();
 
   // Filter out transactions with zero amount
-  const filteredTransactions = transactions.filter(transaction => transaction.amount > 0);
+  const filteredTransactions = transactions.filter(transaction => transaction.amount !== 0);
 
   const handleAddTransaction = () => {
     setEditingTransaction(null);

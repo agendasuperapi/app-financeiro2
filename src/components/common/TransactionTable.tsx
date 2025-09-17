@@ -125,7 +125,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                           )}
                         >
                           {transaction.type === 'income' ? '+' : '-'}
-                          {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
+                          {hideValues ? renderHiddenValue() : formatCurrency(Math.abs(transaction.amount), currency)}
                         </div>
                       </div>
                     </div>
@@ -140,7 +140,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     )}
                   >
                     {transaction.type === 'income' ? '+' : '-'}
-                    {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
+                    {hideValues ? renderHiddenValue() : formatCurrency(Math.abs(transaction.amount), currency)}
                   </TableCell>
                   <TableCell className="pl-2 pr-2 w-[12%] min-w-[90px]">
                     <div className="flex justify-end gap-1">

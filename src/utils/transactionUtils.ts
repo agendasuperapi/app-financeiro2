@@ -292,14 +292,16 @@ export const calculateCategorySummaries = (
   type: 'income' | 'expense'
 ) => {
   const filteredTransactions = transactions.filter((t) => t.type === type);
-  const totalAmount = filteredTransactions.reduce((sum, t) => sum + t.amount, 0);
+  // For expenses, use absolute values since they're stored as negative
+  const totalAmount = Math.abs(filteredTransactions.reduce((sum, t) => sum + t.amount, 0));
   
   // Group by category
   const categories = filteredTransactions.reduce((acc, t) => {
     if (!acc[t.category]) {
       acc[t.category] = 0;
     }
-    acc[t.category] += t.amount;
+    // For expenses, use absolute value
+    acc[t.category] += type === 'expense' ? Math.abs(t.amount) : t.amount;
     return acc;
   }, {} as Record<string, number>);
   
@@ -314,6 +316,6 @@ export const calculateCategorySummaries = (
     category,
     amount,
     percentage: totalAmount > 0 ? Math.round((amount / totalAmount) * 100) : 0,
-    color: colors[index % colors.length],
+    color: colors[index % colors.length]
   }));
 };

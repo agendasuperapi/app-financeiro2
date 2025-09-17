@@ -55,7 +55,8 @@ const generateChartData = (transactions: any[], month: Date) => {
     if (transaction.type === 'income') {
       dayData.income += transaction.amount;
     } else {
-      dayData.expenses += transaction.amount;
+      // Expenses are stored as negative values, so use absolute value
+      dayData.expenses += Math.abs(transaction.amount);
     }
     
     transactionsByDay.set(day, dayData);
@@ -64,6 +65,7 @@ const generateChartData = (transactions: any[], month: Date) => {
   // Convert map to array and calculate balance
   const result = Array.from(transactionsByDay.values());
   result.forEach(item => {
+    // Balance = income - expenses (expenses are now positive values)
     item.balance = item.income - item.expenses;
   });
   

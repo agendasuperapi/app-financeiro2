@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Phone, Camera, Mail, Key, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import DependentsTab from '@/components/profile/DependentsTab';
 
 const ProfilePage = () => {
   const { t } = usePreferences();
@@ -356,6 +357,7 @@ const ProfilePage = () => {
           <Tabs defaultValue="info">
             <TabsList>
               <TabsTrigger value="info">Informações Pessoais</TabsTrigger>
+              <TabsTrigger value="dependents">Dependentes</TabsTrigger>
               <TabsTrigger value="password">Senha</TabsTrigger>
             </TabsList>
             
@@ -463,6 +465,10 @@ const ProfilePage = () => {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+            
+            <TabsContent value="dependents">
+              <DependentsTab />
             </TabsContent>
             
             <TabsContent value="password">

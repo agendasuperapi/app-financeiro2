@@ -16,19 +16,24 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 
     if (error) throw error;
 
-    // For transactions with phone, get dependent names with a simple query
+    // For transactions with phone, get dependent names from tbl_depentes
     const transactionsWithPhone = (data as any[]).filter(item => item.phone);
     let dependentsMap = new Map<string, string>();
 
     for (const transaction of transactionsWithPhone) {
-      const { data: dependentData } = await supabase
-        .from("poupeja_users") // Using poupeja_users table since tbl_depentes is not in types
-        .select("phone, name")
-        .eq("phone", transaction.phone)
-        .single();
-      
-      if (dependentData) {
-        dependentsMap.set(dependentData.phone, dependentData.name || 'Dependente');
+      try {
+        // Query tbl_depentes table directly
+        const { data: dependentData } = await (supabase as any)
+          .from('tbl_depentes')
+          .select('dep_name')
+          .eq('dep_phone', transaction.phone)
+          .single();
+        
+        if (dependentData?.dep_name) {
+          dependentsMap.set(transaction.phone, dependentData.dep_name);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dependente:', error);
       }
     }
 

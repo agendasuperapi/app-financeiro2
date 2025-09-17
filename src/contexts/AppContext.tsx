@@ -538,25 +538,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Data fetching methods (memoized to prevent unnecessary re-renders)
   const getTransactions = useCallback(async (): Promise<Transaction[]> => {
     try {
-      console.log('AppContext: Fetching transactions...');
-      const user = await getCurrentUser();
-      const { data, error } = await supabase
-        .from('poupeja_transactions')
-        .select(`
-          *,
-          category:poupeja_categories(id, name, icon, color, type)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-  
-      if (error) throw error;
-      
-      const transactions = (data || []).map(transformTransaction);
-      console.log('AppContext: Transactions fetched successfully:', transactions.length);
+      console.log('AppContext: Fetching transactions via service...');
+      // Use the centralized service which already enriches with phone and addedBy
+      const { getTransactions: getTransactionsService } = await import('@/services/transactionService');
+      const transactions = await getTransactionsService();
+      console.log('AppContext: Transactions fetched successfully (service):', transactions.length);
       dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
       return transactions;
     } catch (error) {
-      console.error('Error fetching transactions:', error);
+      console.error('AppContext: Error fetching transactions via service:', error);
       throw error;
     }
   }, []); // Empty dependencies as this function is self-contained

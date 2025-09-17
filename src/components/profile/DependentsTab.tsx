@@ -26,8 +26,8 @@ const DependentsTab = () => {
       setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (session?.user?.user_metadata?.phone) {
-        const deps = await DependentsService.getDependents(session.user.user_metadata.phone);
+      if (session?.user?.id) {
+        const deps = await DependentsService.getDependents(session.user.id);
         setDependents(deps);
       }
     } catch (error) {
@@ -58,8 +58,8 @@ const DependentsTab = () => {
       setAdding(true);
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (session?.user?.user_metadata?.phone) {
-        await DependentsService.addDependent(session.user.user_metadata.phone, newDepName, newDepPhone);
+      if (session?.user?.id) {
+        await DependentsService.addDependent(session.user.id, newDepName, newDepPhone);
         
         toast({
           title: 'Sucesso',

@@ -28,6 +28,7 @@ export const useClientAwareData = () => {
     if (!targetUserId) return [];
     
     try {
+      console.log('[ClientAware] 🔍 Iniciando busca de transações do cliente...');
       const { data, error } = await supabase
         .from('poupeja_transactions')
         .select(`
@@ -38,6 +39,10 @@ export const useClientAwareData = () => {
         .order('date', { ascending: false });
 
       if (error) throw error;
+      
+      console.log('[ClientAware] 📊 Dados brutos das transações:', data);
+      console.log('[ClientAware] 📱 Primeira transação completa:', data[0]);
+      console.log('[ClientAware] 📱 Campos disponíveis na primeira transação:', Object.keys(data[0] || {}));
       
       // For transactions with phone, get dependent names from tbl_depentes
       const transactionsWithPhone = (data as any[]).filter(item => item.phone);

@@ -18,10 +18,14 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 
     // For transactions with phone, get dependent names from tbl_depentes
     const transactionsWithPhone = (data as any[]).filter(item => item.phone);
+    console.log('Transações com telefone encontradas:', transactionsWithPhone.length);
+    console.log('Transações com telefone:', transactionsWithPhone.map(t => ({ id: t.id, phone: t.phone, description: t.description })));
+    
     let dependentsMap = new Map<string, string>();
 
     for (const transaction of transactionsWithPhone) {
       try {
+        console.log('Buscando dependente para telefone:', transaction.phone);
         // Query tbl_depentes table directly
         const { data: dependentData } = await (supabase as any)
           .from('tbl_depentes')
@@ -29,13 +33,18 @@ export const getTransactions = async (): Promise<Transaction[]> => {
           .eq('dep_phone', transaction.phone)
           .single();
         
+        console.log('Dados do dependente encontrados:', dependentData);
+        
         if (dependentData?.dep_name) {
           dependentsMap.set(transaction.phone, dependentData.dep_name);
+          console.log('Mapeamento adicionado:', transaction.phone, '->', dependentData.dep_name);
         }
       } catch (error) {
-        console.error('Erro ao buscar dependente:', error);
+        console.error('Erro ao buscar dependente para telefone:', transaction.phone, error);
       }
     }
+    
+    console.log('Mapa final de dependentes:', Array.from(dependentsMap.entries()));
 
     return (data as any[]).map((item: any) => ({
       id: item.id,

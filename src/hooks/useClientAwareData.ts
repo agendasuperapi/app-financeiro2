@@ -41,10 +41,14 @@ export const useClientAwareData = () => {
       
       // For transactions with phone, get dependent names from tbl_depentes
       const transactionsWithPhone = (data as any[]).filter(item => item.phone);
+      console.log('[ClientAware] Transações com telefone encontradas:', transactionsWithPhone.length);
+      console.log('[ClientAware] Transações com telefone:', transactionsWithPhone.map(t => ({ id: t.id, phone: t.phone, description: t.description })));
+      
       let dependentsMap = new Map<string, string>();
 
       for (const transaction of transactionsWithPhone) {
         try {
+          console.log('[ClientAware] Buscando dependente para telefone:', transaction.phone);
           // Query tbl_depentes table directly
           const { data: dependentData } = await (supabase as any)
             .from('tbl_depentes')
@@ -52,13 +56,18 @@ export const useClientAwareData = () => {
             .eq('dep_phone', transaction.phone)
             .single();
           
+          console.log('[ClientAware] Dados do dependente encontrados:', dependentData);
+          
           if (dependentData?.dep_name) {
             dependentsMap.set(transaction.phone, dependentData.dep_name);
+            console.log('[ClientAware] Mapeamento adicionado:', transaction.phone, '->', dependentData.dep_name);
           }
         } catch (error) {
-          console.error('Erro ao buscar dependente:', error);
+          console.error('[ClientAware] Erro ao buscar dependente para telefone:', transaction.phone, error);
         }
       }
+      
+      console.log('[ClientAware] Mapa final de dependentes:', Array.from(dependentsMap.entries()));
       
       return data.map(transaction => ({
         ...transaction,

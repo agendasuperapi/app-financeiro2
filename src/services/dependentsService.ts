@@ -14,7 +14,7 @@ export class DependentsService {
       const { data, error } = await (supabase as any)
         .from('tbl_depentes')
         .select('*')
-        .eq('user_id', userId)
+        .eq('phone', userId) // Using phone field to match user
         .order('dep_numero', { ascending: true });
 
       if (error) throw error;
@@ -31,7 +31,7 @@ export class DependentsService {
       const { data: existingDependents, error: countError } = await (supabase as any)
         .from('tbl_depentes')
         .select('dep_numero')
-        .eq('user_id', userId)
+        .eq('phone', userId) // Using phone field to match user
         .order('dep_numero', { ascending: false })
         .limit(1);
 
@@ -42,7 +42,7 @@ export class DependentsService {
         : 1;
 
       const newDependent = {
-        user_id: userId,
+        phone: userId, // Using phone field to match user
         dep_name: name,
         dep_phone: phone.replace(/\D/g, ''), // Remove non-digits
         dep_numero: nextNumber

@@ -46,7 +46,9 @@ const ContasPage = () => {
         return;
       }
       const data = await getScheduledTransactions(targetUserId);
-      setContas(data);
+      // Filter out transactions with amount = 0
+      const filteredData = data.filter(conta => conta.amount !== 0);
+      setContas(filteredData);
     } catch (error) {
       console.error('Error loading contas:', error);
     } finally {

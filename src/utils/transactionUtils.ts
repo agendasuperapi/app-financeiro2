@@ -101,11 +101,11 @@ export const calculateTotalIncome = (transactions: Transaction[]): number => {
     .reduce((sum, t) => sum + t.amount, 0);
 };
 
-// Calculate total expenses
+// Calculate total expenses (return absolute value since expenses are stored as negative)
 export const calculateTotalExpenses = (transactions: Transaction[]): number => {
-  return transactions
+  return Math.abs(transactions
     .filter((t) => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
+    .reduce((sum, t) => sum + t.amount, 0));
 };
 
 // NEW: Calculate month-specific financial data
@@ -146,7 +146,8 @@ export const calculateMonthlyFinancialData = (
       const transactionDate = new Date(transaction.date);
       return transactionDate <= selectedMonthEnd;
     });
-    accumulatedBalance = calculateTotalIncome(transactionsUpToSelectedMonth) - calculateTotalExpenses(transactionsUpToSelectedMonth);
+    // Just sum all transactions since expenses are already negative
+    accumulatedBalance = transactionsUpToSelectedMonth.reduce((sum, t) => sum + t.amount, 0);
     console.log('Previous month calculation:', { transactionsCount: transactionsUpToSelectedMonth.length, balance: accumulatedBalance });
     
   } else if (selectedMonthStart.getTime() === currentMonth.getTime()) {
@@ -156,7 +157,8 @@ export const calculateMonthlyFinancialData = (
       const transactionDate = new Date(transaction.date);
       return transactionDate <= currentDateEnd;
     });
-    accumulatedBalance = calculateTotalIncome(transactionsUpToCurrent) - calculateTotalExpenses(transactionsUpToCurrent);
+    // Just sum all transactions since expenses are already negative
+    accumulatedBalance = transactionsUpToCurrent.reduce((sum, t) => sum + t.amount, 0);
     console.log('Current month calculation:', { transactionsCount: transactionsUpToCurrent.length, balance: accumulatedBalance });
     
   } else {
@@ -167,7 +169,8 @@ export const calculateMonthlyFinancialData = (
       const transactionDate = new Date(transaction.date);
       return transactionDate <= currentDateEnd;
     });
-    accumulatedBalance = calculateTotalIncome(transactionsUpToCurrent) - calculateTotalExpenses(transactionsUpToCurrent);
+    // Just sum all transactions since expenses are already negative
+    accumulatedBalance = transactionsUpToCurrent.reduce((sum, t) => sum + t.amount, 0);
     console.log('Future month calculation:', { transactionsCount: transactionsUpToCurrent.length, balance: accumulatedBalance });
     
     // For future months, income and expenses should be only what's already registered for that future month

@@ -16,7 +16,23 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 
     if (error) throw error;
 
-    return data.map((item) => ({
+    // For transactions with phone, get dependent names with a simple query
+    const transactionsWithPhone = (data as any[]).filter(item => item.phone);
+    let dependentsMap = new Map<string, string>();
+
+    for (const transaction of transactionsWithPhone) {
+      const { data: dependentData } = await supabase
+        .from("poupeja_users") // Using poupeja_users table since tbl_depentes is not in types
+        .select("phone, name")
+        .eq("phone", transaction.phone)
+        .single();
+      
+      if (dependentData) {
+        dependentsMap.set(dependentData.phone, dependentData.name || 'Dependente');
+      }
+    }
+
+    return (data as any[]).map((item: any) => ({
       id: item.id,
       type: item.type as 'income' | 'expense',
       amount: item.amount,
@@ -25,7 +41,9 @@ export const getTransactions = async (): Promise<Transaction[]> => {
       categoryColor: item.category?.color || "#607D8B",
       description: item.description || "",
       date: item.date,
-      goalId: item.goal_id || undefined
+      goalId: item.goal_id || undefined,
+      phone: item.phone,
+      addedBy: item.phone ? dependentsMap.get(item.phone) : undefined
     }));
   } catch (error) {
     console.error("Error fetching transactions:", error);

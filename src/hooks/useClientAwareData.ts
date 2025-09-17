@@ -39,11 +39,29 @@ export const useClientAwareData = () => {
 
       if (error) throw error;
       
+      // For transactions with phone, get dependent names
+      const transactionsWithPhone = (data as any[]).filter(item => item.phone);
+      let dependentsMap = new Map<string, string>();
+
+      for (const transaction of transactionsWithPhone) {
+        const { data: dependentData } = await supabase
+          .from("poupeja_users")
+          .select("phone, name")
+          .eq("phone", transaction.phone)
+          .single();
+        
+        if (dependentData) {
+          dependentsMap.set(dependentData.phone, dependentData.name || 'Dependente');
+        }
+      }
+      
       return data.map(transaction => ({
         ...transaction,
         category: transaction.categories?.name || 'Sem categoria',
         categoryIcon: transaction.categories?.icon || 'circle',
-        categoryColor: transaction.categories?.color || '#607D8B'
+        categoryColor: transaction.categories?.color || '#607D8B',
+        phone: (transaction as any).phone,
+        addedBy: (transaction as any).phone ? dependentsMap.get((transaction as any).phone) : undefined
       }));
     } catch (error) {
       console.error('Erro ao buscar transações do cliente:', error);

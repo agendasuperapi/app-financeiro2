@@ -44,6 +44,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               <TableHead className="w-[13%] min-w-[90px]">{t('common.date')}</TableHead>
               <TableHead className="w-[22%] min-w-[110px]">{t('common.category')}</TableHead>
               <TableHead className="w-[24%] hidden lg:table-cell">{t('common.description')}</TableHead>
+              <TableHead className="w-[15%] min-w-[100px]">Adicionado por</TableHead>
               <TableHead className="text-right w-[10%] min-w-[75px] hidden lg:table-cell">{t('common.amount')}</TableHead>
               <TableHead className="w-[12%] min-w-[90px]">{t('common.actions') || 'Ações'}</TableHead>
             </TableRow>
@@ -132,6 +133,15 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   </TableCell>
                   <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
                     <div className="truncate pr-2">{transaction.description}</div>
+                  </TableCell>
+                  <TableCell className="text-[10px] md:text-xs">
+                    {transaction.addedBy ? (
+                      <Badge variant="secondary" className="text-[10px]">
+                        {transaction.addedBy}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-[10px]">-</span>
+                    )}
                   </TableCell>
                   <TableCell
                     className={cn(

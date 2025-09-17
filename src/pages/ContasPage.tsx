@@ -268,9 +268,9 @@ const ContasPage = () => {
 
                           {/* Terceira linha: Valor e Ações */}
                           <div className="flex items-center justify-between">
-                            <div className="font-bold text-sm md:text-xl">
-                              {formatCurrency(conta.amount)}
-                            </div>
+            <div className="font-bold text-sm md:text-xl">
+              {formatCurrency(Math.abs(conta.amount))}
+            </div>
                             
                             <div className="flex items-center gap-1 flex-wrap">
                               {!isPaid && (

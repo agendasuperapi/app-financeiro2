@@ -161,7 +161,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
         const transactionData = {
           type: 'expense' as const,
           description: values.description,
-          amount: values.amount,
+          amount: -values.amount,
           installments: values.recurrence === 'installments' ? (values.installments || 1) : 1,
           category: selectedCategory?.name || 'Outros',
           category_id: values.category,
@@ -205,7 +205,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
         const updateData = {
           type: 'expense' as const,
           description: values.description,
-          amount: values.amount,
+          amount: -values.amount,
           installments: values.recurrence === 'installments' ? (values.installments || 1) : 1,
           category: selectedCategory?.name || 'Outros',
           category_id: values.category,

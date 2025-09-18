@@ -35,8 +35,8 @@ const ContaInput: React.FC<ContaInputProps> = ({ form }) => {
     loadContas();
   }, []);
 
-  const handleInputChange = (value: string) => {
-    form.setValue('conta', value);
+  const handleInputChange = (value: string, onChange: (value: string) => void) => {
+    onChange(value);
     
     // Filter suggestions
     const filtered = contas.filter(conta => 
@@ -61,7 +61,7 @@ const ContaInput: React.FC<ContaInputProps> = ({ form }) => {
                 <Input
                   {...field}
                   placeholder={t('transactions.accountPlaceholder')}
-                  onChange={(e) => handleInputChange(e.target.value)}
+                  onChange={(e) => handleInputChange(e.target.value, field.onChange)}
                   onFocus={() => {
                     if (field.value) {
                       const filtered = contas.filter(conta => 

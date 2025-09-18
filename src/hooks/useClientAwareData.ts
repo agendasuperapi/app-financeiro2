@@ -44,35 +44,35 @@ export const useClientAwareData = () => {
       console.log('[ClientAware] 📱 Primeira transação completa:', data[0]);
       console.log('[ClientAware] 📱 Campos disponíveis na primeira transação:', Object.keys(data[0] || {}));
       
-      // For transactions with phone, get dependent names from tbl_depentes
+      // For transactions with phone, get user names from view_cadastros_unificados
       const transactionsWithPhone = (data as any[]).filter(item => item.phone);
       console.log('[ClientAware] Transações com telefone encontradas:', transactionsWithPhone.length);
       console.log('[ClientAware] Transações com telefone:', transactionsWithPhone.map(t => ({ id: t.id, phone: t.phone, description: t.description })));
       
-      let dependentsMap = new Map<string, string>();
+      let usersMap = new Map<string, string>();
 
       for (const transaction of transactionsWithPhone) {
         try {
-          console.log('[ClientAware] Buscando dependente para telefone:', transaction.phone);
-          // Query tbl_depentes table directly
-          const { data: dependentData } = await (supabase as any)
-            .from('tbl_depentes')
-            .select('dep_name')
-            .eq('dep_phone', transaction.phone)
+          console.log('[ClientAware] Buscando usuário para telefone:', transaction.phone);
+          // Query view_cadastros_unificados table
+          const { data: userData } = await (supabase as any)
+            .from('view_cadastros_unificados')
+            .select('nome')
+            .eq('telefone', transaction.phone)
             .single();
           
-          console.log('[ClientAware] Dados do dependente encontrados:', dependentData);
+          console.log('[ClientAware] Dados do usuário encontrados:', userData);
           
-          if (dependentData?.dep_name) {
-            dependentsMap.set(transaction.phone, dependentData.dep_name);
-            console.log('[ClientAware] Mapeamento adicionado:', transaction.phone, '->', dependentData.dep_name);
+          if (userData?.nome) {
+            usersMap.set(transaction.phone, userData.nome);
+            console.log('[ClientAware] Mapeamento adicionado:', transaction.phone, '->', userData.nome);
           }
         } catch (error) {
-          console.error('[ClientAware] Erro ao buscar dependente para telefone:', transaction.phone, error);
+          console.error('[ClientAware] Erro ao buscar usuário para telefone:', transaction.phone, error);
         }
       }
       
-      console.log('[ClientAware] Mapa final de dependentes:', Array.from(dependentsMap.entries()));
+      console.log('[ClientAware] Mapa final de usuários:', Array.from(usersMap.entries()));
       
       return data.map(transaction => ({
         ...transaction,
@@ -80,7 +80,7 @@ export const useClientAwareData = () => {
         categoryIcon: transaction.categories?.icon || 'circle',
         categoryColor: transaction.categories?.color || '#607D8B',
         phone: (transaction as any).phone,
-        addedBy: (transaction as any).phone ? dependentsMap.get((transaction as any).phone) : undefined
+        addedBy: (transaction as any).phone ? usersMap.get((transaction as any).phone) : undefined
       }));
     } catch (error) {
       console.error('Erro ao buscar transações do cliente:', error);

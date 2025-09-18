@@ -139,28 +139,40 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
       if (mode === 'create') {
         console.log('➕ Creating reminder...');
         
-        // Get user data for phone number - use targetUserId if provided (admin creating for client)
+        // Get current user
         const { data: { user } } = await supabase.auth.getUser();
-        const userId = targetUserId || user?.id;
-        const { data: userData } = await supabase
-          .from('poupeja_users')
-          .select('phone')
-          .eq('id', userId)
-          .single();
         
-        // Add Brazilian country code 55 if not already present
-        let userPhone = '';
-        if (userData?.phone) {
-          const rawPhone = userData.phone;
-          userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+        // Determine phone number based on selected person
+        let phoneToUse = '';
+        
+        if (values.dependentName && isDependent) {
+          // If a dependent is selected, use their phone number
+          const selectedUser = dependentUsers.find(user => user.name === values.dependentName);
+          if (selectedUser?.phone) {
+            const rawPhone = selectedUser.phone;
+            phoneToUse = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+          }
+        } else {
+          // Otherwise, use current user's phone number
+          const userId = targetUserId || user?.id;
+          const { data: userData } = await supabase
+            .from('poupeja_users')
+            .select('phone')
+            .eq('id', userId)
+            .single();
+          
+          if (userData?.phone) {
+            const rawPhone = userData.phone;
+            phoneToUse = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+          }
         }
         
         const reminderData = {
           ...submitData,
           reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
           situacao: 'ativo',
-          phone: userPhone,
-          user_id: userId, // Use targetUserId when creating for client
+          phone: phoneToUse,
+          user_id: targetUserId || user?.id,
           dependent_name: values.dependentName || '',
         };
         
@@ -170,28 +182,40 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
       } else if (initialData) {
         console.log('✏️ Updating reminder...', initialData.id);
         
-        // Get user data for phone number - use targetUserId if provided (admin creating for client)
+        // Get current user
         const { data: { user } } = await supabase.auth.getUser();
-        const userId = targetUserId || user?.id;
-        const { data: userData } = await supabase
-          .from('poupeja_users')
-          .select('phone')
-          .eq('id', userId)
-          .single();
         
-        // Add Brazilian country code 55 if not already present
-        let userPhone = '';
-        if (userData?.phone) {
-          const rawPhone = userData.phone;
-          userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+        // Determine phone number based on selected person
+        let phoneToUse = '';
+        
+        if (values.dependentName && isDependent) {
+          // If a dependent is selected, use their phone number
+          const selectedUser = dependentUsers.find(user => user.name === values.dependentName);
+          if (selectedUser?.phone) {
+            const rawPhone = selectedUser.phone;
+            phoneToUse = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+          }
+        } else {
+          // Otherwise, use current user's phone number
+          const userId = targetUserId || user?.id;
+          const { data: userData } = await supabase
+            .from('poupeja_users')
+            .select('phone')
+            .eq('id', userId)
+            .single();
+          
+          if (userData?.phone) {
+            const rawPhone = userData.phone;
+            phoneToUse = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+          }
         }
         
         const updateData = {
           ...submitData,
           reference_code: initialData?.reference_code || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
           situacao: 'ativo',
-          phone: userPhone,
-          user_id: userId, // Use targetUserId when updating for client
+          phone: phoneToUse,
+          user_id: targetUserId || user?.id,
           dependent_name: values.dependentName || '',
         };
         

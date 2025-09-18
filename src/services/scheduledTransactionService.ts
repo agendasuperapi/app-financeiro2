@@ -93,6 +93,13 @@ export const getScheduledTransactions = async (userId?: string): Promise<Schedul
       recurrence: normalizeRecurrence(item.recurrence) || 'once',
       goalId: item.goal_id,
       status: (item.status as 'pending' | 'paid' | 'overdue' | 'upcoming') || 'pending',
+      // Extra fields needed for edit forms
+      conta: (item as any).conta || '',
+      phone: (item as any).phone || undefined,
+      parcela: (item as any).parcela ? String((item as any).parcela) : undefined,
+      situacao: (item as any).situacao || undefined,
+      dependent_name: (item as any).dependent_name || undefined,
+      // Not used in list but keep placeholders for types
       paidDate: undefined,
       paidAmount: undefined,
       lastExecutionDate: undefined,

@@ -274,6 +274,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       goal_id: dbTransaction.goal_id,
       user_id: dbTransaction.user_id,
       created_at: dbTransaction.created_at,
+      phone: dbTransaction.phone,
     };
   };
 
@@ -667,6 +668,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           conta: transaction.conta,
           user_id: user.id,
           reference_code: referenceCode,
+          phone: (transaction as any).phone || null,
         })
         .select(`
           *,
@@ -702,6 +704,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           date: transaction.date,
           goal_id: transaction.goalId,
           conta: transaction.conta,
+          phone: transaction.phone,
         })
         .eq('id', id)
         .select(`

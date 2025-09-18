@@ -92,18 +92,21 @@ const CategoryDateFields: React.FC<CategoryDateFieldsProps> = ({ form, transacti
       <FormField
         control={form.control}
         name="referencia"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Referência</FormLabel>
-            <FormControl>
-              <Input 
-                placeholder="Ex: Boleto, PIX, Cartão..." 
-                {...field} 
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          console.log("Referencia field rendering:", field);
+          return (
+            <FormItem>
+              <FormLabel>Referência</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="Ex: Boleto, PIX, Cartão..." 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
 
       {/* Dependent Selection Field - only show if user is dependent */}

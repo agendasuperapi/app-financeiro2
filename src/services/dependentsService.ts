@@ -76,18 +76,13 @@ export class DependentsService {
 
   static async updateDependent(dependentId: number, name: string, phone: string): Promise<void> {
     try {
-      // Get current user ID first
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
       const { error } = await (supabase as any)
         .from('tbl_depentes')
         .update({
           dep_name: name,
           dep_phone: phone.replace(/\D/g, '') // Remove non-digits
         })
-        .eq('id', user.id) // Use user ID
-        .eq('dep_numero', dependentId); // Use dep_numero as unique identifier
+        .eq('dep_numero', dependentId);
 
       if (error) throw error;
     } catch (error) {
@@ -98,15 +93,10 @@ export class DependentsService {
 
   static async deleteDependent(dependentId: number): Promise<void> {
     try {
-      // Get current user ID first
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
       const { error } = await (supabase as any)
         .from('tbl_depentes')
         .delete()
-        .eq('id', user.id) // Use user ID
-        .eq('dep_numero', dependentId); // Use dep_numero as unique identifier
+        .eq('dep_numero', dependentId);
 
       if (error) throw error;
     } catch (error) {

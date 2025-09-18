@@ -15,6 +15,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { getCategoriesByType } from '@/services/categoryService';
 import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
+import { getSaldoByAccount } from '@/services/saldoService';
+import { getDependentUsers, checkIfUserIsDependent, DependentUser } from '@/services/dependentViewService';
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
+import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ContaFormProps {
   initialData?: ScheduledTransaction | null;
@@ -33,6 +38,9 @@ const contaFormSchema = z.object({
   scheduledDate: z.string().min(1, 'Data é obrigatória'),
   recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly', 'installments']),
   goalId: z.string().optional().nullable(),
+  conta: z.string().min(1, 'Conta é obrigatória'),
+  phone: z.string().optional(),
+  dependentName: z.string().optional(),
 });
 
 type ContaFormValues = z.infer<typeof contaFormSchema>;
@@ -50,6 +58,14 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const [isOnline] = useState(navigator.onLine);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  // States para o campo Conta
+  const [contas, setContas] = useState<string[]>([]);
+  const [openConta, setOpenConta] = useState(false);
+  const [filteredContas, setFilteredContas] = useState<string[]>([]);
+  // States para o seletor de pessoa
+  const [dependentUsers, setDependentUsers] = useState<DependentUser[]>([]);
+  const [isDependent, setIsDependent] = useState(false);
+  const [checkingDependent, setCheckingDependent] = useState(true);
 
   // Default form values for contas (expense only) - simplified approach
   const getDefaultValues = (): ContaFormValues => {
@@ -68,6 +84,9 @@ const ContaForm: React.FC<ContaFormProps> = ({
           : now.toISOString().slice(0, 16),
         recurrence: hasInstallments ? 'installments' : ((initialData.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once'),
         goalId: initialData.goalId || null,
+        conta: initialData.conta || '',
+        phone: initialData.phone || '',
+        dependentName: initialData.dependent_name || '',
       };
     }
     
@@ -79,6 +98,9 @@ const ContaForm: React.FC<ContaFormProps> = ({
       scheduledDate: now.toISOString().slice(0, 16),
       recurrence: 'once',
       goalId: null,
+      conta: '',
+      phone: '',
+      dependentName: '',
     };
   };
 
@@ -91,11 +113,14 @@ const ContaForm: React.FC<ContaFormProps> = ({
     mode: 'onChange',
   });
 
-  // Load categories for expense type only
+  // Load categories, contas and check if user is dependent
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadData = async () => {
       setLoadingCategories(true);
+      setCheckingDependent(true);
+      
       try {
+        // Load categories
         const categoryData = await getCategoriesByType('expense');
         console.log(`Loaded ${categoryData.length} categories for expense:`, categoryData);
         setCategories(categoryData);
@@ -110,15 +135,37 @@ const ContaForm: React.FC<ContaFormProps> = ({
             form.setValue('category', categoryData[0].id);
           }
         }
+
+        // Load contas
+        const saldos = await getSaldoByAccount();
+        const contasList = saldos.map(s => s.conta);
+        setContas(contasList);
+        setFilteredContas(contasList);
+
+        // Check if current user is dependent
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const isDep = await checkIfUserIsDependent(user.id);
+          setIsDependent(isDep);
+          
+          if (isDep) {
+            // Load dependent users for selection
+            const users = await getDependentUsers();
+            setDependentUsers(users);
+          }
+        }
+
       } catch (error) {
-        console.error('Error loading categories:', error);
+        console.error('Error loading data:', error);
         setCategories([]);
+        setContas([]);
       } finally {
         setLoadingCategories(false);
+        setCheckingDependent(false);
       }
     };
 
-    loadCategories();
+    loadData();
   }, [form]);
 
   // Reset form when initialData changes (only for edit mode)
@@ -128,6 +175,37 @@ const ContaForm: React.FC<ContaFormProps> = ({
       form.reset(newValues);
     }
   }, [initialData?.id, mode]);
+
+  // Close conta suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setOpenConta(false);
+    
+    if (openConta) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openConta]);
+
+  const handleContaInputChange = (value: string, onChange: (value: string) => void) => {
+    onChange(value);
+    
+    // Filter suggestions
+    const filtered = contas.filter(conta => 
+      conta.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredContas(filtered);
+    
+    // Show suggestions if there's input and matches
+    setOpenConta(value.length > 0 && filtered.length > 0);
+  };
+
+  const handleDependentChange = (selectedName: string) => {
+    const selectedUser = dependentUsers.find(user => user.name === selectedName);
+    if (selectedUser) {
+      form.setValue('dependentName', selectedUser.name);
+      form.setValue('phone', selectedUser.phone);
+    }
+  };
 
   // Form submission handler
   const onSubmit = async (values: ContaFormValues) => {
@@ -170,9 +248,11 @@ const ContaForm: React.FC<ContaFormProps> = ({
           goalId: values.goalId,
           reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
           situacao: 'ativo',
-          phone: userPhone,
+          phone: values.phone || userPhone,
           parcela: values.recurrence === 'installments' ? (values.installments || 1).toString() : '1',
           user_id: targetUserId,
+          conta: values.conta,
+          dependent_name: values.dependentName || '',
         };
         
         console.log('📋 Creating transaction with data:', transactionData);
@@ -214,10 +294,12 @@ const ContaForm: React.FC<ContaFormProps> = ({
           goalId: values.goalId,
           reference_code: initialData?.reference_code || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
           situacao: 'ativo',
-          phone: userPhone,
+          phone: values.phone || userPhone,
           parcela: values.recurrence === 'installments' ? (values.installments || 1).toString() : '1',
           status: 'pending' as const,
           user_id: targetUserId,
+          conta: values.conta,
+          dependent_name: values.dependentName || '',
         };
         
         console.log('📋 Updating transaction with ID:', initialData.id);
@@ -271,6 +353,98 @@ const ContaForm: React.FC<ContaFormProps> = ({
               </FormItem>
             )}
           />
+
+          {/* Campo Conta */}
+          <FormField
+            control={form.control}
+            name="conta"
+            render={({ field }) => (
+              <FormItem className="flex flex-col relative">
+                <FormLabel>{t('transactions.account')}</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder={t('transactions.accountPlaceholder')}
+                    onChange={(e) => handleContaInputChange(e.target.value, field.onChange)}
+                    onFocus={() => {
+                      if (field.value) {
+                        const filtered = contas.filter(conta => 
+                          conta.toLowerCase().includes(field.value.toLowerCase())
+                        );
+                        setFilteredContas(filtered);
+                        setOpenConta(filtered.length > 0);
+                      } else {
+                        setFilteredContas(contas);
+                        setOpenConta(contas.length > 0);
+                      }
+                    }}
+                  />
+                </FormControl>
+                {openConta && (
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-md border bg-popover p-0 text-popover-foreground shadow-md outline-none">
+                    <Command>
+                      <CommandList>
+                        <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
+                        <CommandGroup>
+                          {filteredContas.map((conta) => (
+                            <CommandItem
+                              key={conta}
+                              value={conta}
+                              onSelect={(currentValue) => {
+                                field.onChange(currentValue);
+                                setOpenConta(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  field.value === conta ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {conta}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </div>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Campo Selecionar Pessoa - only show if user is dependent */}
+          {isDependent && (
+            <FormField
+              control={form.control}
+              name="dependentName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Selecionar Pessoa</FormLabel>
+                  <Select 
+                    onValueChange={handleDependentChange}
+                    value={field.value}
+                    disabled={checkingDependent || dependentUsers.length === 0}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={checkingDependent ? "Carregando..." : "Selecione uma pessoa"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {dependentUsers.map((user) => (
+                        <SelectItem key={user.phone} value={user.name}>
+                          {user.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
           
           {/* Amount Field */}
           <FormField

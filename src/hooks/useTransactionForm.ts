@@ -44,7 +44,7 @@ export const useTransactionForm = ({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       type: initialData?.type || defaultType,
-      amount: initialData?.amount || 0,
+      amount: initialData?.amount ? Math.abs(initialData.amount) : 0,
       conta: initialData?.conta || '',
       category: initialData?.category_id || '',
       description: initialData?.description || '',
@@ -160,7 +160,7 @@ export const useTransactionForm = ({
       setSelectedType(initialData.type);
       form.reset({
         type: initialData.type,
-        amount: initialData.amount,
+        amount: Math.abs(initialData.amount),
         conta: initialData.conta || '',
         category: initialData.category_id || '',
         description: initialData.description || '',

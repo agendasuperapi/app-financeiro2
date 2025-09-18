@@ -135,9 +135,9 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     <div className="truncate pr-2">{transaction.description}</div>
                   </TableCell>
                   <TableCell className="text-[10px] md:text-xs">
-                    {transaction.addedBy ? (
+                    {(transaction as any).addedBy ? (
                       <Badge variant="secondary" className="text-[10px]">
-                        {transaction.addedBy}
+                        {(transaction as any).addedBy}
                       </Badge>
                     ) : (
                       <span className="text-muted-foreground text-[10px]">-</span>

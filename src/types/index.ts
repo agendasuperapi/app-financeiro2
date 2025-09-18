@@ -81,6 +81,7 @@ export interface User {
   email: string;
   profileImage?: string;
   phone?: string;
+  dependente?: boolean;
   achievements: Achievement[];
 }
 

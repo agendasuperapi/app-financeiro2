@@ -7,6 +7,26 @@ import { getNextReferenceCode } from "@/utils/referenceCodeUtils";
 export const getTransactions = async (): Promise<Transaction[]> => {
   try {
     console.log('🔍 Iniciando busca de transações...');
+    
+    // Check if current user is dependente
+    const { data: { user } } = await supabase.auth.getUser();
+    let isUserDependente = false;
+    
+    if (user) {
+      try {
+        const { data: userData } = await supabase
+          .from("poupeja_users")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+        
+        isUserDependente = (userData as any)?.dependente === true;
+      } catch (error) {
+        console.log('Coluna dependente não existe ou erro ao buscar:', error);
+        isUserDependente = false;
+      }
+    }
+    
     const { data, error } = await supabase
       .from("poupeja_transactions")
       .select(`
@@ -18,34 +38,34 @@ export const getTransactions = async (): Promise<Transaction[]> => {
     if (error) throw error;
 
     console.log('📊 Dados brutos das transações:', data);
-    console.log('📱 Primeira transação completa:', data[0]);
-    console.log('📱 Campos disponíveis na primeira transação:', Object.keys(data[0] || {}));
+    console.log('👤 Usuário é dependente:', isUserDependente);
 
-    // For transactions with phone, get user names from view_cadastros_unificados
-    const transactionsWithPhone = (data as any[]).filter(item => item.phone);
-    console.log('Transações com telefone encontradas:', transactionsWithPhone.length);
-    console.log('Transações com telefone:', transactionsWithPhone.map(t => ({ id: t.id, phone: t.phone, description: t.description })));
-    
     let usersMap = new Map<string, string>();
 
-    for (const transaction of transactionsWithPhone) {
-      try {
-        console.log('Buscando usuário para telefone:', transaction.phone);
-        // Query view_cadastros_unificados table
-        const { data: userData } = await (supabase as any)
-          .from('view_cadastros_unificados')
-          .select('nome')
-          .eq('telefone', transaction.phone)
-          .single();
-        
-        console.log('Dados do usuário encontrados:', userData);
-        
-        if (userData?.nome) {
-          usersMap.set(transaction.phone, userData.nome);
-          console.log('Mapeamento adicionado:', transaction.phone, '->', userData.nome);
+    // Only fetch user names if current user is dependente
+    if (isUserDependente) {
+      const transactionsWithPhone = (data as any[]).filter(item => item.phone);
+      console.log('Transações com telefone encontradas:', transactionsWithPhone.length);
+
+      for (const transaction of transactionsWithPhone) {
+        try {
+          console.log('Buscando usuário para telefone:', transaction.phone);
+          // Query view_cadastros_unificados table
+          const { data: userData } = await (supabase as any)
+            .from('view_cadastros_unificados')
+            .select('nome')
+            .eq('telefone', transaction.phone)
+            .single();
+          
+          console.log('Dados do usuário encontrados:', userData);
+          
+          if (userData?.nome) {
+            usersMap.set(transaction.phone, userData.nome);
+            console.log('Mapeamento adicionado:', transaction.phone, '->', userData.nome);
+          }
+        } catch (error) {
+          console.error('Erro ao buscar usuário para telefone:', transaction.phone, error);
         }
-      } catch (error) {
-        console.error('Erro ao buscar usuário para telefone:', transaction.phone, error);
       }
     }
     
@@ -62,7 +82,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
       date: item.date,
       goalId: item.goal_id || undefined,
       phone: item.phone,
-      addedBy: item.phone ? usersMap.get(item.phone) : undefined
+      addedBy: isUserDependente && item.phone ? usersMap.get(item.phone) : undefined
     }));
   } catch (error) {
     console.error("Error fetching transactions:", error);

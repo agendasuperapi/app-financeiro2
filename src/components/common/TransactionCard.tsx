@@ -134,6 +134,15 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
         )}
       </div>
 
+      {/* Added By (if exists) */}
+      {(transaction as any).addedBy && (
+        <div className="flex items-center gap-2 pt-2 border-t border-border">
+          <span className="text-xs text-muted-foreground">
+            Adicionado por: <span className="font-medium">{(transaction as any).addedBy}</span>
+          </span>
+        </div>
+      )}
+
       {/* Goal (if exists) */}
       {transaction.goalId && (
         <div className="flex items-center gap-2 pt-2 border-t border-border">

@@ -82,7 +82,7 @@ export class DependentsService {
           dep_name: name,
           dep_phone: phone.replace(/\D/g, '') // Remove non-digits
         })
-        .eq('dep_id', dependentId);
+        .eq('id', dependentId);
 
       if (error) throw error;
     } catch (error) {
@@ -96,7 +96,7 @@ export class DependentsService {
       const { error } = await (supabase as any)
         .from('tbl_depentes')
         .delete()
-        .eq('dep_id', dependentId);
+        .eq('id', dependentId);
 
       if (error) throw error;
     } catch (error) {

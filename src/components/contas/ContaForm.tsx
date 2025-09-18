@@ -20,6 +20,7 @@ import { getDependentUsers, checkIfUserIsDependent, DependentUser } from '@/serv
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from '@/components/ui/use-toast';
 
 interface ContaFormProps {
   initialData?: ScheduledTransaction | null;
@@ -257,6 +258,11 @@ const ContaForm: React.FC<ContaFormProps> = ({
         
         console.log('📋 Creating transaction with data:', transactionData);
         const result = await addScheduledTransaction(transactionData);
+        if (!result) {
+          console.error('❌ Falha ao criar a transação agendada');
+          toast({ title: 'Erro ao salvar', description: 'Não foi possível salvar a transação. Tente novamente.', variant: 'destructive' });
+          return;
+        }
         console.log('✅ Create request sent', result);
       } else if (initialData) {
         console.log('✏️ Updating scheduled transaction...', initialData.id);
@@ -305,6 +311,11 @@ const ContaForm: React.FC<ContaFormProps> = ({
         console.log('📋 Updating transaction with ID:', initialData.id);
         console.log('📋 Update data:', updateData);
         const result = await updateScheduledTransaction({ ...updateData, id: initialData.id });
+        if (!result) {
+          console.error('❌ Falha ao atualizar a transação agendada');
+          toast({ title: 'Erro ao salvar', description: 'Não foi possível salvar as alterações. Verifique os campos e tente novamente.', variant: 'destructive' });
+          return;
+        }
         console.log('✅ Update request sent', result);
       }
       

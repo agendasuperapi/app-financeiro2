@@ -76,7 +76,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
       const hasInstallments = initialData.parcela && parseInt(initialData.parcela) > 1;
       return {
         description: initialData.description || '',
-        amount: initialData.amount || 100,
+        amount: Math.abs(initialData.amount || 100),
         installments: hasInstallments ? parseInt(initialData.parcela || '1') : undefined,
         category: initialData.category_id || '',
         scheduledDate: initialData.scheduledDate 

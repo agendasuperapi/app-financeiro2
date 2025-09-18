@@ -21,35 +21,35 @@ export const getTransactions = async (): Promise<Transaction[]> => {
     console.log('📱 Primeira transação completa:', data[0]);
     console.log('📱 Campos disponíveis na primeira transação:', Object.keys(data[0] || {}));
 
-    // For transactions with phone, get dependent names from tbl_depentes
+    // For transactions with phone, get user names from view_cadastros_unificados
     const transactionsWithPhone = (data as any[]).filter(item => item.phone);
     console.log('Transações com telefone encontradas:', transactionsWithPhone.length);
     console.log('Transações com telefone:', transactionsWithPhone.map(t => ({ id: t.id, phone: t.phone, description: t.description })));
     
-    let dependentsMap = new Map<string, string>();
+    let usersMap = new Map<string, string>();
 
     for (const transaction of transactionsWithPhone) {
       try {
-        console.log('Buscando dependente para telefone:', transaction.phone);
-        // Query tbl_depentes table directly
-        const { data: dependentData } = await (supabase as any)
-          .from('tbl_depentes')
-          .select('dep_name')
-          .eq('dep_phone', transaction.phone)
+        console.log('Buscando usuário para telefone:', transaction.phone);
+        // Query view_cadastros_unificados table
+        const { data: userData } = await (supabase as any)
+          .from('view_cadastros_unificados')
+          .select('nome')
+          .eq('telefone', transaction.phone)
           .single();
         
-        console.log('Dados do dependente encontrados:', dependentData);
+        console.log('Dados do usuário encontrados:', userData);
         
-        if (dependentData?.dep_name) {
-          dependentsMap.set(transaction.phone, dependentData.dep_name);
-          console.log('Mapeamento adicionado:', transaction.phone, '->', dependentData.dep_name);
+        if (userData?.nome) {
+          usersMap.set(transaction.phone, userData.nome);
+          console.log('Mapeamento adicionado:', transaction.phone, '->', userData.nome);
         }
       } catch (error) {
-        console.error('Erro ao buscar dependente para telefone:', transaction.phone, error);
+        console.error('Erro ao buscar usuário para telefone:', transaction.phone, error);
       }
     }
     
-    console.log('Mapa final de dependentes:', Array.from(dependentsMap.entries()));
+    console.log('Mapa final de usuários:', Array.from(usersMap.entries()));
 
     return (data as any[]).map((item: any) => ({
       id: item.id,
@@ -62,7 +62,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
       date: item.date,
       goalId: item.goal_id || undefined,
       phone: item.phone,
-      addedBy: item.phone ? dependentsMap.get(item.phone) : undefined
+      addedBy: item.phone ? usersMap.get(item.phone) : undefined
     }));
   } catch (error) {
     console.error("Error fetching transactions:", error);

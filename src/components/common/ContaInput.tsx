@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Input } from '@/components/ui/input';
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TransactionFormValues } from '@/schemas/transactionSchema';
@@ -42,47 +42,43 @@ const ContaInput: React.FC<ContaInputProps> = ({ form }) => {
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <FormControl>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={open}
-                  className="justify-between"
-                >
-                  {field.value || t('transactions.accountPlaceholder')}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
+                <Input
+                  value={field.value || ''}
+                  onChange={(e) => {
+                    field.onChange(e.target.value);
+                    setOpen(true);
+                  }}
+                  onFocus={() => setOpen(true)}
+                  placeholder={t('transactions.accountPlaceholder')}
+                />
               </FormControl>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0">
               <Command>
-                <CommandInput 
-                  placeholder={t('transactions.accountPlaceholder')}
-                  value={field.value}
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                  }}
-                />
                 <CommandList>
                   <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
                   <CommandGroup>
-                    {contas.map((conta) => (
-                      <CommandItem
-                        key={conta}
-                        value={conta}
-                        onSelect={(currentValue) => {
-                          field.onChange(currentValue);
-                          setOpen(false);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            field.value === conta ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {conta}
-                      </CommandItem>
-                    ))}
+                    {contas
+                      .filter((c) => c.toLowerCase().includes((field.value || '').toLowerCase()))
+                      .map((conta) => (
+                        <CommandItem
+                          key={conta}
+                          value={conta}
+                          onSelect={(currentValue) => {
+                            field.onChange(currentValue);
+                            setOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              field.value === conta ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {conta}
+                        </CommandItem>
+                      ))}
+
                   </CommandGroup>
                 </CommandList>
               </Command>

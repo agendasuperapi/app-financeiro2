@@ -184,7 +184,8 @@ export const createTransactionForUser = async (transactionData: {
         goal_id: transactionData.goalId,
         user_id: transactionData.user_id,
         reference_code: referenceCode,
-        conta: transactionData.conta
+        conta: transactionData.conta,
+        phone: transactionData.phone
       })
       .select(`
         *,

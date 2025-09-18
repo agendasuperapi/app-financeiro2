@@ -414,17 +414,48 @@ export const updateScheduledTransaction = async (
 
     console.log('Update data with all fields:', updateData);
 
-    const { data, error } = await supabase
-      .from("poupeja_transactions")
-      .update(updateData)
-      .eq("id", transaction.id)
-      .select(`
-        *,
-        category:poupeja_categories(id, name, icon, color, type)
-      `)
-      .single();
+    // Determine if admin update is needed (editing another user's record)
+    const { data: sessionData } = await supabase.auth.getSession();
+    const sessionUserId = sessionData?.session?.user?.id;
+    let ownerUserId: string | null = null;
+    try {
+      const { data: ownerRow } = await supabase
+        .from('poupeja_transactions')
+        .select('user_id')
+        .eq('id', transaction.id)
+        .single();
+      ownerUserId = ownerRow?.user_id || null;
+    } catch (e) {
+      console.warn('Could not fetch transaction owner, proceeding with direct update');
+    }
 
-    if (error) throw error;
+    const needsAdminUpdate = !!(sessionUserId && ownerUserId && sessionUserId !== ownerUserId);
+
+    let data: any;
+
+    if (needsAdminUpdate) {
+      console.log('🔐 Using admin function for update');
+      const { data: fnRes, error: fnError } = await supabase.functions.invoke('update-transaction-admin', {
+        body: { id: transaction.id, update: updateData },
+      });
+      if (fnError || !fnRes?.success) {
+        console.error('Admin update failed:', fnError || fnRes?.error);
+        throw new Error(fnError?.message || (fnRes as any)?.error || 'Admin update failed');
+      }
+      data = (fnRes as any).data;
+    } else {
+      const result = await supabase
+        .from('poupeja_transactions')
+        .update(updateData)
+        .eq('id', transaction.id)
+        .select(`
+          *,
+          category:poupeja_categories(id, name, icon, color, type)
+        `)
+        .single();
+      if (result.error) throw result.error;
+      data = result.data;
+    }
 
     return {
       id: data.id,

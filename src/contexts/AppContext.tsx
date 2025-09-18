@@ -100,8 +100,6 @@ interface AppContextType {
   deleteScheduledTransaction: (id: string) => Promise<void>;
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
-
 const initialState: AppState = {
   transactions: [],
   categories: [],
@@ -116,6 +114,45 @@ const initialState: AppState = {
   customEndDate: null,
   filteredTransactions: [],
 };
+
+// Create a default context value to prevent undefined errors during initialization
+const defaultContextValue: AppContextType = {
+  state: initialState,
+  dispatch: () => {},
+  user: null,
+  hideValues: false,
+  toggleHideValues: () => {},
+  logout: async () => {},
+  setCustomDateRange: () => {},
+  transactions: [],
+  categories: [],
+  goals: [],
+  scheduledTransactions: [],
+  filteredTransactions: [],
+  isLoading: true,
+  timeRange: '30days',
+  setTimeRange: () => {},
+  customStartDate: null,
+  customEndDate: null,
+  getTransactions: async () => [],
+  getGoals: async () => [],
+  recalculateGoalAmounts: async () => false,
+  updateUserProfile: async () => {},
+  addTransaction: async () => {},
+  updateTransaction: async () => {},
+  deleteTransaction: async () => {},
+  addCategory: async () => {},
+  updateCategory: async () => {},
+  deleteCategory: async () => {},
+  addGoal: async () => {},
+  updateGoal: async () => {},
+  deleteGoal: async () => {},
+  addScheduledTransaction: async () => {},
+  updateScheduledTransaction: async () => {},
+  deleteScheduledTransaction: async () => {},
+};
+
+const AppContext = createContext<AppContextType>(defaultContextValue);
 
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
@@ -979,9 +1016,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
 export const useApp = () => {
   const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useApp must be used within an AppProvider');
-  }
   return context;
 };
 

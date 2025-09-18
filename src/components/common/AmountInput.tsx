@@ -126,7 +126,9 @@ const AmountInput: React.FC<AmountInputProps> = ({
                     }
                     
                     setInputValue(sanitizedValue);
-                    field.onChange(stringToNumber(sanitizedValue));
+                    const numericValue = stringToNumber(sanitizedValue);
+                    // Ensure we pass a valid number to the form, not a string
+                    field.onChange(numericValue > 0 ? numericValue : undefined);
                   }}
                   onBlur={() => {
                     // Formata o valor ao perder o foco

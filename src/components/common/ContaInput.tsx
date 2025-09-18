@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Check } from 'lucide-react';
@@ -35,6 +34,16 @@ const ContaInput: React.FC<ContaInputProps> = ({ form }) => {
     loadContas();
   }, []);
 
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setOpen(false);
+    
+    if (open) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [open]);
+
   const handleInputChange = (value: string, onChange: (value: string) => void) => {
     onChange(value);
     
@@ -53,31 +62,29 @@ const ContaInput: React.FC<ContaInputProps> = ({ form }) => {
       control={form.control}
       name="conta"
       render={({ field }) => (
-        <FormItem className="flex flex-col">
+        <FormItem className="flex flex-col relative">
           <FormLabel>{t('transactions.account')}</FormLabel>
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder={t('transactions.accountPlaceholder')}
-                  onChange={(e) => handleInputChange(e.target.value, field.onChange)}
-                  onFocus={() => {
-                    if (field.value) {
-                      const filtered = contas.filter(conta => 
-                        conta.toLowerCase().includes(field.value.toLowerCase())
-                      );
-                      setFilteredContas(filtered);
-                      setOpen(filtered.length > 0);
-                    } else {
-                      setFilteredContas(contas);
-                      setOpen(contas.length > 0);
-                    }
-                  }}
-                />
-              </FormControl>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
+          <FormControl>
+            <Input
+              {...field}
+              placeholder={t('transactions.accountPlaceholder')}
+              onChange={(e) => handleInputChange(e.target.value, field.onChange)}
+              onFocus={() => {
+                if (field.value) {
+                  const filtered = contas.filter(conta => 
+                    conta.toLowerCase().includes(field.value.toLowerCase())
+                  );
+                  setFilteredContas(filtered);
+                  setOpen(filtered.length > 0);
+                } else {
+                  setFilteredContas(contas);
+                  setOpen(contas.length > 0);
+                }
+              }}
+            />
+          </FormControl>
+          {open && (
+            <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-md border bg-popover p-0 text-popover-foreground shadow-md outline-none">
               <Command>
                 <CommandList>
                   <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
@@ -103,8 +110,8 @@ const ContaInput: React.FC<ContaInputProps> = ({ form }) => {
                   </CommandGroup>
                 </CommandList>
               </Command>
-            </PopoverContent>
-          </Popover>
+            </div>
+          )}
           <FormMessage />
         </FormItem>
       )}

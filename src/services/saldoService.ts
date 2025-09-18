@@ -68,10 +68,16 @@ export const getUserSpendingByAccount = async (): Promise<AccountUserSpending[]>
       throw new Error('Usuário não autenticado');
     }
 
-    // Query to get transactions with user information
+    // Query to get transactions with user information joined with view_cadastros_unificados
     const { data, error } = await supabase
       .from('poupeja_transactions')
-      .select('conta, amount, phone, dependent_name')
+      .select(`
+        conta, 
+        amount, 
+        phone,
+        user_id,
+        view_cadastros_unificados!inner(name)
+      `)
       .eq('user_id', user.id)
       .not('conta', 'is', null)
       .not('conta', 'eq', '');
@@ -81,33 +87,6 @@ export const getUserSpendingByAccount = async (): Promise<AccountUserSpending[]>
       throw error;
     }
 
-    // Get unique phones to fetch user names
-    const transactionsWithPhone = (data as any[]).filter(item => item.phone);
-    const sanitize = (p: string) => (p || '').toString().replace(/\D/g, '');
-    const uniquePhones = Array.from(new Set(transactionsWithPhone.map((t: any) => sanitize(t.phone)).filter(Boolean)));
-    
-    let usersMap = new Map<string, string>();
-
-    if (uniquePhones.length > 0) {
-      try {
-        const { data: usersList, error: usersError } = await (supabase as any)
-          .from('view_cadastros_unificados')
-          .select('name, phone')
-          .in('phone', uniquePhones);
-          
-        if (usersError) throw usersError;
-        
-        (usersList || []).forEach((u: any) => {
-          const key = sanitize(u.phone);
-          if (key && u.name) {
-            usersMap.set(key, u.name);
-          }
-        });
-      } catch (e) {
-        console.error('❌ Erro ao buscar nomes na view:', e);
-      }
-    }
-
     // Group by account and user
     const accountUserSpending: { [account: string]: { [user: string]: { phone: string; amount: number } } } = {};
     
@@ -115,18 +94,15 @@ export const getUserSpendingByAccount = async (): Promise<AccountUserSpending[]>
       const conta = transaction.conta;
       const amount = transaction.amount || 0;
       const phone = transaction.phone;
-      const dependentName = transaction.dependent_name;
+      const userName = transaction.view_cadastros_unificados?.name || `Usuário ${phone || 'desconhecido'}`;
       
-      if (conta && phone) {
-        const sanitizedPhone = sanitize(phone);
-        const userName = dependentName || usersMap.get(sanitizedPhone) || `Usuário ${sanitizedPhone}`;
-        
+      if (conta) {
         if (!accountUserSpending[conta]) {
           accountUserSpending[conta] = {};
         }
         
         if (!accountUserSpending[conta][userName]) {
-          accountUserSpending[conta][userName] = { phone: sanitizedPhone, amount: 0 };
+          accountUserSpending[conta][userName] = { phone: phone || '', amount: 0 };
         }
         
         accountUserSpending[conta][userName].amount += amount;

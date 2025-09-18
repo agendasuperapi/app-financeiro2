@@ -232,6 +232,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       description: dbTransaction.description || '',
       date: dbTransaction.date,
       goalId: dbTransaction.goal_id,
+      conta: dbTransaction.conta,
       category_id: dbTransaction.category_id,
       goal_id: dbTransaction.goal_id,
       user_id: dbTransaction.user_id,
@@ -626,6 +627,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           description: transaction.description,
           date: transaction.date,
           goal_id: transaction.goalId,
+          conta: transaction.conta,
           user_id: user.id,
           reference_code: referenceCode,
         })
@@ -661,7 +663,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           category_id: transaction.category_id,
           description: transaction.description,
           date: transaction.date,
-          goal_id: transaction.goalId
+          goal_id: transaction.goalId,
+          conta: transaction.conta,
         })
         .eq('id', id)
         .select(`

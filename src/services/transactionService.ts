@@ -88,6 +88,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
       description: item.description || "",
       date: item.date,
       goalId: item.goal_id || undefined,
+      conta: item.conta,
       phone: item.phone,
       addedBy: item.phone ? usersMap.get(item.phone.replace(/\D/g, '')) : undefined
     }));
@@ -214,7 +215,8 @@ export const createTransactionForUser = async (transactionData: {
       categoryColor: data.category?.color || "#607D8B",
       description: data.description || "",
       date: data.date,
-      goalId: data.goal_id || undefined
+      goalId: data.goal_id || undefined,
+      conta: (data as any).conta
     };
   } catch (error) {
     console.error("Error creating transaction for user:", error);
@@ -308,7 +310,8 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
       categoryColor: data.category?.color || "#607D8B",
       description: data.description || "",
       date: data.date,
-      goalId: data.goal_id || undefined
+      goalId: data.goal_id || undefined,
+      conta: (data as any).conta
     };
   } catch (error) {
     console.error("Error updating transaction:", error);

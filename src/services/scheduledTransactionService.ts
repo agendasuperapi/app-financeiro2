@@ -217,7 +217,9 @@ export const addScheduledTransaction = async (
           situacao: transaction.situacao || 'ativo',
           phone: transaction.phone,
           aba: transaction.aba,
-          recurrence: convertRecurrenceToPortuguese('once') // Convert to Portuguese
+          recurrence: convertRecurrenceToPortuguese('once'), // Convert to Portuguese
+          conta: (transaction as any).conta,
+          dependent_name: (transaction as any).dependent_name,
         };
         
         // Ensure no unwanted properties are added
@@ -294,7 +296,9 @@ export const addScheduledTransaction = async (
         date: transaction.scheduledDate,
         goal_id: transaction.goalId,
         reference_code: referenceCode,
-        status: 'pending'
+        status: 'pending',
+        conta: (transaction as any).conta,
+        dependent_name: (transaction as any).dependent_name,
       };
 
       // Add additional fields if they exist
@@ -397,7 +401,9 @@ export const updateScheduledTransaction = async (
       category_id: categoryId,
       description: transaction.description,
       date: transaction.scheduledDate,
-      goal_id: transaction.goalId
+      goal_id: transaction.goalId,
+      conta: (transaction as any).conta,
+      dependent_name: (transaction as any).dependent_name,
     };
 
     // Add additional fields if they exist

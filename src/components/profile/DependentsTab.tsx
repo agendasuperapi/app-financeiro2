@@ -106,22 +106,20 @@ const DependentsTab = () => {
 
     try {
       setAdding(true);
-      const { data: { session } } = await supabase.auth.getSession();
       
-      if (session?.user?.id && editingDependent.id) {
-        await DependentsService.updateDependent(editingDependent.id, newDepName, newDepPhone);
-        
-        toast({
-          title: 'Sucesso',
-          description: 'Dependente atualizado com sucesso',
-        });
-        
-        setNewDepName('');
-        setNewDepPhone('');
-        setIsEditDialogOpen(false);
-        setEditingDependent(null);
-        fetchDependents();
-      }
+      // Use dep_numero as identifier instead of id
+      await DependentsService.updateDependent(editingDependent.dep_numero, newDepName, newDepPhone);
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Dependente atualizado com sucesso',
+      });
+      
+      setNewDepName('');
+      setNewDepPhone('');
+      setIsEditDialogOpen(false);
+      setEditingDependent(null);
+      fetchDependents();
     } catch (error) {
       console.error('Error updating dependent:', error);
       toast({
@@ -334,7 +332,7 @@ const DependentsTab = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => dependent.id && handleDeleteDependent(dependent.id)}
+                    onClick={() => dependent.dep_numero && handleDeleteDependent(dependent.dep_numero)}
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />

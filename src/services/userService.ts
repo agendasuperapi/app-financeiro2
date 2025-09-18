@@ -25,7 +25,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
       email: data.email || user.email || "",
       profileImage: data.profile_image,
       phone: data.phone || "",
-      dependente: (data as any).dependente || false,
+      dependente: !!(data as any).dependente, // Convert to boolean properly
       achievements: [] // Return empty array since achievements tables don't exist yet
     };
   } catch (error) {

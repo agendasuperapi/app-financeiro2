@@ -40,8 +40,10 @@ export const useClientAwareData = () => {
           .single();
         
         console.log('[ClientAware] 👤 Dados completos do usuário target:', userData);
-        isUserDependente = (userData as any)?.dependente === true;
-        console.log('[ClientAware] 🔍 Campo dependente:', (userData as any)?.dependente);
+        const dependenteValue = (userData as any)?.dependente;
+        // Accept true, "true", 1, "1" as truthy values
+        isUserDependente = dependenteValue === true || dependenteValue === "true" || dependenteValue === 1 || dependenteValue === "1";
+        console.log('[ClientAware] 🔍 Campo dependente (valor bruto):', dependenteValue, 'tipo:', typeof dependenteValue);
         console.log('[ClientAware] ✅ É dependente?', isUserDependente);
       } catch (error) {
         console.log('[ClientAware] ❌ Coluna dependente não existe ou erro ao buscar:', error);

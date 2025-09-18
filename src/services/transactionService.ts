@@ -23,8 +23,10 @@ export const getTransactions = async (): Promise<Transaction[]> => {
           .single();
         
         console.log('👤 Dados completos do usuário:', userData);
-        isUserDependente = (userData as any)?.dependente === true;
-        console.log('🔍 Campo dependente:', (userData as any)?.dependente);
+        const dependenteValue = (userData as any)?.dependente;
+        // Accept true, "true", 1, "1" as truthy values
+        isUserDependente = dependenteValue === true || dependenteValue === "true" || dependenteValue === 1 || dependenteValue === "1";
+        console.log('🔍 Campo dependente (valor bruto):', dependenteValue, 'tipo:', typeof dependenteValue);
         console.log('✅ É dependente?', isUserDependente);
       } catch (error) {
         console.log('❌ Coluna dependente não existe ou erro ao buscar:', error);

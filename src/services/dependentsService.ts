@@ -55,6 +55,18 @@ export class DependentsService {
         .single();
 
       if (error) throw error;
+
+      // Update poupeja_users to mark as dependente = true
+      const { error: updateError } = await (supabase as any)
+        .from('poupeja_users')
+        .update({ dependente: true })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('Error updating user dependente status:', updateError);
+        // Don't throw error, just log it as the main operation succeeded
+      }
+
       return data as Dependent;
     } catch (error) {
       console.error('Error adding dependent:', error);

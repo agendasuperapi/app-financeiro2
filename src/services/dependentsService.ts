@@ -74,12 +74,29 @@ export class DependentsService {
     }
   }
 
-  static async deleteDependent(id: number): Promise<void> {
+  static async updateDependent(dependentId: number, name: string, phone: string): Promise<void> {
+    try {
+      const { error } = await (supabase as any)
+        .from('tbl_depentes')
+        .update({
+          dep_name: name,
+          dep_phone: phone.replace(/\D/g, '') // Remove non-digits
+        })
+        .eq('dep_id', dependentId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating dependent:', error);
+      throw error;
+    }
+  }
+
+  static async deleteDependent(dependentId: number): Promise<void> {
     try {
       const { error } = await (supabase as any)
         .from('tbl_depentes')
         .delete()
-        .eq('id', String(id));
+        .eq('dep_id', dependentId);
 
       if (error) throw error;
     } catch (error) {

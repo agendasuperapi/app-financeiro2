@@ -5,7 +5,7 @@ import { Wallet, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { formatCurrency } from '@/utils/transactionUtils';
-import { getSaldoByAccount } from '@/services/saldoService';
+import { getSaldoByAccount, getUserSpendingByAccount } from '@/services/saldoService';
 import { toast } from 'sonner';
 
 interface AccountBalance {
@@ -13,10 +13,22 @@ interface AccountBalance {
   total: number;
 }
 
+interface UserSpending {
+  name: string;
+  phone: string;
+  amount: number;
+}
+
+interface AccountUserSpending {
+  conta: string;
+  users: UserSpending[];
+}
+
 const SaldoPage: React.FC = () => {
   const { user } = useAppContext();
   const { currency } = usePreferences();
   const [accountBalances, setAccountBalances] = useState<AccountBalance[]>([]);
+  const [userSpendingByAccount, setUserSpendingByAccount] = useState<AccountUserSpending[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,8 +40,12 @@ const SaldoPage: React.FC = () => {
   const loadAccountBalances = async () => {
     try {
       setLoading(true);
-      const balances = await getSaldoByAccount();
+      const [balances, userSpending] = await Promise.all([
+        getSaldoByAccount(),
+        getUserSpendingByAccount()
+      ]);
       setAccountBalances(balances);
+      setUserSpendingByAccount(userSpending);
     } catch (error) {
       console.error('Erro ao carregar saldos por conta:', error);
       toast.error('Erro ao carregar saldos das contas');
@@ -137,16 +153,38 @@ const SaldoPage: React.FC = () => {
                   <div className={`text-2xl font-bold ${account.total >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatCurrency(account.total, currency)}
                   </div>
-                  <div className="flex items-center gap-1 mt-2">
-                    {account.total >= 0 ? (
-                      <TrendingUp className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4 text-red-600" />
-                    )}
-                    <span className="text-sm text-muted-foreground">
-                      {account.total >= 0 ? 'Saldo positivo' : 'Saldo negativo'}
-                    </span>
-                  </div>
+                   <div className="flex items-center gap-1 mt-2">
+                     {account.total >= 0 ? (
+                       <TrendingUp className="h-4 w-4 text-green-600" />
+                     ) : (
+                       <TrendingDown className="h-4 w-4 text-red-600" />
+                     )}
+                     <span className="text-sm text-muted-foreground">
+                       {account.total >= 0 ? 'Saldo positivo' : 'Saldo negativo'}
+                     </span>
+                   </div>
+                   
+                   {/* User spending breakdown */}
+                   {(() => {
+                     const accountUserSpending = userSpendingByAccount.find(uas => uas.conta === account.conta);
+                     return accountUserSpending && accountUserSpending.users.length > 0 ? (
+                       <div className="mt-3 pt-3 border-t border-muted">
+                         <h4 className="text-sm font-medium text-muted-foreground mb-2">Gastos por usuário:</h4>
+                         <div className="space-y-1">
+                           {accountUserSpending.users.map((userSpending) => (
+                             <div key={userSpending.phone} className="flex justify-between items-center text-xs">
+                               <span className="text-muted-foreground truncate mr-2">
+                                 {userSpending.name}
+                               </span>
+                               <span className={`font-medium ${userSpending.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                 {formatCurrency(userSpending.amount, currency)}
+                               </span>
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                     ) : null;
+                   })()}
                 </CardContent>
               </Card>
             ))}

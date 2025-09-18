@@ -54,7 +54,6 @@ export interface ScheduledTransaction {
   scheduledDate: string; // ISO date string
   recurrence?: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'installments';
   goalId?: string; // Optional reference to a goal
-  conta?: string; // Account name
   status?: 'pending' | 'paid' | 'overdue' | 'upcoming';
   paidDate?: string; // ISO date string
   paidAmount?: number;

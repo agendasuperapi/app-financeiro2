@@ -5,7 +5,6 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { useAppContext } from '@/contexts/AppContext';
 import { supabase } from '@/integrations/supabase/client';
 import { addScheduledTransaction, updateScheduledTransaction, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
-import { getSaldoByAccount } from '@/services/saldoService';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,10 +13,6 @@ import { Input } from '@/components/ui/input';
 import { ScheduledTransaction } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Check, ChevronsUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import ScheduleTransactionTypeSelector from './ScheduleTransactionTypeSelector';
 import { getCategoriesByType } from '@/services/categoryService';
 import { Category } from '@/types/categories';
@@ -48,8 +43,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
   const [isOnline] = useState(navigator.onLine);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
-  const [contas, setContas] = useState<string[]>([]);
-  const [contasLoading, setContasLoading] = useState(true);
 
   // Schema for the scheduled transaction form
   const formSchema = z.object({
@@ -57,7 +50,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
     description: z.string().min(1, { message: t('validation.required') }),
     amount: z.number().optional(),
     category: z.string().min(1, { message: t('validation.required') }),
-    conta: z.string().min(1, { message: t('validation.required') }),
     scheduledDate: z.string().min(1, { message: t('validation.required') }),
     recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly']),
     goalId: z.string().optional().nullable(),
@@ -69,7 +61,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
     description: initialData?.description || '',
     amount: initialData?.amount || (defaultType === 'reminder' ? 0 : 0),
     category: initialData?.category_id || '',
-    conta: initialData?.conta || '',
     scheduledDate: initialData?.scheduledDate 
       ? new Date(initialData.scheduledDate).toISOString().slice(0, 16)
       : (() => {
@@ -119,24 +110,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
     loadCategories();
   }, [selectedType, form]);
 
-  // Load contas when component mounts
-  useEffect(() => {
-    const loadContas = async () => {
-      setContasLoading(true);
-      try {
-        const saldos = await getSaldoByAccount();
-        setContas(saldos.map(s => s.conta));
-      } catch (error) {
-        console.error('Erro ao carregar contas:', error);
-        setContas([]);
-      } finally {
-        setContasLoading(false);
-      }
-    };
-    
-    loadContas();
-  }, []);
-
   // Reset form when opening/closing
   useEffect(() => {
     if (open && !initialData) {
@@ -150,7 +123,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
         description: initialData.description,
         amount: initialData.amount,
         category: initialData.category_id || '',
-        conta: initialData.conta || '',
         scheduledDate: new Date(initialData.scheduledDate).toISOString().slice(0, 16),
         recurrence: (initialData.recurrence || 'once') as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly',
         goalId: initialData.goalId,
@@ -209,7 +181,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           amount: submitData.amount,
           category: selectedCategory?.name || 'Lembretes',
           category_id: submitData.type === 'reminder' ? null : submitData.category, // Para lembretes, não enviar category_id
-          conta: submitData.conta,
           scheduledDate: new Date(submitData.scheduledDate).toISOString(),
           recurrence: submitData.recurrence,
           goalId: submitData.goalId,
@@ -248,7 +219,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
           amount: submitData.amount,
           category: selectedCategory?.name || 'Lembretes',
           category_id: submitData.type === 'reminder' ? null : submitData.category, // Para lembretes, não enviar category_id
-          conta: submitData.conta,
           scheduledDate: new Date(submitData.scheduledDate).toISOString(),
           recurrence: submitData.recurrence,
           goalId: submitData.goalId,
@@ -385,64 +355,6 @@ const ScheduledTransactionForm: React.FC<ScheduledTransactionFormProps> = ({
                     <FormControl>
                       <Input type="datetime-local" {...field} />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="conta"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>{t('transactions.account')}</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className="justify-between"
-                          >
-                            {field.value || t('transactions.accountPlaceholder')}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput 
-                            placeholder={t('transactions.accountPlaceholder')}
-                            value={field.value}
-                            onValueChange={(value) => {
-                              field.onChange(value);
-                            }}
-                          />
-                          <CommandList>
-                            <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
-                            <CommandGroup>
-                              {contas.map((conta) => (
-                                <CommandItem
-                                  key={conta}
-                                  value={conta}
-                                  onSelect={(currentValue) => {
-                                    field.onChange(currentValue);
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      field.value === conta ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                  {conta}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}

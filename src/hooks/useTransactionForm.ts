@@ -46,12 +46,15 @@ export const useTransactionForm = ({
       type: initialData?.type || defaultType,
       amount: initialData?.amount ? Math.abs(initialData.amount) : 0,
       conta: initialData?.conta || '',
+      referencia: initialData?.referencia || '',
       category: initialData?.category_id || '',
       description: initialData?.description || '',
       date: initialData?.date 
         ? new Date(initialData.date).toISOString().split('T')[0] 
         : new Date().toISOString().split('T')[0],
       goalId: initialData?.goalId || undefined,
+      phone: initialData?.phone || '',
+      dependentName: initialData?.dependent_name || '',
     },
   });
 
@@ -96,7 +99,10 @@ export const useTransactionForm = ({
             date: new Date(processedValues.date).toISOString(),
             goalId: processedValues.goalId,
             user_id: targetUserId,
-            conta: processedValues.conta
+            conta: processedValues.conta,
+            referencia: processedValues.referencia || '',
+            phone: processedValues.phone || '',
+            dependent_name: processedValues.dependentName || ''
           });
         } else {
           // Usar método normal do contexto para o usuário logado
@@ -109,6 +115,9 @@ export const useTransactionForm = ({
             goalId: processedValues.goalId,
             category: '',
             conta: processedValues.conta,
+            referencia: processedValues.referencia || '',
+            phone: processedValues.phone || '',
+            dependent_name: processedValues.dependentName || ''
           });
         }
         
@@ -125,6 +134,9 @@ export const useTransactionForm = ({
           date: new Date(processedValues.date).toISOString(),
           goalId: processedValues.goalId,
           conta: processedValues.conta,
+          referencia: processedValues.referencia || '',
+          phone: processedValues.phone || '',
+          dependent_name: processedValues.dependentName || ''
         });
         
         console.log("Transaction updated successfully, refreshing data...");
@@ -162,10 +174,13 @@ export const useTransactionForm = ({
         type: initialData.type,
         amount: Math.abs(initialData.amount),
         conta: initialData.conta || '',
+        referencia: initialData.referencia || '',
         category: initialData.category_id || '',
         description: initialData.description || '',
         date: new Date(initialData.date).toISOString().split('T')[0],
         goalId: initialData.goalId,
+        phone: initialData.phone || '',
+        dependentName: initialData.dependent_name || '',
       });
     } else {
       setSelectedType(defaultType);
@@ -173,10 +188,13 @@ export const useTransactionForm = ({
         type: defaultType,
         amount: 0,
         conta: '',
+        referencia: '',
         category: '',
         description: '',
         date: new Date().toISOString().split('T')[0],
         goalId: undefined,
+        phone: '',
+        dependentName: '',
       });
     }
   }, [initialData, defaultType]);

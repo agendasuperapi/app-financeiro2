@@ -14,8 +14,10 @@ export interface Transaction {
   date: string; // ISO date string
   goalId?: string; // Optional reference to a goal
   conta?: string; // Account name
+  referencia?: string; // Reference information (PIX, boleto, etc.)
   phone?: string; // Phone of who added the transaction
   addedBy?: string; // Name of who added the transaction
+  dependent_name?: string; // Name of the dependent who made the transaction
   // Database fields for compatibility
   category_id?: string;
   goal_id?: string;

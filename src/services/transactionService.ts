@@ -133,6 +133,9 @@ export const createTransactionForUser = async (transactionData: {
   goalId?: string;
   user_id: string;
   conta: string;
+  referencia?: string;
+  phone?: string;
+  dependent_name?: string;
 }): Promise<Transaction | null> => {
   try {
     const newId = uuidv4();

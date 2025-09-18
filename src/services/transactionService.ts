@@ -49,36 +49,31 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 
     let usersMap = new Map<string, string>();
 
-    // Only fetch user names if current user is dependente
-    if (isUserDependente) {
-      const transactionsWithPhone = (data as any[]).filter(item => item.phone);
-      console.log('📱 Transações com telefone encontradas:', transactionsWithPhone.length);
-      console.log('📋 Lista de transações com phone:', transactionsWithPhone.map(t => ({ id: t.id, phone: t.phone, description: t.description })));
+    // Buscar nomes para todos os phones em lote
+    const transactionsWithPhone = (data as any[]).filter(item => item.phone);
+    console.log('📱 Transações com telefone encontradas:', transactionsWithPhone.length);
+    const sanitize = (p: string) => (p || '').toString().replace(/\D/g, '');
+    const uniquePhones = Array.from(new Set(transactionsWithPhone.map((t: any) => sanitize(t.phone)).filter(Boolean)));
+    console.log('📋 Phones únicos (sanitizados):', uniquePhones);
 
-      for (const transaction of transactionsWithPhone) {
-        try {
-          console.log('🔍 Buscando usuário para telefone:', transaction.phone);
-          // Query view_cadastros_unificados table
-          const { data: userData } = await (supabase as any)
-            .from('view_cadastros_unificados')
-            .select('name, phone')
-            .eq('phone', transaction.phone)
-            .single();
-          
-          console.log('👤 Dados do usuário encontrados para', transaction.phone, ':', userData);
-          
-          if (userData?.name) {
-            usersMap.set(transaction.phone, userData.name);
-            console.log('✅ Mapeamento adicionado:', transaction.phone, '->', userData.name);
-          } else {
-            console.log('❌ Nome não encontrado para telefone:', transaction.phone);
+    if (uniquePhones.length > 0) {
+      try {
+        const { data: usersList, error: usersError } = await (supabase as any)
+          .from('view_cadastros_unificados')
+          .select('name, phone')
+          .in('phone', uniquePhones);
+        if (usersError) throw usersError;
+        console.log('👥 Registros encontrados na view:', usersList?.length || 0);
+        (usersList || []).forEach((u: any) => {
+          const key = sanitize(u.phone);
+          if (key && u.name) {
+            if (!usersMap.has(key)) usersMap.set(key, u.name);
+            console.log('✅ Mapeamento adicionado:', key, '->', u.name);
           }
-        } catch (error) {
-          console.error('❌ Erro ao buscar usuário para telefone:', transaction.phone, error);
-        }
+        });
+      } catch (e) {
+        console.error('❌ Erro ao buscar nomes na view:', e);
       }
-    } else {
-      console.log('❌ Usuário não é dependente, não buscando nomes adicionais');
     }
     
     console.log('Mapa final de usuários:', Array.from(usersMap.entries()));
@@ -94,7 +89,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
       date: item.date,
       goalId: item.goal_id || undefined,
       phone: item.phone,
-      addedBy: isUserDependente && item.phone ? usersMap.get(item.phone) : undefined
+      addedBy: item.phone ? usersMap.get(item.phone.replace(/\D/g, '')) : undefined
     }));
   } catch (error) {
     console.error("Error fetching transactions:", error);

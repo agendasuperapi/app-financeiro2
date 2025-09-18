@@ -61,15 +61,15 @@ export const getTransactions = async (): Promise<Transaction[]> => {
           // Query view_cadastros_unificados table
           const { data: userData } = await (supabase as any)
             .from('view_cadastros_unificados')
-            .select('nome, telefone')
-            .eq('telefone', transaction.phone)
+            .select('name, phone')
+            .eq('phone', transaction.phone)
             .single();
           
           console.log('👤 Dados do usuário encontrados para', transaction.phone, ':', userData);
           
-          if (userData?.nome) {
-            usersMap.set(transaction.phone, userData.nome);
-            console.log('✅ Mapeamento adicionado:', transaction.phone, '->', userData.nome);
+          if (userData?.name) {
+            usersMap.set(transaction.phone, userData.name);
+            console.log('✅ Mapeamento adicionado:', transaction.phone, '->', userData.name);
           } else {
             console.log('❌ Nome não encontrado para telefone:', transaction.phone);
           }

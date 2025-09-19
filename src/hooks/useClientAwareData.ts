@@ -39,11 +39,20 @@ export const useClientAwareData = () => {
 
       if (error) throw error;
       
-      return data.map(transaction => ({
+      // Fetch dependent flag for this user
+      const { data: userRow } = await (supabase as any)
+        .from('poupeja_users')
+        .select('id, dependente')
+        .eq('id', targetUserId)
+        .single();
+      const isDep = userRow?.dependente === true;
+      
+      return data.map((transaction: any) => ({
         ...transaction,
         category: transaction.categories?.name || 'Sem categoria',
         categoryIcon: transaction.categories?.icon || 'circle',
-        categoryColor: transaction.categories?.color || '#607D8B'
+        categoryColor: transaction.categories?.color || '#607D8B',
+        creatorName: isDep && transaction.name ? transaction.name : undefined,
       }));
     } catch (error) {
       console.error('Erro ao buscar transações do cliente:', error);

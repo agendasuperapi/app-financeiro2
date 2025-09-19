@@ -493,7 +493,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const categories = (categoriesRes.data || []).map(transformCategory);
       dispatch({ type: 'SET_CATEGORIES', payload: categories });
       
-      const transactions = (transactionsRes.data || []).map(transformTransaction);
+      // Build dependent map to determine if we should show creator name
+      const txRows = (transactionsRes.data || []);
+      const userIds = Array.from(new Set(txRows.map((t: any) => t.user_id).filter(Boolean)));
+      let depMap = new Map<string, boolean>();
+      if (userIds.length > 0) {
+        const { data: usersRows } = await (supabase as any)
+          .from('poupeja_users')
+          .select('id, dependente')
+          .in('id', userIds);
+        (usersRows || []).forEach((u: any) => depMap.set(String(u.id), u.dependente === true));
+      }
+
+      const transactions = txRows.map((row: any) => {
+        const base = transformTransaction(row);
+        const isDep = depMap.get(String(row.user_id)) === true;
+        const creatorName = isDep && row.name ? row.name : undefined;
+        return { ...base, creatorName } as Transaction;
+      });
       dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
       
       const goals = (goalsRes.data || []).map(transformGoal);
@@ -551,7 +568,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
       if (error) throw error;
       
-      const transactions = (data || []).map(transformTransaction);
+      // Determine dependent status for users in these transactions
+      const txRows = (data || []);
+      const userIds = Array.from(new Set(txRows.map((t: any) => t.user_id).filter(Boolean)));
+      let depMap = new Map<string, boolean>();
+      if (userIds.length > 0) {
+        const { data: usersRows } = await (supabase as any)
+          .from('poupeja_users')
+          .select('id, dependente')
+          .in('id', userIds);
+        (usersRows || []).forEach((u: any) => depMap.set(String(u.id), u.dependente === true));
+      }
+      const transactions = txRows.map((row: any) => {
+        const base = transformTransaction(row);
+        const isDep = depMap.get(String(row.user_id)) === true;
+        const creatorName = isDep && row.name ? row.name : undefined;
+        return { ...base, creatorName } as Transaction;
+      });
       console.log('AppContext: Transactions fetched successfully:', transactions.length);
       dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
       return transactions;

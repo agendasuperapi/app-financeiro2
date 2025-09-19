@@ -98,7 +98,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   </TableCell>
                   <TableCell>
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <CategoryIcon
                           icon={
                             transaction.type === 'income'
@@ -123,6 +123,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         >
                           {transaction.category}
                         </Badge>
+                        {transaction.creatorName && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-[10px] font-medium">
+                            {transaction.creatorName}
+                          </span>
+                        )}
                       </div>
                       <div className="md:flex md:flex-col md:items-start md:gap-1 lg:hidden mt-1">
                         <div
@@ -138,17 +143,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     </div>
                   </TableCell>
                    <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
-                    <div className="truncate pr-2">
-                      {transaction.description}
-                      {transaction.creatorName && (
-                        <div className="mt-1">
-                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium">
-                            {transaction.creatorName}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
+                     <div className="truncate pr-2">
+                       {transaction.description}
+                     </div>
+                   </TableCell>
                   <TableCell
                     className={cn(
                       'text-right font-semibold text-[10px] md:text-xs hidden lg:table-cell',

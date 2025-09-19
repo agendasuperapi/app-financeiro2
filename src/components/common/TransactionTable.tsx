@@ -130,7 +130,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
+                   <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
                     <div className="truncate pr-2">{transaction.description}</div>
                   </TableCell>
                   <TableCell

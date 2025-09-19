@@ -137,8 +137,8 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
       {/* Creator Name (if exists) */}
       {transaction.creatorName && (
         <div className="flex items-center gap-2 pt-2 border-t border-border">
-          <span className="text-xs text-muted-foreground">
-            Adicionado por: {transaction.creatorName}
+          <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium">
+            {transaction.creatorName}
           </span>
         </div>
       )}

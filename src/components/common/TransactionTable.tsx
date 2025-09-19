@@ -88,8 +88,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         {transaction.description}
                       </div>
                       {transaction.creatorName && (
-                        <div className="lg:hidden text-[10px] text-muted-foreground">
-                          Adicionado por: {transaction.creatorName}
+                        <div className="lg:hidden mt-1">
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-[9px] font-medium">
+                            {transaction.creatorName}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -139,8 +141,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     <div className="truncate pr-2">
                       {transaction.description}
                       {transaction.creatorName && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Adicionado por: {transaction.creatorName}
+                        <div className="mt-1">
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium">
+                            {transaction.creatorName}
+                          </span>
                         </div>
                       )}
                     </div>

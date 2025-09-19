@@ -75,7 +75,7 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
               isIncome ? "text-green-600" : "text-red-600"
             )}>
               {isIncome ? '+' : '-'}
-              {hideValues ? renderHiddenValue() : formatCurrency(transaction.amount, currency)}
+              {hideValues ? renderHiddenValue() : formatCurrency(Math.abs(transaction.amount), currency)}
             </span>
             <p className="text-sm text-muted-foreground">
               {formatDateTime(transaction.date)}

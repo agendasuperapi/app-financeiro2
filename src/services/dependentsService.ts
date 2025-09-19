@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface Dependent {
   id?: number;
-  user_id_ref: string;
+  user_id: string;
   dep_name: string;
   dep_phone: string;
   dep_numero: number;
@@ -14,7 +14,7 @@ export class DependentsService {
       const { data, error } = await (supabase as any)
         .from('tbl_depentes')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .order('dep_numero', { ascending: true });
 
       if (error) throw error;
@@ -31,7 +31,7 @@ export class DependentsService {
       const { data: existingDependents, error: countError } = await (supabase as any)
         .from('tbl_depentes')
         .select('dep_numero')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .order('dep_numero', { ascending: false })
         .limit(1);
 
@@ -42,7 +42,7 @@ export class DependentsService {
         : 1;
 
       const newDependent = {
-        id: userId,
+        user_id: userId,
         dep_name: name,
         dep_phone: phone.replace(/\D/g, ''), // Remove non-digits
         dep_numero: nextNumber
@@ -55,18 +55,6 @@ export class DependentsService {
         .single();
 
       if (error) throw error;
-
-      // Update poupeja_users to mark as dependente = true
-      const { error: updateError } = await (supabase as any)
-        .from('poupeja_users')
-        .update({ dependente: true })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.error('Error updating user dependente status:', updateError);
-        // Don't throw error, just log it as the main operation succeeded
-      }
-
       return data as Dependent;
     } catch (error) {
       console.error('Error adding dependent:', error);
@@ -74,29 +62,12 @@ export class DependentsService {
     }
   }
 
-  static async updateDependent(dependentId: number, name: string, phone: string): Promise<void> {
-    try {
-      const { error } = await (supabase as any)
-        .from('tbl_depentes')
-        .update({
-          dep_name: name,
-          dep_phone: phone.replace(/\D/g, '') // Remove non-digits
-        })
-        .eq('dep_numero', dependentId);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error updating dependent:', error);
-      throw error;
-    }
-  }
-
-  static async deleteDependent(dependentId: number): Promise<void> {
+  static async deleteDependent(id: number): Promise<void> {
     try {
       const { error } = await (supabase as any)
         .from('tbl_depentes')
         .delete()
-        .eq('dep_numero', dependentId);
+        .eq('id', String(id));
 
       if (error) throw error;
     } catch (error) {

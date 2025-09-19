@@ -56,12 +56,9 @@ export const getCategoriesByType = async (type: 'income' | 'expense' | 'reminder
       .select("*")
       .eq("type", type);
     
-    // Filter by userId if provided - include both user categories and public categories (user_id is null)
+    // Filter by userId if provided
     if (userId) {
-      query = query.or(`user_id.eq.${userId},user_id.is.null`);
-    } else {
-      // If no userId provided, only get public categories
-      query = query.is("user_id", null);
+      query = query.eq("user_id", userId);
     }
     
     const { data, error } = await query.order("name");

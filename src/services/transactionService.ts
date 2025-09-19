@@ -6,34 +6,6 @@ import { getNextReferenceCode } from "@/utils/referenceCodeUtils";
 
 export const getTransactions = async (): Promise<Transaction[]> => {
   try {
-    console.log('🔍 Iniciando busca de transações...');
-    
-    // Check if current user is dependente
-    const { data: { user } } = await supabase.auth.getUser();
-    let isUserDependente = false;
-    
-    console.log('🆔 USER ID atual:', user?.id);
-    
-    if (user) {
-      try {
-        const { data: userData } = await supabase
-          .from("poupeja_users")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-        
-        console.log('👤 Dados completos do usuário:', userData);
-        const dependenteValue = (userData as any)?.dependente;
-        // Accept true, "true", 1, "1" as truthy values
-        isUserDependente = dependenteValue === true || dependenteValue === "true" || dependenteValue === 1 || dependenteValue === "1";
-        console.log('🔍 Campo dependente (valor bruto):', dependenteValue, 'tipo:', typeof dependenteValue);
-        console.log('✅ É dependente?', isUserDependente);
-      } catch (error) {
-        console.log('❌ Coluna dependente não existe ou erro ao buscar:', error);
-        isUserDependente = false;
-      }
-    }
-    
     const { data, error } = await supabase
       .from("poupeja_transactions")
       .select(`
@@ -44,41 +16,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 
     if (error) throw error;
 
-    console.log('📊 Dados brutos das transações:', data);
-    console.log('👤 Usuário é dependente:', isUserDependente);
-
-    let usersMap = new Map<string, string>();
-
-    // Buscar nomes para todos os phones em lote
-    const transactionsWithPhone = (data as any[]).filter(item => item.phone);
-    console.log('📱 Transações com telefone encontradas:', transactionsWithPhone.length);
-    const sanitize = (p: string) => (p || '').toString().replace(/\D/g, '');
-    const uniquePhones = Array.from(new Set(transactionsWithPhone.map((t: any) => sanitize(t.phone)).filter(Boolean)));
-    console.log('📋 Phones únicos (sanitizados):', uniquePhones);
-
-    if (uniquePhones.length > 0) {
-      try {
-        const { data: usersList, error: usersError } = await (supabase as any)
-          .from('view_cadastros_unificados')
-          .select('name, phone')
-          .in('phone', uniquePhones);
-        if (usersError) throw usersError;
-        console.log('👥 Registros encontrados na view:', usersList?.length || 0);
-        (usersList || []).forEach((u: any) => {
-          const key = sanitize(u.phone);
-          if (key && u.name) {
-            if (!usersMap.has(key)) usersMap.set(key, u.name);
-            console.log('✅ Mapeamento adicionado:', key, '->', u.name);
-          }
-        });
-      } catch (e) {
-        console.error('❌ Erro ao buscar nomes na view:', e);
-      }
-    }
-    
-    console.log('Mapa final de usuários:', Array.from(usersMap.entries()));
-
-    return (data as any[]).map((item: any) => ({
+    return data.map((item) => ({
       id: item.id,
       type: item.type as 'income' | 'expense',
       amount: item.amount,
@@ -87,10 +25,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
       categoryColor: item.category?.color || "#607D8B",
       description: item.description || "",
       date: item.date,
-      goalId: item.goal_id || undefined,
-      conta: item.conta,
-      phone: item.phone,
-      addedBy: item.phone ? usersMap.get(item.phone.replace(/\D/g, '')) : undefined
+      goalId: item.goal_id || undefined
     }));
   } catch (error) {
     console.error("Error fetching transactions:", error);
@@ -133,9 +68,6 @@ export const createTransactionForUser = async (transactionData: {
   goalId?: string;
   user_id: string;
   conta: string;
-  referencia?: string;
-  phone?: string;
-  dependent_name?: string;
 }): Promise<Transaction | null> => {
   try {
     const newId = uuidv4();
@@ -184,8 +116,7 @@ export const createTransactionForUser = async (transactionData: {
         goal_id: transactionData.goalId,
         user_id: transactionData.user_id,
         reference_code: referenceCode,
-        conta: transactionData.conta,
-        phone: transactionData.phone
+        conta: transactionData.conta
       })
       .select(`
         *,
@@ -219,8 +150,7 @@ export const createTransactionForUser = async (transactionData: {
       categoryColor: data.category?.color || "#607D8B",
       description: data.description || "",
       date: data.date,
-      goalId: data.goal_id || undefined,
-      conta: (data as any).conta
+      goalId: data.goal_id || undefined
     };
   } catch (error) {
     console.error("Error creating transaction for user:", error);
@@ -314,8 +244,7 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
       categoryColor: data.category?.color || "#607D8B",
       description: data.description || "",
       date: data.date,
-      goalId: data.goal_id || undefined,
-      conta: (data as any).conta
+      goalId: data.goal_id || undefined
     };
   } catch (error) {
     console.error("Error updating transaction:", error);

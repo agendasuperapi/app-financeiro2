@@ -28,30 +28,6 @@ export const useClientAwareData = () => {
     if (!targetUserId) return [];
     
     try {
-      console.log('[ClientAware] 🔍 Iniciando busca de transações do cliente para userId:', targetUserId);
-      
-      // Check if target user is dependente
-      let isUserDependente = false;
-      try {
-        const { data: userData } = await supabase
-          .from("poupeja_users")
-          .select("*")
-          .eq("id", targetUserId)
-          .single();
-        
-        console.log('[ClientAware] 👤 Dados completos do usuário target:', userData);
-        const dependenteValue = (userData as any)?.dependente;
-        // Accept true, "true", 1, "1" as truthy values
-        isUserDependente = dependenteValue === true || dependenteValue === "true" || dependenteValue === 1 || dependenteValue === "1";
-        console.log('[ClientAware] 🔍 Campo dependente (valor bruto):', dependenteValue, 'tipo:', typeof dependenteValue);
-        console.log('[ClientAware] ✅ É dependente?', isUserDependente);
-      } catch (error) {
-        console.log('[ClientAware] ❌ Coluna dependente não existe ou erro ao buscar:', error);
-        isUserDependente = false;
-      }
-      
-      console.log('[ClientAware] 👤 Usuário é dependente:', isUserDependente);
-      
       const { data, error } = await supabase
         .from('poupeja_transactions')
         .select(`
@@ -63,46 +39,11 @@ export const useClientAwareData = () => {
 
       if (error) throw error;
       
-      console.log('[ClientAware] 📊 Dados brutos das transações:', data);
-      
-      let usersMap = new Map<string, string>();
-
-      // Buscar nomes para todos os phones em lote (sem depender de flag de dependente)
-      const transactionsWithPhone = (data as any[]).filter(item => item.phone);
-      console.log('[ClientAware] 📱 Transações com telefone encontradas:', transactionsWithPhone.length);
-      const sanitize = (p: string) => (p || '').toString().replace(/\D/g, '');
-      const uniquePhones = Array.from(new Set(transactionsWithPhone.map((t: any) => sanitize(t.phone)).filter(Boolean)));
-      console.log('[ClientAware] 📋 Phones únicos (sanitizados):', uniquePhones);
-
-      if (uniquePhones.length > 0) {
-        try {
-          const { data: usersList, error: usersError } = await (supabase as any)
-            .from('view_cadastros_unificados')
-            .select('name, phone')
-            .in('phone', uniquePhones);
-          if (usersError) throw usersError;
-          console.log('[ClientAware] 👥 Registros encontrados na view:', usersList?.length || 0);
-          (usersList || []).forEach((u: any) => {
-            const key = sanitize(u.phone);
-            if (key && u.name) {
-              if (!usersMap.has(key)) usersMap.set(key, u.name);
-              console.log('[ClientAware] ✅ Mapeamento adicionado:', key, '->', u.name);
-            }
-          });
-        } catch (e) {
-          console.error('[ClientAware] ❌ Erro ao buscar nomes na view:', e);
-        }
-      }
-      
-      console.log('[ClientAware] Mapa final de usuários:', Array.from(usersMap.entries()));
-      
       return data.map(transaction => ({
         ...transaction,
         category: transaction.categories?.name || 'Sem categoria',
         categoryIcon: transaction.categories?.icon || 'circle',
-        categoryColor: transaction.categories?.color || '#607D8B',
-        phone: (transaction as any).phone,
-        addedBy: (transaction as any).phone ? usersMap.get(((transaction as any).phone || '').toString().replace(/\D/g, '')) : undefined
+        categoryColor: transaction.categories?.color || '#607D8B'
       }));
     } catch (error) {
       console.error('Erro ao buscar transações do cliente:', error);

@@ -93,13 +93,6 @@ export const getScheduledTransactions = async (userId?: string): Promise<Schedul
       recurrence: normalizeRecurrence(item.recurrence) || 'once',
       goalId: item.goal_id,
       status: (item.status as 'pending' | 'paid' | 'overdue' | 'upcoming') || 'pending',
-      // Extra fields needed for edit forms
-      conta: (item as any).conta || '',
-      phone: (item as any).phone || undefined,
-      parcela: (item as any).parcela ? String((item as any).parcela) : undefined,
-      situacao: (item as any).situacao || undefined,
-      dependent_name: (item as any).dependent_name || undefined,
-      // Not used in list but keep placeholders for types
       paidDate: undefined,
       paidAmount: undefined,
       lastExecutionDate: undefined,
@@ -224,8 +217,7 @@ export const addScheduledTransaction = async (
           situacao: transaction.situacao || 'ativo',
           phone: transaction.phone,
           aba: transaction.aba,
-          recurrence: convertRecurrenceToPortuguese('once'), // Convert to Portuguese
-          conta: (transaction as any).conta,
+          recurrence: convertRecurrenceToPortuguese('once') // Convert to Portuguese
         };
         
         // Ensure no unwanted properties are added
@@ -302,8 +294,7 @@ export const addScheduledTransaction = async (
         date: transaction.scheduledDate,
         goal_id: transaction.goalId,
         reference_code: referenceCode,
-        status: 'pending',
-        conta: (transaction as any).conta,
+        status: 'pending'
       };
 
       // Add additional fields if they exist
@@ -406,8 +397,7 @@ export const updateScheduledTransaction = async (
       category_id: categoryId,
       description: transaction.description,
       date: transaction.scheduledDate,
-      goal_id: transaction.goalId,
-      conta: (transaction as any).conta,
+      goal_id: transaction.goalId
     };
 
     // Add additional fields if they exist
@@ -421,48 +411,17 @@ export const updateScheduledTransaction = async (
 
     console.log('Update data with all fields:', updateData);
 
-    // Determine if admin update is needed (editing another user's record)
-    const { data: sessionData } = await supabase.auth.getSession();
-    const sessionUserId = sessionData?.session?.user?.id;
-    let ownerUserId: string | null = null;
-    try {
-      const { data: ownerRow } = await supabase
-        .from('poupeja_transactions')
-        .select('user_id')
-        .eq('id', transaction.id)
-        .single();
-      ownerUserId = ownerRow?.user_id || null;
-    } catch (e) {
-      console.warn('Could not fetch transaction owner, proceeding with direct update');
-    }
+    const { data, error } = await supabase
+      .from("poupeja_transactions")
+      .update(updateData)
+      .eq("id", transaction.id)
+      .select(`
+        *,
+        category:poupeja_categories(id, name, icon, color, type)
+      `)
+      .single();
 
-    const needsAdminUpdate = !!(sessionUserId && ownerUserId && sessionUserId !== ownerUserId);
-
-    let data: any;
-
-    if (needsAdminUpdate) {
-      console.log('🔐 Using admin function for update');
-      const { data: fnRes, error: fnError } = await supabase.functions.invoke('update-transaction-admin', {
-        body: { id: transaction.id, update: updateData },
-      });
-      if (fnError || !fnRes?.success) {
-        console.error('Admin update failed:', fnError || fnRes?.error);
-        throw new Error(fnError?.message || (fnRes as any)?.error || 'Admin update failed');
-      }
-      data = (fnRes as any).data;
-    } else {
-      const result = await supabase
-        .from('poupeja_transactions')
-        .update(updateData)
-        .eq('id', transaction.id)
-        .select(`
-          *,
-          category:poupeja_categories(id, name, icon, color, type)
-        `)
-        .single();
-      if (result.error) throw result.error;
-      data = result.data;
-    }
+    if (error) throw error;
 
     return {
       id: data.id,

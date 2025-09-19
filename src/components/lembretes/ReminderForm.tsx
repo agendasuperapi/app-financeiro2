@@ -12,7 +12,6 @@ import { Input } from '@/components/ui/input';
 import { ScheduledTransaction } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { getDependentUsers, checkIfUserIsDependent, DependentUser } from '@/services/dependentViewService';
 
 interface ReminderFormProps {
   open: boolean;
@@ -34,17 +33,12 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
   const { t } = usePreferences();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isOnline] = useState(navigator.onLine);
-  // States para o seletor de pessoa
-  const [dependentUsers, setDependentUsers] = useState<DependentUser[]>([]);
-  const [isDependent, setIsDependent] = useState(false);
-  const [checkingDependent, setCheckingDependent] = useState(true);
 
   // Schema for reminder form (specific for reminders)
   const formSchema = z.object({
     description: z.string().min(1, { message: t('validation.required') }),
     scheduledDate: z.string().min(1, { message: t('validation.required') }),
     recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly']),
-    dependentName: z.string().optional(),
   });
 
   // Default form values for reminders
@@ -58,7 +52,6 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           return now.toISOString().slice(0, 16);
         })(),
     recurrence: (initialData?.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
-    dependentName: initialData?.dependent_name || '',
   };
 
   // Form setup
@@ -66,35 +59,6 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
-
-  // Load dependent users and check if user is dependent
-  useEffect(() => {
-    const loadDependentData = async () => {
-      setCheckingDependent(true);
-      
-      try {
-        // Check if current user is dependent
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const isDep = await checkIfUserIsDependent(user.id);
-          setIsDependent(isDep);
-          
-          if (isDep) {
-            // Load dependent users for selection
-            const users = await getDependentUsers();
-            setDependentUsers(users);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading dependent data:', error);
-        setDependentUsers([]);
-      } finally {
-        setCheckingDependent(false);
-      }
-    };
-
-    loadDependentData();
-  }, []);
 
   // Reset form when opening/closing
   useEffect(() => {
@@ -107,17 +71,9 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         description: initialData.description,
         scheduledDate: new Date(initialData.scheduledDate).toISOString().slice(0, 16),
         recurrence: (initialData.recurrence || 'once') as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly',
-        dependentName: initialData.dependent_name || '',
       });
     }
   }, [open, initialData, form]);
-
-  const handleDependentChange = (selectedName: string) => {
-    const selectedUser = dependentUsers.find(user => user.name === selectedName);
-    if (selectedUser) {
-      form.setValue('dependentName', selectedUser.name);
-    }
-  };
 
   // Form submission handler
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -139,41 +95,28 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
       if (mode === 'create') {
         console.log('➕ Creating reminder...');
         
-        // Get current user
+        // Get user data for phone number - use targetUserId if provided (admin creating for client)
         const { data: { user } } = await supabase.auth.getUser();
+        const userId = targetUserId || user?.id;
+        const { data: userData } = await supabase
+          .from('poupeja_users')
+          .select('phone')
+          .eq('id', userId)
+          .single();
         
-        // Determine phone number based on selected person
-        let phoneToUse = '';
-        
-        if (values.dependentName && isDependent) {
-          // If a dependent is selected, use their phone number
-          const selectedUser = dependentUsers.find(user => user.name === values.dependentName);
-          if (selectedUser?.phone) {
-            const rawPhone = selectedUser.phone;
-            phoneToUse = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
-          }
-        } else {
-          // Otherwise, use current user's phone number
-          const userId = targetUserId || user?.id;
-          const { data: userData } = await supabase
-            .from('poupeja_users')
-            .select('phone')
-            .eq('id', userId)
-            .single();
-          
-          if (userData?.phone) {
-            const rawPhone = userData.phone;
-            phoneToUse = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
-          }
+        // Add Brazilian country code 55 if not already present
+        let userPhone = '';
+        if (userData?.phone) {
+          const rawPhone = userData.phone;
+          userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
         }
         
         const reminderData = {
           ...submitData,
           reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
           situacao: 'ativo',
-          phone: phoneToUse,
-          user_id: targetUserId || user?.id,
-          dependent_name: values.dependentName || '',
+          phone: userPhone,
+          user_id: userId, // Use targetUserId when creating for client
         };
         
         console.log('📋 Creating reminder with data:', reminderData);
@@ -182,41 +125,28 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
       } else if (initialData) {
         console.log('✏️ Updating reminder...', initialData.id);
         
-        // Get current user
+        // Get user data for phone number - use targetUserId if provided (admin creating for client)
         const { data: { user } } = await supabase.auth.getUser();
+        const userId = targetUserId || user?.id;
+        const { data: userData } = await supabase
+          .from('poupeja_users')
+          .select('phone')
+          .eq('id', userId)
+          .single();
         
-        // Determine phone number based on selected person
-        let phoneToUse = '';
-        
-        if (values.dependentName && isDependent) {
-          // If a dependent is selected, use their phone number
-          const selectedUser = dependentUsers.find(user => user.name === values.dependentName);
-          if (selectedUser?.phone) {
-            const rawPhone = selectedUser.phone;
-            phoneToUse = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
-          }
-        } else {
-          // Otherwise, use current user's phone number
-          const userId = targetUserId || user?.id;
-          const { data: userData } = await supabase
-            .from('poupeja_users')
-            .select('phone')
-            .eq('id', userId)
-            .single();
-          
-          if (userData?.phone) {
-            const rawPhone = userData.phone;
-            phoneToUse = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
-          }
+        // Add Brazilian country code 55 if not already present
+        let userPhone = '';
+        if (userData?.phone) {
+          const rawPhone = userData.phone;
+          userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
         }
         
         const updateData = {
           ...submitData,
           reference_code: initialData?.reference_code || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
           situacao: 'ativo',
-          phone: phoneToUse,
-          user_id: targetUserId || user?.id,
-          dependent_name: values.dependentName || '',
+          phone: userPhone,
+          user_id: userId, // Use targetUserId when updating for client
         };
         
         console.log('📋 Updating reminder with ID:', initialData.id);
@@ -316,38 +246,6 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
                   </FormItem>
                 )}
               />
-
-              {/* Campo Selecionar Pessoa - only show if user is dependent */}
-              {isDependent && (
-                <FormField
-                  control={form.control}
-                  name="dependentName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Selecionar Pessoa</FormLabel>
-                      <Select 
-                        onValueChange={handleDependentChange}
-                        value={field.value}
-                        disabled={checkingDependent || dependentUsers.length === 0}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione uma pessoa..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {dependentUsers.map((user) => (
-                            <SelectItem key={user.name} value={user.name}>
-                              {user.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
 
               <DialogFooter className="flex flex-col sm:flex-row gap-3 justify-between items-center">
                 {mode === 'edit' && (

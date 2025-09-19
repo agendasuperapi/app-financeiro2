@@ -498,17 +498,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const userIds = Array.from(new Set(txRows.map((t: any) => t.user_id).filter(Boolean)));
       let depMap = new Map<string, boolean>();
       if (userIds.length > 0) {
-        const { data: usersRows } = await (supabase as any)
-          .from('poupeja_users')
-          .select('id, dependente')
-          .in('id', userIds);
-        (usersRows || []).forEach((u: any) => depMap.set(String(u.id), u.dependente === true));
+        try {
+          console.log("DEBUG AppContext: Tentando buscar poupeja_users para userIds:", userIds);
+          const { data: usersRows, error: usersError } = await (supabase as any)
+            .from('poupeja_users')
+            .select('id, dependente')
+            .in('id', userIds);
+          
+          if (usersError) {
+            console.error("DEBUG AppContext: ERRO ao buscar poupeja_users:", usersError);
+            console.error("DEBUG AppContext: Verifique permissões RLS para poupeja_users");
+          } else {
+            console.log("DEBUG AppContext: poupeja_users dados obtidos:", usersRows);
+          }
+          
+          (usersRows || []).forEach((u: any) => depMap.set(String(u.id), u.dependente === true));
+        } catch (error) {
+          console.error("DEBUG AppContext: EXCEPTION ao acessar poupeja_users:", error);
+        }
       }
 
       const transactions = txRows.map((row: any) => {
         const base = transformTransaction(row);
         const isDep = depMap.get(String(row.user_id)) === true;
         const creatorName = isDep && row.name ? row.name : undefined;
+        console.log(`DEBUG AppContext: TX ${row.id} - userID: ${row.user_id}, isDep: ${isDep}, name: ${row.name}, final: ${creatorName}`);
         return { ...base, creatorName } as Transaction;
       });
       dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
@@ -573,16 +587,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const userIds = Array.from(new Set(txRows.map((t: any) => t.user_id).filter(Boolean)));
       let depMap = new Map<string, boolean>();
       if (userIds.length > 0) {
-        const { data: usersRows } = await (supabase as any)
-          .from('poupeja_users')
-          .select('id, dependente')
-          .in('id', userIds);
-        (usersRows || []).forEach((u: any) => depMap.set(String(u.id), u.dependente === true));
+        try {
+          console.log("DEBUG getTransactions: Tentando buscar poupeja_users para userIds:", userIds);
+          const { data: usersRows, error: usersError } = await (supabase as any)
+            .from('poupeja_users')
+            .select('id, dependente')
+            .in('id', userIds);
+          
+          if (usersError) {
+            console.error("DEBUG getTransactions: ERRO ao buscar poupeja_users:", usersError);
+            console.error("DEBUG getTransactions: Problema de RLS? Código:", usersError.code, "Mensagem:", usersError.message);
+          } else {
+            console.log("DEBUG getTransactions: poupeja_users dados obtidos:", usersRows);
+          }
+          
+          (usersRows || []).forEach((u: any) => depMap.set(String(u.id), u.dependente === true));
+        } catch (error) {
+          console.error("DEBUG getTransactions: EXCEPTION ao acessar poupeja_users:", error);
+        }
       }
       const transactions = txRows.map((row: any) => {
         const base = transformTransaction(row);
         const isDep = depMap.get(String(row.user_id)) === true;
         const creatorName = isDep && row.name ? row.name : undefined;
+        console.log(`DEBUG getTransactions: TX ${row.id} - userID: ${row.user_id}, isDep: ${isDep}, name: ${row.name}, final: ${creatorName}`);
         return { ...base, creatorName } as Transaction;
       });
       console.log('AppContext: Transactions fetched successfully:', transactions.length);

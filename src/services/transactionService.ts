@@ -29,18 +29,26 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 
     if (userIds.length > 0) {
       try {
-        const { data: usersRows } = await (supabase as any)
+        console.log("DEBUG: Tentando buscar dados de poupeja_users para userIds:", userIds);
+        const { data: usersRows, error: usersError } = await (supabase as any)
           .from('poupeja_users')
           .select('id, dependente')
           .in('id', userIds);
 
-        console.log("DEBUG: Dados dos usuários (poupeja_users):", usersRows);
+        if (usersError) {
+          console.error("DEBUG: ERRO ao buscar poupeja_users:", usersError);
+          console.error("DEBUG: Isso pode ser um problema de RLS (Row Level Security)");
+        } else {
+          console.log("DEBUG: Dados dos usuários (poupeja_users) - SUCCESS:", usersRows);
+        }
+
         (usersRows || []).forEach((u: any) => {
           depMap.set(String(u.id), u.dependente === true);
           console.log(`DEBUG: User ${u.id} dependente: ${u.dependente}`);
         });
       } catch (e) {
-        console.warn('Não foi possível carregar dependente de poupeja_users (tipos antigos):', e);
+        console.error('DEBUG: EXCEPTION ao carregar dependente de poupeja_users:', e);
+        console.error('DEBUG: Provavelmente falta permissão RLS para poupeja_users');
       }
     }
 

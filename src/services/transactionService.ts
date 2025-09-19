@@ -17,25 +17,26 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 
     if (error) throw error;
 
-    // Verificar se o usuário atual é dependente (coluna 'dependente' em poupeja_users)
-    const { data: authData } = await supabase.auth.getUser();
-    let isDependent = false;
+    const txs = (data as any[]) || [];
 
-    if (authData?.user?.id) {
+    // Buscar o status "dependente" dos donos das transações (poupeja_users)
+    const userIds = Array.from(new Set(txs.map((t: any) => t.user_id).filter(Boolean)));
+    let depMap = new Map<string, boolean>();
+
+    if (userIds.length > 0) {
       try {
-        const { data: userRow } = await (supabase as any)
+        const { data: usersRows } = await (supabase as any)
           .from('poupeja_users')
-          .select('dependente')
-          .eq('id', authData.user.id)
-          .single();
+          .select('id, dependente')
+          .in('id', userIds);
 
-        isDependent = !!(userRow && (userRow as any).dependente === true);
-      } catch (_) {
-        isDependent = false;
+        (usersRows || []).forEach((u: any) => depMap.set(String(u.id), u.dependente === true));
+      } catch (e) {
+        console.warn('Não foi possível carregar dependente de poupeja_users (tipos antigos):', e);
       }
     }
 
-    return (data as any[]).map((item: any) => ({
+    return txs.map((item: any) => ({
       id: item.id,
       type: item.type as 'income' | 'expense',
       amount: item.amount,
@@ -45,7 +46,8 @@ export const getTransactions = async (): Promise<Transaction[]> => {
       description: item.description || "",
       date: item.date,
       goalId: item.goal_id || undefined,
-      creatorName: isDependent && item.name ? item.name : undefined
+      // Mostrar nome de quem adicionou somente quando o dono da transação é dependente
+      creatorName: depMap.get(String(item.user_id)) === true && item.name ? item.name : undefined
     }));
   } catch (error) {
     console.error("Error fetching transactions:", error);

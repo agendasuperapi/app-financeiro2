@@ -6,42 +6,67 @@ import { getNextReferenceCode } from "@/utils/referenceCodeUtils";
 
 export const getTransactions = async (): Promise<Transaction[]> => {
   try {
-    // First, get current user to check if they are a dependent
-    const { data: authData } = await supabase.auth.getUser();
-    let isDependent = false;
-    
-    if (authData?.user) {
-      const { data: userData } = await supabase
-        .from('poupeja_users')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
-      
-      isDependent = (userData as any)?.dependente === true;
-    }
-
+    // Get transactions with creator info
     const { data, error } = await supabase
       .from("poupeja_transactions")
       .select(`
         *,
-        category:poupeja_categories(id, name, icon, color, type)
+        category:poupeja_categories(id, name, icon, color, type),
+        creator:poupeja_users(name)
       `)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    return data.map((item: any) => ({
-      id: item.id,
-      type: item.type as 'income' | 'expense',
-      amount: item.amount,
-      category: item.category?.name || "Outros",
-      categoryIcon: item.category?.icon || "circle",
-      categoryColor: item.category?.color || "#607D8B",
-      description: item.description || "",
-      date: item.date,
-      goalId: item.goal_id || undefined,
-      creatorName: isDependent && item.name ? item.name : undefined
-    }));
+    // Check if current user is a dependent (check if they exist in tbl_depentes)
+    const { data: authData } = await supabase.auth.getUser();
+    let isDependent = false;
+    
+    console.log("Current user ID:", authData?.user?.id);
+    
+    if (authData?.user) {
+      try {
+        const { data: dependentData } = await (supabase as any)
+          .from('tbl_depentes')
+          .select('id')
+          .eq('user_id', authData.user.id)
+          .limit(1);
+        
+        isDependent = dependentData && dependentData.length > 0;
+        console.log("Is dependent:", isDependent, "dependentData:", dependentData);
+      } catch (depError) {
+        console.log("Error checking dependent status (table might not exist):", depError);
+        isDependent = false;
+      }
+    }
+
+    console.log("Raw transaction data sample:", data?.[0]);
+
+    return data.map((item: any) => {
+      const result = {
+        id: item.id,
+        type: item.type as 'income' | 'expense',
+        amount: item.amount,
+        category: item.category?.name || "Outros",
+        categoryIcon: item.category?.icon || "circle",
+        categoryColor: item.category?.color || "#607D8B",
+        description: item.description || "",
+        date: item.date,
+        goalId: item.goal_id || undefined,
+        // Show creator name only if current user is a dependent
+        creatorName: isDependent ? item.creator?.name : undefined
+      };
+      
+      if (isDependent) {
+        console.log("Transaction creator info:", {
+          transactionId: item.id,
+          creatorName: item.creator?.name,
+          fullCreator: item.creator
+        });
+      }
+      
+      return result;
+    });
   } catch (error) {
     console.error("Error fetching transactions:", error);
     return [];

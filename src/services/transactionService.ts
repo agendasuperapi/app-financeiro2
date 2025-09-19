@@ -18,10 +18,14 @@ export const getTransactions = async (): Promise<Transaction[]> => {
     if (error) throw error;
 
     const txs = (data as any[]) || [];
+    console.log("DEBUG: Transações carregadas:", txs.length);
+    console.log("DEBUG: Primeira transação:", txs[0]);
 
     // Buscar o status "dependente" dos donos das transações (poupeja_users)
     const userIds = Array.from(new Set(txs.map((t: any) => t.user_id).filter(Boolean)));
     let depMap = new Map<string, boolean>();
+
+    console.log("DEBUG: UserIDs únicos encontrados:", userIds);
 
     if (userIds.length > 0) {
       try {
@@ -30,25 +34,38 @@ export const getTransactions = async (): Promise<Transaction[]> => {
           .select('id, dependente')
           .in('id', userIds);
 
-        (usersRows || []).forEach((u: any) => depMap.set(String(u.id), u.dependente === true));
+        console.log("DEBUG: Dados dos usuários (poupeja_users):", usersRows);
+        (usersRows || []).forEach((u: any) => {
+          depMap.set(String(u.id), u.dependente === true);
+          console.log(`DEBUG: User ${u.id} dependente: ${u.dependente}`);
+        });
       } catch (e) {
         console.warn('Não foi possível carregar dependente de poupeja_users (tipos antigos):', e);
       }
     }
 
-    return txs.map((item: any) => ({
-      id: item.id,
-      type: item.type as 'income' | 'expense',
-      amount: item.amount,
-      category: item.category?.name || "Outros",
-      categoryIcon: item.category?.icon || "circle",
-      categoryColor: item.category?.color || "#607D8B",
-      description: item.description || "",
-      date: item.date,
-      goalId: item.goal_id || undefined,
-      // Mostrar nome de quem adicionou somente quando o dono da transação é dependente
-      creatorName: depMap.get(String(item.user_id)) === true && item.name ? item.name : undefined
-    }));
+    console.log("DEBUG: Mapa de dependentes:", Object.fromEntries(depMap));
+
+    return txs.map((item: any) => {
+      const isDep = depMap.get(String(item.user_id)) === true;
+      const creatorName = isDep && item.name ? item.name : undefined;
+      
+      console.log(`DEBUG: Transação ${item.id} - user_id: ${item.user_id}, isDep: ${isDep}, name: ${item.name}, creatorName: ${creatorName}`);
+      
+      return {
+        id: item.id,
+        type: item.type as 'income' | 'expense',
+        amount: item.amount,
+        category: item.category?.name || "Outros",
+        categoryIcon: item.category?.icon || "circle",
+        categoryColor: item.category?.color || "#607D8B",
+        description: item.description || "",
+        date: item.date,
+        goalId: item.goal_id || undefined,
+        // Mostrar nome de quem adicionou somente quando o dono da transação é dependente
+        creatorName: creatorName
+      };
+    });
   } catch (error) {
     console.error("Error fetching transactions:", error);
     return [];

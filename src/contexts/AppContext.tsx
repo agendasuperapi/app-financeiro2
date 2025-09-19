@@ -520,9 +520,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       const transactions = txRows.map((row: any) => {
         const base = transformTransaction(row);
-        const isDep = depMap.get(String(row.user_id)) === true;
-        const creatorName = isDep && row.name ? row.name : undefined;
-        console.log(`DEBUG AppContext: TX ${row.id} - userID: ${row.user_id}, isDep: ${isDep}, name: ${row.name}, final: ${creatorName}`);
+        const creatorName = row.name ? row.name : undefined;
+        console.log(`DEBUG AppContext: TX ${row.id} - name: ${row.name}, final: ${creatorName}`);
         return { ...base, creatorName } as Transaction;
       });
       dispatch({ type: 'SET_TRANSACTIONS', payload: transactions });
@@ -608,9 +607,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
       const transactions = txRows.map((row: any) => {
         const base = transformTransaction(row);
-        const isDep = depMap.get(String(row.user_id)) === true;
-        const creatorName = isDep && row.name ? row.name : undefined;
-        console.log(`DEBUG getTransactions: TX ${row.id} - userID: ${row.user_id}, isDep: ${isDep}, name: ${row.name}, final: ${creatorName}`);
+        const creatorName = row.name ? row.name : undefined;
+        console.log(`DEBUG getTransactions: TX ${row.id} - name: ${row.name}, final: ${creatorName}`);
         return { ...base, creatorName } as Transaction;
       });
       console.log('AppContext: Transactions fetched successfully:', transactions.length);

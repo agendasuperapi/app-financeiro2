@@ -55,10 +55,9 @@ export const getTransactions = async (): Promise<Transaction[]> => {
     console.log("DEBUG: Mapa de dependentes:", Object.fromEntries(depMap));
 
     return txs.map((item: any) => {
-      const isDep = depMap.get(String(item.user_id)) === true;
-      const creatorName = isDep && item.name ? item.name : undefined;
+      const creatorName = item.name ? item.name : undefined;
       
-      console.log(`DEBUG: Transação ${item.id} - user_id: ${item.user_id}, isDep: ${isDep}, name: ${item.name}, creatorName: ${creatorName}`);
+      console.log(`DEBUG: Transação ${item.id} - user_id: ${item.user_id}, name: ${item.name}, finalCreator: ${creatorName}`);
       
       return {
         id: item.id,
@@ -70,7 +69,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
         description: item.description || "",
         date: item.date,
         goalId: item.goal_id || undefined,
-        // Mostrar nome de quem adicionou somente quando o dono da transação é dependente
+        // Mostrar nome de quem adicionou quando houver nome na transação
         creatorName: creatorName
       };
     });

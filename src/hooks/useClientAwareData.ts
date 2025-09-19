@@ -52,7 +52,7 @@ export const useClientAwareData = () => {
         category: transaction.categories?.name || 'Sem categoria',
         categoryIcon: transaction.categories?.icon || 'circle',
         categoryColor: transaction.categories?.color || '#607D8B',
-        creatorName: isDep && transaction.name ? transaction.name : undefined,
+        creatorName: transaction.name ? transaction.name : undefined,
       }));
     } catch (error) {
       console.error('Erro ao buscar transações do cliente:', error);

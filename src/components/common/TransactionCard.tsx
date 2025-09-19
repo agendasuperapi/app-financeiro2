@@ -111,7 +111,7 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
 
       {/* Category and Description */}
       <div className="space-y-2 mb-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <CategoryIcon 
             icon={transaction.type === 'income' ? 'trending-up' : transaction.type === 'expense' ? transaction.category.toLowerCase().includes('food') ? 'utensils' : 'shopping-bag' : 'circle'} 
             color={iconColor} 
@@ -125,6 +125,11 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
           )}>
             {transaction.category}
           </Badge>
+          {transaction.creatorName && (
+            <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium">
+              {transaction.creatorName}
+            </span>
+          )}
         </div>
         
         {transaction.description && (
@@ -133,15 +138,6 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
           </p>
         )}
       </div>
-
-      {/* Creator Name (if exists) */}
-      {transaction.creatorName && (
-        <div className="flex items-center gap-2 pt-2 border-t border-border">
-          <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium">
-            {transaction.creatorName}
-          </span>
-        </div>
-      )}
 
       {/* Goal (if exists) */}
       {transaction.goalId && (

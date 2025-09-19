@@ -87,6 +87,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                       <div className="lg:hidden text-[10px] text-muted-foreground break-words">
                         {transaction.description}
                       </div>
+                      {transaction.creatorName && (
+                        <div className="lg:hidden text-[10px] text-muted-foreground">
+                          Adicionado por: {transaction.creatorName}
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>

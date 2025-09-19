@@ -131,7 +131,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     </div>
                   </TableCell>
                    <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
-                    <div className="truncate pr-2">{transaction.description}</div>
+                    <div className="truncate pr-2">
+                      {transaction.description}
+                      {transaction.creatorName && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Adicionado por: {transaction.creatorName}
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell
                     className={cn(

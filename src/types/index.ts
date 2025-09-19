@@ -14,6 +14,7 @@ export interface Transaction {
   date: string; // ISO date string
   goalId?: string; // Optional reference to a goal
   conta?: string; // Account name
+  creatorName?: string; // Name of who created the transaction (for dependents)
   // Database fields for compatibility
   category_id?: string;
   goal_id?: string;

@@ -6,6 +6,20 @@ import { getNextReferenceCode } from "@/utils/referenceCodeUtils";
 
 export const getTransactions = async (): Promise<Transaction[]> => {
   try {
+    // First, get current user to check if they are a dependent
+    const { data: authData } = await supabase.auth.getUser();
+    let isDependent = false;
+    
+    if (authData?.user) {
+      const { data: userData } = await supabase
+        .from('poupeja_users')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+      
+      isDependent = (userData as any)?.dependente === true;
+    }
+
     const { data, error } = await supabase
       .from("poupeja_transactions")
       .select(`
@@ -16,7 +30,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 
     if (error) throw error;
 
-    return data.map((item) => ({
+    return data.map((item: any) => ({
       id: item.id,
       type: item.type as 'income' | 'expense',
       amount: item.amount,
@@ -25,7 +39,8 @@ export const getTransactions = async (): Promise<Transaction[]> => {
       categoryColor: item.category?.color || "#607D8B",
       description: item.description || "",
       date: item.date,
-      goalId: item.goal_id || undefined
+      goalId: item.goal_id || undefined,
+      creatorName: isDependent && item.name ? item.name : undefined
     }));
   } catch (error) {
     console.error("Error fetching transactions:", error);

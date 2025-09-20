@@ -14,9 +14,14 @@ interface AddedByFieldProps {
   form: UseFormReturn<TransactionFormValues>;
 }
 
+interface UserData {
+  name: string;
+  phone: string;
+}
+
 const AddedByField: React.FC<AddedByFieldProps> = ({ form }) => {
   const { t } = usePreferences();
-  const [users, setUsers] = useState<string[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -25,26 +30,32 @@ const AddedByField: React.FC<AddedByFieldProps> = ({ form }) => {
       try {
         setLoading(true);
         
-        // Buscar nomes únicos da view "view_cadastros_unificados"
+        // Buscar nomes e telefones únicos da view "view_cadastros_unificados"
         const { data, error } = await (supabase as any)
           .from('view_cadastros_unificados')
-          .select('primeiro_name')
+          .select('primeiro_name, phone')
           .not('primeiro_name', 'is', null);
 
         if (error) throw error;
 
-        // Extrair nomes únicos e filtrar valores vazios
-        const uniqueNames = Array.from(new Set(
-          (data as any[])
-            .map(item => item.primeiro_name)
-            .filter(name => name && name.trim() !== '')
-        )).sort();
+        // Extrair dados únicos e filtrar valores vazios
+        const uniqueUsers = Array.from(
+          new Map(
+            (data as any[])
+              .filter(item => item.primeiro_name && item.primeiro_name.trim() !== '')
+              .map(item => [
+                item.primeiro_name, 
+                { name: item.primeiro_name, phone: item.phone || '' }
+              ])
+          ).values()
+        ).sort((a, b) => a.name.localeCompare(b.name));
 
-        setUsers(uniqueNames);
+        setUsers(uniqueUsers);
         
         // Se há apenas uma opção, definir automaticamente
-        if (uniqueNames.length === 1 && !form.getValues('name')) {
-          form.setValue('name', uniqueNames[0]);
+        if (uniqueUsers.length === 1 && !form.getValues('name')) {
+          form.setValue('name', uniqueUsers[0].name);
+          form.setValue('phone', uniqueUsers[0].phone);
         }
       } catch (error) {
         console.error('Erro ao carregar nomes da view cadastros unificados:', error);
@@ -93,22 +104,26 @@ const AddedByField: React.FC<AddedByFieldProps> = ({ form }) => {
                     {loading ? "Carregando nomes..." : "Nenhum nome encontrado."}
                   </CommandEmpty>
                   <CommandGroup>
-                    {users.map((name) => (
+                    {users.map((user) => (
                       <CommandItem
-                        key={name}
-                        value={name}
+                        key={user.name}
+                        value={user.name}
                         onSelect={(currentValue) => {
+                          const selectedUser = users.find(u => u.name === currentValue);
                           field.onChange(currentValue);
+                          if (selectedUser) {
+                            form.setValue('phone', selectedUser.phone);
+                          }
                           setOpen(false);
                         }}
                       >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            field.value === name ? "opacity-100" : "opacity-0"
+                            field.value === user.name ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        {name}
+                        {user.name}
                       </CommandItem>
                     ))}
                   </CommandGroup>

@@ -458,6 +458,37 @@ const ProfilePage = () => {
                         <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
                           {t('common.cancel')}
                         </Button>
+                        <Button 
+                          type="button" 
+                          variant="secondary" 
+                          onClick={async () => {
+                            try {
+                              const { data: { session } } = await supabase.auth.getSession();
+                              if (session?.user?.id) {
+                                const { error } = await (supabase as any)
+                                  .from('poupeja_users')
+                                  .update({ dependente: true })
+                                  .eq('id', session.user.id);
+                                
+                                if (error) throw error;
+                                
+                                toast({
+                                  title: "Status atualizado",
+                                  description: "Status de dependente ativado com sucesso!"
+                                });
+                              }
+                            } catch (error) {
+                              console.error('Error updating dependente status:', error);
+                              toast({
+                                title: "Erro",
+                                description: "Não foi possível atualizar o status de dependente",
+                                variant: "destructive"
+                              });
+                            }
+                          }}
+                        >
+                          Ativar Dependente
+                        </Button>
                       </div>
                     </form>
                   ) : (

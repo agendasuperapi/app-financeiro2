@@ -8,7 +8,7 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TransactionFormValues } from '@/schemas/transactionSchema';
 import { usePreferences } from '@/contexts/PreferencesContext';
-import { UserManagementService } from '@/services/api_service';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AddedByFieldProps {
   form: UseFormReturn<TransactionFormValues>;
@@ -21,24 +21,34 @@ const AddedByField: React.FC<AddedByFieldProps> = ({ form }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadUsers = async () => {
+    const loadNames = async () => {
       try {
         setLoading(true);
-        const userData = await UserManagementService.getAllUsersWithSubscriptions();
-        const userNames = userData
-          .filter(user => user.name) // Only users with names
-          .map(user => user.name as string) // TypeScript assertion since we filtered nulls
-          .sort(); // Sort alphabetically
-        setUsers(userNames);
+        
+        // Buscar nomes da tabela de usuários 
+        // (quando a coluna "name" for adicionada à poupeja_transactions, poderemos buscar de lá também)
+        const { data: userData, error: userError } = await supabase
+          .from('poupeja_users')
+          .select('name')
+          .not('name', 'is', null);
+
+        if (!userError && userData) {
+          const uniqueNames = Array.from(new Set(
+            userData
+              .map(user => user.name)
+              .filter(name => name && name.trim() !== '')
+          )).sort();
+          setUsers(uniqueNames);
+        }
       } catch (error) {
-        console.error('Erro ao carregar usuários:', error);
+        console.error('Erro ao carregar nomes:', error);
         setUsers([]);
       } finally {
         setLoading(false);
       }
     };
     
-    loadUsers();
+    loadNames();
   }, []);
 
   return (
@@ -66,7 +76,7 @@ const AddedByField: React.FC<AddedByFieldProps> = ({ form }) => {
             <PopoverContent className="w-full p-0">
               <Command>
                 <CommandInput 
-                  placeholder="Buscar usuário..."
+                  placeholder="Buscar nome..."
                   value={field.value || ''}
                   onValueChange={(value) => {
                     field.onChange(value);
@@ -74,13 +84,13 @@ const AddedByField: React.FC<AddedByFieldProps> = ({ form }) => {
                 />
                 <CommandList>
                   <CommandEmpty>
-                    {loading ? "Carregando usuários..." : "Nenhum usuário encontrado."}
+                    {loading ? "Carregando nomes..." : "Nenhum nome encontrado."}
                   </CommandEmpty>
                   <CommandGroup>
-                    {users.map((userName) => (
+                    {users.map((name) => (
                       <CommandItem
-                        key={userName}
-                        value={userName}
+                        key={name}
+                        value={name}
                         onSelect={(currentValue) => {
                           field.onChange(currentValue);
                           setOpen(false);
@@ -89,10 +99,10 @@ const AddedByField: React.FC<AddedByFieldProps> = ({ form }) => {
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            field.value === userName ? "opacity-100" : "opacity-0"
+                            field.value === name ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        {userName}
+                        {name}
                       </CommandItem>
                     ))}
                   </CommandGroup>

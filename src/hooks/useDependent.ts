@@ -22,7 +22,7 @@ export const useDependent = () => {
         const { data, error } = await (supabase as any)
           .from('tbl_depentes')
           .select('situacao')
-          .eq('user_id', user.id)
+          .eq('id', user.id)
           .single();
 
         if (error) {

@@ -16,6 +16,7 @@ import GoalSelector from './GoalSelector';
 import AddedByField from './AddedByField';
 import { useToast } from '@/hooks/use-toast';
 import { useClientView } from '@/contexts/ClientViewContext';
+import { useDependent } from '@/hooks/useDependent';
 
 interface TransactionFormProps {
   open: boolean;
@@ -38,6 +39,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const { setCustomDateRange, getTransactions, getGoals } = useAppContext();
   const { toast } = useToast();
   const { selectedUser } = useClientView();
+  const { isDependent } = useDependent();
   
   // Initialize form
   const { form, selectedType, handleTypeChange, onSubmit } = useTransactionForm({
@@ -104,7 +106,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               <AmountInput form={form} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ContaInput form={form} />
-                <AddedByField form={form} />
+                {isDependent && <AddedByField form={form} />}
               </div>
               <CategoryDateFields form={form} transactionType={selectedType} />
               

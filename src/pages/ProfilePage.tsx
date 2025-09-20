@@ -11,10 +11,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { Phone, Camera, Mail, Key, Loader2, Users, Calendar } from 'lucide-react';
+import { Phone, Camera, Mail, Key, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DependentsTab from '@/components/profile/DependentsTab';
-import { cadastrosService, CadastroUnificado } from '@/services/cadastrosService';
 
 const ProfilePage = () => {
   const { t } = usePreferences();
@@ -34,10 +33,6 @@ const ProfilePage = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
-  
-  // For cadastros data
-  const [cadastros, setCadastros] = useState<CadastroUnificado[]>([]);
-  const [loadingCadastros, setLoadingCadastros] = useState(false);
   
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -73,28 +68,6 @@ const ProfilePage = () => {
     
     fetchUserData();
   }, [user?.id]);
-
-  // Fetch cadastros unificados data
-  useEffect(() => {
-    const fetchCadastros = async () => {
-      setLoadingCadastros(true);
-      try {
-        const data = await cadastrosService.getCadastrosUnificados();
-        setCadastros(data);
-      } catch (error) {
-        console.error('Erro ao carregar cadastros unificados:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar dados dos cadastros",
-          variant: "destructive",
-        });
-      } finally {
-        setLoadingCadastros(false);
-      }
-    };
-
-    fetchCadastros();
-  }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -385,7 +358,6 @@ const ProfilePage = () => {
             <TabsList>
               <TabsTrigger value="info">Informações Pessoais</TabsTrigger>
               <TabsTrigger value="dependents">Dependentes</TabsTrigger>
-              <TabsTrigger value="cadastros">Cadastros Unificados</TabsTrigger>
               <TabsTrigger value="password">Senha</TabsTrigger>
             </TabsList>
             
@@ -497,77 +469,6 @@ const ProfilePage = () => {
             
             <TabsContent value="dependents">
               <DependentsTab />
-            </TabsContent>
-            
-            <TabsContent value="cadastros">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    <CardTitle>Cadastros Unificados</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Lista de todos os cadastros unificados do sistema
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {loadingCadastros ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin" />
-                      <span className="ml-2">Carregando cadastros...</span>
-                    </div>
-                  ) : cadastros.length > 0 ? (
-                    <div className="space-y-4">
-                      <div className="text-sm text-muted-foreground mb-4">
-                        Total de cadastros: {cadastros.length}
-                      </div>
-                      <div className="grid gap-4">
-                        {cadastros.map((cadastro) => (
-                          <Card key={cadastro.id} className="p-4">
-                            <div className="flex items-start justify-between">
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-medium">{cadastro.primeiro_name}</h4>
-                                </div>
-                                <div className="text-sm text-muted-foreground space-y-1">
-                                  <div className="flex items-center gap-2">
-                                    <Mail className="h-4 w-4" />
-                                    {cadastro.email}
-                                  </div>
-                                  {cadastro.phone && (
-                                    <div className="flex items-center gap-2">
-                                      <Phone className="h-4 w-4" />
-                                      {cadastro.phone}
-                                    </div>
-                                  )}
-                                  <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4" />
-                                    {new Date(cadastro.created_at).toLocaleDateString('pt-BR', {
-                                      day: '2-digit',
-                                      month: '2-digit',
-                                      year: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit'
-                                    })}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                ID: {cadastro.id.slice(0, 8)}...
-                              </div>
-                            </div>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Nenhum cadastro encontrado</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
             </TabsContent>
             
             <TabsContent value="password">

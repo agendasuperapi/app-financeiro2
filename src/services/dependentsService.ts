@@ -1,8 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Dependent {
-  id?: number;
-  user_id: string;
+  dep_id?: number;
+  id: string;
   dep_name: string;
   dep_phone: string;
   dep_numero: number;
@@ -14,7 +14,7 @@ export class DependentsService {
       const { data, error } = await (supabase as any)
         .from('tbl_depentes')
         .select('*')
-        .eq('user_id', userId)
+        .eq('id', userId)
         .order('dep_numero', { ascending: true });
 
       if (error) throw error;
@@ -31,7 +31,7 @@ export class DependentsService {
       const { data: existingDependents, error: countError } = await (supabase as any)
         .from('tbl_depentes')
         .select('dep_numero')
-        .eq('user_id', userId)
+        .eq('id', userId)
         .order('dep_numero', { ascending: false })
         .limit(1);
 
@@ -42,7 +42,7 @@ export class DependentsService {
         : 1;
 
       const newDependent = {
-        user_id: userId,
+        id: userId,
         dep_name: name,
         dep_phone: phone.replace(/\D/g, ''), // Remove non-digits
         dep_numero: nextNumber
@@ -67,7 +67,7 @@ export class DependentsService {
       const { error } = await (supabase as any)
         .from('tbl_depentes')
         .delete()
-        .eq('id', String(id));
+        .eq('dep_id', String(id));
 
       if (error) throw error;
     } catch (error) {

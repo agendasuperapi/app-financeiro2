@@ -200,8 +200,8 @@ const DependentsTab = () => {
         ) : (
           <div className="space-y-4">
             {dependents.map((dependent) => (
-              <div
-                key={dependent.id}
+               <div
+                key={dependent.dep_id}
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
                 <div className="flex items-center gap-3">
@@ -217,7 +217,7 @@ const DependentsTab = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => dependent.id && handleDeleteDependent(dependent.id)}
+                  onClick={() => dependent.dep_id && handleDeleteDependent(dependent.dep_id)}
                   className="text-destructive hover:text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />

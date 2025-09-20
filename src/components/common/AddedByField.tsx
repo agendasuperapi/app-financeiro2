@@ -25,23 +25,24 @@ const AddedByField: React.FC<AddedByFieldProps> = ({ form }) => {
       try {
         setLoading(true);
         
-        // Buscar nomes da tabela de usuários 
-        // (quando a coluna "name" for adicionada à poupeja_transactions, poderemos buscar de lá também)
-        const { data: userData, error: userError } = await supabase
-          .from('poupeja_users')
+        // Buscar nomes únicos da coluna "name" da tabela poupeja_transactions
+        const { data, error } = await supabase
+          .from('poupeja_transactions')
           .select('name')
           .not('name', 'is', null);
 
-        if (!userError && userData) {
-          const uniqueNames = Array.from(new Set(
-            userData
-              .map(user => user.name)
-              .filter(name => name && name.trim() !== '')
-          )).sort();
-          setUsers(uniqueNames);
-        }
+        if (error) throw error;
+
+        // Extrair nomes únicos e filtrar valores vazios
+        const uniqueNames = Array.from(new Set(
+          (data as any[])
+            .map(item => item.name)
+            .filter(name => name && name.trim() !== '')
+        )).sort();
+
+        setUsers(uniqueNames);
       } catch (error) {
-        console.error('Erro ao carregar nomes:', error);
+        console.error('Erro ao carregar nomes das transações:', error);
         setUsers([]);
       } finally {
         setLoading(false);

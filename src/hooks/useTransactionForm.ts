@@ -111,8 +111,7 @@ export const useTransactionForm = ({
             goalId: processedValues.goalId,
             category: '',
             conta: processedValues.conta,
-            creatorName: processedValues.name || undefined,
-            // name will be saved in DB via AppContext addTransaction
+            name: processedValues.name || undefined,
           });
         }
         
@@ -129,7 +128,7 @@ export const useTransactionForm = ({
           date: new Date(processedValues.date).toISOString(),
           goalId: processedValues.goalId,
           conta: processedValues.conta,
-          creatorName: processedValues.name || undefined,
+          name: processedValues.name || undefined,
         });
         
         console.log("Transaction updated successfully, refreshing data...");

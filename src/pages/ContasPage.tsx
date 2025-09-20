@@ -258,6 +258,11 @@ const ContasPage = () => {
                             </div>
                             <div className="flex items-center gap-1">
                               <span>•</span>
+                              {conta.creatorName && (
+                                <span className="inline-flex items-center px-1 py-0.5 rounded-md bg-primary/10 text-primary text-[8px] md:text-[9px] font-medium mr-1">
+                                  {conta.creatorName}
+                                </span>
+                              )}
                               <span>{formatRecurrence(conta.recurrence)}</span>
                             </div>
                             <div className="flex items-center gap-1">

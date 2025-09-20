@@ -19,7 +19,7 @@ const DescriptionField: React.FC<DescriptionFieldProps> = ({ form }) => {
       name="description"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{t('common.description')} ({t('common.optional')})</FormLabel>
+          <FormLabel>{t("common.description")}</FormLabel>
           <FormControl>
             <Textarea {...field} placeholder={t('common.description')} />
           </FormControl>

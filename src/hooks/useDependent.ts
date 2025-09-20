@@ -26,8 +26,32 @@ export const useDependent = () => {
           .single();
 
         if (error) {
-          console.error('Erro ao verificar status de dependente:', error);
-          setIsDependent(false);
+          // Se não encontrar o usuário, buscar na view e adicionar
+          try {
+            const { data: viewData, error: viewError } = await (supabase as any)
+              .from('view_cadastros_unificados')
+              .select('primeiro_name')
+              .eq('id', user.id)
+              .single();
+
+            if (!viewError && viewData?.primeiro_name) {
+              // Inserir o usuário na tabela tbl_depentes
+              await (supabase as any)
+                .from('tbl_depentes')
+                .insert({
+                  id: user.id,
+                  nome: viewData.primeiro_name,
+                  situacao: 'true'
+                });
+              
+              setIsDependent(true);
+            } else {
+              setIsDependent(false);
+            }
+          } catch (insertError) {
+            console.error('Erro ao inserir dependente:', insertError);
+            setIsDependent(false);
+          }
           return;
         }
 

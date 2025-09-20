@@ -80,25 +80,34 @@ export const getScheduledTransactions = async (userId?: string): Promise<Schedul
       (item.status === 'pending' || item.status === 'paid') && item.amount !== 0
     );
 
-    return filteredData.map((item: any) => ({
-      id: item.id,
-      type: item.type as 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros',
-      amount: item.amount,
-      category: item.category?.name || "Outros",
-      category_id: item.category_id,
-      categoryIcon: item.category?.icon || "circle",
-      categoryColor: item.category?.color || "#607D8B",
-      description: item.description || "",
-      scheduledDate: item.date,
-      recurrence: normalizeRecurrence(item.recurrence) || 'once',
-      goalId: item.goal_id,
-      status: (item.status as 'pending' | 'paid' | 'overdue' | 'upcoming') || 'pending',
-      paidDate: undefined,
-      paidAmount: undefined,
-      lastExecutionDate: undefined,
-      nextExecutionDate: undefined,
-      creatorName: item.name ? item.name : undefined,
-    }));
+    console.log("DEBUG Scheduled: Transações carregadas:", filteredData.length);
+    console.log("DEBUG Scheduled: Primeira transação:", filteredData[0]);
+
+    return filteredData.map((item: any) => {
+      const creatorName = item.name ? item.name : undefined;
+      
+      console.log(`DEBUG Scheduled: Transação ${item.id} - user_id: ${item.user_id}, name: ${item.name}, finalCreator: ${creatorName}`);
+      
+      return {
+        id: item.id,
+        type: item.type as 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros',
+        amount: item.amount,
+        category: item.category?.name || "Outros",
+        category_id: item.category_id,
+        categoryIcon: item.category?.icon || "circle",
+        categoryColor: item.category?.color || "#607D8B",
+        description: item.description || "",
+        scheduledDate: item.date,
+        recurrence: normalizeRecurrence(item.recurrence) || 'once',
+        goalId: item.goal_id,
+        status: (item.status as 'pending' | 'paid' | 'overdue' | 'upcoming') || 'pending',
+        paidDate: undefined,
+        paidAmount: undefined,
+        lastExecutionDate: undefined,
+        nextExecutionDate: undefined,
+        creatorName: creatorName,
+      };
+    });
   } catch (error) {
     console.error("Error fetching scheduled transactions:", error);
     return [];

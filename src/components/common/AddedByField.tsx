@@ -61,7 +61,7 @@ const AddedByField: React.FC<AddedByFieldProps> = ({ form }) => {
                   user_id: user.id,
                   amount: 0,
                   type: 'expense',
-                  category: 'd6c7432e-2b7a-4937-95db-4ce2df58d40f', // Categoria "Outros"
+                  category_id: 'd6c7432e-2b7a-4937-95db-4ce2df58d40f', // Categoria "Outros"
                   conta: 'sistema',
                   description: 'Registro inicial do usuário',
                   date: new Date().toISOString().split('T')[0]

@@ -41,6 +41,11 @@ const AddedByField: React.FC<AddedByFieldProps> = ({ form }) => {
         )).sort();
 
         setUsers(uniqueNames);
+        
+        // Se há apenas uma opção, definir automaticamente
+        if (uniqueNames.length === 1 && !form.getValues('name')) {
+          form.setValue('name', uniqueNames[0]);
+        }
       } catch (error) {
         console.error('Erro ao carregar nomes da view cadastros unificados:', error);
         setUsers([]);
@@ -50,7 +55,7 @@ const AddedByField: React.FC<AddedByFieldProps> = ({ form }) => {
     };
     
     loadNames();
-  }, []);
+  }, [form]);
 
   return (
     <FormField

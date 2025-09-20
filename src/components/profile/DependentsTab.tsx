@@ -11,13 +11,16 @@ import { supabase } from '@/integrations/supabase/client';
 const DependentsTab = () => {
   const [dependents, setDependents] = useState<Dependent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [adding, setAdding] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingDependent, setEditingDependent] = useState<Dependent | null>(null);
-  const [newDepName, setNewDepName] = useState('');
-  const [newDepFirstName, setNewDepFirstName] = useState('');
-  const [newDepPhone, setNewDepPhone] = useState('');
+  
+  // Form fields
+  const [primeiroName, setPrimeiroName] = useState('');
+  const [depName, setDepName] = useState('');
+  const [phone, setPhone] = useState('');
+  
   const { toast } = useToast();
 
   useEffect(() => {
@@ -45,33 +48,38 @@ const DependentsTab = () => {
     }
   };
 
+  const resetForm = () => {
+    setPrimeiroName('');
+    setDepName('');
+    setPhone('');
+  };
+
   const handleAddDependent = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!newDepName.trim() || !newDepPhone.trim()) {
+    if (!primeiroName.trim() || !depName.trim() || !phone.trim()) {
       toast({
         title: 'Erro',
-        description: 'Nome e telefone são obrigatórios',
+        description: 'Todos os campos são obrigatórios',
         variant: 'destructive',
       });
       return;
     }
 
     try {
-      setAdding(true);
+      setSubmitting(true);
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user?.id) {
-        await DependentsService.addDependent(session.user.id, newDepName, newDepPhone);
+        await DependentsService.addDependent(session.user.id, primeiroName, depName, phone);
         
         toast({
           title: 'Sucesso',
           description: 'Dependente adicionado com sucesso',
         });
         
-        setNewDepName('');
-        setNewDepPhone('');
-        setIsDialogOpen(false);
+        resetForm();
+        setIsAddDialogOpen(false);
         fetchDependents();
       }
     } catch (error) {
@@ -82,41 +90,40 @@ const DependentsTab = () => {
         variant: 'destructive',
       });
     } finally {
-      setAdding(false);
+      setSubmitting(false);
     }
   };
 
   const handleEditDependent = (dependent: Dependent) => {
-    console.log('Opening edit dialog for dependent:', dependent);
     setEditingDependent(dependent);
-    setNewDepName(dependent.dep_name || '');
-    setNewDepPhone(dependent.dep_phone || '');
+    setPrimeiroName(dependent.primeiro_name || '');
+    setDepName(dependent.dep_name || '');
+    setPhone(dependent.dep_phone || '');
     setIsEditDialogOpen(true);
   };
 
   const handleUpdateDependent = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!editingDependent?.dep_id || !newDepName.trim() || !newDepPhone.trim()) {
+    if (!editingDependent?.dep_id || !primeiroName.trim() || !depName.trim() || !phone.trim()) {
       toast({
         title: 'Erro',
-        description: 'Nome e telefone são obrigatórios',
+        description: 'Todos os campos são obrigatórios',
         variant: 'destructive',
       });
       return;
     }
 
     try {
-      setAdding(true);
-      await DependentsService.updateDependent(editingDependent.dep_id, newDepName, newDepPhone);
+      setSubmitting(true);
+      await DependentsService.updateDependent(editingDependent.dep_id, primeiroName, depName, phone);
       
       toast({
         title: 'Sucesso',
         description: 'Dependente atualizado com sucesso',
       });
       
-      setNewDepName('');
-      setNewDepPhone('');
+      resetForm();
       setIsEditDialogOpen(false);
       setEditingDependent(null);
       fetchDependents();
@@ -128,14 +135,13 @@ const DependentsTab = () => {
         variant: 'destructive',
       });
     } finally {
-      setAdding(false);
+      setSubmitting(false);
     }
   };
 
-  const handleDeleteDependent = async (id: number) => {
-    console.log('Attempting to delete dependent with id:', id);
+  const handleDeleteDependent = async (depId: number) => {
     try {
-      await DependentsService.deleteDependent(id);
+      await DependentsService.deleteDependent(depId);
       
       toast({
         title: 'Sucesso',
@@ -176,7 +182,10 @@ const DependentsTab = () => {
           </CardDescription>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
+          if (!open) resetForm();
+        }}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
@@ -193,13 +202,28 @@ const DependentsTab = () => {
             
             <form onSubmit={handleAddDependent} className="space-y-4">
               <div className="grid gap-2">
-                <label htmlFor="dep-name" className="font-medium">Nome</label>
+                <label htmlFor="primeiro-name" className="font-medium">Primeiro Nome</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    id="primeiro-name"
+                    value={primeiroName}
+                    onChange={(e) => setPrimeiroName(e.target.value)}
+                    placeholder="Primeiro nome"
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="dep-name" className="font-medium">Nome Completo</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     id="dep-name"
-                    value={newDepName}
-                    onChange={(e) => setNewDepName(e.target.value)}
+                    value={depName}
+                    onChange={(e) => setDepName(e.target.value)}
                     placeholder="Nome completo do dependente"
                     className="pl-10"
                     required
@@ -213,8 +237,8 @@ const DependentsTab = () => {
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     id="dep-phone"
-                    value={newDepPhone}
-                    onChange={(e) => setNewDepPhone(e.target.value)}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     placeholder="5511999999999"
                     className="pl-10"
                     type="tel"
@@ -227,11 +251,11 @@ const DependentsTab = () => {
               </div>
               
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={adding}>
-                  {adding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button type="submit" disabled={submitting}>
+                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Adicionar
                 </Button>
               </DialogFooter>
@@ -242,9 +266,8 @@ const DependentsTab = () => {
         <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
           setIsEditDialogOpen(open);
           if (!open) {
+            resetForm();
             setEditingDependent(null);
-            setNewDepName('');
-            setNewDepPhone('');
           }
         }}>
           <DialogContent>
@@ -257,13 +280,28 @@ const DependentsTab = () => {
             
             <form onSubmit={handleUpdateDependent} className="space-y-4">
               <div className="grid gap-2">
-                <label htmlFor="edit-dep-name" className="font-medium">Nome</label>
+                <label htmlFor="edit-primeiro-name" className="font-medium">Primeiro Nome</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    id="edit-primeiro-name"
+                    value={primeiroName}
+                    onChange={(e) => setPrimeiroName(e.target.value)}
+                    placeholder="Primeiro nome"
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="edit-dep-name" className="font-medium">Nome Completo</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     id="edit-dep-name"
-                    value={newDepName}
-                    onChange={(e) => setNewDepName(e.target.value)}
+                    value={depName}
+                    onChange={(e) => setDepName(e.target.value)}
                     placeholder="Nome completo do dependente"
                     className="pl-10"
                     required
@@ -277,8 +315,8 @@ const DependentsTab = () => {
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
                     id="edit-dep-phone"
-                    value={newDepPhone}
-                    onChange={(e) => setNewDepPhone(e.target.value)}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     placeholder="5511999999999"
                     className="pl-10"
                     type="tel"
@@ -294,8 +332,8 @@ const DependentsTab = () => {
                 <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={adding}>
-                  {adding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button type="submit" disabled={submitting}>
+                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Salvar
                 </Button>
               </DialogFooter>
@@ -314,17 +352,19 @@ const DependentsTab = () => {
         ) : (
           <div className="space-y-4">
             {dependents.map((dependent) => (
-               <div
+              <div
                 key={dependent.dep_id}
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                    {dependent.dep_numero}
+                  <div className="flex items-center justify-center w-10 h-10 bg-primary/10 text-primary rounded-full text-sm font-medium">
+                    {dependent.primeiro_name?.[0]?.toUpperCase() || 'D'}
                   </div>
                   <div>
                     <h4 className="font-medium">{dependent.dep_name}</h4>
-                    <p className="text-sm text-muted-foreground">{dependent.dep_phone}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {dependent.primeiro_name} • {dependent.dep_phone}
+                    </p>
                   </div>
                 </div>
                 

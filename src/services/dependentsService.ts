@@ -3,10 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 export interface Dependent {
   dep_id?: number;
   id: string;
-  dep_name: string;
   primeiro_name: string;
+  dep_name: string;
   dep_phone: string;
-  dep_numero?: number;
 }
 
 export class DependentsService {
@@ -16,7 +15,7 @@ export class DependentsService {
         .from('tbl_depentes')
         .select('*')
         .eq('id', userId)
-        .order('dep_numero', { ascending: true });
+        .order('dep_id', { ascending: true });
 
       if (error) throw error;
       return (data || []) as Dependent[];
@@ -26,12 +25,12 @@ export class DependentsService {
     }
   }
 
-  static async addDependent(userId: string, name: string, firstName: string, phone: string): Promise<Dependent> {
+  static async addDependent(userId: string, primeiroName: string, depName: string, phone: string): Promise<Dependent> {
     try {
       const newDependent = {
         id: userId,
-        dep_name: name,
-        primeiro_name: firstName,
+        primeiro_name: primeiroName,
+        dep_name: depName,
         dep_phone: phone.replace(/\D/g, '') // Remove non-digits
       };
 
@@ -49,15 +48,16 @@ export class DependentsService {
     }
   }
 
-  static async updateDependent(id: number, name: string, phone: string): Promise<void> {
+  static async updateDependent(depId: number, primeiroName: string, depName: string, phone: string): Promise<void> {
     try {
       const { error } = await (supabase as any)
         .from('tbl_depentes')
         .update({
-          dep_name: name,
+          primeiro_name: primeiroName,
+          dep_name: depName,
           dep_phone: phone.replace(/\D/g, '') // Remove non-digits
         })
-        .eq('dep_id', id);
+        .eq('dep_id', depId);
 
       if (error) throw error;
     } catch (error) {
@@ -66,19 +66,14 @@ export class DependentsService {
     }
   }
 
-  static async deleteDependent(id: number): Promise<void> {
-    console.log('DependentsService: Deleting dependent with dep_id:', id);
+  static async deleteDependent(depId: number): Promise<void> {
     try {
       const { error } = await (supabase as any)
         .from('tbl_depentes')
         .delete()
-        .eq('dep_id', id);
+        .eq('dep_id', depId);
 
-      if (error) {
-        console.error('Supabase delete error:', error);
-        throw error;
-      }
-      console.log('Delete successful');
+      if (error) throw error;
     } catch (error) {
       console.error('Error deleting dependent:', error);
       throw error;

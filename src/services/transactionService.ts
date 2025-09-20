@@ -257,6 +257,8 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
         date: transaction.date,
         goal_id: transaction.goalId,
         conta: transaction.conta,
+        name: (transaction as any).name,
+        phone: (transaction as any).phone,
         reference_code: await getNextReferenceCode() // Generate new reference code for updates
       })
       .eq("id", transaction.id)

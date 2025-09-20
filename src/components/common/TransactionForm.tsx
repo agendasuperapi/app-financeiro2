@@ -101,10 +101,12 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <TransactionTypeSelector form={form} onTypeChange={handleTypeChange} />
               <AmountInput form={form} />
-              <ContaInput form={form} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ContaInput form={form} />
+                <AddedByField form={form} />
+              </div>
               <CategoryDateFields form={form} transactionType={selectedType} />
               <DescriptionField form={form} />
-              <AddedByField form={form} />
               
               {selectedType === 'income' && (
                 <GoalSelector form={form} />

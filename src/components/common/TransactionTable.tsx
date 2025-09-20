@@ -82,19 +82,12 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     )}
                   </TableCell>
                   <TableCell className="font-medium text-[10px] md:text-xs">
-                    <div className="space-y-1">
-                      <div className="font-medium">{formatDateTime(transaction.created_at || transaction.date)}</div>
-                      <div className="lg:hidden text-[10px] text-muted-foreground break-words">
-                        {transaction.description}
-                      </div>
-                      {transaction.creatorName && (
-                        <div className="lg:hidden mt-1">
-                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-[9px] font-medium">
-                            {transaction.creatorName}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                     <div className="space-y-1">
+                       <div className="font-medium">{formatDateTime(transaction.created_at || transaction.date)}</div>
+                       <div className="lg:hidden text-[10px] text-muted-foreground break-words">
+                         {transaction.description}
+                       </div>
+                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="space-y-2">

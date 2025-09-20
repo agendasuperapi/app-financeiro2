@@ -106,7 +106,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               <AmountInput form={form} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ContaInput form={form} />
-                <AddedByField form={form} />
+                {isDependent && <AddedByField form={form} />}
               </div>
               <CategoryDateFields form={form} transactionType={selectedType} />
               

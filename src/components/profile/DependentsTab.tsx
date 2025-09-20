@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Trash2, Users, Plus, Phone, User, Loader2, Edit } from 'lucide-react';
 import { DependentsService, type Dependent } from '@/services/dependentsService';
 import { supabase } from '@/integrations/supabase/client';

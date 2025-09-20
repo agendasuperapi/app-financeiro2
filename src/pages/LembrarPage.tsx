@@ -389,9 +389,14 @@ const LembrarPage = () => {
                                       <Calendar className="h-3 w-3" />
                                        <span>{formatDate(conta.scheduledDate, 'dd/MM/yyyy HH:mm')}</span>
                                     </div>
-                                    <div className="mt-1">
-                                      {formatRecurrence(conta.recurrence)}
-                                    </div>
+                                     <div className="mt-1">
+                                       {conta.creatorName && (
+                                         <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-[9px] font-medium mr-2">
+                                           {conta.creatorName}
+                                         </span>
+                                       )}
+                                       {formatRecurrence(conta.recurrence)}
+                                     </div>
                                   </div>
                                 </div>
                               </TableCell>

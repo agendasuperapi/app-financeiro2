@@ -97,6 +97,7 @@ export const getScheduledTransactions = async (userId?: string): Promise<Schedul
       paidAmount: undefined,
       lastExecutionDate: undefined,
       nextExecutionDate: undefined,
+      creatorName: item.name ? item.name : undefined,
     }));
   } catch (error) {
     console.error("Error fetching scheduled transactions:", error);

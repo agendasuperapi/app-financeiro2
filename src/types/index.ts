@@ -63,6 +63,7 @@ export interface ScheduledTransaction {
   situacao?: string; // Status or situation
   parcela?: string; // Installment information
   aba?: string; // Tab/section identifier
+  creatorName?: string; // Name of who created the scheduled transaction (for dependents)
   // Database fields for compatibility
   category_id?: string;
   goal_id?: string;

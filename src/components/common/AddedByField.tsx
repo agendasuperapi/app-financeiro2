@@ -25,24 +25,24 @@ const AddedByField: React.FC<AddedByFieldProps> = ({ form }) => {
       try {
         setLoading(true);
         
-        // Buscar nomes únicos da coluna "name" da tabela poupeja_transactions
-        const { data, error } = await supabase
-          .from('poupeja_transactions')
-          .select('name')
-          .not('name', 'is', null);
+        // Buscar nomes únicos da view "view_cadastros_unificados"
+        const { data, error } = await (supabase as any)
+          .from('view_cadastros_unificados')
+          .select('primeiro_name')
+          .not('primeiro_name', 'is', null);
 
         if (error) throw error;
 
         // Extrair nomes únicos e filtrar valores vazios
         const uniqueNames = Array.from(new Set(
           (data as any[])
-            .map(item => item.name)
+            .map(item => item.primeiro_name)
             .filter(name => name && name.trim() !== '')
         )).sort();
 
         setUsers(uniqueNames);
       } catch (error) {
-        console.error('Erro ao carregar nomes das transações:', error);
+        console.error('Erro ao carregar nomes da view cadastros unificados:', error);
         setUsers([]);
       } finally {
         setLoading(false);

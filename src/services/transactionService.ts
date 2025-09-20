@@ -99,6 +99,7 @@ export const addTransaction = async (transaction: Omit<Transaction, "id">): Prom
       user_id: userId,
       conta: (transaction as any).conta || '',
       name: (transaction as any).name,
+      phone: (transaction as any).phone,
     });
   } catch (error) {
     console.error("Error adding transaction:", error);
@@ -116,6 +117,7 @@ export const createTransactionForUser = async (transactionData: {
   user_id: string;
   conta: string;
   name?: string;
+  phone?: string;
 }): Promise<Transaction | null> => {
   try {
     const newId = uuidv4();
@@ -166,6 +168,7 @@ export const createTransactionForUser = async (transactionData: {
         reference_code: referenceCode,
         conta: transactionData.conta,
         name: transactionData.name,
+        phone: transactionData.phone,
       })
       .select(`
         *,

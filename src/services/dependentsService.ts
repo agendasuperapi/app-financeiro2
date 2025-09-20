@@ -2,7 +2,6 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface Dependent {
   id: string;
-  primeiro_name: string;
   dep_name: string;
   dep_phone: string;
 }
@@ -24,11 +23,10 @@ export class DependentsService {
     }
   }
 
-  static async addDependent(userId: string, primeiroName: string, depName: string, phone: string): Promise<Dependent> {
+  static async addDependent(userId: string, depName: string, phone: string): Promise<Dependent> {
     try {
       const newDependent = {
         id: userId,
-        primeiro_name: primeiroName,
         dep_name: depName,
         dep_phone: phone.replace(/\D/g, '') // Remove non-digits
       };
@@ -47,18 +45,16 @@ export class DependentsService {
     }
   }
 
-  static async updateDependent(original: Dependent, primeiroName: string, depName: string, phone: string): Promise<void> {
+  static async updateDependent(original: Dependent, depName: string, phone: string): Promise<void> {
     try {
       const { error } = await (supabase as any)
         .from('tbl_depentes')
         .update({
-          primeiro_name: primeiroName,
           dep_name: depName,
           dep_phone: phone.replace(/\D/g, '') // Remove non-digits
         })
         .match({
           id: original.id,
-          primeiro_name: original.primeiro_name,
           dep_name: original.dep_name,
           dep_phone: original.dep_phone,
         });
@@ -77,7 +73,6 @@ export class DependentsService {
         .delete()
         .match({
           id: original.id,
-          primeiro_name: original.primeiro_name,
           dep_name: original.dep_name,
           dep_phone: original.dep_phone,
         });

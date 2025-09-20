@@ -86,9 +86,10 @@ const DependentsTab = () => {
   };
 
   const handleEditDependent = (dependent: Dependent) => {
+    console.log('Opening edit dialog for dependent:', dependent);
     setEditingDependent(dependent);
-    setNewDepName(dependent.dep_name);
-    setNewDepPhone(dependent.dep_phone);
+    setNewDepName(dependent.dep_name || '');
+    setNewDepPhone(dependent.dep_phone || '');
     setIsEditDialogOpen(true);
   };
 
@@ -237,7 +238,14 @@ const DependentsTab = () => {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+          setIsEditDialogOpen(open);
+          if (!open) {
+            setEditingDependent(null);
+            setNewDepName('');
+            setNewDepPhone('');
+          }
+        }}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Editar Dependente</DialogTitle>

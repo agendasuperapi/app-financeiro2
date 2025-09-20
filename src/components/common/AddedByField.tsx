@@ -78,10 +78,6 @@ const AddedByField: React.FC<AddedByFieldProps> = ({ form }) => {
               <Command>
                 <CommandInput 
                   placeholder="Buscar nome..."
-                  value={field.value || ''}
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                  }}
                 />
                 <CommandList>
                   <CommandEmpty>

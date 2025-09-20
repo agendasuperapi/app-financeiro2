@@ -88,7 +88,8 @@ const LembrarPage = () => {
         recurrence: normalizeRecurrence(item.recurrence),
         goalId: item.goal_id,
         status: item.status || 'pending',
-        situacao: item.situacao || 'pendente'
+        situacao: item.situacao || 'pendente',
+        creatorName: item.name ? item.name : undefined
       }));
 
       setContas(filteredData);
@@ -390,12 +391,12 @@ const LembrarPage = () => {
                                        <span>{formatDate(conta.scheduledDate, 'dd/MM/yyyy HH:mm')}</span>
                                     </div>
                                      <div className="mt-1">
-                                       {conta.creatorName && (
+                                       {conta.creatorName ? (
                                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-[9px] font-medium mr-2">
                                            {conta.creatorName}
                                          </span>
-                                       )}
-                                       {formatRecurrence(conta.recurrence)}
+                                       ) : null}
+                                       <span>{formatRecurrence(conta.recurrence)}</span>
                                      </div>
                                   </div>
                                 </div>

@@ -80,13 +80,18 @@ export class DependentsService {
   }
 
   static async deleteDependent(id: number): Promise<void> {
+    console.log('DependentsService: Deleting dependent with dep_id:', id);
     try {
       const { error } = await (supabase as any)
         .from('tbl_depentes')
         .delete()
         .eq('dep_id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw error;
+      }
+      console.log('Delete successful');
     } catch (error) {
       console.error('Error deleting dependent:', error);
       throw error;

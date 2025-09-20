@@ -131,6 +131,7 @@ const DependentsTab = () => {
   };
 
   const handleDeleteDependent = async (id: number) => {
+    console.log('Attempting to delete dependent with id:', id);
     try {
       await DependentsService.deleteDependent(id);
       

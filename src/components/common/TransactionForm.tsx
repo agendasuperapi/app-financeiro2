@@ -7,6 +7,7 @@ import { Transaction } from '@/types';
 import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useTransactionForm } from '@/hooks/useTransactionForm';
+import { useUserDependent } from '@/hooks/useUserDependent';
 import TransactionTypeSelector from './TransactionTypeSelector';
 import AmountInput from './AmountInput';
 import ContaInput from './ContaInput';
@@ -38,6 +39,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const { setCustomDateRange, getTransactions, getGoals } = useAppContext();
   const { toast } = useToast();
   const { selectedUser } = useClientView();
+  const { isDependent } = useUserDependent();
   
   // Initialize form
   const { form, selectedType, handleTypeChange, onSubmit } = useTransactionForm({
@@ -104,7 +106,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               <AmountInput form={form} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ContaInput form={form} />
-                <AddedByField form={form} />
+                {isDependent && <AddedByField form={form} />}
               </div>
               <CategoryDateFields form={form} transactionType={selectedType} />
               

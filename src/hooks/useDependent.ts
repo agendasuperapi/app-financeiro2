@@ -18,10 +18,20 @@ export const useDependent = () => {
           return;
         }
 
-        // Check if user has dependent status - using a simple approach for now
-        // Note: The user mentioned "tbl_depentes" table but it doesn't exist in current schema
-        // This will return false until the proper table is created
-        setIsDependent(false);
+        // Check if user has dependent status in tbl_depentes
+        const { data, error } = await (supabase as any)
+          .from('tbl_depentes')
+          .select('situacao')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Erro ao verificar status de dependente:', error);
+          setIsDependent(false);
+          return;
+        }
+
+        setIsDependent(data?.situacao === 'true' || data?.situacao === true);
       } catch (error) {
         console.error('Erro ao verificar status de dependente:', error);
         setIsDependent(false);

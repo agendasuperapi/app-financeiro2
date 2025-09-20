@@ -31,6 +31,7 @@ export class DependentsService {
         dep_phone: phone.replace(/\D/g, '') // Remove non-digits
       };
 
+      // Insert the dependent
       const { data, error } = await (supabase as any)
         .from('tbl_depentes')
         .insert([newDependent])
@@ -38,6 +39,15 @@ export class DependentsService {
         .single();
 
       if (error) throw error;
+
+      // Update user's dependente status to true
+      const { error: updateError } = await (supabase as any)
+        .from('poupeja_users')
+        .update({ dependente: true })
+        .eq('id', userId);
+
+      if (updateError) throw updateError;
+
       return data as Dependent;
     } catch (error) {
       console.error('Error adding dependent:', error);

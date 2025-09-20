@@ -4,8 +4,9 @@ export interface Dependent {
   dep_id?: number;
   id: string;
   dep_name: string;
+  primeiro_name: string;
   dep_phone: string;
-  dep_numero: number;
+  dep_numero?: number;
 }
 
 export class DependentsService {
@@ -25,27 +26,13 @@ export class DependentsService {
     }
   }
 
-  static async addDependent(userId: string, name: string, phone: string): Promise<Dependent> {
+  static async addDependent(userId: string, name: string, firstName: string, phone: string): Promise<Dependent> {
     try {
-      // Get the next dep_numero by counting existing dependents
-      const { data: existingDependents, error: countError } = await (supabase as any)
-        .from('tbl_depentes')
-        .select('dep_numero')
-        .eq('id', userId)
-        .order('dep_numero', { ascending: false })
-        .limit(1);
-
-      if (countError) throw countError;
-
-      const nextNumber = existingDependents && existingDependents.length > 0 
-        ? (existingDependents[0] as any).dep_numero + 1 
-        : 1;
-
       const newDependent = {
         id: userId,
         dep_name: name,
-        dep_phone: phone.replace(/\D/g, ''), // Remove non-digits
-        dep_numero: nextNumber
+        primeiro_name: firstName,
+        dep_phone: phone.replace(/\D/g, '') // Remove non-digits
       };
 
       const { data, error } = await (supabase as any)

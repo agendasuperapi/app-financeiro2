@@ -16,6 +16,7 @@ const DependentsTab = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingDependent, setEditingDependent] = useState<Dependent | null>(null);
   const [newDepName, setNewDepName] = useState('');
+  const [newDepFirstName, setNewDepFirstName] = useState('');
   const [newDepPhone, setNewDepPhone] = useState('');
   const { toast } = useToast();
 

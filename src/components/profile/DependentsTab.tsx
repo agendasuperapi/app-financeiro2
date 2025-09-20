@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { Trash2, Users, Plus, Phone, User, Loader2 } from 'lucide-react';
+import { Trash2, Users, Plus, Phone, User, Loader2, Edit } from 'lucide-react';
 import { DependentsService, type Dependent } from '@/services/dependentsService';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -13,6 +13,8 @@ const DependentsTab = () => {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingDependent, setEditingDependent] = useState<Dependent | null>(null);
   const [newDepName, setNewDepName] = useState('');
   const [newDepPhone, setNewDepPhone] = useState('');
   const { toast } = useToast();
@@ -76,6 +78,51 @@ const DependentsTab = () => {
       toast({
         title: 'Erro',
         description: 'Erro ao adicionar dependente',
+        variant: 'destructive',
+      });
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const handleEditDependent = (dependent: Dependent) => {
+    setEditingDependent(dependent);
+    setNewDepName(dependent.dep_name);
+    setNewDepPhone(dependent.dep_phone);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateDependent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingDependent?.dep_id || !newDepName.trim() || !newDepPhone.trim()) {
+      toast({
+        title: 'Erro',
+        description: 'Nome e telefone são obrigatórios',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setAdding(true);
+      await DependentsService.updateDependent(editingDependent.dep_id, newDepName, newDepPhone);
+      
+      toast({
+        title: 'Sucesso',
+        description: 'Dependente atualizado com sucesso',
+      });
+      
+      setNewDepName('');
+      setNewDepPhone('');
+      setIsEditDialogOpen(false);
+      setEditingDependent(null);
+      fetchDependents();
+    } catch (error) {
+      console.error('Error updating dependent:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar dependente',
         variant: 'destructive',
       });
     } finally {
@@ -188,6 +235,63 @@ const DependentsTab = () => {
             </form>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Dependente</DialogTitle>
+              <DialogDescription>
+                Edite as informações do dependente
+              </DialogDescription>
+            </DialogHeader>
+            
+            <form onSubmit={handleUpdateDependent} className="space-y-4">
+              <div className="grid gap-2">
+                <label htmlFor="edit-dep-name" className="font-medium">Nome</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    id="edit-dep-name"
+                    value={newDepName}
+                    onChange={(e) => setNewDepName(e.target.value)}
+                    placeholder="Nome completo do dependente"
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <label htmlFor="edit-dep-phone" className="font-medium">Telefone</label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    id="edit-dep-phone"
+                    value={newDepPhone}
+                    onChange={(e) => setNewDepPhone(e.target.value)}
+                    placeholder="5511999999999"
+                    className="pl-10"
+                    type="tel"
+                    required
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Formato: código do país + DDD + número (ex: 5511999999999)
+                </p>
+              </div>
+              
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={adding}>
+                  {adding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Salvar
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </CardHeader>
       
       <CardContent>
@@ -214,14 +318,23 @@ const DependentsTab = () => {
                   </div>
                 </div>
                 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => dependent.dep_id && handleDeleteDependent(dependent.dep_id)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditDependent(dependent)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => dependent.dep_id && handleDeleteDependent(dependent.dep_id)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

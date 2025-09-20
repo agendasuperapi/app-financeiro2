@@ -1,7 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Dependent {
-  dep_id?: number;
   id: string;
   primeiro_name: string;
   dep_name: string;
@@ -15,7 +14,7 @@ export class DependentsService {
         .from('tbl_depentes')
         .select('*')
         .eq('id', userId)
-        .order('dep_id', { ascending: true });
+        .order('id', { ascending: true });
 
       if (error) throw error;
       return (data || []) as Dependent[];
@@ -48,7 +47,7 @@ export class DependentsService {
     }
   }
 
-  static async updateDependent(depId: number, primeiroName: string, depName: string, phone: string): Promise<void> {
+  static async updateDependent(id: string, primeiroName: string, depName: string, phone: string): Promise<void> {
     try {
       const { error } = await (supabase as any)
         .from('tbl_depentes')
@@ -57,7 +56,7 @@ export class DependentsService {
           dep_name: depName,
           dep_phone: phone.replace(/\D/g, '') // Remove non-digits
         })
-        .eq('dep_id', depId);
+        .eq('id', id);
 
       if (error) throw error;
     } catch (error) {
@@ -66,12 +65,12 @@ export class DependentsService {
     }
   }
 
-  static async deleteDependent(depId: number): Promise<void> {
+  static async deleteDependent(id: string): Promise<void> {
     try {
       const { error } = await (supabase as any)
         .from('tbl_depentes')
         .delete()
-        .eq('dep_id', depId);
+        .eq('id', id);
 
       if (error) throw error;
     } catch (error) {

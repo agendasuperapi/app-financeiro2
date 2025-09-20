@@ -105,7 +105,7 @@ const DependentsTab = () => {
   const handleUpdateDependent = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!editingDependent?.dep_id || !primeiroName.trim() || !depName.trim() || !phone.trim()) {
+    if (!editingDependent?.id || !primeiroName.trim() || !depName.trim() || !phone.trim()) {
       toast({
         title: 'Erro',
         description: 'Todos os campos são obrigatórios',
@@ -116,7 +116,7 @@ const DependentsTab = () => {
 
     try {
       setSubmitting(true);
-      await DependentsService.updateDependent(editingDependent.dep_id, primeiroName, depName, phone);
+      await DependentsService.updateDependent(editingDependent.id, primeiroName, depName, phone);
       
       toast({
         title: 'Sucesso',
@@ -139,9 +139,9 @@ const DependentsTab = () => {
     }
   };
 
-  const handleDeleteDependent = async (depId: number) => {
+  const handleDeleteDependent = async (id: string) => {
     try {
-      await DependentsService.deleteDependent(depId);
+      await DependentsService.deleteDependent(id);
       
       toast({
         title: 'Sucesso',
@@ -353,7 +353,7 @@ const DependentsTab = () => {
           <div className="space-y-4">
             {dependents.map((dependent) => (
               <div
-                key={dependent.dep_id}
+                key={dependent.id}
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
                 <div className="flex items-center gap-3">
@@ -379,7 +379,7 @@ const DependentsTab = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => dependent.dep_id && handleDeleteDependent(dependent.dep_id)}
+                    onClick={() => dependent.id && handleDeleteDependent(dependent.id)}
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />

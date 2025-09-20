@@ -152,22 +152,6 @@ export const createTransactionForUser = async (transactionData: {
       }
     }
 
-    // Resolve 'name' from view_cadastros_unificados by user_id
-    let resolvedName: string | null = null;
-    try {
-      const { data: viewUser, error: viewErr } = await (supabase as any)
-        .from('view_cadastros_unificados')
-        .select('primeiro_name')
-        .eq('id', transactionData.user_id)
-        .single();
-      if (viewErr) {
-        console.warn('WARN: Could not fetch primeiro_name from view_cadastros_unificados:', viewErr);
-      }
-      resolvedName = (viewUser?.primeiro_name ?? null);
-    } catch (e) {
-      console.warn('WARN: Exception fetching primeiro_name from view:', e);
-    }
-
     const { data, error } = await supabase
       .from("poupeja_transactions")
       .insert({
@@ -181,7 +165,7 @@ export const createTransactionForUser = async (transactionData: {
         user_id: transactionData.user_id,
         reference_code: referenceCode,
         conta: transactionData.conta,
-        name: resolvedName ?? transactionData.name ?? null,
+        name: transactionData.name,
       })
       .select(`
         *,

@@ -47,7 +47,7 @@ export class DependentsService {
     }
   }
 
-  static async updateDependent(id: string, primeiroName: string, depName: string, phone: string): Promise<void> {
+  static async updateDependent(original: Dependent, primeiroName: string, depName: string, phone: string): Promise<void> {
     try {
       const { error } = await (supabase as any)
         .from('tbl_depentes')
@@ -56,7 +56,12 @@ export class DependentsService {
           dep_name: depName,
           dep_phone: phone.replace(/\D/g, '') // Remove non-digits
         })
-        .eq('id', id);
+        .match({
+          id: original.id,
+          primeiro_name: original.primeiro_name,
+          dep_name: original.dep_name,
+          dep_phone: original.dep_phone,
+        });
 
       if (error) throw error;
     } catch (error) {
@@ -65,12 +70,17 @@ export class DependentsService {
     }
   }
 
-  static async deleteDependent(id: string): Promise<void> {
+  static async deleteDependent(original: Dependent): Promise<void> {
     try {
       const { error } = await (supabase as any)
         .from('tbl_depentes')
         .delete()
-        .eq('id', id);
+        .match({
+          id: original.id,
+          primeiro_name: original.primeiro_name,
+          dep_name: original.dep_name,
+          dep_phone: original.dep_phone,
+        });
 
       if (error) throw error;
     } catch (error) {

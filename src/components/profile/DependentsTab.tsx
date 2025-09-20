@@ -116,7 +116,7 @@ const DependentsTab = () => {
 
     try {
       setSubmitting(true);
-      await DependentsService.updateDependent(editingDependent.id, primeiroName, depName, phone);
+      await DependentsService.updateDependent(editingDependent, primeiroName, depName, phone);
       
       toast({
         title: 'Sucesso',
@@ -139,9 +139,9 @@ const DependentsTab = () => {
     }
   };
 
-  const handleDeleteDependent = async (id: string) => {
+  const handleDeleteDependent = async (dep: Dependent) => {
     try {
-      await DependentsService.deleteDependent(id);
+      await DependentsService.deleteDependent(dep);
       
       toast({
         title: 'Sucesso',
@@ -353,7 +353,7 @@ const DependentsTab = () => {
           <div className="space-y-4">
             {dependents.map((dependent) => (
               <div
-                key={dependent.id}
+                key={`${dependent.id}-${dependent.dep_name}-${dependent.dep_phone}`}
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
                 <div className="flex items-center gap-3">
@@ -379,7 +379,7 @@ const DependentsTab = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => dependent.id && handleDeleteDependent(dependent.id)}
+                    onClick={() => handleDeleteDependent(dependent)}
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />

@@ -97,7 +97,8 @@ export const addTransaction = async (transaction: Omit<Transaction, "id">): Prom
       date: transaction.date,
       goalId: transaction.goalId,
       user_id: userId,
-      conta: (transaction as any).conta || ''
+      conta: (transaction as any).conta || '',
+      name: (transaction as any).name,
     });
   } catch (error) {
     console.error("Error adding transaction:", error);
@@ -114,6 +115,7 @@ export const createTransactionForUser = async (transactionData: {
   goalId?: string;
   user_id: string;
   conta: string;
+  name?: string;
 }): Promise<Transaction | null> => {
   try {
     const newId = uuidv4();
@@ -162,7 +164,8 @@ export const createTransactionForUser = async (transactionData: {
         goal_id: transactionData.goalId,
         user_id: transactionData.user_id,
         reference_code: referenceCode,
-        conta: transactionData.conta
+        conta: transactionData.conta,
+        name: transactionData.name,
       })
       .select(`
         *,

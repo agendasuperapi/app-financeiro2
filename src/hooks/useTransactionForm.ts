@@ -52,6 +52,7 @@ export const useTransactionForm = ({
         ? new Date(initialData.date).toISOString().split('T')[0] 
         : new Date().toISOString().split('T')[0],
       goalId: initialData?.goalId || undefined,
+      name: initialData?.creatorName || '',
     },
   });
 
@@ -96,7 +97,8 @@ export const useTransactionForm = ({
             date: new Date(processedValues.date).toISOString(),
             goalId: processedValues.goalId,
             user_id: targetUserId,
-            conta: processedValues.conta
+            conta: processedValues.conta,
+            name: processedValues.name || undefined,
           });
         } else {
           // Usar método normal do contexto para o usuário logado
@@ -109,6 +111,8 @@ export const useTransactionForm = ({
             goalId: processedValues.goalId,
             category: '',
             conta: processedValues.conta,
+            creatorName: processedValues.name || undefined,
+            // name will be saved in DB via AppContext addTransaction
           });
         }
         
@@ -125,6 +129,7 @@ export const useTransactionForm = ({
           date: new Date(processedValues.date).toISOString(),
           goalId: processedValues.goalId,
           conta: processedValues.conta,
+          creatorName: processedValues.name || undefined,
         });
         
         console.log("Transaction updated successfully, refreshing data...");

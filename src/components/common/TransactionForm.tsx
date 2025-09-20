@@ -100,7 +100,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <TransactionTypeSelector form={form} onTypeChange={handleTypeChange} />
               <AmountInput form={form} />
-              <ContaInput form={form} />
+              <ContaInput form={form} transaction={initialData} />
               <CategoryDateFields form={form} transactionType={selectedType} />
               <DescriptionField form={form} />
               

@@ -12,9 +12,10 @@ import { getSaldoByAccount } from '@/services/saldoService';
 
 interface ContaInputProps {
   form: UseFormReturn<TransactionFormValues>;
+  transaction?: { creatorName?: string; name?: string }; // For displaying who added the transaction
 }
 
-const ContaInput: React.FC<ContaInputProps> = ({ form }) => {
+const ContaInput: React.FC<ContaInputProps> = ({ form, transaction }) => {
   const { t } = usePreferences();
   const [contas, setContas] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
@@ -33,65 +34,78 @@ const ContaInput: React.FC<ContaInputProps> = ({ form }) => {
   }, []);
 
   return (
-    <FormField
-      control={form.control}
-      name="conta"
-      render={({ field }) => (
+    <div className="flex flex-col space-y-4">
+      <FormField
+        control={form.control}
+        name="conta"
+        render={({ field }) => (
+          <FormItem className="flex flex-col">
+            <FormLabel>{t('transactions.account')}</FormLabel>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <FormControl>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="justify-between"
+                  >
+                    {field.value || t('transactions.accountPlaceholder')}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </FormControl>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <CommandInput 
+                    placeholder={t('transactions.accountPlaceholder')}
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                    }}
+                  />
+                  <CommandList>
+                    <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
+                    <CommandGroup>
+                      {contas.map((conta) => (
+                        <CommandItem
+                          key={conta}
+                          value={conta}
+                          onSelect={(currentValue) => {
+                            field.onChange(currentValue);
+                            setOpen(false);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              field.value === conta ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {conta}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      {(transaction?.creatorName || transaction?.name) && (
         <FormItem className="flex flex-col">
-          <FormLabel>{t('transactions.account')}</FormLabel>
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <FormControl>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={open}
-                  className="justify-between"
-                >
-                  {field.value || t('transactions.accountPlaceholder')}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </FormControl>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
-              <Command>
-                <CommandInput 
-                  placeholder={t('transactions.accountPlaceholder')}
-                  value={field.value}
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                  }}
-                />
-                <CommandList>
-                  <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
-                  <CommandGroup>
-                    {contas.map((conta) => (
-                      <CommandItem
-                        key={conta}
-                        value={conta}
-                        onSelect={(currentValue) => {
-                          field.onChange(currentValue);
-                          setOpen(false);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            field.value === conta ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {conta}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-          <FormMessage />
+          <FormLabel>Adicionado por</FormLabel>
+          <FormControl>
+            <div className="px-3 py-2 border border-input bg-muted rounded-md text-sm">
+              {transaction?.creatorName || transaction?.name}
+            </div>
+          </FormControl>
         </FormItem>
       )}
-    />
+    </div>
   );
 };
 

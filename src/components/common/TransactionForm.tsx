@@ -13,6 +13,7 @@ import ContaInput from './ContaInput';
 import CategoryDateFields from './CategoryDateFields';
 import DescriptionField from './DescriptionField';
 import GoalSelector from './GoalSelector';
+import AddedByField from './AddedByField';
 import { useToast } from '@/hooks/use-toast';
 import { useClientView } from '@/contexts/ClientViewContext';
 
@@ -103,6 +104,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               <ContaInput form={form} />
               <CategoryDateFields form={form} transactionType={selectedType} />
               <DescriptionField form={form} />
+              <AddedByField form={form} />
               
               {selectedType === 'income' && (
                 <GoalSelector form={form} />

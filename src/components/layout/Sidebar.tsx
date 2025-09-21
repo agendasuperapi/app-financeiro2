@@ -91,11 +91,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
         href: '/transactions'
       },
       {
-        icon: FolderOpen,
-        label: t('nav.categories'),
-        href: '/categories'
-      },
-      {
         icon: AlertTriangle,
         label: 'Metas/Limites',
         href: '/limits'
@@ -259,11 +254,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       icon: Receipt,
       label: t('nav.transactions'),
       href: '/transactions'
-    },
-    {
-      icon: FolderOpen,
-      label: t('nav.categories'),
-      href: '/categories'
     },
     {
       icon: AlertTriangle,

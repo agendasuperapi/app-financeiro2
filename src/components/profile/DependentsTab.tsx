@@ -170,8 +170,8 @@ const DependentsTab = () => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Users className="h-4 w-4" />
             Dependentes
           </CardTitle>
           <CardDescription>

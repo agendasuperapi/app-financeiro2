@@ -115,16 +115,21 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
         label: 'Lembretes',
         href: '/lembrar'
       },
-    {
-      icon: BarChart3,
-      label: t('nav.reports'),
-      href: '/reports'
-    },
-    {
-      icon: Crown,
-      label: t('nav.plans'),
-      href: '/plans'
-    },
+      {
+        icon: BarChart3,
+        label: t('nav.reports'),
+        href: '/reports'
+      },
+      {
+        icon: FileText,
+        label: 'Anotações',
+        href: '/notes'
+      },
+      {
+        icon: Crown,
+        label: t('nav.plans'),
+        href: '/plans'
+      },
     ];
 
     return (
@@ -284,6 +289,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       icon: BarChart3,
       label: t('nav.reports'),
       href: '/reports'
+    },
+    {
+      icon: FileText,
+      label: 'Anotações',
+      href: '/notes'
     },
     {
       icon: Crown,

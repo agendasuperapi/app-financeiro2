@@ -279,6 +279,35 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t md:hidden">
       <nav className="flex items-center justify-around py-2">
         {menuItems.map((item, index) => {
+          if (item.type === 'quick-actions') {
+            return (
+              <Popover key="quick-actions" open={isQuickActionsOpen} onOpenChange={setIsQuickActionsOpen}>
+                <PopoverTrigger asChild>
+                  <button className={cn("flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground min-w-0", isQuickActionsOpen ? "bg-green-600 text-white shadow-md" : "text-muted-foreground")}>
+                    <div className="rounded-full bg-primary text-primary-foreground p-1">
+                      <Plus className="h-8 w-8 py-0" />
+                    </div>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-2 mb-2" align="center" side="top">
+                  <AnimatePresence>
+                    {isQuickActionsOpen && (
+                      <motion.div variants={containerVariants} initial="hidden" animate="visible" exit="exit" className="space-y-1">
+                        {quickActionItems.map(quickItem => (
+                          <motion.div key={quickItem.label} variants={itemVariants}>
+                            <Button variant="ghost" onClick={quickItem.action} className={`w-full justify-start gap-3 ${quickItem.bgColor} ${quickItem.color}`}>
+                              <quickItem.icon className="h-4 w-4" />
+                              <span>{quickItem.label}</span>
+                            </Button>
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </PopoverContent>
+              </Popover>
+            );
+          }
           return (
             <NavLink key={item.href} to={item.href} className={({
               isActive

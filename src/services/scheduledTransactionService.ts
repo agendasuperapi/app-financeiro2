@@ -120,6 +120,7 @@ export const addScheduledTransaction = async (
     situacao?: string;
     phone?: string;
     aba?: string;
+    conta?: string;
     recurrence?: string;
     installments?: number;
     user_id?: string;
@@ -228,7 +229,7 @@ export const addScheduledTransaction = async (
           situacao: transaction.situacao || 'ativo',
           phone: transaction.phone,
           name: transaction.creatorName,
-          aba: transaction.aba,
+          conta: transaction.conta,
           recurrence: convertRecurrenceToPortuguese('once') // Convert to Portuguese
         };
         
@@ -314,7 +315,7 @@ export const addScheduledTransaction = async (
       if (transaction.situacao) insertData.situacao = transaction.situacao;
       if (transaction.phone) insertData.phone = transaction.phone;
       if (transaction.creatorName) insertData.name = transaction.creatorName;
-      if (transaction.aba) insertData.aba = transaction.aba;
+      if (transaction.conta) insertData.conta = transaction.conta;
       // Always convert recurrence to Portuguese, with default value
       insertData.recurrence = convertRecurrenceToPortuguese(transaction.recurrence);
 
@@ -372,6 +373,7 @@ export const updateScheduledTransaction = async (
     situacao?: string;
     phone?: string;
     aba?: string;
+    conta?: string;
     recurrence?: string;
     user_id?: string;
     creatorName?: string;
@@ -419,7 +421,7 @@ export const updateScheduledTransaction = async (
     if (transaction.situacao) updateData.situacao = transaction.situacao;
     if (transaction.phone) updateData.phone = transaction.phone;
     if (transaction.creatorName) updateData.name = transaction.creatorName;
-    if (transaction.aba) updateData.aba = transaction.aba;
+    if (transaction.conta) updateData.conta = transaction.conta;
     // Always convert recurrence to Portuguese
     updateData.recurrence = convertRecurrenceToPortuguese(transaction.recurrence);
     if (transaction.status) updateData.status = transaction.status;

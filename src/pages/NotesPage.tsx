@@ -83,7 +83,7 @@ const NotesPage: React.FC = () => {
           data: values.data,
           descricao: values.descricao,
           notas: values.notas,
-          creator_name: values.name,
+          name: values.name,
           phone: values.phone
         });
         if (error) throw error;
@@ -93,7 +93,7 @@ const NotesPage: React.FC = () => {
           data: values.data,
           descricao: values.descricao,
           notas: values.notas,
-          creator_name: values.name,
+          name: values.name,
           phone: values.phone
         });
       }
@@ -158,7 +158,7 @@ const NotesPage: React.FC = () => {
       data: note.data,
       descricao: note.descricao,
       notas: note.notas,
-      name: (note as any).creator_name || '',
+      name: (note as any).name || '',
       phone: (note as any).phone || ''
     });
     setIsEditingNote(true);
@@ -174,7 +174,7 @@ const NotesPage: React.FC = () => {
           data: values.data,
           descricao: values.descricao,
           notas: values.notas,
-          creator_name: values.name,
+          name: values.name,
           phone: values.phone
         }).eq('id', editingNote.id);
         if (error) throw error;
@@ -184,7 +184,7 @@ const NotesPage: React.FC = () => {
           data: values.data,
           descricao: values.descricao,
           notas: values.notas,
-          creator_name: values.name,
+          name: values.name,
           phone: values.phone
         });
       }

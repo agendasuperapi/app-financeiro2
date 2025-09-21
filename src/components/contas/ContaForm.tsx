@@ -276,73 +276,23 @@ const ContaForm: React.FC<ContaFormProps> = ({
           <FormField
             control={form.control}
             name="amount"
-            render={({ field }) => {
-              const [inputValue, setInputValue] = useState(
-                field.value ? field.value.toString().replace('.', ',') : ''
-              );
-
-              // Helper functions for formatting
-              const sanitizeInput = (value: string) => {
-                return value.replace(/[^\d,]/g, '');
-              };
-
-              const validateNumericInput = (value: string) => {
-                const commaCount = (value.match(/,/g) || []).length;
-                return commaCount <= 1;
-              };
-
-              const stringToNumber = (str: string) => {
-                if (!str || str === '0,00') return 0;
-                return parseFloat(str.replace(',', '.')) || 0;
-              };
-
-              const formatNumberToString = (num: number) => {
-                return num.toFixed(2).replace('.', ',');
-              };
-
-              // Sync local state with field value when form loads
-              useEffect(() => {
-                if (field.value && field.value !== stringToNumber(inputValue)) {
-                  setInputValue(formatNumberToString(field.value));
-                }
-              }, [field.value]);
-
-              return (
-                <FormItem>
-                  <FormLabel>Valor</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      value={inputValue}
-                      onChange={(e) => {
-                        const newValue = e.target.value;
-                        const sanitizedValue = sanitizeInput(newValue);
-                        
-                        if (!validateNumericInput(sanitizedValue)) {
-                          return;
-                        }
-                        
-                        setInputValue(sanitizedValue);
-                        field.onChange(stringToNumber(sanitizedValue));
-                      }}
-                      onBlur={() => {
-                        // Formata o valor ao perder o foco
-                        const numValue = stringToNumber(inputValue);
-                        setInputValue(numValue ? formatNumberToString(numValue) : '');
-                      }}
-                      placeholder="0,00"
-                      maxLength={15}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('common.amount')}</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    {...field}
+                    onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                    placeholder="0,00"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          </div>
 
           <FormField
             control={form.control}
@@ -394,53 +344,51 @@ const ContaForm: React.FC<ContaFormProps> = ({
             />
           )}
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('common.category')}</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value}
-                    disabled={loadingCategories}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={loadingCategories ? t('common.loading') : t('transactions.selectCategory')} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories.map(category => (
-                        <SelectItem key={category.id} value={category.id}>
-                          <div className="flex items-center gap-2">
-                            <CategoryIcon icon={category.icon} color={category.color} size={16} />
-                            <span>{category.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="scheduledDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('schedule.scheduledFor')}</FormLabel>
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('common.category')}</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value}
+                  disabled={loadingCategories}
+                >
                   <FormControl>
-                    <Input type="datetime-local" {...field} />
+                    <SelectTrigger>
+                      <SelectValue placeholder={loadingCategories ? t('common.loading') : t('transactions.selectCategory')} />
+                    </SelectTrigger>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                  <SelectContent>
+                    {categories.map(category => (
+                      <SelectItem key={category.id} value={category.id}>
+                        <div className="flex items-center gap-2">
+                          <CategoryIcon icon={category.icon} color={category.color} size={16} />
+                          <span>{category.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="scheduledDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('schedule.scheduledFor')}</FormLabel>
+                <FormControl>
+                  <Input type="datetime-local" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <div className="flex flex-col sm:flex-row gap-3 justify-between items-center pt-4">
             {mode === 'edit' && (

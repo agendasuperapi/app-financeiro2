@@ -23,6 +23,8 @@ export interface UpdateNoteData {
   data?: string;
   descricao?: string;
   notas?: string;
+  creator_name?: string;
+  phone?: string;
 }
 
 export class NotesService {

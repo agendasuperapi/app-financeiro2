@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Calendar, FileText, Trash2, User } from 'lucide-react';
+import { Search, Plus, Calendar, FileText, Trash2, User, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -49,6 +49,8 @@ const NotesPage: React.FC = () => {
   } = useClientAwareNotes();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddingNote, setIsAddingNote] = useState(false);
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
   const {
     toast
   } = useToast();
@@ -149,6 +151,62 @@ const NotesPage: React.FC = () => {
       });
     }
   };
+
+  const handleEditNote = (note: Note) => {
+    setEditingNote(note);
+    form.reset({
+      data: note.data,
+      descricao: note.descricao,
+      notas: note.notas,
+      name: (note as any).creator_name || '',
+      phone: (note as any).phone || ''
+    });
+    setIsEditingNote(true);
+  };
+
+  const handleUpdateNote = async (values: NoteFormValues) => {
+    if (!editingNote) return;
+    
+    try {
+      if (isClientView && selectedUser) {
+        // Atualizar nota para o cliente selecionado
+        const { error } = await (supabase as any).from('financeiro_notas').update({
+          data: values.data,
+          descricao: values.descricao,
+          notas: values.notas,
+          creator_name: values.name,
+          phone: values.phone
+        }).eq('id', editingNote.id);
+        if (error) throw error;
+      } else {
+        // Atualizar nota para o usuário logado
+        await NotesService.updateNote(editingNote.id, {
+          data: values.data,
+          descricao: values.descricao,
+          notas: values.notas,
+          creator_name: values.name,
+          phone: values.phone
+        });
+      }
+      
+      setIsEditingNote(false);
+      setEditingNote(null);
+      toast({
+        title: "Sucesso",
+        description: "Nota atualizada com sucesso!"
+      });
+
+      // Recarregar notas
+      await loadNotes();
+    } catch (error) {
+      console.error('Erro ao atualizar nota:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a nota.",
+        variant: "destructive"
+      });
+    }
+  };
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'dd/MM/yyyy', {
@@ -236,6 +294,63 @@ const NotesPage: React.FC = () => {
                     </Form>
                   </DialogContent>
                 </Dialog>
+                
+                {/* Edit Dialog */}
+                <Dialog open={isEditingNote} onOpenChange={setIsEditingNote}>
+                  <DialogContent className="sm:max-w-[525px]">
+                    <DialogHeader>
+                      <DialogTitle>Editar Nota</DialogTitle>
+                      <DialogDescription>
+                        Edite os campos abaixo para atualizar a nota.
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(handleUpdateNote)} className="space-y-4 py-4">
+                        <FormField control={form.control} name="data" render={({
+                      field
+                    }) => <FormItem>
+                              <FormLabel>Data</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>} />
+                        
+                        <FormField control={form.control} name="descricao" render={({
+                      field
+                    }) => <FormItem>
+                              <FormLabel>Titulo</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Digite a descrição da nota..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>} />
+
+                        <AddedByFieldForm form={form} />
+                        
+                        <FormField control={form.control} name="notas" render={({
+                      field
+                    }) => <FormItem>
+                              <FormLabel>Notas</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Digite suas notas aqui..." className="min-h-[100px]" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>} />
+                        
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" variant="outline" onClick={() => setIsEditingNote(false)}>
+                            Cancelar
+                          </Button>
+                          <Button type="submit">
+                            Atualizar Nota
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
             </div>
 
             {/* Campo de pesquisa */}
@@ -275,9 +390,26 @@ const NotesPage: React.FC = () => {
                             {formatDate(note.data)}
                           </div>
                         </div>
-                         <Button variant="ghost" size="sm" onClick={() => handleDeleteNote(note.id)} className={cn("text-destructive hover:text-destructive", isClientView && "opacity-50 cursor-not-allowed")} disabled={isClientView}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleEditNote(note)}
+                            className={cn("text-primary hover:text-primary", isClientView && "opacity-50 cursor-not-allowed")}
+                            disabled={isClientView}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleDeleteNote(note.id)} 
+                            className={cn("text-destructive hover:text-destructive", isClientView && "opacity-50 cursor-not-allowed")} 
+                            disabled={isClientView}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>

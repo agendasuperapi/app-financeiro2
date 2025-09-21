@@ -14,6 +14,9 @@ export interface CreateNoteData {
   data: string;
   descricao: string;
   notas: string;
+  conta?: string;
+  creator_name?: string;
+  phone?: string;
 }
 
 export interface UpdateNoteData {

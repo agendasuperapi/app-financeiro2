@@ -15,6 +15,11 @@ import MainLayout from '@/components/layout/MainLayout';
 import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import ContaAddedByGrid from '@/components/common/ContaAddedByGrid';
 
 interface Note {
   id: string;
@@ -24,16 +29,37 @@ interface Note {
   created_at: string;
 }
 
+// Schema for note form
+const noteFormSchema = z.object({
+  data: z.string().min(1, 'Data é obrigatória'),
+  descricao: z.string().min(1, 'Descrição é obrigatória'),
+  notas: z.string().min(1, 'Notas são obrigatórias'),
+  // Campos obrigatórios do ContaInput e AddedByField
+  conta: z.string().min(1, 'Conta é obrigatória'),
+  name: z.string().min(1, 'Usuario é obrigatório'),
+  phone: z.string().optional(),
+});
+
+type NoteFormValues = z.infer<typeof noteFormSchema>;
+
 const NotesPage: React.FC = () => {
   const { notes, loading, isClientView, selectedUser, loadNotes, deleteNote } = useClientAwareNotes();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddingNote, setIsAddingNote] = useState(false);
-  const [newNote, setNewNote] = useState({
-    data: format(new Date(), 'yyyy-MM-dd'),
-    descricao: '',
-    notas: ''
-  });
   const { toast } = useToast();
+
+  // Form setup
+  const form = useForm<NoteFormValues>({
+    resolver: zodResolver(noteFormSchema),
+    defaultValues: {
+      data: format(new Date(), 'yyyy-MM-dd'),
+      descricao: '',
+      notas: '',
+      conta: '',
+      name: '',
+      phone: '',
+    },
+  });
 
   // Carregar notas do Supabase
   useEffect(() => {
@@ -45,16 +71,7 @@ const NotesPage: React.FC = () => {
     note.notas.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddNote = async () => {
-    if (!newNote.descricao || !newNote.notas) {
-      toast({
-        title: "Erro",
-        description: "Por favor, preencha a descrição e as notas.",
-        variant: "destructive"
-      });
-      return;
-    }
-
+  const handleAddNote = async (values: NoteFormValues) => {
     try {
       if (isClientView && selectedUser) {
         // Criar nota para o cliente selecionado
@@ -62,25 +79,34 @@ const NotesPage: React.FC = () => {
           .from('financeiro_notas')
           .insert({
             user_id: selectedUser.id,
-            data: newNote.data,
-            descricao: newNote.descricao,
-            notas: newNote.notas
+            data: values.data,
+            descricao: values.descricao,
+            notas: values.notas,
+            conta: values.conta,
+            creator_name: values.name,
+            phone: values.phone,
           });
 
         if (error) throw error;
       } else {
         // Criar nota para o usuário logado
         await NotesService.createNote({
-          data: newNote.data,
-          descricao: newNote.descricao,
-          notas: newNote.notas
+          data: values.data,
+          descricao: values.descricao,
+          notas: values.notas,
+          conta: values.conta,
+          creator_name: values.name,
+          phone: values.phone,
         });
       }
 
-      setNewNote({
+      form.reset({
         data: format(new Date(), 'yyyy-MM-dd'),
         descricao: '',
-        notas: ''
+        notas: '',
+        conta: '',
+        name: '',
+        phone: '',
       });
       setIsAddingNote(false);
 
@@ -175,44 +201,67 @@ const NotesPage: React.FC = () => {
                         Preencha os campos abaixo para adicionar uma nova nota.
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="data">Data</Label>
-                        <Input
-                          id="data"
-                          type="date"
-                          value={newNote.data}
-                          onChange={(e) => setNewNote(prev => ({ ...prev, data: e.target.value }))}
+                    
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(handleAddNote)} className="space-y-4 py-4">
+                        <FormField
+                          control={form.control}
+                          name="data"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Data</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="descricao">Descrição</Label>
-                        <Input
-                          id="descricao"
-                          placeholder="Digite a descrição da nota..."
-                          value={newNote.descricao}
-                          onChange={(e) => setNewNote(prev => ({ ...prev, descricao: e.target.value }))}
+                        
+                        <FormField
+                          control={form.control}
+                          name="descricao"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Descrição</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Digite a descrição da nota..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="notas">Notas</Label>
-                        <Textarea
-                          id="notas"
-                          placeholder="Digite suas notas aqui..."
-                          value={newNote.notas}
-                          onChange={(e) => setNewNote(prev => ({ ...prev, notas: e.target.value }))}
-                          className="min-h-[100px]"
+
+                        <ContaAddedByGrid form={form} />
+                        
+                        <FormField
+                          control={form.control}
+                          name="notas"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Notas</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Digite suas notas aqui..." 
+                                  className="min-h-[100px]" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setIsAddingNote(false)}>
-                        Cancelar
-                      </Button>
-                      <Button onClick={handleAddNote}>
-                        Salvar Nota
-                      </Button>
-                    </div>
+                        
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" variant="outline" onClick={() => setIsAddingNote(false)}>
+                            Cancelar
+                          </Button>
+                          <Button type="submit">
+                            Salvar Nota
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
                   </DialogContent>
                 </Dialog>
             </div>

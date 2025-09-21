@@ -154,6 +154,26 @@ export const createTransactionForUser = async (transactionData: {
       }
     }
 
+    // Resolve phone from view if not provided
+    let phoneValue = transactionData.phone;
+    if (!phoneValue && transactionData.name) {
+      try {
+        const { data: viewRow, error: viewError } = await supabase
+          .from('view_cadastros_unificados')
+          .select('phone')
+          .eq('id', transactionData.user_id)
+          .eq('primeiro_name', transactionData.name)
+          .maybeSingle();
+        if (!viewError && (viewRow as any)?.phone) {
+          phoneValue = (viewRow as any).phone as string;
+        } else if (viewError) {
+          console.warn('createTransactionForUser: Could not fetch phone from view', viewError);
+        }
+      } catch (e) {
+        console.warn('createTransactionForUser: Exception fetching phone from view', e);
+      }
+    }
+
     const { data, error } = await supabase
       .from("poupeja_transactions")
       .insert({
@@ -168,7 +188,7 @@ export const createTransactionForUser = async (transactionData: {
         reference_code: referenceCode,
         conta: transactionData.conta,
         name: transactionData.name,
-        phone: transactionData.phone,
+        phone: phoneValue,
       })
       .select(`
         *,

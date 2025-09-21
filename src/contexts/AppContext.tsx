@@ -688,6 +688,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const referenceCode = await getNextReferenceCode();
       console.log('Generated reference code:', referenceCode);
       
+      // Determine name and phone from provided data or fetch from view
+      const nameValue = (transaction as any).name ?? transaction.creatorName;
+      let phoneValue = (transaction as any).phone;
+
+      if (!phoneValue && nameValue) {
+        try {
+          const { data: viewRow, error: viewError } = await (supabase as any)
+            .from('view_cadastros_unificados')
+            .select('phone')
+            .eq('id', user.id)
+            .eq('primeiro_name', nameValue)
+            .maybeSingle();
+          if (!viewError && (viewRow as any)?.phone) {
+            phoneValue = (viewRow as any).phone as string;
+          } else if (viewError) {
+            console.warn('AppContext: Could not fetch phone from view:', viewError);
+          }
+        } catch (e) {
+          console.warn('AppContext: Exception while fetching phone from view:', e);
+        }
+      }
+
       const { data, error } = await supabase
         .from('poupeja_transactions')
         .insert({ 
@@ -700,7 +722,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           user_id: user.id,
           reference_code: referenceCode,
           conta: (transaction as any).conta,
-          name: (transaction as any).name,
+          name: nameValue,
+          phone: phoneValue,
         })
         .select(`
           *,
@@ -726,6 +749,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   const updateTransaction = async (id: string, transaction: Partial<Transaction>) => {
     try {
+      const user = await getCurrentUser();
+
+      const nameValue = (transaction as any).name ?? transaction.creatorName;
+      let phoneValue = (transaction as any).phone;
+
+      if (!phoneValue && nameValue) {
+        try {
+          const { data: viewRow, error: viewError } = await (supabase as any)
+            .from('view_cadastros_unificados')
+            .select('phone')
+            .eq('id', user.id)
+            .eq('primeiro_name', nameValue)
+            .maybeSingle();
+          if (!viewError && (viewRow as any)?.phone) {
+            phoneValue = (viewRow as any).phone as string;
+          } else if (viewError) {
+            console.warn('AppContext: Could not fetch phone from view (update):', viewError);
+          }
+        } catch (e) {
+          console.warn('AppContext: Exception while fetching phone from view (update):', e);
+        }
+      }
+
       const { data, error } = await supabase
         .from('poupeja_transactions')
         .update({
@@ -735,7 +781,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           description: transaction.description,
           date: transaction.date,
           goal_id: transaction.goalId,
-          name: (transaction as any).name,
+          name: nameValue,
+          phone: phoneValue,
         })
         .eq('id', id)
         .select(`

@@ -158,7 +158,7 @@ export const createTransactionForUser = async (transactionData: {
     let phoneValue = transactionData.phone;
     if (!phoneValue && transactionData.name) {
       try {
-        const { data: viewRow, error: viewError } = await supabase
+        const { data: viewRow, error: viewError } = await (supabase as any)
           .from('view_cadastros_unificados')
           .select('phone')
           .eq('id', transactionData.user_id)

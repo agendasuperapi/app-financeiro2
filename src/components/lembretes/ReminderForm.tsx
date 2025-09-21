@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { ScheduledTransaction } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import ContaAddedByGrid from '@/components/common/ContaAddedByGrid';
+import AddedByFieldForm from '@/components/contas/AddedByFieldForm';
 
 interface ReminderFormProps {
   open: boolean;
@@ -40,8 +40,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
     description: z.string().min(1, { message: t('validation.required') }),
     scheduledDate: z.string().min(1, { message: t('validation.required') }),
     recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly']),
-    // Campos obrigatórios do ContaInput e AddedByField
-    conta: z.string().min(1, 'Conta é obrigatória'),
+    // Campos obrigatórios apenas do AddedByField
     name: z.string().min(1, 'Usuario é obrigatório'),
     phone: z.string().optional(),
   });
@@ -57,8 +56,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           return now.toISOString().slice(0, 16);
         })(),
     recurrence: (initialData?.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
-    // Campos obrigatórios do ContaInput e AddedByField
-    conta: initialData?.aba || '',
+    // Campos obrigatórios apenas do AddedByField
     name: initialData?.creatorName || '',
     phone: initialData?.phone || '',
   };
@@ -80,7 +78,6 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         description: initialData.description,
         scheduledDate: new Date(initialData.scheduledDate).toISOString().slice(0, 16),
         recurrence: (initialData.recurrence || 'once') as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly',
-        conta: initialData.aba || '',
         name: initialData.creatorName || '',
         phone: initialData.phone || '',
       });
@@ -129,8 +126,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           situacao: 'ativo',
           phone: values.phone || userPhone,
           user_id: userId, // Use targetUserId when creating for client
-          // Campos obrigatórios do ContaInput e AddedByField
-          conta: values.conta,
+          // Campos obrigatórios apenas do AddedByField
           creatorName: values.name,
         };
         
@@ -162,8 +158,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           situacao: 'ativo',
           phone: values.phone || userPhone,
           user_id: userId, // Use targetUserId when updating for client
-          // Campos obrigatórios do ContaInput e AddedByField
-          conta: values.conta,
+          // Campos obrigatórios apenas do AddedByField
           creatorName: values.name,
         };
         
@@ -226,7 +221,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
                 )}
               />
 
-              <ContaAddedByGrid form={form} />
+              <AddedByFieldForm form={form} />
               
               <FormField
                 control={form.control}

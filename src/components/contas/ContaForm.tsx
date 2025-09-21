@@ -294,6 +294,9 @@ const ContaForm: React.FC<ContaFormProps> = ({
             )}
           />
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          </div>
+
           <FormField
             control={form.control}
             name="recurrence"

@@ -19,7 +19,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import ContaAddedByGrid from '@/components/common/ContaAddedByGrid';
+import AddedByFieldForm from '@/components/contas/AddedByFieldForm';
 
 interface Note {
   id: string;
@@ -34,8 +34,7 @@ const noteFormSchema = z.object({
   data: z.string().min(1, 'Data é obrigatória'),
   descricao: z.string().min(1, 'Descrição é obrigatória'),
   notas: z.string().min(1, 'Notas são obrigatórias'),
-  // Campos obrigatórios do ContaInput e AddedByField
-  conta: z.string().min(1, 'Conta é obrigatória'),
+  // Campos obrigatórios apenas do AddedByField
   name: z.string().min(1, 'Usuario é obrigatório'),
   phone: z.string().optional(),
 });
@@ -55,7 +54,6 @@ const NotesPage: React.FC = () => {
       data: format(new Date(), 'yyyy-MM-dd'),
       descricao: '',
       notas: '',
-      conta: '',
       name: '',
       phone: '',
     },
@@ -82,7 +80,6 @@ const NotesPage: React.FC = () => {
             data: values.data,
             descricao: values.descricao,
             notas: values.notas,
-            conta: values.conta,
             creator_name: values.name,
             phone: values.phone,
           });
@@ -94,7 +91,6 @@ const NotesPage: React.FC = () => {
           data: values.data,
           descricao: values.descricao,
           notas: values.notas,
-          conta: values.conta,
           creator_name: values.name,
           phone: values.phone,
         });
@@ -104,7 +100,6 @@ const NotesPage: React.FC = () => {
         data: format(new Date(), 'yyyy-MM-dd'),
         descricao: '',
         notas: '',
-        conta: '',
         name: '',
         phone: '',
       });
@@ -232,7 +227,7 @@ const NotesPage: React.FC = () => {
                           )}
                         />
 
-                        <ContaAddedByGrid form={form} />
+                        <AddedByFieldForm form={form} />
                         
                         <FormField
                           control={form.control}

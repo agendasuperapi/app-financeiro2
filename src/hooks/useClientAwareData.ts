@@ -138,6 +138,24 @@ export const useClientAwareData = () => {
     }
   }, [appContext.transactions.length, isClientView, targetUserId, loadClientData]);
 
+  // Realtime Supabase: atualiza imediatamente quando houver inserções/updates/deletes
+  useEffect(() => {
+    if (!isClientView || !targetUserId) return;
+
+    const channel = (supabase as any)
+      .channel(`rt-transactions-${targetUserId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'poupeja_transactions', filter: `user_id=eq.${targetUserId}` }, () => {
+        loadClientData();
+      })
+      .subscribe();
+
+    return () => {
+      try {
+        (supabase as any).removeChannel?.(channel);
+      } catch {}
+    };
+  }, [isClientView, targetUserId, loadClientData]);
+
   // Retornar dados apropriados baseado no contexto
   return {
     // Dados

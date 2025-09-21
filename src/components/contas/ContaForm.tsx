@@ -297,32 +297,6 @@ const ContaForm: React.FC<ContaFormProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="recurrence"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('schedule.recurrence')}</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('schedule.recurrence')} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="once">{t('schedule.once')}</SelectItem>
-                      <SelectItem value="daily">{t('schedule.daily')}</SelectItem>
-                      <SelectItem value="weekly">{t('schedule.weekly')}</SelectItem>
-                      <SelectItem value="monthly">{t('schedule.monthly')}</SelectItem>
-                      <SelectItem value="yearly">{t('schedule.yearly')}</SelectItem>
-                      <SelectItem value="installments">Parcelas</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
               name="category"
               render={({ field }) => (
                 <FormItem>
@@ -352,7 +326,47 @@ const ContaForm: React.FC<ContaFormProps> = ({
                 </FormItem>
               )}
             />
+            
+            <FormField
+              control={form.control}
+              name="scheduledDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('schedule.scheduledFor')}</FormLabel>
+                  <FormControl>
+                    <Input type="datetime-local" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
+
+          <FormField
+            control={form.control}
+            name="recurrence"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('schedule.recurrence')}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('schedule.recurrence')} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="once">{t('schedule.once')}</SelectItem>
+                    <SelectItem value="daily">{t('schedule.daily')}</SelectItem>
+                    <SelectItem value="weekly">{t('schedule.weekly')}</SelectItem>
+                    <SelectItem value="monthly">{t('schedule.monthly')}</SelectItem>
+                    <SelectItem value="yearly">{t('schedule.yearly')}</SelectItem>
+                    <SelectItem value="installments">Parcelas</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
 
           {/* Conditional Installments Field - only show when recurrence is 'installments' */}
@@ -380,19 +394,6 @@ const ContaForm: React.FC<ContaFormProps> = ({
           )}
           
           
-          <FormField
-            control={form.control}
-            name="scheduledDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('schedule.scheduledFor')}</FormLabel>
-                <FormControl>
-                  <Input type="datetime-local" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
           <div className="flex flex-col sm:flex-row gap-3 justify-between items-center pt-4">
             {mode === 'edit' && (

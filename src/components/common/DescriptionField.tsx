@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { UseFormReturn } from 'react-hook-form';
 import { TransactionFormValues } from '@/schemas/transactionSchema';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -21,7 +21,7 @@ const DescriptionField: React.FC<DescriptionFieldProps> = ({ form }) => {
         <FormItem>
           <FormLabel>{t("common.description")}</FormLabel>
           <FormControl>
-            <Textarea {...field} placeholder={t('common.description')} />
+            <Input {...field} placeholder={t('common.description')} />
           </FormControl>
           <FormMessage />
         </FormItem>

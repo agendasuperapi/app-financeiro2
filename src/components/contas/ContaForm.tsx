@@ -34,6 +34,10 @@ const contaFormSchema = z.object({
   scheduledDate: z.string().min(1, 'Data é obrigatória'),
   recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly', 'installments']),
   goalId: z.string().optional().nullable(),
+  // Campos obrigatórios do ContaInput e AddedByField
+  conta: z.string().min(1, 'Conta é obrigatória'),
+  name: z.string().min(1, 'Usuario é obrigatório'),
+  phone: z.string().optional(),
 });
 
 type ContaFormValues = z.infer<typeof contaFormSchema>;
@@ -69,6 +73,10 @@ const ContaForm: React.FC<ContaFormProps> = ({
           : now.toISOString().slice(0, 16),
         recurrence: hasInstallments ? 'installments' : ((initialData.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once'),
         goalId: initialData.goalId || null,
+        // Novos campos obrigatórios - usando campos disponíveis da interface
+        conta: initialData.aba || '', // usando 'aba' como conta
+        name: initialData.creatorName || '',
+        phone: initialData.phone || '',
       };
     }
     
@@ -80,6 +88,10 @@ const ContaForm: React.FC<ContaFormProps> = ({
       scheduledDate: now.toISOString().slice(0, 16),
       recurrence: 'once',
       goalId: null,
+      // Novos campos obrigatórios
+      conta: '',
+      name: '',
+      phone: '',
     };
   };
 
@@ -171,9 +183,12 @@ const ContaForm: React.FC<ContaFormProps> = ({
           goalId: values.goalId,
           reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
           situacao: 'ativo',
-          phone: userPhone,
+          phone: values.phone || userPhone,
           parcela: values.recurrence === 'installments' ? (values.installments || 1).toString() : '1',
           user_id: targetUserId,
+          // Campos obrigatórios do ContaInput e AddedByField
+          aba: values.conta, // salvar conta no campo 'aba'
+          creatorName: values.name,
         };
         
         console.log('📋 Creating transaction with data:', transactionData);
@@ -215,10 +230,13 @@ const ContaForm: React.FC<ContaFormProps> = ({
           goalId: values.goalId,
           reference_code: initialData?.reference_code || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
           situacao: 'ativo',
-          phone: userPhone,
+          phone: values.phone || userPhone,
           parcela: values.recurrence === 'installments' ? (values.installments || 1).toString() : '1',
           status: 'pending' as const,
           user_id: targetUserId,
+          // Campos obrigatórios do ContaInput e AddedByField
+          aba: values.conta, // salvar conta no campo 'aba'
+          creatorName: values.name,
         };
         
         console.log('📋 Updating transaction with ID:', initialData.id);

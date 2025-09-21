@@ -174,7 +174,7 @@ const DependentsTab = () => {
             <Users className="h-4 w-4" />
             Dependentes
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs">
             Gerencie seus dependentes ({dependents.length} cadastrado{dependents.length !== 1 ? 's' : ''})
           </CardDescription>
         </div>

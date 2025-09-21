@@ -187,6 +187,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           parcela: values.recurrence === 'installments' ? (values.installments || 1).toString() : '1',
           user_id: targetUserId,
           // Campos obrigatórios do ContaInput e AddedByField
+          conta: values.conta,
           creatorName: values.name,
         };
         
@@ -234,6 +235,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           status: 'pending' as const,
           user_id: targetUserId,
           // Campos obrigatórios do ContaInput e AddedByField
+          conta: values.conta,
           creatorName: values.name,
         };
         

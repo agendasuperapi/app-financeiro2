@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useClientView } from '@/contexts/ClientViewContext';
 import { useAppContext } from '@/contexts/AppContext';
@@ -23,8 +23,8 @@ export const useClientAwareData = () => {
   const targetUserId = selectedUser?.id || appContext.user?.id;
   const isClientView = !!selectedUser;
 
-  // Buscar transações do usuário selecionado
-  const fetchClientTransactions = async () => {
+  // Buscar transações do usuário selecionado com query otimizada
+  const fetchClientTransactions = useCallback(async () => {
     if (!targetUserId) return [];
     
     try {
@@ -32,10 +32,10 @@ export const useClientAwareData = () => {
         .from('poupeja_transactions')
         .select(`
           *,
-          categories:category_id(name, icon, color)
+          category:poupeja_categories(id, name, icon, color, type)
         `)
         .eq('user_id', targetUserId)
-        .order('date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       
@@ -49,19 +49,19 @@ export const useClientAwareData = () => {
       
       return data.map((transaction: any) => ({
         ...transaction,
-        category: transaction.categories?.name || 'Sem categoria',
-        categoryIcon: transaction.categories?.icon || 'circle',
-        categoryColor: transaction.categories?.color || '#607D8B',
+        category: transaction.category?.name || 'Sem categoria',
+        categoryIcon: transaction.category?.icon || 'circle',
+        categoryColor: transaction.category?.color || '#607D8B',
         creatorName: transaction.name ? transaction.name : undefined,
       }));
     } catch (error) {
       console.error('Erro ao buscar transações do cliente:', error);
       return [];
     }
-  };
+  }, [targetUserId]);
 
   // Buscar metas/limites do usuário selecionado  
-  const fetchClientGoals = async () => {
+  const fetchClientGoals = useCallback(async () => {
     if (!targetUserId) return [];
     
     try {
@@ -77,10 +77,10 @@ export const useClientAwareData = () => {
       console.error('Erro ao buscar metas do cliente:', error);
       return [];
     }
-  };
+  }, [targetUserId]);
 
   // Buscar notas do usuário selecionado
-  const fetchClientNotes = async () => {
+  const fetchClientNotes = useCallback(async () => {
     if (!targetUserId) return [];
     
     try {
@@ -97,28 +97,46 @@ export const useClientAwareData = () => {
       console.error('Erro ao buscar notas do cliente:', error);
       return [];
     }
-  };
+  }, [targetUserId]);
 
-  // Carregar dados quando o usuário selecionado mudar
-  useEffect(() => {
-    if (isClientView && targetUserId) {
-      setLoading(true);
-      
-      Promise.all([
+  // Função para recarregar dados
+  const loadClientData = useCallback(async () => {
+    if (!isClientView || !targetUserId) return;
+    
+    setLoading(true);
+    try {
+      const [transactions, goals, notes] = await Promise.all([
         fetchClientTransactions(),
         fetchClientGoals(),
         fetchClientNotes()
-      ]).then(([transactions, goals, notes]) => {
-        setClientTransactions(transactions);
-        setClientGoals(goals);
-        setClientNotes(notes);
-        setLoading(false);
-      }).catch(error => {
-        console.error('Erro ao carregar dados do cliente:', error);
-        setLoading(false);
-      });
+      ]);
+      setClientTransactions(transactions);
+      setClientGoals(goals);
+      setClientNotes(notes);
+    } catch (error) {
+      console.error('Erro ao carregar dados do cliente:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [targetUserId, isClientView]);
+  }, [isClientView, targetUserId, fetchClientTransactions, fetchClientGoals, fetchClientNotes]);
+
+  // Carregar dados quando o usuário selecionado mudar
+  useEffect(() => {
+    loadClientData();
+  }, [loadClientData]);
+
+  // Escutar mudanças no AppContext para recarregar dados do cliente
+  useEffect(() => {
+    if (isClientView && targetUserId) {
+      // Recarregar dados quando transações do AppContext mudam
+      // Isso garante sincronização quando novas transações são adicionadas
+      const timeoutId = setTimeout(() => {
+        loadClientData();
+      }, 100); // Pequeno delay para evitar múltiplas chamadas
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [appContext.transactions.length, isClientView, targetUserId, loadClientData]);
 
   // Retornar dados apropriados baseado no contexto
   return {
@@ -139,19 +157,6 @@ export const useClientAwareData = () => {
     getGoals: appContext.getGoals,
     
     // Função para refetch dos dados do cliente
-    refetchClientData: async () => {
-      if (isClientView && targetUserId) {
-        setLoading(true);
-        const [transactions, goals, notes] = await Promise.all([
-          fetchClientTransactions(),
-          fetchClientGoals(), 
-          fetchClientNotes()
-        ]);
-        setClientTransactions(transactions);
-        setClientGoals(goals);
-        setClientNotes(notes);
-        setLoading(false);
-      }
-    }
+    refetchClientData: loadClientData
   };
 };

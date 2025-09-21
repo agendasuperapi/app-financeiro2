@@ -356,181 +356,214 @@ const ProfilePage = () => {
         <Separator />
         
         <div className="grid gap-6">
-          <Tabs defaultValue="info">
-            <TabsList>
-              <TabsTrigger value="info">Informações Pessoais</TabsTrigger>
-              <TabsTrigger value="categories">Categorias</TabsTrigger>
-              <TabsTrigger value="dependents">Dependentes</TabsTrigger>
-              <TabsTrigger value="password">Senha</TabsTrigger>
-              <TabsTrigger value="preferences">Preferências</TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="info" className="w-full">
+            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-6">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1 p-1 h-auto bg-muted/50">
+                <TabsTrigger 
+                  value="info" 
+                  className="text-xs md:text-sm px-2 py-3 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
+                >
+                  Informações
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="categories" 
+                  className="text-xs md:text-sm px-2 py-3 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
+                >
+                  Categorias
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="dependents" 
+                  className="text-xs md:text-sm px-2 py-3 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
+                >
+                  Dependentes
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="password" 
+                  className="text-xs md:text-sm px-2 py-3 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
+                >
+                  Senha
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="preferences" 
+                  className="text-xs md:text-sm px-2 py-3 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
+                >
+                  Preferências
+                </TabsTrigger>
+              </TabsList>
+            </div>
             
-            <TabsContent value="info">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Informações Pessoais</CardTitle>
-                  <CardDescription>Seus dados de cadastro e contato</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="relative">
-                      <Avatar className="h-20 w-20">
-                        {uploading ? (
-                          <div className="flex h-full w-full items-center justify-center bg-muted">
-                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="space-y-6 max-h-[calc(100vh-200px)] md:max-h-none overflow-y-auto px-1">
+              <TabsContent value="info" className="mt-0 space-y-6"
+              >
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg md:text-xl">Informações Pessoais</CardTitle>
+                    <CardDescription className="text-sm">Seus dados de cadastro e contato</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
+                      <div className="relative">
+                        <Avatar className="h-16 w-16 md:h-20 md:w-20">
+                          {uploading ? (
+                            <div className="flex h-full w-full items-center justify-center bg-muted">
+                              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                            </div>
+                          ) : (
+                            <>
+                              <AvatarImage src={profileImage} />
+                              <AvatarFallback className="text-lg md:text-xl">{name?.charAt(0) || email?.charAt(0)}</AvatarFallback>
+                            </>
+                          )}
+                        </Avatar>
+                        {isEditing && (
+                          <div 
+                            className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-2 cursor-pointer shadow-md touch-target"
+                            onClick={handleImageClick}
+                          >
+                            <Camera className="h-4 w-4" />
+                            <input 
+                              type="file" 
+                              ref={fileInputRef}
+                              className="hidden" 
+                              accept="image/*" 
+                              onChange={handleImageChange}
+                            />
                           </div>
-                        ) : (
-                          <>
-                            <AvatarImage src={profileImage} />
-                            <AvatarFallback className="text-xl">{name?.charAt(0) || email?.charAt(0)}</AvatarFallback>
-                          </>
                         )}
-                      </Avatar>
-                      {isEditing && (
-                        <div 
-                          className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1 cursor-pointer shadow-md"
-                          onClick={handleImageClick}
-                        >
-                          <Camera className="h-4 w-4" />
-                          <input 
-                            type="file" 
-                            ref={fileInputRef}
-                            className="hidden" 
-                            accept="image/*" 
-                            onChange={handleImageChange}
-                          />
-                        </div>
-                      )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg md:text-xl font-medium">{user?.name || 'Usuário'}</h3>
+                        <p className="text-sm text-muted-foreground break-all">{user?.email}</p>
+                        {user?.phone && <p className="text-sm text-muted-foreground">{user.phone}</p>}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-medium">{user?.name || 'Usuário'}</h3>
-                      <p className="text-muted-foreground">{user?.email}</p>
-                      {user?.phone && <p className="text-muted-foreground">{user.phone}</p>}
-                    </div>
-                  </div>
-                  
-                  {isEditing ? (
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div className="grid gap-2">
-                        <label htmlFor="name" className="font-medium">Nome</label>
-                        <Input 
-                          id="name" 
-                          value={name} 
-                          onChange={(e) => setName(e.target.value)} 
-                          placeholder="Seu nome completo" 
-                        />
-                      </div>
-                      
-                      <div className="grid gap-2">
-                        <label htmlFor="email" className="font-medium">E-mail</label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    
+                    {isEditing ? (
+                      <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="grid gap-2">
+                          <label htmlFor="name" className="text-sm font-medium">Nome</label>
                           <Input 
-                            id="email" 
-                            type="email"
-                            value={email} 
-                            onChange={(e) => setEmail(e.target.value)} 
-                            placeholder="seu@email.com" 
-                            className="pl-10"
+                            id="name" 
+                            value={name} 
+                            onChange={(e) => setName(e.target.value)} 
+                            placeholder="Seu nome completo"
+                            className="h-11"
+                          />
+                        </div>
+                        
+                        <div className="grid gap-2">
+                          <label htmlFor="email" className="text-sm font-medium">E-mail</label>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                            <Input 
+                              id="email" 
+                              type="email"
+                              value={email} 
+                              onChange={(e) => setEmail(e.target.value)} 
+                              placeholder="seu@email.com" 
+                              className="pl-10 h-11"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid gap-2">
+                          <label htmlFor="phone" className="text-sm font-medium">WhatsApp</label>
+                          <div className="relative">
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                            <Input 
+                              id="phone" 
+                              value={phone} 
+                              onChange={(e) => setPhone(e.target.value)} 
+                              placeholder="5511999999999" 
+                              className="pl-10 h-11"
+                              type="tel"
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Formato: código do país + DDD + número (ex: 5511999999999)
+                          </p>
+                        </div>
+                        
+                        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
+                          <Button type="submit" disabled={updatingProfile} className="w-full md:w-auto h-11">
+                            {updatingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {t('common.save')}
+                          </Button>
+                          <Button type="button" variant="outline" onClick={() => setIsEditing(false)} className="w-full md:w-auto h-11">
+                            {t('common.cancel')}
+                          </Button>
+                        </div>
+                      </form>
+                    ) : (
+                      <Button onClick={() => setIsEditing(true)} className="w-full md:w-auto h-11">
+                        Editar Perfil
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="categories" className="mt-0">
+                <CategoriesTab />
+              </TabsContent>
+              
+              <TabsContent value="dependents" className="mt-0">
+                <DependentsTab />
+              </TabsContent>
+              
+              <TabsContent value="password" className="mt-0">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg md:text-xl">Alterar Senha</CardTitle>
+                    <CardDescription className="text-sm">Atualize sua senha de acesso</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handlePasswordChange} className="space-y-4">
+                      <div className="grid gap-2">
+                        <label htmlFor="newPassword" className="text-sm font-medium">Nova Senha</label>
+                        <div className="relative">
+                          <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                          <Input 
+                            id="newPassword" 
+                            type="password"
+                            value={newPassword} 
+                            onChange={(e) => setNewPassword(e.target.value)} 
+                            placeholder="••••••••"
+                            className="pl-10 h-11"
+                            required
                           />
                         </div>
                       </div>
                       
                       <div className="grid gap-2">
-                        <label htmlFor="phone" className="font-medium">WhatsApp</label>
+                        <label htmlFor="confirmPassword" className="text-sm font-medium">Confirmar Senha</label>
                         <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                          <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                           <Input 
-                            id="phone" 
-                            value={phone} 
-                            onChange={(e) => setPhone(e.target.value)} 
-                            placeholder="5511999999999" 
-                            className="pl-10"
-                            type="tel"
+                            id="confirmPassword" 
+                            type="password"
+                            value={confirmPassword} 
+                            onChange={(e) => setConfirmPassword(e.target.value)} 
+                            placeholder="••••••••"
+                            className="pl-10 h-11"
+                            required
                           />
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          Formato: código do país + DDD + número (ex: 5511999999999)
-                        </p>
                       </div>
                       
-                      <div className="flex space-x-2">
-                        <Button type="submit" disabled={updatingProfile}>
-                          {updatingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          {t('common.save')}
-                        </Button>
-                        <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
-                          {t('common.cancel')}
-                        </Button>
-                      </div>
+                      <Button type="submit" disabled={changingPassword} className="w-full h-11">
+                        {changingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Alterar Senha
+                      </Button>
                     </form>
-                  ) : (
-                    <Button onClick={() => setIsEditing(true)}>Editar Perfil</Button>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="categories">
-              <CategoriesTab />
-            </TabsContent>
-            
-            <TabsContent value="dependents">
-              <DependentsTab />
-            </TabsContent>
-            
-            <TabsContent value="password">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Alterar Senha</CardTitle>
-                  <CardDescription>Atualize sua senha de acesso</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handlePasswordChange} className="space-y-4">
-                    <div className="grid gap-2">
-                      <label htmlFor="newPassword" className="font-medium">Nova Senha</label>
-                      <div className="relative">
-                        <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <Input 
-                          id="newPassword" 
-                          type="password"
-                          value={newPassword} 
-                          onChange={(e) => setNewPassword(e.target.value)} 
-                          placeholder="••••••••"
-                          className="pl-10"
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <label htmlFor="confirmPassword" className="font-medium">Confirmar Senha</label>
-                      <div className="relative">
-                        <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <Input 
-                          id="confirmPassword" 
-                          type="password"
-                          value={confirmPassword} 
-                          onChange={(e) => setConfirmPassword(e.target.value)} 
-                          placeholder="••••••••"
-                          className="pl-10"
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <Button type="submit" disabled={changingPassword}>
-                      {changingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Alterar Senha
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="preferences">
-              <PreferencesTab />
-            </TabsContent>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="preferences" className="mt-0">
+                <PreferencesTab />
+              </TabsContent>
+            </div>
           </Tabs>
         </div>
       </div>

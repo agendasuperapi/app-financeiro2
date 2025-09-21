@@ -389,6 +389,12 @@ const NotesPage: React.FC = () => {
                             <Calendar className="h-4 w-4" />
                             {formatDate(note.data)}
                           </div>
+                          {(note as any).name && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <User className="h-4 w-4" />
+                              Adicionado por: {(note as any).name}
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <Button 

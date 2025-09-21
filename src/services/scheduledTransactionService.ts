@@ -123,6 +123,7 @@ export const addScheduledTransaction = async (
     recurrence?: string;
     installments?: number;
     user_id?: string;
+    creatorName?: string;
   }
 ): Promise<ScheduledTransaction | null> => {
   try {
@@ -226,6 +227,7 @@ export const addScheduledTransaction = async (
           parcela: `${i + 1}`,
           situacao: transaction.situacao || 'ativo',
           phone: transaction.phone,
+          name: transaction.creatorName,
           aba: transaction.aba,
           recurrence: convertRecurrenceToPortuguese('once') // Convert to Portuguese
         };
@@ -311,6 +313,7 @@ export const addScheduledTransaction = async (
       if (transaction.parcela) insertData.parcela = transaction.parcela;
       if (transaction.situacao) insertData.situacao = transaction.situacao;
       if (transaction.phone) insertData.phone = transaction.phone;
+      if (transaction.creatorName) insertData.name = transaction.creatorName;
       if (transaction.aba) insertData.aba = transaction.aba;
       // Always convert recurrence to Portuguese, with default value
       insertData.recurrence = convertRecurrenceToPortuguese(transaction.recurrence);
@@ -371,6 +374,7 @@ export const updateScheduledTransaction = async (
     aba?: string;
     recurrence?: string;
     user_id?: string;
+    creatorName?: string;
   }
 ): Promise<ScheduledTransaction | null> => {
   try {
@@ -414,6 +418,7 @@ export const updateScheduledTransaction = async (
     if (transaction.parcela) updateData.parcela = transaction.parcela;
     if (transaction.situacao) updateData.situacao = transaction.situacao;
     if (transaction.phone) updateData.phone = transaction.phone;
+    if (transaction.creatorName) updateData.name = transaction.creatorName;
     if (transaction.aba) updateData.aba = transaction.aba;
     // Always convert recurrence to Portuguese
     updateData.recurrence = convertRecurrenceToPortuguese(transaction.recurrence);

@@ -9,11 +9,10 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { useTransactionForm } from '@/hooks/useTransactionForm';
 import TransactionTypeSelector from './TransactionTypeSelector';
 import AmountInput from './AmountInput';
-import ContaInput from './ContaInput';
 import CategoryDateFields from './CategoryDateFields';
 import DescriptionField from './DescriptionField';
 import GoalSelector from './GoalSelector';
-import AddedByField from './AddedByField';
+import ContaAddedByGrid from './ContaAddedByGrid';
 import { useToast } from '@/hooks/use-toast';
 import { useClientView } from '@/contexts/ClientViewContext';
 
@@ -102,10 +101,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               <TransactionTypeSelector form={form} onTypeChange={handleTypeChange} />
               <DescriptionField form={form} />
               <AmountInput form={form} />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <ContaInput form={form} />
-                <AddedByField form={form} />
-              </div>
+              <ContaAddedByGrid form={form} />
               <CategoryDateFields form={form} transactionType={selectedType} />
               
               {selectedType === 'income' && (

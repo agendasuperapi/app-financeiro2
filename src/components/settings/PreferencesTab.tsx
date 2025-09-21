@@ -10,7 +10,7 @@ const PreferencesTab: React.FC = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('settings.preferences')}</CardTitle>
+        <CardTitle className="text-lg md:text-xl">{t('settings.preferences')}</CardTitle>
         <CardDescription>{t('settings.managePreferences')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

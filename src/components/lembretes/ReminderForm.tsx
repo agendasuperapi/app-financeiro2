@@ -235,32 +235,34 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
                 )}
               />
 
-              <AddedByFieldForm form={form} />
-              
-              <FormField
-                control={form.control}
-                name="recurrence"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('schedule.recurrence')}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('schedule.recurrence')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="once">{t('schedule.once')}</SelectItem>
-                        <SelectItem value="daily">{t('schedule.daily')}</SelectItem>
-                        <SelectItem value="weekly">{t('schedule.weekly')}</SelectItem>
-                        <SelectItem value="monthly">{t('schedule.monthly')}</SelectItem>
-                        <SelectItem value="yearly">{t('schedule.yearly')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AddedByFieldForm form={form} />
+                
+                <FormField
+                  control={form.control}
+                  name="recurrence"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('schedule.recurrence')}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('schedule.recurrence')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="once">{t('schedule.once')}</SelectItem>
+                          <SelectItem value="daily">{t('schedule.daily')}</SelectItem>
+                          <SelectItem value="weekly">{t('schedule.weekly')}</SelectItem>
+                          <SelectItem value="monthly">{t('schedule.monthly')}</SelectItem>
+                          <SelectItem value="yearly">{t('schedule.yearly')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <DialogFooter className="flex flex-col sm:flex-row gap-3 justify-between items-center">
                 {mode === 'edit' && (

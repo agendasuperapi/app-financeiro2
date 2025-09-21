@@ -291,6 +291,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       href: '/reports'
     },
     {
+      icon: FileText,
+      label: 'Anotações',
+      href: '/notes'
+    },
+    {
       icon: Crown,
       label: t('nav.plans'),
       href: '/plans'

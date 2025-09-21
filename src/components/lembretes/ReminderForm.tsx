@@ -220,8 +220,6 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
                   </FormItem>
                 )}
               />
-
-              <AddedByFieldForm form={form} />
               
               <FormField
                 control={form.control}
@@ -236,6 +234,8 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
                   </FormItem>
                 )}
               />
+
+              <AddedByFieldForm form={form} />
               
               <FormField
                 control={form.control}

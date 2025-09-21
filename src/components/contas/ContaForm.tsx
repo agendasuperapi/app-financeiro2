@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { getCategoriesByType } from '@/services/categoryService';
 import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
+import ContaAddedByGrid from '@/components/common/ContaAddedByGrid';
 
 interface ContaFormProps {
   initialData?: ScheduledTransaction | null;
@@ -293,6 +294,8 @@ const ContaForm: React.FC<ContaFormProps> = ({
               </FormItem>
             )}
           />
+
+          <ContaAddedByGrid form={form} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField

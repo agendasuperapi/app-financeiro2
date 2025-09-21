@@ -392,7 +392,7 @@ const ProfilePage = () => {
               </TabsList>
             </div>
             
-            <div className="space-y-6 max-h-[calc(100vh-200px)] md:max-h-none overflow-y-auto px-1">
+            <div className="space-y-6 max-h-[calc(100vh-320px)] md:max-h-none overflow-y-auto px-1">
               <TabsContent value="info" className="mt-0 space-y-6"
               >
                 <Card>

@@ -309,11 +309,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       label: t('nav.profile'),
       href: '/profile'
     },
-    {
-      icon: Settings,
-      label: t('nav.settings'),
-      href: '/settings'
-    },
   ];
 
   if (!user) return null;

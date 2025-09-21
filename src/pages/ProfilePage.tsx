@@ -15,6 +15,7 @@ import { Phone, Camera, Mail, Key, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DependentsTab from '@/components/profile/DependentsTab';
 import CategoriesTab from '@/components/profile/CategoriesTab';
+import PreferencesTab from '@/components/settings/PreferencesTab';
 
 const ProfilePage = () => {
   const { t } = usePreferences();
@@ -361,6 +362,7 @@ const ProfilePage = () => {
               <TabsTrigger value="categories">Categorias</TabsTrigger>
               <TabsTrigger value="dependents">Dependentes</TabsTrigger>
               <TabsTrigger value="password">Senha</TabsTrigger>
+              <TabsTrigger value="preferences">Preferências</TabsTrigger>
             </TabsList>
             
             <TabsContent value="info">
@@ -524,6 +526,10 @@ const ProfilePage = () => {
                   </form>
                 </CardContent>
               </Card>
+            </TabsContent>
+            
+            <TabsContent value="preferences">
+              <PreferencesTab />
             </TabsContent>
           </Tabs>
         </div>

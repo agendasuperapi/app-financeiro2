@@ -42,17 +42,17 @@ const TransactionsPage = () => {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      if (isClientView && refetchClientData) {
+      if (refetchClientData) {
         console.log('🔄 [REFRESH] Manual refresh requested - reloading client data...');
         await refetchClientData();
-        toast({
-          title: 'Dados atualizados',
-          description: 'A página foi atualizada com sucesso.',
-        });
       } else {
-        // Refresh da página inteira se não for client view
-        window.location.reload();
+        // Força atualização dos dados via evento personalizado
+        window.dispatchEvent(new CustomEvent('refresh-transactions'));
       }
+      toast({
+        title: 'Dados atualizados',
+        description: 'A página foi atualizada com sucesso.',
+      });
     } catch (error) {
       console.error('Error refreshing data:', error);
       toast({

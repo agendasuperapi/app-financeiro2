@@ -111,19 +111,34 @@ const CalendarPage: React.FC = () => {
                   className="rounded-md border p-3 pointer-events-auto"
                   classNames={{
                     day: cn(
-                      "h-12 w-12 p-0 font-normal aria-selected:opacity-100 relative"
+                      "h-12 w-12 p-0 font-normal aria-selected:opacity-100 relative cursor-pointer hover:bg-accent hover:text-accent-foreground"
                     ),
                     day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
                     day_today: "bg-accent text-accent-foreground",
                   }}
+                  modifiers={{
+                    hasTransactions: getDatesWithTransactions()
+                  }}
+                  modifiersClassNames={{
+                    hasTransactions: "font-semibold"
+                  }}
                   components={{
-                    Day: ({ date, displayMonth }) => {
+                    Day: ({ date, displayMonth, ...props }) => {
                       const dayTransactions = getTransactionsForDate(date);
                       const incomeCount = dayTransactions.filter(t => t.type === 'income').length;
                       const expenseCount = dayTransactions.filter(t => t.type === 'expense').length;
                       
                       return (
-                        <div className="relative w-full h-full flex flex-col items-center justify-center">
+                        <button
+                          {...props}
+                          className={cn(
+                            "relative w-full h-full flex flex-col items-center justify-center rounded-md transition-colors",
+                            "hover:bg-accent hover:text-accent-foreground",
+                            selectedDate && isSameDay(date, selectedDate) && "bg-primary text-primary-foreground",
+                            isSameDay(date, new Date()) && !selectedDate && "bg-accent text-accent-foreground"
+                          )}
+                          onClick={() => setSelectedDate(date)}
+                        >
                           <span>{format(date, 'd')}</span>
                           {dayTransactions.length > 0 && (
                             <div className="absolute bottom-1 flex gap-1">
@@ -135,7 +150,7 @@ const CalendarPage: React.FC = () => {
                               )}
                             </div>
                           )}
-                        </div>
+                        </button>
                       );
                     }
                   }}

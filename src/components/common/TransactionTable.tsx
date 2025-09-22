@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -9,6 +9,16 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Transaction } from '@/types';
 import { formatCurrency, formatDateTime } from '@/utils/transactionUtils';
 import { cn } from '@/lib/utils';
@@ -31,8 +41,23 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   hideValues = false
 }) => {
   const { t, currency } = usePreferences();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
 
   const renderHiddenValue = () => '******';
+
+  const handleDeleteClick = (transactionId: string) => {
+    setTransactionToDelete(transactionId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (transactionToDelete && onDelete) {
+      onDelete(transactionToDelete);
+    }
+    setDeleteDialogOpen(false);
+    setTransactionToDelete(null);
+  };
 
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm">
@@ -167,7 +192,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                           variant="ghost"
                           size="sm"
                           className="h-7 w-7 p-0 text-metacash-error hover:text-metacash-error"
-                          onClick={() => onDelete(transaction.id)}
+                          onClick={() => handleDeleteClick(transaction.id)}
                         >
                           <Trash2 className="h-3 w-3" />
                           <span className="sr-only">{t('common.delete')}</span>
@@ -181,6 +206,23 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('common.confirmDelete') || 'Confirmar Exclusão'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('common.confirmDeleteMessage') || 'Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel') || 'Cancelar'}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete}>
+              {t('common.delete') || 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

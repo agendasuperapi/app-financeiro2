@@ -119,7 +119,6 @@ export const addScheduledTransaction = async (
     parcela?: string;
     situacao?: string;
     phone?: string;
-    aba?: string;
     conta?: string;
     recurrence?: string;
     installments?: number;
@@ -372,7 +371,6 @@ export const updateScheduledTransaction = async (
     parcela?: string;
     situacao?: string;
     phone?: string;
-    aba?: string;
     conta?: string;
     recurrence?: string;
     user_id?: string;
@@ -568,7 +566,6 @@ export const markAsPaid = async (
       reference_code: newReferenceCode,
       phone: (originalTransaction as any).phone,
       parcela: (originalTransaction as any).parcela,
-      aba: (originalTransaction as any).aba,
       user_id: originalTransaction.user_id
     };
 

@@ -6,7 +6,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, startOfDay, subDays, startOfMonth, startOfYear, addMonths, subMonths } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
 import { pt } from 'date-fns/locale';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { cn } from '@/lib/utils';
@@ -34,10 +33,32 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
   const [customStartDate, setCustomStartDate] = useState<Date>();
   const [customEndDate, setCustomEndDate] = useState<Date>();
 
+  // Helper function to get current date in user's timezone
+  const getTodayInTimezone = () => {
+    const now = new Date();
+    // Create a date in the user's timezone by adjusting for timezone offset
+    const timezoneOffsets: Record<string, number> = {
+      'America/Sao_Paulo': -3,
+      'America/New_York': -5,
+      'Europe/London': 0,
+      'Europe/Paris': 1,
+      'Asia/Tokyo': 9,
+      'Australia/Sydney': 11,
+      'America/Los_Angeles': -8,
+      'America/Chicago': -6,
+      'Europe/Berlin': 1,
+      'Asia/Shanghai': 8,
+    };
+    
+    const offsetHours = timezoneOffsets[timezone] || -3;
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const timezoneDate = new Date(utc + (offsetHours * 3600000));
+    
+    return startOfDay(timezoneDate);
+  };
+
   const handleRangeTypeChange = (type: DateRangeType) => {
-    // Get current date in user's timezone
-    const nowInTimezone = toZonedTime(new Date(), timezone);
-    const today = startOfDay(nowInTimezone);
+    const today = getTodayInTimezone();
     let newRange: DateRange;
 
     switch (type) {

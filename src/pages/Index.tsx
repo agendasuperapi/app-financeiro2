@@ -40,7 +40,8 @@ const Index = () => {
     hideValues,
     toggleHideValues,
     getTransactions,
-    scheduledTransactions
+    scheduledTransactions,
+    setTimeRange
   } = useAppContext();
   const { t } = usePreferences();
   
@@ -75,27 +76,34 @@ const Index = () => {
         };
       }
 
-      // For "today" filter, use filtered transactions from current day only
-      if (currentRange.type === 'today') {
-        const todayTransactions = filteredTransactions || [];
-        const todayIncome = calculateTotalIncome(todayTransactions);
-        const todayExpenses = calculateTotalExpenses(todayTransactions);
-        
+      // For 'month', use the existing monthly calculation
+      if (currentRange.type === 'month') {
+        const monthlyData = calculateMonthlyFinancialData(
+          transactions,
+          new Date(
+            currentRange.startDate.getFullYear(),
+            currentRange.startDate.getMonth(),
+            1
+          )
+        );
         return {
-          displayTransactions: todayTransactions,
-          totalIncome: todayIncome,
-          totalExpenses: todayExpenses,
-          balance: todayIncome - todayExpenses
+          displayTransactions: monthlyData.monthTransactions,
+          totalIncome: monthlyData.monthlyIncome,
+          totalExpenses: monthlyData.monthlyExpenses,
+          balance: monthlyData.accumulatedBalance
         };
       }
+
+      // For all other filters (today, 7days, year, custom), use AppContext filteredTransactions
+      const rangeTransactions = filteredTransactions || [];
+      const income = calculateTotalIncome(rangeTransactions);
+      const expenses = calculateTotalExpenses(rangeTransactions);
       
-      // For other filters (month, year, etc.), use the existing monthly calculation
-      const monthlyData = calculateMonthlyFinancialData(transactions, new Date(currentRange.startDate.getFullYear(), currentRange.startDate.getMonth(), 1));
       return {
-        displayTransactions: monthlyData.monthTransactions,
-        totalIncome: monthlyData.monthlyIncome,
-        totalExpenses: monthlyData.monthlyExpenses,
-        balance: monthlyData.accumulatedBalance
+        displayTransactions: rangeTransactions,
+        totalIncome: income,
+        totalExpenses: expenses,
+        balance: income - expenses
       };
     } catch (error) {
       console.error('Dashboard: Error calculating financial data:', error);
@@ -140,13 +148,26 @@ const Index = () => {
 
   // Update date range whenever currentRange changes
   useEffect(() => {
-    setCustomDateRange(currentRange.startDate, currentRange.endDate);
+    // Sync AppContext filters with selector
+    if (currentRange.type === 'today') {
+      setTimeRange('today');
+    } else if (currentRange.type === '7days') {
+      setTimeRange('7days');
+    } else if (currentRange.type === 'custom') {
+      setTimeRange('custom');
+      setCustomDateRange(currentRange.startDate, currentRange.endDate);
+    } else if (currentRange.type === 'month' || currentRange.type === 'year') {
+      // Map month/year to custom in AppContext for consistent filtering elsewhere
+      setTimeRange('custom');
+      setCustomDateRange(currentRange.startDate, currentRange.endDate);
+    }
+
     console.log("Dashboard: Date range updated:", { 
       start: currentRange.startDate.toDateString(), 
       end: currentRange.endDate.toDateString(),
       type: currentRange.type
     });
-  }, [currentRange, setCustomDateRange]);
+  }, [currentRange, setCustomDateRange, setTimeRange]);
   
   const handleRangeChange = (range: DateRange) => {
     console.log("Dashboard: Range changed to:", range);

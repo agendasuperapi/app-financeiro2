@@ -4,10 +4,15 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { getSaldoByAccount } from '@/services/saldoService';
+
+interface SaldoData {
+  conta: string;
+  total: number;
+}
 
 interface ContaInputFormProps {
   form: UseFormReturn<any>; // Aceita qualquer tipo de form
@@ -15,21 +20,32 @@ interface ContaInputFormProps {
 
 const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
   const { t } = usePreferences();
-  const [contas, setContas] = useState<string[]>([]);
+  const [contasData, setContasData] = useState<SaldoData[]>([]);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const loadContas = async () => {
+    setLoading(true);
+    try {
+      const saldos = await getSaldoByAccount();
+      setContasData(saldos);
+    } catch (error) {
+      console.error('Erro ao carregar contas:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadContas = async () => {
-      try {
-        const saldos = await getSaldoByAccount();
-        setContas(saldos.map(s => s.conta));
-      } catch (error) {
-        console.error('Erro ao carregar contas:', error);
-      }
-    };
-    
     loadContas();
   }, []);
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
 
   return (
     <FormField
@@ -37,7 +53,19 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
       name="conta"
       render={({ field }) => (
         <FormItem className="flex flex-col">
-          <FormLabel>{t('transactions.account')}</FormLabel>
+          <FormLabel className="flex items-center gap-2">
+            {t('transactions.account')}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={loadContas}
+              disabled={loading}
+              className="h-6 w-6 p-0"
+            >
+              <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
+            </Button>
+          </FormLabel>
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <FormControl>
@@ -46,6 +74,7 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
                   role="combobox"
                   aria-expanded={open}
                   className="justify-between"
+                  disabled={loading}
                 >
                   {field.value || t('transactions.accountPlaceholder')}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -62,12 +91,14 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
                   }}
                 />
                 <CommandList>
-                  <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
+                  <CommandEmpty>
+                    {loading ? "Carregando contas..." : "Nenhuma conta encontrada."}
+                  </CommandEmpty>
                   <CommandGroup>
-                    {contas.map((conta) => (
+                    {contasData.map((contaData) => (
                       <CommandItem
-                        key={conta}
-                        value={conta}
+                        key={contaData.conta}
+                        value={contaData.conta}
                         onSelect={(currentValue) => {
                           field.onChange(currentValue);
                           setOpen(false);
@@ -76,10 +107,15 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            field.value === conta ? "opacity-100" : "opacity-0"
+                            field.value === contaData.conta ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        {conta}
+                        <div className="flex flex-col">
+                          <span className="font-medium">{contaData.conta}</span>
+                          <span className="text-sm text-muted-foreground">
+                            Saldo: {formatCurrency(contaData.total)}
+                          </span>
+                        </div>
                       </CommandItem>
                     ))}
                   </CommandGroup>

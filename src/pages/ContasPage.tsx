@@ -6,6 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
 import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
@@ -24,6 +34,8 @@ const ContasPage = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [contaToDelete, setContaToDelete] = useState<ScheduledTransaction | null>(null);
   const { formatDate } = useDateFormat();
   const { currency } = usePreferences();
   const { isClientView, selectedUser, targetUserId } = useClientAwareData();
@@ -113,19 +125,28 @@ const ContasPage = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      const success = await deleteScheduledTransaction(id);
-      if (success) {
-        toast.success('Conta excluída com sucesso');
-        await loadContas();
-      } else {
+  const handleDeleteClick = (conta: ScheduledTransaction) => {
+    setContaToDelete(conta);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (contaToDelete) {
+      try {
+        const success = await deleteScheduledTransaction(contaToDelete.id);
+        if (success) {
+          toast.success('Conta excluída com sucesso');
+          await loadContas();
+        } else {
+          toast.error('Erro ao excluir conta');
+        }
+      } catch (error) {
+        console.error('Error deleting account:', error);
         toast.error('Erro ao excluir conta');
       }
-    } catch (error) {
-      console.error('Error deleting account:', error);
-      toast.error('Erro ao excluir conta');
     }
+    setDeleteDialogOpen(false);
+    setContaToDelete(null);
   };
 
   // Formatar valor monetário
@@ -317,7 +338,7 @@ const ContasPage = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleDelete(conta.id)}
+                                onClick={() => handleDeleteClick(conta)}
                                 className="text-red-600 border-red-600 hover:bg-red-50 h-6 md:h-7 w-6 md:w-7 p-0"
                               >
                                 <Trash2 className="h-2.5 w-2.5 md:h-3 md:w-3" />
@@ -362,6 +383,33 @@ const ContasPage = () => {
             />
           </DialogContent>
         </Dialog>
+
+        {/* Dialog de Confirmação de Exclusão */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2">
+                {contaToDelete && (
+                  <div className="bg-muted p-3 rounded-md">
+                    <p className="font-medium">
+                      {contaToDelete.description || 'Conta sem descrição'}
+                    </p>
+                    <p className="text-sm font-semibold text-metacash-error">
+                      {formatCurrency(Math.abs(contaToDelete.amount))}
+                    </p>
+                  </div>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmDelete}>
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </SubscriptionGuard>
     </MainLayout>
   );

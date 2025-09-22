@@ -84,7 +84,7 @@ export const getScheduledTransactions = async (userId?: string): Promise<Schedul
     console.log("DEBUG Scheduled: Primeira transação:", filteredData[0]);
 
     return filteredData.map((item: any) => {
-      const creatorName = item.creatorName || item.name || undefined;
+      const creatorName = item.name ? item.name : undefined;
       
       console.log(`DEBUG Scheduled: Transação ${item.id} - user_id: ${item.user_id}, name: ${item.name}, finalCreator: ${creatorName}`);
       
@@ -106,8 +106,6 @@ export const getScheduledTransactions = async (userId?: string): Promise<Schedul
         lastExecutionDate: undefined,
         nextExecutionDate: undefined,
         creatorName: creatorName,
-        phone: item.phone || undefined,
-        conta: item.conta || undefined,
       };
     });
   } catch (error) {

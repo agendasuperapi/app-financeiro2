@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, startOfDay, subDays, startOfMonth, startOfYear, addMonths, subMonths } from 'date-fns';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { pt } from 'date-fns/locale';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { cn } from '@/lib/utils';
@@ -72,26 +73,46 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
     let newRange: DateRange;
 
     switch (type) {
-      case 'today':
+      case 'today': {
+        const tz = timezone || 'America/Sao_Paulo';
+        const nowZoned = toZonedTime(new Date(), tz);
+        const startLocal = startOfDay(nowZoned);
+        const endLocal = new Date(startLocal);
+        endLocal.setHours(23, 59, 59, 999);
         newRange = {
-          startDate: today,
-          endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59),
+          startDate: fromZonedTime(startLocal, tz),
+          endDate: fromZonedTime(endLocal, tz),
           type: 'today'
         };
         console.log('DateRangeSelector - "today" selected:', {
           startDate: newRange.startDate.toISOString(),
           endDate: newRange.endDate.toISOString(),
           startDateFormatted: format(newRange.startDate, 'dd/MM/yyyy'),
-          endDateFormatted: format(newRange.endDate, 'dd/MM/yyyy')
+          endDateFormatted: format(newRange.endDate, 'dd/MM/yyyy'),
+          tz
         });
         break;
-      case '7days':
+      }
+      case '7days': {
+        const tz = timezone || 'America/Sao_Paulo';
+        const baseZoned = toZonedTime(new Date(), tz);
+        const startLocal = startOfDay(subDays(baseZoned, 6));
+        const endLocal = new Date(startOfDay(baseZoned));
+        endLocal.setHours(23, 59, 59, 999);
         newRange = {
-          startDate: subDays(today, 6),
-          endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59),
+          startDate: fromZonedTime(startLocal, tz),
+          endDate: fromZonedTime(endLocal, tz),
           type: '7days'
         };
+        console.log('DateRangeSelector - "7days" selected:', {
+          startDate: newRange.startDate.toISOString(),
+          endDate: newRange.endDate.toISOString(),
+          startDateFormatted: format(newRange.startDate, 'dd/MM/yyyy'),
+          endDateFormatted: format(newRange.endDate, 'dd/MM/yyyy'),
+          tz
+        });
         break;
+      }
       case 'month':
         const monthStart = startOfMonth(today);
         newRange = {

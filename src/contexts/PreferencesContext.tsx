@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import translations from '@/translations';
+import { updateUserTimezone, getUserTimezone } from '@/services/userService';
 
 // Define available language types
 export type Language = 'pt' | 'en';
@@ -55,9 +56,23 @@ const PreferencesProvider: React.FC<PreferencesProviderProps> = ({ children }) =
     (localStorage.getItem('currency') as Currency) || 'BRL'
   );
   
-  const [timezone, setTimezone] = useState<Timezone>(
-    (localStorage.getItem('timezone') as Timezone) || 'America/Sao_Paulo'
-  );
+  const [timezone, setTimezone] = useState<Timezone>('America/Sao_Paulo');
+
+  // Load timezone from database on mount
+  useEffect(() => {
+    const loadTimezone = async () => {
+      try {
+        const userTimezone = await getUserTimezone();
+        if (userTimezone) {
+          setTimezone(userTimezone as Timezone);
+        }
+      } catch (error) {
+        console.error('Error loading user timezone:', error);
+      }
+    };
+
+    loadTimezone();
+  }, []);
 
   // Save preferences to localStorage when they change
   useEffect(() => {
@@ -68,9 +83,16 @@ const PreferencesProvider: React.FC<PreferencesProviderProps> = ({ children }) =
     localStorage.setItem('currency', currency);
   }, [currency]);
 
-  useEffect(() => {
-    localStorage.setItem('timezone', timezone);
-  }, [timezone]);
+  // Save timezone to database when it changes
+  const handleTimezoneChange = async (newTimezone: Timezone) => {
+    setTimezone(newTimezone);
+    try {
+      await updateUserTimezone(newTimezone);
+      console.log('Timezone saved to database:', newTimezone);
+    } catch (error) {
+      console.error('Error saving timezone to database:', error);
+    }
+  };
 
   // Create translation function that supports multiple languages and fallback
   const t = (key: string, fallback?: string) => {
@@ -96,7 +118,7 @@ const PreferencesProvider: React.FC<PreferencesProviderProps> = ({ children }) =
       currency,
       setCurrency,
       timezone,
-      setTimezone 
+      setTimezone: handleTimezoneChange 
     }}>
       {children}
     </PreferencesContext.Provider>

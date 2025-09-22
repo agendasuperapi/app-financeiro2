@@ -82,6 +82,58 @@ export const updateUserProfile = async (
   }
 };
 
+export const updateUserTimezone = async (timezone: string): Promise<boolean> => {
+  try {
+    console.log('userService: Updating user timezone:', timezone);
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('userService: No authenticated user found');
+      return false;
+    }
+    
+    // Direct update with any cast to avoid TypeScript errors for the fuso column
+    const { error } = await supabase
+      .from("poupeja_users")
+      .update({ fuso: timezone } as any)
+      .eq("id", user.id);
+        
+    if (error) {
+      console.error('userService: Database timezone update error:', error);
+      return false;
+    }
+    
+    console.log('userService: Timezone updated successfully');
+    return true;
+  } catch (error) {
+    console.error("userService: Error updating user timezone:", error);
+    return false;
+  }
+};
+
+export const getUserTimezone = async (): Promise<string | null> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    
+    const { data, error } = await supabase
+      .from("poupeja_users")
+      .select("fuso")
+      .eq("id", user.id)
+      .single();
+    
+    if (error) {
+      console.error("Error fetching user timezone:", error);
+      return null;
+    }
+    
+    return (data as any).fuso;
+  } catch (error) {
+    console.error("Error getting user timezone:", error);
+    return null;
+  }
+};
+
 export const getUserAchievements = async (): Promise<any[]> => {
   try {
     // Since achievements tables don't exist yet, return empty array

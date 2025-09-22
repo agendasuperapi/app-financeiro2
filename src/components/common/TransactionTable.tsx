@@ -212,9 +212,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle>{t('common.confirmDelete') || 'Confirmar Exclusão'}</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
-              <p>
-                {t('common.confirmDeleteMessage') || "Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita."}
-              </p>
               {transactionToDelete && (
                 <div className="bg-muted p-3 rounded-md">
                   <p className="font-medium">

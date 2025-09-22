@@ -5,29 +5,40 @@ import { Calendar } from '@/components/ui/calendar';
 import MonthNavigation from '@/components/common/MonthNavigation';
 import { Badge } from '@/components/ui/badge';
 import { getTransactions } from '@/services/transactionService';
-import { Transaction } from '@/types';
+import { getScheduledTransactions } from '@/services/scheduledTransactionService';
+import { Transaction, ScheduledTransaction } from '@/types';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { DayPicker } from 'react-day-picker';
 
 const CalendarPage: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [reminders, setReminders] = useState<ScheduledTransaction[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadTransactions();
+    loadData();
   }, []);
 
-  const loadTransactions = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const data = await getTransactions();
-      setTransactions(data);
+      const [transactionsData, scheduledData] = await Promise.all([
+        getTransactions(),
+        getScheduledTransactions()
+      ]);
+      
+      setTransactions(transactionsData);
+      
+      // Filtrar apenas lembretes do scheduled transactions
+      const remindersList = scheduledData.filter(item => 
+        item.type === 'lembrete' || item.type === 'reminder'
+      );
+      setReminders(remindersList);
     } catch (error) {
-      console.error('Error loading transactions:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -40,45 +51,37 @@ const CalendarPage: React.FC = () => {
     );
   };
 
+  // Agrupa lembretes por data
+  const getRemindersForDate = (date: Date) => {
+    return reminders.filter(reminder => 
+      isSameDay(parseISO(reminder.scheduledDate), date)
+    );
+  };
+
   // Obtém todas as datas que têm transações no mês atual
   const getDatesWithTransactions = () => {
     const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
     
-    return transactions
+    const transactionDates = transactions
       .filter(transaction => {
         const transactionDate = parseISO(transaction.date);
         return transactionDate >= startOfMonth && transactionDate <= endOfMonth;
       })
       .map(transaction => parseISO(transaction.date));
-  };
 
-  // Renderiza o conteúdo de cada dia no calendário
-  const renderDay = (date: Date) => {
-    const dayTransactions = getTransactionsForDate(date);
-    const incomeCount = dayTransactions.filter(t => t.type === 'income').length;
-    const expenseCount = dayTransactions.filter(t => t.type === 'expense').length;
-    
-    return (
-      <div className="relative w-full h-full">
-        <div className="text-center">
-          {format(date, 'd')}
-        </div>
-        {dayTransactions.length > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 flex gap-1 justify-center">
-            {incomeCount > 0 && (
-              <div className="w-2 h-2 bg-green-500 rounded-full" title={`${incomeCount} receita(s)`} />
-            )}
-            {expenseCount > 0 && (
-              <div className="w-2 h-2 bg-red-500 rounded-full" title={`${expenseCount} despesa(s)`} />
-            )}
-          </div>
-        )}
-      </div>
-    );
+    const reminderDates = reminders
+      .filter(reminder => {
+        const reminderDate = parseISO(reminder.scheduledDate);
+        return reminderDate >= startOfMonth && reminderDate <= endOfMonth;
+      })
+      .map(reminder => parseISO(reminder.scheduledDate));
+
+    return [...transactionDates, ...reminderDates];
   };
 
   const selectedDateTransactions = selectedDate ? getTransactionsForDate(selectedDate) : [];
+  const selectedDateReminders = selectedDate ? getRemindersForDate(selectedDate) : [];
 
   return (
     <MainLayout>
@@ -125,8 +128,10 @@ const CalendarPage: React.FC = () => {
                   components={{
                     Day: ({ date, displayMonth, ...props }) => {
                       const dayTransactions = getTransactionsForDate(date);
+                      const dayReminders = getRemindersForDate(date);
                       const incomeCount = dayTransactions.filter(t => t.type === 'income').length;
                       const expenseCount = dayTransactions.filter(t => t.type === 'expense').length;
+                      const reminderCount = dayReminders.length;
                       
                       return (
                         <button
@@ -140,13 +145,16 @@ const CalendarPage: React.FC = () => {
                           onClick={() => setSelectedDate(date)}
                         >
                           <span>{format(date, 'd')}</span>
-                          {dayTransactions.length > 0 && (
+                          {(dayTransactions.length > 0 || dayReminders.length > 0) && (
                             <div className="absolute bottom-1 flex gap-1">
                               {incomeCount > 0 && (
                                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
                               )}
                               {expenseCount > 0 && (
                                 <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                              )}
+                              {reminderCount > 0 && (
+                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
                               )}
                             </div>
                           )}
@@ -167,6 +175,10 @@ const CalendarPage: React.FC = () => {
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                   <span>Despesas</span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span>Lembretes</span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -184,43 +196,69 @@ const CalendarPage: React.FC = () => {
             <CardContent>
               {selectedDate ? (
                 <div className="space-y-3">
-                  {selectedDateTransactions.length > 0 ? (
-                    selectedDateTransactions.map((transaction) => (
-                      <div
-                        key={transaction.id}
-                        className="flex items-center justify-between p-3 border rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: transaction.categoryColor }}
-                          />
-                          <div>
-                            <p className="font-medium">{transaction.category}</p>
-                            {transaction.description && (
-                              <p className="text-sm text-muted-foreground">
-                                {transaction.description}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <Badge
-                          variant={transaction.type === 'income' ? 'default' : 'destructive'}
+                  {(selectedDateTransactions.length > 0 || selectedDateReminders.length > 0) ? (
+                    <>
+                      {/* Transações */}
+                      {selectedDateTransactions.map((transaction) => (
+                        <div
+                          key={transaction.id}
+                          className="flex items-center justify-between p-3 border rounded-lg"
                         >
-                          {transaction.type === 'income' ? '+' : '-'}
-                          R$ {transaction.amount.toFixed(2)}
-                        </Badge>
-                      </div>
-                    ))
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: transaction.categoryColor }}
+                            />
+                            <div>
+                              <p className="font-medium">{transaction.category}</p>
+                              {transaction.description && (
+                                <p className="text-sm text-muted-foreground">
+                                  {transaction.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <Badge
+                            variant={transaction.type === 'income' ? 'default' : 'destructive'}
+                          >
+                            {transaction.type === 'income' ? '+' : '-'}
+                            R$ {transaction.amount.toFixed(2)}
+                          </Badge>
+                        </div>
+                      ))}
+                      
+                      {/* Lembretes */}
+                      {selectedDateReminders.map((reminder) => (
+                        <div
+                          key={reminder.id}
+                          className="flex items-center justify-between p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full bg-blue-500" />
+                            <div>
+                              <p className="font-medium">{reminder.category}</p>
+                              {reminder.description && (
+                                <p className="text-sm text-muted-foreground">
+                                  {reminder.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="border-blue-500 text-blue-600">
+                            Lembrete
+                          </Badge>
+                        </div>
+                      ))}
+                    </>
                   ) : (
                     <p className="text-muted-foreground text-center">
-                      Nenhuma transação nesta data
+                      Nenhuma transação ou lembrete nesta data
                     </p>
                   )}
                 </div>
               ) : (
                 <p className="text-muted-foreground text-center">
-                  Clique em uma data para ver as transações
+                  Clique em uma data para ver as transações e lembretes
                 </p>
               )}
             </CardContent>
@@ -235,7 +273,7 @@ const CalendarPage: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center p-4 border rounded-lg">
                 <p className="text-2xl font-bold text-green-600">
                   {transactions
@@ -263,10 +301,29 @@ const CalendarPage: React.FC = () => {
                 <p className="text-sm text-muted-foreground">Despesas</p>
               </div>
               <div className="text-center p-4 border rounded-lg">
+                <p className="text-2xl font-bold text-blue-600">
+                  {reminders
+                    .filter(r => {
+                      const date = parseISO(r.scheduledDate);
+                      return date.getMonth() === currentMonth.getMonth() &&
+                             date.getFullYear() === currentMonth.getFullYear();
+                    })
+                    .length}
+                </p>
+                <p className="text-sm text-muted-foreground">Lembretes</p>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
                 <p className="text-2xl font-bold">
                   {transactions
                     .filter(t => {
                       const date = parseISO(t.date);
+                      return date.getMonth() === currentMonth.getMonth() &&
+                             date.getFullYear() === currentMonth.getFullYear();
+                    })
+                    .length + 
+                  reminders
+                    .filter(r => {
+                      const date = parseISO(r.scheduledDate);
                       return date.getMonth() === currentMonth.getMonth() &&
                              date.getFullYear() === currentMonth.getFullYear();
                     })

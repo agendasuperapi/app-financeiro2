@@ -352,19 +352,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Update filtered transactions when transactions or time range changes
   useEffect(() => {
-    // console.log('[DEBUG] AppContext: Filtering transactions...', {
-    //   totalTransactions: state.transactions.length,
-    //   timeRange: state.timeRange,
-    //   customStartDate: state.customStartDate,
-    //   customEndDate: state.customEndDate
-    // });
+    console.log('🔄 [FILTER DEBUG] AppContext: Filtering transactions...', {
+      totalTransactions: state.transactions.length,
+      timeRange: state.timeRange,
+      customStartDate: state.customStartDate?.toLocaleDateString(),
+      customEndDate: state.customEndDate?.toLocaleDateString(),
+      timestamp: new Date().toISOString()
+    });
     
     const filtered = filterTransactionsByTimeRange(state.transactions);
     
-    // console.log('[DEBUG] AppContext: Filtered transactions:', {
-    //   filteredCount: filtered.length,
-    //   transactions: filtered.map(t => ({ id: t.id, amount: t.amount, date: t.date, type: t.type }))
-    // });
+    console.log('📊 [FILTER DEBUG] AppContext: Filtered result:', {
+      filteredCount: filtered.length,
+      recentTransactions: filtered.slice(0, 3).map(t => ({ 
+        id: t.id, 
+        amount: t.amount, 
+        date: t.date, 
+        type: t.type,
+        description: t.description 
+      })),
+      timestamp: new Date().toISOString()
+    });
     
     dispatch({ type: 'SET_FILTERED_TRANSACTIONS', payload: filtered });
   }, [state.transactions, state.timeRange, state.customStartDate, state.customEndDate]);
@@ -733,7 +741,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
       if (error) throw error;
       const transformedTransaction = transformTransaction(data);
-      console.log('AppContext: Transaction added successfully:', transformedTransaction);
+      console.log('✅ [ADD DEBUG] AppContext: Transaction added successfully:', transformedTransaction);
+      console.log('📅 [ADD DEBUG] Transaction date vs current filter:', {
+        transactionDate: transformedTransaction.date,
+        currentRange: `${state.customStartDate?.toLocaleDateString()} - ${state.customEndDate?.toLocaleDateString()}`,
+        timeRange: state.timeRange
+      });
       dispatch({ type: 'ADD_TRANSACTION', payload: transformedTransaction });
       
       // Se a transação estiver associada a uma meta, recalcular os valores das metas

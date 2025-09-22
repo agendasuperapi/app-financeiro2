@@ -32,10 +32,16 @@ const CalendarPage: React.FC = () => {
       
       setTransactions(transactionsData);
       
-      // Filtrar apenas lembretes do scheduled transactions
+      console.log('DEBUG Calendar: Scheduled data loaded:', scheduledData);
+      console.log('DEBUG Calendar: First scheduled item:', scheduledData[0]);
+      
+      // Filtrar lembretes - incluir todas as transações agendadas com status pending
+      // pois os lembretes estão salvos como transações normais mas com status pending
       const remindersList = scheduledData.filter(item => 
-        item.type === 'lembrete' || item.type === 'reminder'
+        item.status === 'pending' || item.type === 'lembrete' || item.type === 'reminder'
       );
+      
+      console.log('DEBUG Calendar: Filtered reminders:', remindersList);
       setReminders(remindersList);
     } catch (error) {
       console.error('Error loading data:', error);

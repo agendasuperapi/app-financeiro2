@@ -71,10 +71,10 @@ const ContaForm: React.FC<ContaFormProps> = ({
         scheduledDate: initialData.scheduledDate ? new Date(initialData.scheduledDate).toISOString().slice(0, 16) : now.toISOString().slice(0, 16),
         recurrence: hasInstallments ? 'installments' : initialData.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' || 'once',
         goalId: initialData.goalId || null,
-        // Novos campos obrigatórios - usando campos disponíveis da interface
-        conta: initialData.conta || '',
-        name: initialData.creatorName || '',
-        phone: initialData.phone || ''
+        // Novos campos obrigatórios - usando campos disponíveis da interface (com retrocompatibilidade)
+        conta: initialData.conta || (initialData as any).aba || '',
+        name: initialData.creatorName || (initialData as any).name || '',
+        phone: initialData.phone || (initialData as any).phone || ''
       };
     }
     return {

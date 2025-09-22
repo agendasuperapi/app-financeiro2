@@ -100,6 +100,13 @@ export const useTransactionForm = ({
             conta: processedValues.conta,
             name: processedValues.name || undefined,
           });
+          // Disparar evento para atualizar dados do cliente imediatamente
+          try {
+            window.dispatchEvent(new CustomEvent('client-transactions-updated', { detail: { userId: targetUserId } }));
+            console.log("📣 [EVENT] client-transactions-updated dispatched for user:", targetUserId);
+          } catch (e) {
+            console.warn("[EVENT] Failed to dispatch client-transactions-updated event", e);
+          }
         } else {
           // Usar método normal do contexto para o usuário logado
           await addTransaction({

@@ -167,6 +167,21 @@ export const useClientAwareData = () => {
     };
   }, [isClientView, targetUserId, loadClientData]);
 
+  // Listener local para atualizar imediatamente após criação via formulário
+  useEffect(() => {
+    if (!isClientView || !targetUserId) return;
+
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (!detail || detail.userId !== targetUserId) return;
+      console.log('📣 [EVENT] client-transactions-updated received. Reloading client data...');
+      loadClientData();
+    };
+
+    window.addEventListener('client-transactions-updated' as any, handler as any);
+    return () => window.removeEventListener('client-transactions-updated' as any, handler as any);
+  }, [isClientView, targetUserId, loadClientData]);
+
   // Retornar dados apropriados baseado no contexto
   return {
     // Dados

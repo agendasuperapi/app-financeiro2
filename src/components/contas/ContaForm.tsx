@@ -72,7 +72,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
         recurrence: hasInstallments ? 'installments' : initialData.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' || 'once',
         goalId: initialData.goalId || null,
         // Novos campos obrigatórios - usando campos disponíveis da interface
-        conta: initialData.conta || '',
+        conta: initialData.aba || '',
         name: initialData.creatorName || '',
         phone: initialData.phone || ''
       };
@@ -319,7 +319,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
             <FormField control={form.control} name="category" render={({
             field
           }) => <FormItem>
-                  <FormLabel>Qual Categoria</FormLabel>
+                  <FormLabel>{t('common.category')}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value} disabled={loadingCategories}>
                     <FormControl>
                       <SelectTrigger>

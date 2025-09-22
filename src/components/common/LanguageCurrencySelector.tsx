@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { usePreferences, Currency, Language, Timezone } from '@/contexts/PreferencesContext';
-import { Flag, Globe, Clock } from 'lucide-react';
+import { usePreferences, Currency, Language } from '@/contexts/PreferencesContext';
+import { Flag, Globe } from 'lucide-react';
 
 const LanguageCurrencySelector = () => {
-  const { currency, setCurrency, language, setLanguage, timezone, setTimezone, t } = usePreferences();
+  const { currency, setCurrency, language, setLanguage, t } = usePreferences();
 
   const handleCurrencyChange = (value: string) => {
     setCurrency(value as Currency);
@@ -13,23 +13,6 @@ const LanguageCurrencySelector = () => {
   
   const handleLanguageChange = (value: string) => {
     setLanguage(value as Language);
-  };
-
-  const handleTimezoneChange = (value: string) => {
-    setTimezone(value as Timezone);
-  };
-
-  const timezoneLabels = {
-    'America/Sao_Paulo': 'São Paulo (GMT-3)',
-    'America/New_York': 'Nova York (GMT-5)',
-    'Europe/London': 'Londres (GMT+0)',
-    'Europe/Paris': 'Paris (GMT+1)',
-    'Asia/Tokyo': 'Tóquio (GMT+9)',
-    'Australia/Sydney': 'Sydney (GMT+10)',
-    'America/Los_Angeles': 'Los Angeles (GMT-8)',
-    'America/Chicago': 'Chicago (GMT-6)',
-    'Europe/Berlin': 'Berlim (GMT+1)',
-    'Asia/Shanghai': 'Xangai (GMT+8)',
   };
 
   return (
@@ -65,27 +48,6 @@ const LanguageCurrencySelector = () => {
             <SelectGroup>
               <SelectItem value="USD">USD ($)</SelectItem>
               <SelectItem value="BRL">BRL (R$)</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex flex-col space-y-2">
-        <label htmlFor="timezone-select" className="text-sm font-medium">
-          {t('settings.timezone', 'Fuso Horário')}
-        </label>
-        <Select value={timezone} onValueChange={handleTimezoneChange}>
-          <SelectTrigger id="timezone-select" className="w-[200px]">
-            <Clock className="mr-2 h-4 w-4" />
-            <SelectValue placeholder={t('settings.selectTimezone', 'Selecione o fuso horário')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {Object.entries(timezoneLabels).map(([value, label]) => (
-                <SelectItem key={value} value={value}>
-                  {label}
-                </SelectItem>
-              ))}
             </SelectGroup>
           </SelectContent>
         </Select>

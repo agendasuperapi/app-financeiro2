@@ -1,27 +1,25 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import DateRangeSelector, { DateRange } from '@/components/common/DateRangeSelector';
+import MonthNavigation from '@/components/common/MonthNavigation';
 import { Eye, EyeOff, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePreferences } from '@/contexts/PreferencesContext';
 
 interface DashboardHeaderProps {
-  currentRange: DateRange;
-  onRangeChange: (range: DateRange) => void;
+  currentMonth: Date;
+  onMonthChange: (date: Date) => void;
   hideValues: boolean;
   toggleHideValues: () => void;
   onAddTransaction: (type?: 'income' | 'expense') => void;
-  onRefresh?: () => void;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
-  currentRange,
-  onRangeChange,
+  currentMonth,
+  onMonthChange,
   hideValues,
   toggleHideValues,
-  onAddTransaction,
-  onRefresh
+  onAddTransaction
 }) => {
   const { t } = usePreferences();
 
@@ -32,7 +30,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <DateRangeSelector currentRange={currentRange} onRangeChange={onRangeChange} onRefresh={onRefresh} />
+      <MonthNavigation currentMonth={currentMonth} onMonthChange={onMonthChange} />
       <div className="flex items-center gap-4">
         <Button
           variant="outline"

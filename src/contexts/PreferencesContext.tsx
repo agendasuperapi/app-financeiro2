@@ -1,7 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import translations from '@/translations';
-import { updateUserTimezone, getUserTimezone } from '@/services/userService';
 
 // Define available language types
 export type Language = 'pt' | 'en';
@@ -9,27 +8,12 @@ export type Language = 'pt' | 'en';
 // Define the Currency type
 export type Currency = 'USD' | 'BRL';
 
-// Define available timezone types
-export type Timezone = 
-  | 'America/Sao_Paulo'
-  | 'America/New_York'
-  | 'Europe/London'
-  | 'Europe/Paris'
-  | 'Asia/Tokyo'
-  | 'Australia/Sydney'
-  | 'America/Los_Angeles'
-  | 'America/Chicago'
-  | 'Europe/Berlin'
-  | 'Asia/Shanghai';
-
 interface PreferencesContextProps {
   language: Language;
   setLanguage: (language: Language) => void;
   t: (key: string, fallback?: string) => string;
   currency: Currency;
   setCurrency: (currency: Currency) => void;
-  timezone: Timezone;
-  setTimezone: (timezone: Timezone) => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextProps>({
@@ -38,8 +22,6 @@ const PreferencesContext = createContext<PreferencesContextProps>({
   t: (key: string, fallback?: string) => fallback || key,
   currency: 'BRL',
   setCurrency: () => {},
-  timezone: 'America/Sao_Paulo',
-  setTimezone: () => {},
 });
 
 interface PreferencesProviderProps {
@@ -55,24 +37,6 @@ const PreferencesProvider: React.FC<PreferencesProviderProps> = ({ children }) =
   const [currency, setCurrency] = useState<Currency>(
     (localStorage.getItem('currency') as Currency) || 'BRL'
   );
-  
-  const [timezone, setTimezone] = useState<Timezone>('America/Sao_Paulo');
-
-  // Load timezone from database on mount
-  useEffect(() => {
-    const loadTimezone = async () => {
-      try {
-        const userTimezone = await getUserTimezone();
-        if (userTimezone) {
-          setTimezone(userTimezone as Timezone);
-        }
-      } catch (error) {
-        console.error('Error loading user timezone:', error);
-      }
-    };
-
-    loadTimezone();
-  }, []);
 
   // Save preferences to localStorage when they change
   useEffect(() => {
@@ -82,17 +46,6 @@ const PreferencesProvider: React.FC<PreferencesProviderProps> = ({ children }) =
   useEffect(() => {
     localStorage.setItem('currency', currency);
   }, [currency]);
-
-  // Save timezone to database when it changes
-  const handleTimezoneChange = async (newTimezone: Timezone) => {
-    setTimezone(newTimezone);
-    try {
-      await updateUserTimezone(newTimezone);
-      console.log('Timezone saved to database:', newTimezone);
-    } catch (error) {
-      console.error('Error saving timezone to database:', error);
-    }
-  };
 
   // Create translation function that supports multiple languages and fallback
   const t = (key: string, fallback?: string) => {
@@ -116,9 +69,7 @@ const PreferencesProvider: React.FC<PreferencesProviderProps> = ({ children }) =
       setLanguage,
       t,
       currency,
-      setCurrency,
-      timezone,
-      setTimezone: handleTimezoneChange 
+      setCurrency 
     }}>
       {children}
     </PreferencesContext.Provider>

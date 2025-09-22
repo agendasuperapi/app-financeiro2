@@ -22,7 +22,7 @@ import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { ScheduledTransaction } from '@/types';
-import { isAfter, isToday, format, startOfMonth, endOfMonth } from 'date-fns';
+import { isAfter, isToday } from 'date-fns';
 import { toast } from 'sonner';
 import ContaForm from '@/components/contas/ContaForm';
 
@@ -31,7 +31,6 @@ const ContasPage = () => {
   const [filteredContas, setFilteredContas] = useState<ScheduledTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('todos');
-  const [monthFilter, setMonthFilter] = useState<string>(format(new Date(), 'yyyy-MM'));
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
@@ -48,8 +47,8 @@ const ContasPage = () => {
   }, [targetUserId]);
 
   useEffect(() => {
-    applyFilters();
-  }, [contas, statusFilter, monthFilter]);
+    applyStatusFilter();
+  }, [contas, statusFilter]);
 
   const loadContas = async () => {
     setLoading(true);
@@ -67,36 +66,26 @@ const ContasPage = () => {
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...contas];
-
-    // Filtrar por mês
-    const [year, month] = monthFilter.split('-');
-    const startDate = startOfMonth(new Date(parseInt(year), parseInt(month) - 1));
-    const endDate = endOfMonth(new Date(parseInt(year), parseInt(month) - 1));
-    
-    filtered = filtered.filter((conta) => {
-      const scheduledDate = new Date(conta.scheduledDate);
-      return scheduledDate >= startDate && scheduledDate <= endDate;
-    });
-
-    // Filtrar por status
-    if (statusFilter !== 'todos') {
-      filtered = filtered.filter((conta) => {
-        const status = getContaStatus(conta);
-        
-        switch (statusFilter) {
-          case 'pendente':
-            return status === 'Pendente';
-          case 'pago':
-            return status === 'Pago';
-          case 'vencido':
-            return status === 'Vencido' || status === 'Vence Hoje';
-          default:
-            return true;
-        }
-      });
+  const applyStatusFilter = () => {
+    if (statusFilter === 'todos') {
+      setFilteredContas(contas);
+      return;
     }
+
+    const filtered = contas.filter((conta) => {
+      const status = getContaStatus(conta);
+      
+      switch (statusFilter) {
+        case 'pendente':
+          return status === 'Pendente';
+        case 'pago':
+          return status === 'Pago';
+        case 'vencido':
+          return status === 'Vencido' || status === 'Vence Hoje';
+        default:
+          return true;
+      }
+    });
     
     setFilteredContas(filtered);
   };
@@ -232,31 +221,9 @@ const ContasPage = () => {
             </Dialog>
           </div>
           
-          {/* Filtros */}
-          <div className="flex items-center gap-2 mb-2 md:mb-4 flex-wrap">
+          {/* Filtro de Status */}
+          <div className="flex items-center gap-2 mb-2 md:mb-4">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <Select value={monthFilter} onValueChange={setMonthFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filtrar por mês" />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 12 }, (_, i) => {
-                  const date = new Date();
-                  date.setMonth(date.getMonth() - 6 + i);
-                  const value = format(date, 'yyyy-MM');
-                  const monthNames = [
-                    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-                    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-                  ];
-                  const label = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-                  return (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Filtrar por status" />

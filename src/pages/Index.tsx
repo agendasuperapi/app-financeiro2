@@ -15,8 +15,6 @@ import { markAsPaid } from '@/services/scheduledTransactionService';
 import { ScheduledTransaction } from '@/types';
 import { motion } from 'framer-motion';
 import { User } from 'lucide-react';
-import { DateRange } from '@/components/common/DateRangeSelector';
-import { startOfMonth, endOfMonth, startOfDay } from 'date-fns';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -40,8 +38,7 @@ const Index = () => {
     hideValues,
     toggleHideValues,
     getTransactions,
-    scheduledTransactions,
-    setTimeRange
+    scheduledTransactions
   } = useAppContext();
   const { t } = usePreferences();
   
@@ -49,11 +46,7 @@ const Index = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
-  const [currentRange, setCurrentRange] = useState<DateRange>({
-    startDate: startOfDay(new Date()),
-    endDate: startOfDay(new Date()),
-    type: 'today'
-  });
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [currentGoalIndex, setCurrentGoalIndex] = useState(0);
   
   console.log("Dashboard rendered with:", {
@@ -63,58 +56,29 @@ const Index = () => {
     scheduledTransactionsCount: scheduledTransactions.length
   });
   
-  // Calculate financial data based on selected range type
-  const financialData = React.useMemo(() => {
+  // NEW: Calculate month-specific financial data using the new utility with error handling
+  const monthlyData = React.useMemo(() => {
     try {
       if (!transactions || !Array.isArray(transactions)) {
         console.warn('Dashboard: Invalid transactions data, using fallback');
         return {
-          displayTransactions: [],
-          totalIncome: 0,
-          totalExpenses: 0,
-          balance: 0
+          monthTransactions: [],
+          monthlyIncome: 0,
+          monthlyExpenses: 0,
+          accumulatedBalance: 0
         };
       }
-
-      // For 'month', use the existing monthly calculation
-      if (currentRange.type === 'month') {
-        const monthlyData = calculateMonthlyFinancialData(
-          transactions,
-          new Date(
-            currentRange.startDate.getFullYear(),
-            currentRange.startDate.getMonth(),
-            1
-          )
-        );
-        return {
-          displayTransactions: monthlyData.monthTransactions,
-          totalIncome: monthlyData.monthlyIncome,
-          totalExpenses: monthlyData.monthlyExpenses,
-          balance: monthlyData.accumulatedBalance
-        };
-      }
-
-      // For all other filters (today, 7days, year, custom), use AppContext filteredTransactions
-      const rangeTransactions = filteredTransactions || [];
-      const income = calculateTotalIncome(rangeTransactions);
-      const expenses = calculateTotalExpenses(rangeTransactions);
-      
-      return {
-        displayTransactions: rangeTransactions,
-        totalIncome: income,
-        totalExpenses: expenses,
-        balance: income - expenses
-      };
+      return calculateMonthlyFinancialData(transactions, currentMonth);
     } catch (error) {
-      console.error('Dashboard: Error calculating financial data:', error);
+      console.error('Dashboard: Error calculating monthly data:', error);
       return {
-        displayTransactions: [],
-        totalIncome: 0,
-        totalExpenses: 0,
-        balance: 0
+        monthTransactions: [],
+        monthlyIncome: 0,
+        monthlyExpenses: 0,
+        accumulatedBalance: 0
       };
     }
-  }, [transactions, filteredTransactions, currentRange]);
+  }, [transactions, currentMonth]);
 
   const monthlyGoals = React.useMemo(() => {
     try {
@@ -122,14 +86,16 @@ const Index = () => {
         console.warn('Dashboard: Invalid goals data, using fallback');
         return [];
       }
-      return getGoalsForMonth(goals, new Date(currentRange.startDate.getFullYear(), currentRange.startDate.getMonth(), 1));
+      return getGoalsForMonth(goals, currentMonth);
     } catch (error) {
       console.error('Dashboard: Error calculating monthly goals:', error);
       return [];
     }
-  }, [goals, currentRange]);
+  }, [goals, currentMonth]);
   
-  const { displayTransactions, totalIncome, totalExpenses, balance } = financialData;
+  const totalIncome = monthlyData.monthlyIncome;
+  const totalExpenses = monthlyData.monthlyExpenses;
+  const balance = monthlyData.accumulatedBalance;
   
   // Load initial data only once when component mounts
   useEffect(() => {
@@ -146,41 +112,25 @@ const Index = () => {
     loadInitialData();
   }, []); // ✅ Empty dependency array - runs only once
 
-  // Update date range whenever currentRange changes
+  // Update date range when month changes
   useEffect(() => {
-    // Sync AppContext filters with selector
-    if (currentRange.type === 'today') {
-      setTimeRange('today');
-    } else if (currentRange.type === '7days') {
-      setTimeRange('7days');
-    } else if (currentRange.type === 'custom') {
-      setTimeRange('custom');
-      setCustomDateRange(currentRange.startDate, currentRange.endDate);
-    } else if (currentRange.type === 'month' || currentRange.type === 'year') {
-      // Map month/year to custom in AppContext for consistent filtering elsewhere
-      setTimeRange('custom');
-      setCustomDateRange(currentRange.startDate, currentRange.endDate);
-    }
+    const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0, 23, 59, 59);
+    setCustomDateRange(firstDay, lastDay);
+    console.log("Dashboard: Date range updated for month:", currentMonth.toDateString());
+  }, [currentMonth, setCustomDateRange]);
 
-    console.log("Dashboard: Date range updated:", { 
-      start: currentRange.startDate.toDateString(), 
-      end: currentRange.endDate.toDateString(),
-      type: currentRange.type
-    });
-  }, [currentRange, setCustomDateRange, setTimeRange]);
+  // Removed auto-refresh to prevent performance issues
+  // Data will be refreshed when user performs actions (add/edit/delete transactions)
   
-  const handleRangeChange = (range: DateRange) => {
-    console.log("Dashboard: Range changed to:", range);
-    setCurrentRange(range);
-  };
-
-  const handleRefresh = () => {
-    getTransactions();
-    getGoals();
-    toast({
-      title: "Dados atualizados",
-      description: "As informações foram atualizadas com sucesso."
-    });
+  const handleMonthChange = (date: Date) => {
+    console.log("Dashboard: Month changed to:", date.toDateString());
+    setCurrentMonth(date);
+    
+    // Update filtered transactions range to match the selected month
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
+    setCustomDateRange(firstDay, lastDay);
   };
   
   const handleAddTransaction = (type: 'income' | 'expense' = 'expense') => {
@@ -285,12 +235,11 @@ const Index = () => {
           
           {/* Header com navegação de mês e toggle de visibilidade */}
           <DashboardHeader
-            currentRange={currentRange}
-            onRangeChange={handleRangeChange}
+            currentMonth={currentMonth}
+            onMonthChange={handleMonthChange}
             hideValues={hideValues}
             toggleHideValues={toggleHideValues}
             onAddTransaction={handleAddTransaction}
-            onRefresh={handleRefresh}
           />
           
           {/* 3 Cards principais na mesma linha */}
@@ -304,10 +253,10 @@ const Index = () => {
 
           {/* Conteúdo do dashboard - com fallback para evitar erro */}
           <DashboardContent
-            filteredTransactions={displayTransactions || []}
+            filteredTransactions={monthlyData?.monthTransactions || []}
             goals={monthlyGoals || []}
             currentGoalIndex={currentGoalIndex}
-            currentMonth={new Date(currentRange.startDate.getFullYear(), currentRange.startDate.getMonth(), 1)}
+            currentMonth={currentMonth}
             hideValues={hideValues}
             onGoalChange={setCurrentGoalIndex}
             onEditTransaction={handleEditTransaction}

@@ -8,12 +8,27 @@ export type Language = 'pt' | 'en';
 // Define the Currency type
 export type Currency = 'USD' | 'BRL';
 
+// Define available timezone types
+export type Timezone = 
+  | 'America/Sao_Paulo'
+  | 'America/New_York'
+  | 'Europe/London'
+  | 'Europe/Paris'
+  | 'Asia/Tokyo'
+  | 'Australia/Sydney'
+  | 'America/Los_Angeles'
+  | 'America/Chicago'
+  | 'Europe/Berlin'
+  | 'Asia/Shanghai';
+
 interface PreferencesContextProps {
   language: Language;
   setLanguage: (language: Language) => void;
   t: (key: string, fallback?: string) => string;
   currency: Currency;
   setCurrency: (currency: Currency) => void;
+  timezone: Timezone;
+  setTimezone: (timezone: Timezone) => void;
 }
 
 const PreferencesContext = createContext<PreferencesContextProps>({
@@ -22,6 +37,8 @@ const PreferencesContext = createContext<PreferencesContextProps>({
   t: (key: string, fallback?: string) => fallback || key,
   currency: 'BRL',
   setCurrency: () => {},
+  timezone: 'America/Sao_Paulo',
+  setTimezone: () => {},
 });
 
 interface PreferencesProviderProps {
@@ -37,6 +54,10 @@ const PreferencesProvider: React.FC<PreferencesProviderProps> = ({ children }) =
   const [currency, setCurrency] = useState<Currency>(
     (localStorage.getItem('currency') as Currency) || 'BRL'
   );
+  
+  const [timezone, setTimezone] = useState<Timezone>(
+    (localStorage.getItem('timezone') as Timezone) || 'America/Sao_Paulo'
+  );
 
   // Save preferences to localStorage when they change
   useEffect(() => {
@@ -46,6 +67,10 @@ const PreferencesProvider: React.FC<PreferencesProviderProps> = ({ children }) =
   useEffect(() => {
     localStorage.setItem('currency', currency);
   }, [currency]);
+
+  useEffect(() => {
+    localStorage.setItem('timezone', timezone);
+  }, [timezone]);
 
   // Create translation function that supports multiple languages and fallback
   const t = (key: string, fallback?: string) => {
@@ -69,7 +94,9 @@ const PreferencesProvider: React.FC<PreferencesProviderProps> = ({ children }) =
       setLanguage,
       t,
       currency,
-      setCurrency 
+      setCurrency,
+      timezone,
+      setTimezone 
     }}>
       {children}
     </PreferencesContext.Provider>

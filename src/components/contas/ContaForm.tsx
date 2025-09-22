@@ -16,7 +16,6 @@ import { getCategoriesByType } from '@/services/categoryService';
 import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
 import ContaAddedByGrid from '@/components/common/ContaAddedByGrid';
-
 interface ContaFormProps {
   initialData?: ScheduledTransaction | null;
   mode: 'create' | 'edit';
@@ -37,20 +36,22 @@ const contaFormSchema = z.object({
   // Campos obrigatórios do ContaInput e AddedByField
   conta: z.string().min(1, 'Conta é obrigatória'),
   name: z.string().min(1, 'Usuario é obrigatório'),
-  phone: z.string().optional(),
+  phone: z.string().optional()
 });
-
 type ContaFormValues = z.infer<typeof contaFormSchema>;
-
 const ContaForm: React.FC<ContaFormProps> = ({
   initialData,
   mode,
   onSuccess,
   onCancel,
-  defaultType = 'expense',
+  defaultType = 'expense'
 }) => {
-  const { t } = usePreferences();
-  const { selectedUser } = useClientView();
+  const {
+    t
+  } = usePreferences();
+  const {
+    selectedUser
+  } = useClientView();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isOnline] = useState(navigator.onLine);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -60,7 +61,6 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const getDefaultValues = (): ContaFormValues => {
     const now = new Date();
     now.setHours(now.getHours() + 1, 0, 0, 0);
-    
     if (mode === 'edit' && initialData) {
       const hasInstallments = initialData.parcela && parseInt(initialData.parcela) > 1;
       return {
@@ -68,18 +68,15 @@ const ContaForm: React.FC<ContaFormProps> = ({
         amount: Math.abs(initialData.amount || 100),
         installments: hasInstallments ? parseInt(initialData.parcela || '1') : undefined,
         category: initialData.category_id || '',
-        scheduledDate: initialData.scheduledDate 
-          ? new Date(initialData.scheduledDate).toISOString().slice(0, 16)
-          : now.toISOString().slice(0, 16),
-        recurrence: hasInstallments ? 'installments' : ((initialData.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once'),
+        scheduledDate: initialData.scheduledDate ? new Date(initialData.scheduledDate).toISOString().slice(0, 16) : now.toISOString().slice(0, 16),
+        recurrence: hasInstallments ? 'installments' : initialData.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' || 'once',
         goalId: initialData.goalId || null,
         // Novos campos obrigatórios - usando campos disponíveis da interface
-        conta: initialData.conta || '',
+        conta: initialData.aba || '',
         name: initialData.creatorName || '',
-        phone: initialData.phone || '',
+        phone: initialData.phone || ''
       };
     }
-    
     return {
       description: '',
       amount: 100,
@@ -91,17 +88,16 @@ const ContaForm: React.FC<ContaFormProps> = ({
       // Novos campos obrigatórios
       conta: '',
       name: '',
-      phone: '',
+      phone: ''
     };
   };
-
   const defaultFormValues = getDefaultValues();
 
   // Form setup
   const form = useForm<ContaFormValues>({
     resolver: zodResolver(contaFormSchema),
     defaultValues: defaultFormValues,
-    mode: 'onChange',
+    mode: 'onChange'
   });
 
   // Load categories for expense type only
@@ -112,12 +108,11 @@ const ContaForm: React.FC<ContaFormProps> = ({
         const categoryData = await getCategoriesByType('expense');
         console.log(`Loaded ${categoryData.length} categories for expense:`, categoryData);
         setCategories(categoryData);
-        
+
         // Set default category if none selected and categories are available
         if (categoryData.length > 0) {
           const currentCategory = form.getValues('category');
           const categoryExists = categoryData.some(c => c.id === currentCategory || c.name === currentCategory);
-          
           if (!categoryExists) {
             console.log("Setting default category to:", categoryData[0].id);
             form.setValue('category', categoryData[0].id);
@@ -130,7 +125,6 @@ const ContaForm: React.FC<ContaFormProps> = ({
         setLoadingCategories(false);
       }
     };
-
     loadCategories();
   }, [form]);
 
@@ -145,37 +139,37 @@ const ContaForm: React.FC<ContaFormProps> = ({
   // Form submission handler
   const onSubmit = async (values: ContaFormValues) => {
     console.log('🚀 Conta form submitted with values:', values);
-    
     try {
       if (mode === 'create') {
         console.log('➕ Creating scheduled transaction...');
         // Find the selected category to get both name and id
         const selectedCategory = categories.find(cat => cat.id === values.category);
         console.log('🏷️ Selected category:', selectedCategory);
-        
+
         // Get current user for phone number
-        const { data: { user } } = await supabase.auth.getUser();
-        const { data: userData } = await supabase
-          .from('poupeja_users')
-          .select('phone')
-          .eq('id', selectedUser?.id || user?.id)
-          .single();
-        
+        const {
+          data: {
+            user
+          }
+        } = await supabase.auth.getUser();
+        const {
+          data: userData
+        } = await supabase.from('poupeja_users').select('phone').eq('id', selectedUser?.id || user?.id).single();
+
         // Add Brazilian country code 55 if not already present
         let userPhone = '';
         if (userData?.phone) {
           const rawPhone = userData.phone;
           userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
         }
-        
+
         // Determine target user id (admin visualizando um cliente)
         const targetUserId = selectedUser?.id || user?.id || undefined;
-        
         const transactionData = {
           type: 'expense' as const,
           description: values.description,
           amount: -values.amount,
-          installments: values.recurrence === 'installments' ? (values.installments || 1) : 1,
+          installments: values.recurrence === 'installments' ? values.installments || 1 : 1,
           category: selectedCategory?.name || 'Outros',
           category_id: values.category,
           scheduledDate: new Date(values.scheduledDate).toISOString(),
@@ -188,9 +182,8 @@ const ContaForm: React.FC<ContaFormProps> = ({
           user_id: targetUserId,
           // Campos obrigatórios do ContaInput e AddedByField
           conta: values.conta,
-          creatorName: values.name,
+          creatorName: values.name
         };
-        
         console.log('📋 Creating transaction with data:', transactionData);
         const result = await addScheduledTransaction(transactionData);
         console.log('✅ Create request sent', result);
@@ -199,30 +192,31 @@ const ContaForm: React.FC<ContaFormProps> = ({
         // Find the selected category to get both name and id
         const selectedCategory = categories.find(cat => cat.id === values.category);
         console.log('🏷️ Selected category:', selectedCategory);
-        
+
         // Get current user for phone number
-        const { data: { user } } = await supabase.auth.getUser();
-        const { data: userData } = await supabase
-          .from('poupeja_users')
-          .select('phone')
-          .eq('id', selectedUser?.id || user?.id)
-          .single();
-        
+        const {
+          data: {
+            user
+          }
+        } = await supabase.auth.getUser();
+        const {
+          data: userData
+        } = await supabase.from('poupeja_users').select('phone').eq('id', selectedUser?.id || user?.id).single();
+
         // Add Brazilian country code 55 if not already present
         let userPhone = '';
         if (userData?.phone) {
           const rawPhone = userData.phone;
           userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
         }
-        
+
         // Determine target user id (admin visualizando um cliente)
         const targetUserId = selectedUser?.id || user?.id || undefined;
-        
         const updateData = {
           type: 'expense' as const,
           description: values.description,
           amount: -values.amount,
-          installments: values.recurrence === 'installments' ? (values.installments || 1) : 1,
+          installments: values.recurrence === 'installments' ? values.installments || 1 : 1,
           category: selectedCategory?.name || 'Outros',
           category_id: values.category,
           scheduledDate: new Date(values.scheduledDate).toISOString(),
@@ -236,17 +230,18 @@ const ContaForm: React.FC<ContaFormProps> = ({
           user_id: targetUserId,
           // Campos obrigatórios do ContaInput e AddedByField
           conta: values.conta,
-          creatorName: values.name,
+          creatorName: values.name
         };
-        
         console.log('📋 Updating transaction with ID:', initialData.id);
         console.log('📋 Update data:', updateData);
-        const result = await updateScheduledTransaction({ ...updateData, id: initialData.id });
+        const result = await updateScheduledTransaction({
+          ...updateData,
+          id: initialData.id
+        });
         console.log('✅ Update request sent', result);
       }
-      
       console.log('🎉 Form completed successfully');
-      
+
       // Call onSuccess callback if provided
       if (onSuccess) {
         console.log('🔄 Calling onSuccess callback');
@@ -269,58 +264,39 @@ const ContaForm: React.FC<ContaFormProps> = ({
       }
     }
   };
-
-  return (
-    <>
+  return <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           
           
           {/* Description Field - moved to top */}
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
+          <FormField control={form.control} name="description" render={({
+          field
+        }) => <FormItem>
                 <FormLabel>{t('common.description')}</FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="Digite a descrição da transação..." />
                 </FormControl>
                 <FormMessage />
-              </FormItem>
-            )}
-          />
+              </FormItem>} />
           
           {/* Amount Field */}
-          <FormField
-            control={form.control}
-            name="amount"
-            render={({ field }) => (
-              <FormItem>
+          <FormField control={form.control} name="amount" render={({
+          field
+        }) => <FormItem>
                 <FormLabel>{t('common.amount')}</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    {...field}
-                    onChange={e => field.onChange(Math.abs(parseFloat(e.target.value) || 0))}
-                    placeholder="0,00"
-                  />
+                  <Input type="number" step="0.01" min="0.01" {...field} onChange={e => field.onChange(Math.abs(parseFloat(e.target.value) || 0))} placeholder="0,00" />
                 </FormControl>
                 <FormMessage />
-              </FormItem>
-            )}
-          />
+              </FormItem>} />
 
           <ContaAddedByGrid form={form} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="recurrence"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="recurrence" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>{t('schedule.recurrence')}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
@@ -338,115 +314,68 @@ const ContaForm: React.FC<ContaFormProps> = ({
                     </SelectContent>
                   </Select>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
             
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="category" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>{t('common.category')}</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value}
-                    disabled={loadingCategories}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value} disabled={loadingCategories}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={loadingCategories ? t('common.loading') : "Qual Categoria"} />
+                        <SelectValue placeholder={loadingCategories ? t('common.loading') : t('transactions.selectCategory')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categories.map(category => (
-                        <SelectItem key={category.id} value={category.id}>
+                      {categories.map(category => <SelectItem key={category.id} value={category.id}>
                           <div className="flex items-center gap-2">
                             <CategoryIcon icon={category.icon} color={category.color} size={16} />
                             <span>{category.name}</span>
                           </div>
-                        </SelectItem>
-                      ))}
+                        </SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  
+                </FormItem>} />
           </div>
 
           {/* Conditional Installments Field - only show when recurrence is 'installments' */}
-          {form.watch('recurrence') === 'installments' && (
-            <FormField
-              control={form.control}
-              name="installments"
-              render={({ field }) => (
-                <FormItem>
+          {form.watch('recurrence') === 'installments' && <FormField control={form.control} name="installments" render={({
+          field
+        }) => <FormItem>
                   <FormLabel>Número de Parcelas</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      min="1"
-                      {...field}
-                      onChange={e => field.onChange(parseInt(e.target.value) || 1)}
-                      placeholder="1"
-                      value={field.value || ''}
-                    />
+                    <Input type="number" min="1" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 1)} placeholder="1" value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
+                </FormItem>} />}
           
-          <FormField
-            control={form.control}
-            name="scheduledDate"
-            render={({ field }) => (
-              <FormItem>
+          <FormField control={form.control} name="scheduledDate" render={({
+          field
+        }) => <FormItem>
                 <FormLabel>{t('schedule.scheduledFor')}</FormLabel>
                 <FormControl>
                   <Input type="datetime-local" {...field} />
                 </FormControl>
                 <FormMessage />
-              </FormItem>
-            )}
-          />
+              </FormItem>} />
 
           <div className="flex flex-col sm:flex-row gap-3 justify-between items-center pt-4">
-            {mode === 'edit' && (
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                onClick={() => setDeleteDialogOpen(true)}
-                disabled={!isOnline}
-                className="w-full sm:w-auto"
-              >
+            {mode === 'edit' && <Button type="button" variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)} disabled={!isOnline} className="w-full sm:w-auto">
                 {t('common.delete')}
-              </Button>
-            )}
+              </Button>}
             <div className="flex gap-2 w-full sm:w-auto">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onCancel}
-                className="flex-1 sm:flex-initial min-w-20"
-              >
+              <Button type="button" variant="outline" size="sm" onClick={onCancel} className="flex-1 sm:flex-initial min-w-20">
                 {t('common.cancel')}
               </Button>
-              <Button 
-                type="submit" 
-                variant="default"
-                size="sm"
-                disabled={!isOnline}
-                className="flex-1 sm:flex-initial min-w-20"
-              >
+              <Button type="submit" variant="default" size="sm" disabled={!isOnline} className="flex-1 sm:flex-initial min-w-20">
                 {mode === 'create' ? t('common.create') : t('common.update')}
               </Button>
             </div>
           </div>
+          {!isOnline && <p className="text-xs text-muted-foreground text-right mt-2">
+              {t('schedule.editingRequiresConnection')}
+            </p>}
         </form>
       </Form>
       
@@ -467,8 +396,6 @@ const ContaForm: React.FC<ContaFormProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
-  );
+    </>;
 };
-
 export default ContaForm;

@@ -165,43 +165,9 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
             </>
           )}
           
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer p-1 h-auto"
-              >
-                {getRangeLabel()}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="center">
-              <Calendar
-                mode="single"
-                selected={currentRange.startDate}
-                onSelect={(date) => {
-                  if (date) {
-                    if (currentRange.type === 'month') {
-                      // Se for mês, navegar para o mês selecionado
-                      onRangeChange({
-                        startDate: new Date(date.getFullYear(), date.getMonth(), 1),
-                        endDate: new Date(date.getFullYear(), date.getMonth() + 1, 0),
-                        type: 'month'
-                      });
-                    } else {
-                      // Para outros tipos, definir como custom
-                      onRangeChange({
-                        startDate: date,
-                        endDate: date,
-                        type: 'custom'
-                      });
-                    }
-                  }
-                }}
-                initialFocus
-                className="pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
+          <div className="text-sm font-medium text-muted-foreground">
+            {getRangeLabel()}
+          </div>
           
           {currentRange.type === 'month' && (
             <>

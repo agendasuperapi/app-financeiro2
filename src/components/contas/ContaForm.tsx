@@ -447,11 +447,6 @@ const ContaForm: React.FC<ContaFormProps> = ({
               </Button>
             </div>
           </div>
-          {!isOnline && (
-            <p className="text-xs text-muted-foreground text-right mt-2">
-              {t('schedule.editingRequiresConnection')}
-            </p>
-          )}
         </form>
       </Form>
       

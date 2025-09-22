@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, RefreshCw } from 'lucide-react';
-import { format, startOfDay, subDays, startOfMonth, startOfYear } from 'date-fns';
+import { CalendarIcon, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, startOfDay, subDays, startOfMonth, startOfYear, addMonths, subMonths } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { cn } from '@/lib/utils';
@@ -111,6 +111,28 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
     }
   };
 
+  const handlePreviousMonth = () => {
+    if (currentRange.type === 'month') {
+      const previousMonth = subMonths(currentRange.startDate, 1);
+      onRangeChange({
+        startDate: startOfMonth(previousMonth),
+        endDate: new Date(previousMonth.getFullYear(), previousMonth.getMonth() + 1, 0),
+        type: 'month'
+      });
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (currentRange.type === 'month') {
+      const nextMonth = addMonths(currentRange.startDate, 1);
+      onRangeChange({
+        startDate: startOfMonth(nextMonth),
+        endDate: new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0),
+        type: 'month'
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col sm:flex-row items-center gap-4">
       <div className="flex items-center gap-2">
@@ -127,8 +149,36 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
           </SelectContent>
         </Select>
 
-        <div className="text-sm font-medium text-muted-foreground">
-          {getRangeLabel()}
+        <div className="flex items-center gap-2">
+          {currentRange.type === 'month' && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePreviousMonth}
+                className="h-6 w-6"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+          
+          <div className="text-sm font-medium text-muted-foreground">
+            {getRangeLabel()}
+          </div>
+          
+          {currentRange.type === 'month' && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleNextMonth}
+                className="h-6 w-6"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </>
+          )}
         </div>
         
         {onRefresh && (

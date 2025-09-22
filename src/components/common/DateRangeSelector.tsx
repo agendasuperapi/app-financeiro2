@@ -179,17 +179,6 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
             </>
           )}
         </div>
-        
-        {onRefresh && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onRefresh}
-            className="h-8 w-8"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-        )}
       </div>
 
       {currentRange.type === 'custom' && (
@@ -254,6 +243,17 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
             </PopoverContent>
           </Popover>
         </div>
+      )}
+      
+      {onRefresh && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onRefresh}
+          className="h-8 w-8"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
       )}
     </div>
   );

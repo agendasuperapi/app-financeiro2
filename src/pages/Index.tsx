@@ -15,6 +15,8 @@ import { markAsPaid } from '@/services/scheduledTransactionService';
 import { ScheduledTransaction } from '@/types';
 import { motion } from 'framer-motion';
 import { User } from 'lucide-react';
+import { DateRange } from '@/components/common/DateRangeSelector';
+import { startOfMonth, endOfMonth, startOfDay } from 'date-fns';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -46,7 +48,11 @@ const Index = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentRange, setCurrentRange] = useState<DateRange>({
+    startDate: startOfMonth(new Date()),
+    endDate: endOfMonth(new Date()),
+    type: 'month'
+  });
   const [currentGoalIndex, setCurrentGoalIndex] = useState(0);
   
   console.log("Dashboard rendered with:", {
@@ -68,7 +74,7 @@ const Index = () => {
           accumulatedBalance: 0
         };
       }
-      return calculateMonthlyFinancialData(transactions, currentMonth);
+      return calculateMonthlyFinancialData(transactions, new Date(currentRange.startDate.getFullYear(), currentRange.startDate.getMonth(), 1));
     } catch (error) {
       console.error('Dashboard: Error calculating monthly data:', error);
       return {
@@ -78,7 +84,7 @@ const Index = () => {
         accumulatedBalance: 0
       };
     }
-  }, [transactions, currentMonth]);
+  }, [transactions, currentRange]);
 
   const monthlyGoals = React.useMemo(() => {
     try {
@@ -86,12 +92,12 @@ const Index = () => {
         console.warn('Dashboard: Invalid goals data, using fallback');
         return [];
       }
-      return getGoalsForMonth(goals, currentMonth);
+      return getGoalsForMonth(goals, new Date(currentRange.startDate.getFullYear(), currentRange.startDate.getMonth(), 1));
     } catch (error) {
       console.error('Dashboard: Error calculating monthly goals:', error);
       return [];
     }
-  }, [goals, currentMonth]);
+  }, [goals, currentRange]);
   
   const totalIncome = monthlyData.monthlyIncome;
   const totalExpenses = monthlyData.monthlyExpenses;
@@ -112,25 +118,28 @@ const Index = () => {
     loadInitialData();
   }, []); // ✅ Empty dependency array - runs only once
 
-  // Update date range when month changes
+  // Update date range whenever currentRange changes
   useEffect(() => {
-    const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-    const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0, 23, 59, 59);
-    setCustomDateRange(firstDay, lastDay);
-    console.log("Dashboard: Date range updated for month:", currentMonth.toDateString());
-  }, [currentMonth, setCustomDateRange]);
-
-  // Removed auto-refresh to prevent performance issues
-  // Data will be refreshed when user performs actions (add/edit/delete transactions)
+    setCustomDateRange(currentRange.startDate, currentRange.endDate);
+    console.log("Dashboard: Date range updated:", { 
+      start: currentRange.startDate.toDateString(), 
+      end: currentRange.endDate.toDateString(),
+      type: currentRange.type
+    });
+  }, [currentRange, setCustomDateRange]);
   
-  const handleMonthChange = (date: Date) => {
-    console.log("Dashboard: Month changed to:", date.toDateString());
-    setCurrentMonth(date);
-    
-    // Update filtered transactions range to match the selected month
-    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
-    setCustomDateRange(firstDay, lastDay);
+  const handleRangeChange = (range: DateRange) => {
+    console.log("Dashboard: Range changed to:", range);
+    setCurrentRange(range);
+  };
+
+  const handleRefresh = () => {
+    getTransactions();
+    getGoals();
+    toast({
+      title: "Dados atualizados",
+      description: "As informações foram atualizadas com sucesso."
+    });
   };
   
   const handleAddTransaction = (type: 'income' | 'expense' = 'expense') => {
@@ -235,11 +244,12 @@ const Index = () => {
           
           {/* Header com navegação de mês e toggle de visibilidade */}
           <DashboardHeader
-            currentMonth={currentMonth}
-            onMonthChange={handleMonthChange}
+            currentRange={currentRange}
+            onRangeChange={handleRangeChange}
             hideValues={hideValues}
             toggleHideValues={toggleHideValues}
             onAddTransaction={handleAddTransaction}
+            onRefresh={handleRefresh}
           />
           
           {/* 3 Cards principais na mesma linha */}
@@ -256,7 +266,7 @@ const Index = () => {
             filteredTransactions={monthlyData?.monthTransactions || []}
             goals={monthlyGoals || []}
             currentGoalIndex={currentGoalIndex}
-            currentMonth={currentMonth}
+            currentMonth={new Date(currentRange.startDate.getFullYear(), currentRange.startDate.getMonth(), 1)}
             hideValues={hideValues}
             onGoalChange={setCurrentGoalIndex}
             onEditTransaction={handleEditTransaction}

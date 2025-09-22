@@ -62,29 +62,51 @@ const Index = () => {
     scheduledTransactionsCount: scheduledTransactions.length
   });
   
-  // NEW: Calculate month-specific financial data using the new utility with error handling
-  const monthlyData = React.useMemo(() => {
+  // Calculate financial data based on selected range type
+  const financialData = React.useMemo(() => {
     try {
       if (!transactions || !Array.isArray(transactions)) {
         console.warn('Dashboard: Invalid transactions data, using fallback');
         return {
-          monthTransactions: [],
-          monthlyIncome: 0,
-          monthlyExpenses: 0,
-          accumulatedBalance: 0
+          displayTransactions: [],
+          totalIncome: 0,
+          totalExpenses: 0,
+          balance: 0
         };
       }
-      return calculateMonthlyFinancialData(transactions, new Date(currentRange.startDate.getFullYear(), currentRange.startDate.getMonth(), 1));
-    } catch (error) {
-      console.error('Dashboard: Error calculating monthly data:', error);
+
+      // For "today" filter, use filtered transactions from current day only
+      if (currentRange.type === 'today') {
+        const todayTransactions = filteredTransactions || [];
+        const todayIncome = calculateTotalIncome(todayTransactions);
+        const todayExpenses = calculateTotalExpenses(todayTransactions);
+        
+        return {
+          displayTransactions: todayTransactions,
+          totalIncome: todayIncome,
+          totalExpenses: todayExpenses,
+          balance: todayIncome - todayExpenses
+        };
+      }
+      
+      // For other filters (month, year, etc.), use the existing monthly calculation
+      const monthlyData = calculateMonthlyFinancialData(transactions, new Date(currentRange.startDate.getFullYear(), currentRange.startDate.getMonth(), 1));
       return {
-        monthTransactions: [],
-        monthlyIncome: 0,
-        monthlyExpenses: 0,
-        accumulatedBalance: 0
+        displayTransactions: monthlyData.monthTransactions,
+        totalIncome: monthlyData.monthlyIncome,
+        totalExpenses: monthlyData.monthlyExpenses,
+        balance: monthlyData.accumulatedBalance
+      };
+    } catch (error) {
+      console.error('Dashboard: Error calculating financial data:', error);
+      return {
+        displayTransactions: [],
+        totalIncome: 0,
+        totalExpenses: 0,
+        balance: 0
       };
     }
-  }, [transactions, currentRange]);
+  }, [transactions, filteredTransactions, currentRange]);
 
   const monthlyGoals = React.useMemo(() => {
     try {
@@ -99,9 +121,7 @@ const Index = () => {
     }
   }, [goals, currentRange]);
   
-  const totalIncome = monthlyData.monthlyIncome;
-  const totalExpenses = monthlyData.monthlyExpenses;
-  const balance = monthlyData.accumulatedBalance;
+  const { displayTransactions, totalIncome, totalExpenses, balance } = financialData;
   
   // Load initial data only once when component mounts
   useEffect(() => {
@@ -263,7 +283,7 @@ const Index = () => {
 
           {/* Conteúdo do dashboard - com fallback para evitar erro */}
           <DashboardContent
-            filteredTransactions={monthlyData?.monthTransactions || []}
+            filteredTransactions={displayTransactions || []}
             goals={monthlyGoals || []}
             currentGoalIndex={currentGoalIndex}
             currentMonth={new Date(currentRange.startDate.getFullYear(), currentRange.startDate.getMonth(), 1)}

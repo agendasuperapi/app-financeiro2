@@ -29,24 +29,24 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
       try {
         setLoading(true);
 
-        // Buscar nomes e telefones únicos da view "view_cadastros_unificados"
+        // Buscar contas únicas da tabela "poupeja_transactions"
         const { data, error } = await (supabase as any)
-          .from('view_cadastros_unificados')
-          .select('id, name, phone')
-          .not('name', 'is', null);
+          .from('poupeja_transactions')
+          .select('conta')
+          .not('conta', 'is', null);
 
         if (error) throw error;
 
-        // Extrair dados únicos e filtrar valores vazios
+        // Extrair contas únicas e filtrar valores vazios
         const uniqueUsers = Array.from(
           new Map(
             (data as any[])
-              .filter(item => item.name && item.name.trim() !== '')
+              .filter(item => item.conta && item.conta.trim() !== '')
               .map(item => [
-                item.name,
+                item.conta,
                 {
-                  name: item.name,
-                  phone: item.phone || ''
+                  name: item.conta,
+                  phone: ''
                 }
               ])
           ).values()
@@ -95,7 +95,7 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
             <PopoverContent className="w-full p-0 z-50 border bg-popover text-popover-foreground shadow-md">
               <Command>
                 <CommandInput
-                  placeholder="Buscar nome..."
+                  placeholder="Buscar conta..."
                   value={field.value || ''}
                   onValueChange={(value) => {
                     field.onChange(value);
@@ -103,7 +103,7 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
                 />
                 <CommandList>
                   <CommandEmpty>
-                    {loading ? "Carregando nomes..." : "Nenhum nome encontrado."}
+                    {loading ? "Carregando contas..." : "Nenhuma conta encontrada."}
                   </CommandEmpty>
                   <CommandGroup>
                     {users.map((user) => (

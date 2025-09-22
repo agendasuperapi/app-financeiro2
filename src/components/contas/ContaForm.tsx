@@ -72,9 +72,9 @@ const ContaForm: React.FC<ContaFormProps> = ({
         recurrence: hasInstallments ? 'installments' : initialData.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' || 'once',
         goalId: initialData.goalId || null,
         // Novos campos obrigatórios - usando campos disponíveis da interface
-        conta: '',
-        name: initialData.description || '',
-        phone: ''
+        conta: (initialData as any).conta || '',
+        name: (initialData as any).conta || '',
+        phone: (initialData as any).phone || ''
       };
     }
     return {

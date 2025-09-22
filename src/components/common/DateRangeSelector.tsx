@@ -193,7 +193,7 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
       </div>
 
       {currentRange.type === 'custom' && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
               <Button

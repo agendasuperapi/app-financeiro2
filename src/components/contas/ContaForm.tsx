@@ -132,6 +132,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
   useEffect(() => {
     if (mode === 'edit' && initialData) {
       const newValues = getDefaultValues();
+      console.log('✏️ Edit mode - resetting form with initialData:', newValues);
       form.reset(newValues);
     }
   }, [initialData?.id, mode]);

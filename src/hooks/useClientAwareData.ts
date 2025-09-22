@@ -103,6 +103,7 @@ export const useClientAwareData = () => {
   const loadClientData = useCallback(async () => {
     if (!isClientView || !targetUserId) return;
     
+    console.log('🔄 [CLIENT DATA] Loading client data for user:', targetUserId);
     setLoading(true);
     try {
       const [transactions, goals, notes] = await Promise.all([
@@ -110,11 +111,16 @@ export const useClientAwareData = () => {
         fetchClientGoals(),
         fetchClientNotes()
       ]);
+      console.log('✅ [CLIENT DATA] Client data loaded:', {
+        transactions: transactions.length,
+        goals: goals.length,
+        notes: notes.length
+      });
       setClientTransactions(transactions);
       setClientGoals(goals);
       setClientNotes(notes);
     } catch (error) {
-      console.error('Erro ao carregar dados do cliente:', error);
+      console.error('❌ [CLIENT DATA] Erro ao carregar dados do cliente:', error);
     } finally {
       setLoading(false);
     }
@@ -142,14 +148,19 @@ export const useClientAwareData = () => {
   useEffect(() => {
     if (!isClientView || !targetUserId) return;
 
+    console.log('📡 [REALTIME] Setting up realtime listener for user:', targetUserId);
+
     const channel = (supabase as any)
       .channel(`rt-transactions-${targetUserId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'poupeja_transactions', filter: `user_id=eq.${targetUserId}` }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'poupeja_transactions', filter: `user_id=eq.${targetUserId}` }, (payload: any) => {
+        console.log('📡 [REALTIME] Transaction change detected:', payload);
+        console.log('🔄 [REALTIME] Reloading client data...');
         loadClientData();
       })
       .subscribe();
 
     return () => {
+      console.log('📡 [REALTIME] Cleaning up realtime listener for user:', targetUserId);
       try {
         (supabase as any).removeChannel?.(channel);
       } catch {}

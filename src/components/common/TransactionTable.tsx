@@ -42,18 +42,18 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 }) => {
   const { t, currency } = usePreferences();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
 
   const renderHiddenValue = () => '******';
 
-  const handleDeleteClick = (transactionId: string) => {
-    setTransactionToDelete(transactionId);
+  const handleDeleteClick = (transaction: Transaction) => {
+    setTransactionToDelete(transaction);
     setDeleteDialogOpen(true);
   };
 
   const handleConfirmDelete = () => {
     if (transactionToDelete && onDelete) {
-      onDelete(transactionToDelete);
+      onDelete(transactionToDelete.id);
     }
     setDeleteDialogOpen(false);
     setTransactionToDelete(null);
@@ -192,7 +192,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                           variant="ghost"
                           size="sm"
                           className="h-7 w-7 p-0 text-metacash-error hover:text-metacash-error"
-                          onClick={() => handleDeleteClick(transaction.id)}
+                          onClick={() => handleDeleteClick(transaction)}
                         >
                           <Trash2 className="h-3 w-3" />
                           <span className="sr-only">{t('common.delete')}</span>
@@ -211,8 +211,24 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('common.confirmDelete') || 'Confirmar Exclusão'}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('common.confirmDeleteMessage') || "Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita."}
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                {t('common.confirmDeleteMessage') || "Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita."}
+              </p>
+              {transactionToDelete && (
+                <div className="bg-muted p-3 rounded-md">
+                  <p className="font-medium">
+                    {transactionToDelete.description}
+                  </p>
+                  <p className={cn(
+                    "text-sm font-semibold",
+                    transactionToDelete.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
+                  )}>
+                    {transactionToDelete.type === 'income' ? '+' : '-'}
+                    {hideValues ? renderHiddenValue() : formatCurrency(Math.abs(transactionToDelete.amount), currency)}
+                  </p>
+                </div>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

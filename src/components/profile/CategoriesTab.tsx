@@ -46,7 +46,7 @@ const CategoriesTab: React.FC = () => {
     const loadCategories = async () => {
       setLoading(true);
       try {
-        const loadedCategories = await getCategoriesByType(categoryType, targetUserId);
+        const loadedCategories = await getCategoriesByType(categoryType);
         setCategories(loadedCategories);
       } catch (error) {
         console.error('Error loading categories:', error);
@@ -83,7 +83,7 @@ const CategoriesTab: React.FC = () => {
       try {
         const success = await deleteCategory(categoryToDelete.id);
         if (success) {
-          const updatedCategories = await getCategoriesByType(categoryType, targetUserId);
+          const updatedCategories = await getCategoriesByType(categoryType);
           setCategories(updatedCategories);
           toast({
             title: t('categories.deleted'),
@@ -136,7 +136,7 @@ const CategoriesTab: React.FC = () => {
       }
       
       // Refresh categories list
-      const updatedCategories = await getCategoriesByType(categoryType, targetUserId);
+      const updatedCategories = await getCategoriesByType(categoryType);
       setCategories(updatedCategories);
       setCategoryFormOpen(false);
     } catch (error) {

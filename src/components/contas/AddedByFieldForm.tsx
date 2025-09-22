@@ -87,7 +87,7 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
                   className="justify-between"
                   disabled={loading}
                 >
-                  {field.value || "Selecione quem adicionou..."}
+                  {field.value || "Quem Adicionou"}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </FormControl>

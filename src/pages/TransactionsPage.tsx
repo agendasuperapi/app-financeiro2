@@ -7,17 +7,20 @@ import TransactionTable from '@/components/common/TransactionTable';
 import TransactionForm from '@/components/common/TransactionForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, User } from 'lucide-react';
+import { Plus, User, RotateCcw } from 'lucide-react';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { Transaction } from '@/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/components/ui/use-toast';
 
 const TransactionsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const { transactions, deleteTransaction, isClientView, selectedUser, targetUserId } = useClientAwareData();
+  const [refreshing, setRefreshing] = useState(false);
+  const { transactions, deleteTransaction, isClientView, selectedUser, targetUserId, refetchClientData } = useClientAwareData();
   const isMobile = useIsMobile();
+  const { toast } = useToast();
 
   // Filter out transactions with zero amount
   const filteredTransactions = transactions.filter(transaction => transaction.amount !== 0);
@@ -34,6 +37,32 @@ const TransactionsPage = () => {
 
   const handleDeleteTransaction = (id: string) => {
     deleteTransaction(id);
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      if (isClientView && refetchClientData) {
+        console.log('🔄 [REFRESH] Manual refresh requested - reloading client data...');
+        await refetchClientData();
+        toast({
+          title: 'Dados atualizados',
+          description: 'A página foi atualizada com sucesso.',
+        });
+      } else {
+        // Refresh da página inteira se não for client view
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      toast({
+        title: 'Erro ao atualizar',
+        description: 'Não foi possível atualizar os dados.',
+        variant: 'destructive',
+      });
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   return (
@@ -58,12 +87,24 @@ const TransactionsPage = () => {
               {isMobile ? 'Transações' : 'Transações Recentes'}
             </h1>
             
-            {/* Add Button - visible on tablet and desktop */}
+            {/* Buttons - visible on tablet and desktop */}
             {!isMobile && (
-              <Button onClick={handleAddTransaction} size="lg" className="shrink-0">
-                <Plus className="mr-2 h-4 w-4" />
-                {isClientView ? 'Adicionar para Cliente' : 'Adicionar Transação'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="flex items-center gap-2"
+                >
+                  <RotateCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                  Atualizar
+                </Button>
+                <Button onClick={handleAddTransaction} size="lg" className="shrink-0">
+                  <Plus className="mr-2 h-4 w-4" />
+                  {isClientView ? 'Adicionar para Cliente' : 'Adicionar Transação'}
+                </Button>
+              </div>
             )}
           </div>
           
@@ -93,9 +134,19 @@ const TransactionsPage = () => {
           </div>
         </div>
 
-        {/* Mobile Floating Action Button */}
+        {/* Mobile Floating Action Buttons */}
         {isMobile && (
-          <div className="fixed bottom-20 right-4 z-50">
+          <div className="fixed bottom-20 right-4 z-50 flex flex-col gap-3">
+            <Button 
+              variant="outline"
+              size="lg"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="h-12 w-12 rounded-full shadow-lg hover:shadow-xl transition-shadow bg-background border-2"
+            >
+              <RotateCcw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="sr-only">Atualizar</span>
+            </Button>
             <Button 
               onClick={handleAddTransaction}
               size="lg"

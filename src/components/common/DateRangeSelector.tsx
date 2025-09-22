@@ -165,6 +165,9 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
             </>
           )}
           
+          <div className="text-sm font-medium text-muted-foreground">
+            {getRangeLabel()}
+          </div>
           
           {currentRange.type === 'month' && (
             <>

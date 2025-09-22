@@ -41,35 +41,37 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
       case 'today':
         newRange = {
           startDate: today,
-          endDate: today,
+          endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59),
           type: 'today'
         };
         break;
       case '7days':
         newRange = {
           startDate: subDays(today, 6),
-          endDate: today,
+          endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59),
           type: '7days'
         };
         break;
       case 'month':
+        const monthStart = startOfMonth(today);
         newRange = {
-          startDate: startOfMonth(today),
-          endDate: today,
+          startDate: monthStart,
+          endDate: new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59),
           type: 'month'
         };
         break;
       case 'year':
+        const yearStart = startOfYear(today);
         newRange = {
-          startDate: startOfYear(today),
-          endDate: today,
+          startDate: yearStart,
+          endDate: new Date(today.getFullYear(), 11, 31, 23, 59, 59),
           type: 'year'
         };
         break;
       case 'custom':
         newRange = {
           startDate: customStartDate || today,
-          endDate: customEndDate || today,
+          endDate: customEndDate ? new Date(customEndDate.getFullYear(), customEndDate.getMonth(), customEndDate.getDate(), 23, 59, 59) : new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59),
           type: 'custom'
         };
         break;
@@ -84,7 +86,7 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
     if (customStartDate && customEndDate) {
       onRangeChange({
         startDate: customStartDate,
-        endDate: customEndDate,
+        endDate: new Date(customEndDate.getFullYear(), customEndDate.getMonth(), customEndDate.getDate(), 23, 59, 59),
         type: 'custom'
       });
     }

@@ -5,6 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -51,6 +61,8 @@ const NotesPage: React.FC = () => {
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
   const {
     toast
   } = useToast();
@@ -150,6 +162,46 @@ const NotesPage: React.FC = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleDeleteClick = (note: Note) => {
+    // Desabilitar exclusão na visualização de cliente
+    if (isClientView) {
+      toast({
+        title: "Operação não permitida",
+        description: "Não é possível excluir notas na visualização de cliente.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setNoteToDelete(note);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (noteToDelete) {
+      try {
+        if (deleteNote) {
+          await deleteNote(noteToDelete.id);
+        }
+        toast({
+          title: "Sucesso",
+          description: "Nota excluída com sucesso!"
+        });
+
+        // Recarregar notas
+        await loadNotes();
+      } catch (error) {
+        console.error('Erro ao excluir nota:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível excluir a nota.",
+          variant: "destructive"
+        });
+      }
+    }
+    setDeleteDialogOpen(false);
+    setNoteToDelete(null);
   };
 
   const handleEditNote = (note: Note) => {
@@ -409,7 +461,7 @@ const NotesPage: React.FC = () => {
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            onClick={() => handleDeleteNote(note.id)} 
+                            onClick={() => handleDeleteClick(note)} 
                             className={cn("text-destructive hover:text-destructive", isClientView && "opacity-50 cursor-not-allowed")} 
                             disabled={isClientView}
                           >
@@ -426,6 +478,33 @@ const NotesPage: React.FC = () => {
           </div>
         </div>
       </SubscriptionGuard>
+
+      {/* Dialog de Confirmação de Exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              {noteToDelete && (
+                <div className="bg-muted p-3 rounded-md">
+                  <p className="font-medium">
+                    {noteToDelete.descricao}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {formatDate(noteToDelete.data)}
+                  </p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete}>
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>;
 };
 export default NotesPage;

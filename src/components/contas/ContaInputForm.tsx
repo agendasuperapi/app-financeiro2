@@ -52,7 +52,7 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
                 </Button>
               </FormControl>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
+            <PopoverContent className="w-full p-0 z-50 bg-popover border shadow-md">
               <Command>
                 <CommandInput 
                   placeholder={t('transactions.accountPlaceholder')}

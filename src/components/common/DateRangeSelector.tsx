@@ -51,8 +51,8 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
     };
     
     const offsetHours = timezoneOffsets[timezone] || -3;
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const timezoneDate = new Date(utc + (offsetHours * 3600000));
+    const utcMs = now.getTime();
+    const timezoneDate = new Date(utcMs + (offsetHours * 3600000));
     
     return startOfDay(timezoneDate);
   };

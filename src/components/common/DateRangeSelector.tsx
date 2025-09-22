@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, startOfDay, subDays, startOfMonth, startOfYear, addMonths, subMonths } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { pt } from 'date-fns/locale';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { cn } from '@/lib/utils';
@@ -29,12 +30,14 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
   onRangeChange,
   onRefresh
 }) => {
-  const { t } = usePreferences();
+  const { t, timezone } = usePreferences();
   const [customStartDate, setCustomStartDate] = useState<Date>();
   const [customEndDate, setCustomEndDate] = useState<Date>();
 
   const handleRangeTypeChange = (type: DateRangeType) => {
-    const today = startOfDay(new Date());
+    // Get current date in user's timezone
+    const nowInTimezone = toZonedTime(new Date(), timezone);
+    const today = startOfDay(nowInTimezone);
     let newRange: DateRange;
 
     switch (type) {

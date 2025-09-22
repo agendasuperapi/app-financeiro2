@@ -53,8 +53,18 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
     const offsetHours = timezoneOffsets[timezone] || -3;
     const utcMs = now.getTime();
     const timezoneDate = new Date(utcMs + (offsetHours * 3600000));
+    const todayInTimezone = startOfDay(timezoneDate);
     
-    return startOfDay(timezoneDate);
+    console.log('DateRangeSelector - getTodayInTimezone:', {
+      timezone,
+      now: now.toISOString(),
+      offsetHours,
+      timezoneDate: timezoneDate.toISOString(),
+      todayInTimezone: todayInTimezone.toISOString(),
+      todayFormatted: format(todayInTimezone, 'dd/MM/yyyy')
+    });
+    
+    return todayInTimezone;
   };
 
   const handleRangeTypeChange = (type: DateRangeType) => {
@@ -68,6 +78,12 @@ const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
           endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59),
           type: 'today'
         };
+        console.log('DateRangeSelector - "today" selected:', {
+          startDate: newRange.startDate.toISOString(),
+          endDate: newRange.endDate.toISOString(),
+          startDateFormatted: format(newRange.startDate, 'dd/MM/yyyy'),
+          endDateFormatted: format(newRange.endDate, 'dd/MM/yyyy')
+        });
         break;
       case '7days':
         newRange = {

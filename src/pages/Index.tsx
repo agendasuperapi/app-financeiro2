@@ -49,9 +49,9 @@ const Index = () => {
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [currentRange, setCurrentRange] = useState<DateRange>({
-    startDate: startOfMonth(new Date()),
-    endDate: endOfMonth(new Date()),
-    type: 'month'
+    startDate: startOfDay(new Date()),
+    endDate: startOfDay(new Date()),
+    type: 'today'
   });
   const [currentGoalIndex, setCurrentGoalIndex] = useState(0);
   

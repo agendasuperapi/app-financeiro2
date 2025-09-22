@@ -355,7 +355,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={loadingCategories ? t('common.loading') : t('transactions.selectCategory')} />
+                        <SelectValue placeholder={loadingCategories ? t('common.loading') : "Qual Categoria"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>

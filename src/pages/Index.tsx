@@ -69,45 +69,55 @@ const Index = () => {
         };
       }
 
-      // Generate monthly simulations for calculations (current month only)
+      // Generate simulations for calculations (only for the selected month)
       const generateMonthlySimulations = (scheduledTransactions: any[]) => {
         const simulations: any[] = [];
-        
-        scheduledTransactions
-          .filter((scheduled) => ['monthly', 'installments'].includes(scheduled.recurrence))
-          .forEach((scheduled) => {
-            // Generate simulation for current month only for calculations
-            const simulationDate = new Date(currentMonth);
 
-            // Robust day-of-month extraction with fallbacks
-            const baseDateStr = scheduled.scheduled_date || scheduled.scheduledDate || scheduled.nextExecutionDate || scheduled.date;
+        const monthKey = (d: Date) => d.getFullYear() * 12 + d.getMonth();
+        const selectedMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+
+        scheduledTransactions
+          .filter((s) => (s.type === 'income' || s.type === 'expense'))
+          .filter((s) => ['monthly', 'installments'].includes(s.recurrence))
+          .forEach((s) => {
+            const baseDateStr = s.scheduled_date || s.scheduledDate || s.nextExecutionDate || s.date;
             const baseDate = baseDateStr ? new Date(baseDateStr) : null;
-            const day = baseDate && !isNaN(baseDate.getTime()) ? baseDate.getDate() : 1;
-            simulationDate.setDate(day);
-            
-            // Ensure month/year stays as selected
-            const isCurrentMonth = simulationDate.getMonth() === currentMonth.getMonth() && 
-                                 simulationDate.getFullYear() === currentMonth.getFullYear();
-            
-            if (isCurrentMonth) {
-              const simulation = {
-                id: `calc-simulation-${scheduled.id}`,
-                type: scheduled.type,
-                amount: scheduled.amount,
-                category: scheduled.category,
-                categoryIcon: scheduled.categoryIcon,
-                categoryColor: scheduled.categoryColor,
-                description: `${scheduled.description} (Simulação)`,
+            if (!baseDate || isNaN(baseDate.getTime())) return;
+
+            const startMonth = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+            const monthsSinceStart = monthKey(selectedMonthStart) - monthKey(startMonth);
+
+            // Decide if this month should include a simulation
+            let includeThisMonth = false;
+            if (s.recurrence === 'monthly') {
+              includeThisMonth = monthsSinceStart >= 0; // every month from start
+            } else if (s.recurrence === 'installments') {
+              const total = parseInt(String(s.installments ?? s.parcela ?? 1));
+              includeThisMonth = monthsSinceStart >= 0 && monthsSinceStart < total;
+            }
+
+            if (includeThisMonth) {
+              const day = baseDate.getDate() || 1;
+              const simulationDate = new Date(currentMonth);
+              simulationDate.setDate(Math.min(day, 28)); // avoid invalid dates for short months
+
+              simulations.push({
+                id: `calc-simulation-${s.id}`,
+                type: s.type,
+                amount: s.amount,
+                category: s.category,
+                categoryIcon: s.categoryIcon,
+                categoryColor: s.categoryColor,
+                description: `${s.description} (Simulação)`,
                 date: simulationDate.toISOString(),
-                conta: scheduled.conta,
-                creatorName: scheduled.creatorName,
+                conta: s.conta,
+                creatorName: s.creatorName,
                 __isSimulation: true,
-                __originalScheduledId: scheduled.id
-              };
-              simulations.push(simulation);
+                __originalScheduledId: s.id,
+              });
             }
           });
-        
+
         return simulations;
       };
 
@@ -133,50 +143,51 @@ const Index = () => {
     }
   }, [transactions, scheduledTransactions, currentMonth]);
 
-  // Função para simular transações mensais para visualização
+  // Função para simular transações mensais para visualização (apenas do mês selecionado)
   const generateMonthlySimulationsForDisplay = React.useCallback((scheduledTransactions: any[]) => {
     const simulations: any[] = [];
-    
-    scheduledTransactions
-      .filter((scheduled) => ['monthly', 'installments'].includes(scheduled.recurrence))
-      .forEach((scheduled) => {
-        // Determine how many months to simulate
-        const totalMonths = scheduled.recurrence === 'installments'
-          ? parseInt(String((scheduled.installments ?? scheduled.parcela ?? 12)))
-          : 12;
 
-        // Resolve base day-of-month robustly
-        const baseDateStr = scheduled.scheduled_date || scheduled.scheduledDate || scheduled.nextExecutionDate || scheduled.date;
+    const monthKey = (d: Date) => d.getFullYear() * 12 + d.getMonth();
+    const selectedMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+
+    scheduledTransactions
+      .filter((s: any) => (s.type === 'income' || s.type === 'expense'))
+      .filter((s: any) => ['monthly', 'installments'].includes(s.recurrence))
+      .forEach((s: any) => {
+        const baseDateStr = s.scheduled_date || s.scheduledDate || s.nextExecutionDate || s.date;
         const baseDate = baseDateStr ? new Date(baseDateStr) : null;
-        const day = baseDate && !isNaN(baseDate.getTime()) ? baseDate.getDate() : 1;
-        
-        // Generate simulations for the next N months starting from selected month
-        for (let i = 0; i < totalMonths; i++) {
+        if (!baseDate || isNaN(baseDate.getTime())) return;
+
+        const startMonth = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+        const monthsSinceStart = monthKey(selectedMonthStart) - monthKey(startMonth);
+
+        let includeThisMonth = false;
+        if (s.recurrence === 'monthly') {
+          includeThisMonth = monthsSinceStart >= 0;
+        } else if (s.recurrence === 'installments') {
+          const total = parseInt(String(s.installments ?? s.parcela ?? 1));
+          includeThisMonth = monthsSinceStart >= 0 && monthsSinceStart < total;
+        }
+
+        if (includeThisMonth) {
+          const day = baseDate.getDate() || 1;
           const simulationDate = new Date(currentMonth);
-          simulationDate.setMonth(simulationDate.getMonth() + i);
-          simulationDate.setDate(day);
-          
-          // Only include current or future months relative to selected month start
-          const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-          const isCurrentOrFuture = simulationDate >= monthStart;
-          
-          if (isCurrentOrFuture) {
-            const simulation = {
-              id: `display-simulation-${scheduled.id}-${i}`,
-              type: scheduled.type,
-              amount: scheduled.amount,
-              category: scheduled.category,
-              categoryIcon: scheduled.categoryIcon,
-              categoryColor: scheduled.categoryColor,
-              description: `${scheduled.description} (Simulação)`,
-              date: simulationDate.toISOString(),
-              conta: scheduled.conta,
-              creatorName: scheduled.creatorName,
-              __isSimulation: true,
-              __originalScheduledId: scheduled.id
-            };
-            simulations.push(simulation);
-          }
+          simulationDate.setDate(Math.min(day, 28));
+
+          simulations.push({
+            id: `display-simulation-${s.id}-${monthKey(selectedMonthStart)}`,
+            type: s.type,
+            amount: s.amount,
+            category: s.category,
+            categoryIcon: s.categoryIcon,
+            categoryColor: s.categoryColor,
+            description: `${s.description} (Simulação)`,
+            date: simulationDate.toISOString(),
+            conta: s.conta,
+            creatorName: s.creatorName,
+            __isSimulation: true,
+            __originalScheduledId: s.id,
+          });
         }
       });
     

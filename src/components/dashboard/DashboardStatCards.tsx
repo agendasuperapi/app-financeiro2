@@ -70,10 +70,9 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
       }, 0);
   }, [transactionsWithSimulations, totalExpenses]);
 
-  // Ajuste do saldo usando os valores já exibidos nos cards
-  // balance (já inclui: saldo anterior + receitas do mês - despesas reais do mês)
-  // Precisamos substituir as despesas reais pelas despesas combinadas (reais + simulações)
-  const adjustedBalance = balance + totalExpenses - totalExpensesCombined;
+  // Cálculo do saldo total: Saldo do mês anterior + receita + despesa
+  // balance = saldo do mês anterior, incomeFromTotal = receita, totalExpensesCombined = despesa (subtraída)
+  const adjustedBalance = balance + incomeFromTotal - totalExpensesCombined;
 
   // Cores/fundo conforme sinal do saldo ajustado
   const saldoBgGradient = adjustedBalance >= 0 

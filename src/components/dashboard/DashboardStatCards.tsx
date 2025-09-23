@@ -70,6 +70,13 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
       }, 0);
   }, [transactionsWithSimulations, totalExpenses]);
 
+  // Calcular valor combinado: Saldo mês anterior + income-total + totalExpensesCombined
+  const combinedValue = React.useMemo(() => {
+    // Saldo mês anterior seria o balance original menos as receitas e despesas do mês atual
+    const previousBalance = balance - totalIncome + totalExpenses;
+    return previousBalance + incomeFromTotal + totalExpensesCombined;
+  }, [balance, totalIncome, totalExpenses, incomeFromTotal, totalExpensesCombined]);
+
   // Ajuste do saldo usando os valores já exibidos nos cards
   // balance (já inclui: saldo anterior + receitas do mês - despesas reais do mês)
   // Precisamos substituir as despesas reais pelas despesas combinadas (reais + simulações)
@@ -141,7 +148,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                 </p>
               </div>
               <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-green-700 dark:text-green-400">
-                {hideValues ? renderHiddenValue() : formatCurrency(incomeFromTotal, currency)}
+                {hideValues ? renderHiddenValue() : formatCurrency(combinedValue, currency)}
               </p>
             </div>
             <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-green-200/30 dark:bg-green-800/20 rounded-full" />

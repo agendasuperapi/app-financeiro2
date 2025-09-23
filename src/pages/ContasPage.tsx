@@ -52,7 +52,7 @@ const ContasPage = () => {
   const [filteredContas, setFilteredContas] = useState<ScheduledTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('todos');
-  const [dateFilter, setDateFilter] = useState<string>('todos');
+  const [dateFilter, setDateFilter] = useState<string>('mes');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);

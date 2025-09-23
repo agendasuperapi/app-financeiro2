@@ -3,6 +3,7 @@ import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -20,7 +21,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
-import { Loader2, Edit, Trash2, CheckCircle, Plus, Filter, User, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
+import { Loader2, Edit, Trash2, CheckCircle, Plus, Filter, User, ChevronLeft, ChevronRight, CalendarIcon, Search } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
@@ -55,6 +56,7 @@ const ContasPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
@@ -72,7 +74,7 @@ const ContasPage = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [contas, statusFilter, dateFilter, selectedDate, startDate, endDate]);
+  }, [contas, statusFilter, dateFilter, selectedDate, startDate, endDate, searchQuery]);
 
   const loadContas = async () => {
     setLoading(true);
@@ -150,6 +152,18 @@ const ContasPage = () => {
           default:
             return true;
         }
+      });
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      filtered = filtered.filter((conta) => {
+        const searchLower = searchQuery.toLowerCase();
+        return (
+          conta.description?.toLowerCase().includes(searchLower) ||
+          conta.category?.toLowerCase().includes(searchLower) ||
+          conta.creatorName?.toLowerCase().includes(searchLower)
+        );
       });
     }
     
@@ -317,6 +331,17 @@ const ContasPage = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-2 md:mb-4">
             <Filter className="h-4 w-4 text-muted-foreground" />
             
+            {/* Campo de Pesquisa */}
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Pesquisar contas..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            
             {/* Filtro de Status */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-48">
@@ -446,7 +471,7 @@ const ContasPage = () => {
                 </div>
               ) : filteredContas.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  {statusFilter === 'todos' && dateFilter === 'todos' ? 
+                  {statusFilter === 'todos' && dateFilter === 'todos' && !searchQuery.trim() ? 
                     'Nenhuma conta encontrada' : 
                     'Nenhuma conta encontrada para os filtros selecionados'
                   }

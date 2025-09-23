@@ -30,9 +30,13 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
     const getIncomeFromElement = () => {
       const element = document.getElementById('income-total');
       if (element && element.textContent && !element.textContent.includes('*')) {
-        // Extrair número do texto formatado
-        const text = element.textContent.replace(/[^\d,.-]/g, '');
-        const value = parseFloat(text.replace(',', '.')) || totalIncome;
+        // Tratar formato brasileiro: R$ 5.850,00
+        let text = element.textContent;
+        // Remover símbolos de moeda e espaços
+        text = text.replace(/[R$\s]/g, '');
+        // Remover pontos de milhares e substituir vírgula decimal por ponto
+        text = text.replace(/\./g, '').replace(',', '.');
+        const value = parseFloat(text) || totalIncome;
         setIncomeFromTotal(value);
       } else {
         setIncomeFromTotal(totalIncome);

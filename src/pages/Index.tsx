@@ -73,65 +73,7 @@ const Index = () => {
       const generateMonthlySimulations = (scheduledTransactions: any[]) => {
         const simulations: any[] = [];
 
-        const monthKey = (d: Date) => d.getFullYear() * 12 + d.getMonth();
-        const selectedMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-
-        scheduledTransactions
-          .filter((s) => (s.type === 'income' || s.type === 'expense'))
-          .filter((s) => ['monthly', 'installments'].includes(s.recurrence))
-          .forEach((s) => {
-            const baseDateStr = s.scheduled_date || s.scheduledDate || s.nextExecutionDate || s.date;
-            const baseDate = baseDateStr ? new Date(baseDateStr) : null;
-            if (!baseDate || isNaN(baseDate.getTime())) return;
-
-            const startMonth = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
-            const monthsSinceStart = monthKey(selectedMonthStart) - monthKey(startMonth);
-
-            // Decide if this month should include a simulation
-            let includeThisMonth = false;
-            if (s.recurrence === 'monthly') {
-              includeThisMonth = monthsSinceStart >= 0; // every month from start
-            } else if (s.recurrence === 'installments') {
-              const total = parseInt(String(s.installments ?? s.parcela ?? 1));
-              includeThisMonth = monthsSinceStart >= 0 && monthsSinceStart < total;
-            }
-
-            if (includeThisMonth) {
-              // Verificar se já existe uma transação real com descrição similar no mês atual
-              const desc = s.description ? String(s.description).toLowerCase() : '';
-              const hasRealTransaction = transactions.some((realTx: any) => {
-                const realDesc = realTx.description ? String(realTx.description).toLowerCase() : '';
-                const realDate = new Date(realTx.date);
-                
-                return realDate.getFullYear() === currentMonth.getFullYear() && 
-                       realDate.getMonth() === currentMonth.getMonth() && 
-                       (realDesc.includes(desc) || desc.includes(realDesc));
-              });
-              
-              // Só incluir simulação se não existir transação real similar
-              if (!hasRealTransaction) {
-                const day = baseDate.getDate() || 1;
-                const simulationDate = new Date(currentMonth);
-                simulationDate.setDate(Math.min(day, 28)); // avoid invalid dates for short months
-
-                simulations.push({
-                  id: `calc-simulation-${s.id}`,
-                  type: s.type,
-                  amount: s.amount,
-                  category: s.category,
-                  categoryIcon: s.categoryIcon,
-                  categoryColor: s.categoryColor,
-                  description: `${s.description} (Simulação)`,
-                  date: simulationDate.toISOString(),
-                  conta: s.conta,
-                  creatorName: s.creatorName,
-                  __isSimulation: true,
-                  __originalScheduledId: s.id,
-                });
-              }
-            }
-          });
-
+        // Não gerar simulações - o usuário não quer transações "inventadas"
         return simulations;
       };
 
@@ -159,68 +101,9 @@ const Index = () => {
 
   // Função para simular transações mensais para visualização (apenas do mês selecionado)
   const generateMonthlySimulationsForDisplay = React.useCallback((scheduledTransactions: any[]) => {
-    const simulations: any[] = [];
-
-    const monthKey = (d: Date) => d.getFullYear() * 12 + d.getMonth();
-    const selectedMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-
-    scheduledTransactions
-      .filter((s: any) => (s.type === 'income' || s.type === 'expense'))
-      .filter((s: any) => ['monthly', 'installments'].includes(s.recurrence))
-      .forEach((s: any) => {
-        const baseDateStr = s.scheduled_date || s.scheduledDate || s.nextExecutionDate || s.date;
-        const baseDate = baseDateStr ? new Date(baseDateStr) : null;
-        if (!baseDate || isNaN(baseDate.getTime())) return;
-
-        const startMonth = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
-        const monthsSinceStart = monthKey(selectedMonthStart) - monthKey(startMonth);
-
-        let includeThisMonth = false;
-        if (s.recurrence === 'monthly') {
-          includeThisMonth = monthsSinceStart >= 0;
-        } else if (s.recurrence === 'installments') {
-          const total = parseInt(String(s.installments ?? s.parcela ?? 1));
-          includeThisMonth = monthsSinceStart >= 0 && monthsSinceStart < total;
-        }
-
-        if (includeThisMonth) {
-          // Verificar se já existe uma transação real com descrição similar no mês atual
-          const desc = s.description ? String(s.description).toLowerCase() : '';
-          const hasRealTransaction = transactions.some((realTx: any) => {
-            const realDesc = realTx.description ? String(realTx.description).toLowerCase() : '';
-            const realDate = new Date(realTx.date);
-            
-            return realDate.getFullYear() === currentMonth.getFullYear() && 
-                   realDate.getMonth() === currentMonth.getMonth() && 
-                   (realDesc.includes(desc) || desc.includes(realDesc));
-          });
-          
-          // Só incluir simulação se não existir transação real similar
-          if (!hasRealTransaction) {
-            const day = baseDate.getDate() || 1;
-            const simulationDate = new Date(currentMonth);
-            simulationDate.setDate(Math.min(day, 28));
-
-            simulations.push({
-              id: `display-simulation-${s.id}-${monthKey(selectedMonthStart)}`,
-              type: s.type,
-              amount: s.amount,
-              category: s.category,
-              categoryIcon: s.categoryIcon,
-              categoryColor: s.categoryColor,
-              description: `${s.description} (Simulação)`,
-              date: simulationDate.toISOString(),
-              conta: s.conta,
-              creatorName: s.creatorName,
-              __isSimulation: true,
-              __originalScheduledId: s.id,
-            });
-          }
-        }
-      });
-    
-    return simulations;
-  }, [currentMonth, transactions]);
+    // Não gerar simulações - o usuário não quer transações "inventadas"
+    return [];
+  }, []);
 
   // Combinar transações reais com simulações para visualização
   const transactionsWithDisplaySimulations = React.useMemo(() => {

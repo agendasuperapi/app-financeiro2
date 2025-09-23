@@ -23,6 +23,34 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
   transactionsWithSimulations = [],
   onNavigateToTransactionType
 }) => {
+  // Puxar valor do elemento income-total
+  const [incomeFromTotal, setIncomeFromTotal] = React.useState(totalIncome);
+  
+  React.useEffect(() => {
+    const getIncomeFromElement = () => {
+      const element = document.getElementById('income-total');
+      if (element && element.textContent && !element.textContent.includes('*')) {
+        // Extrair número do texto formatado
+        const text = element.textContent.replace(/[^\d,.-]/g, '');
+        const value = parseFloat(text.replace(',', '.')) || totalIncome;
+        setIncomeFromTotal(value);
+      } else {
+        setIncomeFromTotal(totalIncome);
+      }
+    };
+
+    // Observar mudanças no elemento
+    const observer = new MutationObserver(getIncomeFromElement);
+    const targetElement = document.getElementById('income-total');
+    
+    if (targetElement) {
+      observer.observe(targetElement, { childList: true, characterData: true, subtree: true });
+      getIncomeFromElement(); // Executar uma vez
+    }
+
+    return () => observer.disconnect();
+  }, [totalIncome]);
+
   const { t, currency } = usePreferences();
   
   // Total de despesas (reais + simulações) - mesma lógica do DashboardContent
@@ -109,7 +137,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                 </p>
               </div>
               <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-green-700 dark:text-green-400">
-                {hideValues ? renderHiddenValue() : formatCurrency(totalIncome, currency)}
+                {hideValues ? renderHiddenValue() : formatCurrency(incomeFromTotal, currency)}
               </p>
             </div>
             <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-green-200/30 dark:bg-green-800/20 rounded-full" />

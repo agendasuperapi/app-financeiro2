@@ -571,32 +571,40 @@ const ContasPage = () => {
              </div>
                              
                              <div className="flex items-center gap-1 flex-wrap">
-                               {!isSimulation && !isPaid && (
-                                  <Button
+                                {!isSimulation && !isPaid && (
+                                   <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        console.log('🖱️ Button clicked for ID:', conta.id);
+                                        handleMarkAsPaid(conta.id);
+                                      }}
+                                      className={`text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7 ${
+                                        conta.amount > 0 
+                                          ? 'text-green-600 border-green-600 hover:bg-green-50' 
+                                          : 'text-red-600 border-red-600 hover:bg-red-50'
+                                      }`}
+                                    >
+                                     <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
+                                     {conta.amount > 0 ? 'Marcar como Recebido' : 'Marcar como Pago'}
+                                   </Button>
+                                )}
+                               
+                                {!isSimulation && isPaid && (
+                                   <Button
                                      size="sm"
                                      variant="outline"
-                                     onClick={() => {
-                                       console.log('🖱️ Button clicked for ID:', conta.id);
-                                       handleMarkAsPaid(conta.id);
-                                     }}
-                                     className="text-green-600 border-green-600 hover:bg-green-50 text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7"
+                                     disabled
+                                     className={`text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7 ${
+                                       conta.amount > 0 
+                                         ? 'text-green-600 border-green-600' 
+                                         : 'text-red-600 border-red-600'
+                                     }`}
                                    >
-                                    <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
-                                    {conta.amount > 0 ? 'Marcar como Recebido' : 'Marcar como Pago'}
-                                  </Button>
-                               )}
-                               
-                               {!isSimulation && isPaid && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    disabled
-                                    className="text-green-600 border-green-600 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7"
-                                  >
-                                    <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
-                                    {conta.amount > 0 ? 'Recebido' : 'Pago'}
-                                  </Button>
-                               )}
+                                     <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
+                                     {conta.amount > 0 ? 'Recebido' : 'Pago'}
+                                   </Button>
+                                )}
                                
                                {!isSimulation && (
                                  <>

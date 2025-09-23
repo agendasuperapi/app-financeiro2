@@ -12,8 +12,6 @@ interface DashboardStatCardsProps {
   balance: number;
   hideValues: boolean;
   onNavigateToTransactionType: (type: 'income' | 'expense') => void;
-  combinedTransactions?: any[]; // Transações reais + simuladas do DashboardContent
-  currentMonth: Date;
 }
 
 const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
@@ -21,41 +19,9 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
   totalExpenses,
   balance,
   hideValues,
-  onNavigateToTransactionType,
-  combinedTransactions = [],
-  currentMonth
+  onNavigateToTransactionType
 }) => {
   const { t, currency } = usePreferences();
-  
-  // Calcular despesas reais e simuladas a partir das transações combinadas
-  const { realExpenses, simulatedExpenses, combinedIncome } = React.useMemo(() => {
-    const currentMonthYear = currentMonth.getFullYear();
-    const currentMonthIndex = currentMonth.getMonth();
-    
-    const monthTransactions = combinedTransactions.filter(transaction => {
-      const transactionDate = new Date(transaction.date);
-      return transactionDate.getFullYear() === currentMonthYear && 
-             transactionDate.getMonth() === currentMonthIndex;
-    });
-    
-    const real = monthTransactions
-      .filter(t => t.type === 'expense' && !t.__isSimulation)
-      .reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
-    
-    const simulated = monthTransactions
-      .filter(t => t.type === 'expense' && t.__isSimulation)
-      .reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
-      
-    const income = monthTransactions
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + (t.amount || 0), 0);
-    
-    return {
-      realExpenses: real,
-      simulatedExpenses: simulated,
-      combinedIncome: income
-    };
-  }, [combinedTransactions, currentMonth]);
   
   const renderHiddenValue = () => '******';
 
@@ -146,25 +112,9 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                   {t('common.expense')}
                 </p>
               </div>
-              <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-red-700 dark:text-red-400 mb-2">
+              <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-red-700 dark:text-red-400">
                 {hideValues ? renderHiddenValue() : formatCurrency(totalExpenses, currency)}
               </p>
-              
-              {/* Mostrar divisão entre real e simulada */}
-              {combinedTransactions.length > 0 && (realExpenses > 0 || simulatedExpenses > 0) && (
-                <div className="text-xs space-y-1 opacity-75">
-                  <div className="flex justify-between items-center">
-                    <span>Real:</span>
-                    <span>{hideValues ? '***' : formatCurrency(realExpenses, currency)}</span>
-                  </div>
-                  {simulatedExpenses > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span>Simulada:</span>
-                      <span>{hideValues ? '***' : formatCurrency(simulatedExpenses, currency)}</span>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
             <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-red-200/30 dark:bg-red-800/20 rounded-full" />
           </CardContent>

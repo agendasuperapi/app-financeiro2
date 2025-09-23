@@ -41,6 +41,15 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
   // Saldo final = saldo anterior + receitas - despesas do mês atual
   const saldoFinal = balance + totalIncome - totalExpensesCombined;
   
+  // Debug logs para verificar cálculos
+  console.log('[SALDO DEBUG]', {
+    saldoAnterior: balance,
+    receitasMes: totalIncome, 
+    despesasMes: totalExpensesCombined,
+    saldoFinal: saldoFinal,
+    transactionsWithSimulations: transactionsWithSimulations.length
+  });
+  
   // Cores dinâmicas baseadas no saldo final
   const saldoColor = saldoFinal >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
   const saldoBgGradient = saldoFinal >= 0 

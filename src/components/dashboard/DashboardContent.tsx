@@ -11,6 +11,7 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { Goal, ScheduledTransaction, Transaction } from '@/types';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
+import { formatCurrency } from '@/utils/transactionUtils';
 
 interface DashboardContentProps {
   filteredTransactions: any[];
@@ -37,7 +38,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   onMarkScheduledAsPaid,
   scheduledTransactions = []
 }) => {
-  const { t } = usePreferences();
+  const { t, currency } = usePreferences();
 
   // Simulações mensais baseadas em poupeja_transactions.recurrence = 'Mensal'
   const [monthlySimulations, setMonthlySimulations] = React.useState<Transaction[]>([]);
@@ -110,6 +111,17 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     return combined.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [filteredTransactions, monthlySimulations]);
 
+  // Total de despesas (reais + simulações) no mês atual
+  const totalExpensesCombined = React.useMemo(() => {
+    return transactionsWithSimulations
+      .filter((tx: any) => (tx.type === 'expense') || (typeof tx.amount === 'number' && tx.amount < 0))
+      .reduce((sum: number, tx: any) => {
+        const amt = Number(tx.amount) || 0;
+        // Considerar valor absoluto para despesas negativas ou tipo 'expense'
+        return sum + (amt < 0 ? -amt : (tx.type === 'expense' ? amt : 0));
+      }, 0);
+  }, [transactionsWithSimulations]);
+
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
@@ -149,7 +161,12 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         <Card className="shadow-lg border-0">
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold">{t('transactions.recent')}</h3>
+              <div>
+                <h3 className="text-xl font-semibold">{t('transactions.recent')}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {t('common.expense')}: {hideValues ? '******' : formatCurrency(totalExpensesCombined, currency)}
+                </p>
+              </div>
               <Button variant="outline" asChild>
                 <Link to="/transactions">{t('common.viewAll')}</Link>
               </Button>

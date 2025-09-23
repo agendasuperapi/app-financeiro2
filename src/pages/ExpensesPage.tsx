@@ -149,7 +149,7 @@ const ExpensesPage = () => {
                 </CardHeader>
                 <CardContent>
                   <TransactionList 
-                    transactions={expenses.slice(0, 5)}
+                    transactions={expenses.slice(0, 10)}
                     onEdit={handleEditTransaction}
                     onDelete={handleDeleteTransaction}
                   />

@@ -191,12 +191,12 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
               </Button>
             </div>
             <TransactionList 
-              transactions={transactionsWithSimulations.slice(0, 5)} 
+              transactions={transactionsWithSimulations.slice(0, 10)} 
               onEdit={onEditTransaction} 
               onDelete={onDeleteTransaction} 
               hideValues={hideValues} 
             />
-            {transactionsWithSimulations.length > 5 && (
+            {transactionsWithSimulations.length > 10 && (
               <div className="mt-6 text-center">
                 <Button variant="outline" asChild>
                   <Link to="/transactions">{t('common.viewAll')}</Link>

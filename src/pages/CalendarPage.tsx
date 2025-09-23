@@ -4,12 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import MonthNavigation from '@/components/common/MonthNavigation';
 import { Badge } from '@/components/ui/badge';
-import { getTransactions } from '@/services/transactionService';
-import { getScheduledTransactions } from '@/services/scheduledTransactionService';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { getTransactions, deleteTransaction } from '@/services/transactionService';
+import { getScheduledTransactions, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
 import { Transaction, ScheduledTransaction } from '@/types';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { Edit, Trash2, MoreVertical } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import TransactionForm from '@/components/common/TransactionForm';
+import ScheduledTransactionForm from '@/components/schedule/ScheduledTransactionForm';
 
 const CalendarPage: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -17,6 +25,76 @@ const CalendarPage: React.FC = () => {
   const [reminders, setReminders] = useState<ScheduledTransaction[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editReminderDialogOpen, setEditReminderDialogOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [selectedReminder, setSelectedReminder] = useState<ScheduledTransaction | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { toast } = useToast();
+
+  const handleEditTransaction = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteTransaction = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleEditReminder = (reminder: ScheduledTransaction) => {
+    setSelectedReminder(reminder);
+    setEditReminderDialogOpen(true);
+  };
+
+  const handleDeleteReminder = (reminder: ScheduledTransaction) => {
+    setSelectedReminder(reminder);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedTransaction && !selectedReminder) return;
+    
+    setIsDeleting(true);
+    try {
+      if (selectedTransaction) {
+        await deleteTransaction(selectedTransaction.id);
+        toast({
+          title: "Sucesso",
+          description: "Transação excluída com sucesso!",
+        });
+      } else if (selectedReminder) {
+        await deleteScheduledTransaction(selectedReminder.id);
+        toast({
+          title: "Sucesso",
+          description: "Lembrete excluído com sucesso!",
+        });
+      }
+      
+      await loadData();
+      setDeleteDialogOpen(false);
+      setSelectedTransaction(null);
+      setSelectedReminder(null);
+    } catch (error) {
+      console.error('Error deleting:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleTransactionSuccess = async () => {
+    setEditDialogOpen(false);
+    setEditReminderDialogOpen(false);
+    setSelectedTransaction(null);
+    setSelectedReminder(null);
+    await loadData();
+  };
 
   useEffect(() => {
     loadData();
@@ -224,12 +302,34 @@ const CalendarPage: React.FC = () => {
                               )}
                             </div>
                           </div>
-                          <Badge
-                            variant={transaction.type === 'income' ? 'default' : 'destructive'}
-                          >
-                            {transaction.type === 'income' ? '+' : '-'}
-                            R$ {transaction.amount.toFixed(2)}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant={transaction.type === 'income' ? 'default' : 'destructive'}
+                            >
+                              {transaction.type === 'income' ? '+' : '-'}
+                              R$ {transaction.amount.toFixed(2)}
+                            </Badge>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                <DropdownMenuItem onClick={() => handleEditTransaction(transaction)}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleDeleteTransaction(transaction)}
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Excluir
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
                       ))}
                       
@@ -250,9 +350,31 @@ const CalendarPage: React.FC = () => {
                               )}
                             </div>
                           </div>
-                          <Badge variant="outline" className="border-blue-500 text-blue-600">
-                            Lembrete
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="border-blue-500 text-blue-600">
+                              Lembrete
+                            </Badge>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                <DropdownMenuItem onClick={() => handleEditReminder(reminder)}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleDeleteReminder(reminder)}
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Excluir
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
                       ))}
                     </>
@@ -341,6 +463,47 @@ const CalendarPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialogs */}
+      {selectedTransaction && (
+        <TransactionForm
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          initialData={selectedTransaction}
+          mode="edit"
+        />
+      )}
+
+      {selectedReminder && (
+        <ScheduledTransactionForm
+          open={editReminderDialogOpen}
+          onOpenChange={setEditReminderDialogOpen}
+          initialData={selectedReminder}
+          mode="edit"
+          onSuccess={handleTransactionSuccess}
+        />
+      )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 };

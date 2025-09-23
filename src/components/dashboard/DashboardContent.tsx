@@ -48,7 +48,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         const { data, error } = await (supabase as any)
           .from('poupeja_transactions')
           .select(`*, category:poupeja_categories(id, name, icon, color, type) `)
-          .eq('recurrence', 'Mensal');
+          .eq('recurrence', 'Mensal')
+          .eq('status', 'pending')
+          .eq('situacao', 'ativo');
 
         if (error) throw error;
 

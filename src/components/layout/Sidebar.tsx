@@ -296,11 +296,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       href: '/notes'
     },
     {
-      icon: BookOpen,
-      label: 'Regras',
-      href: '/rules'
-    },
-    {
       icon: Crown,
       label: t('nav.plans'),
       href: '/plans'

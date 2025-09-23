@@ -18,13 +18,12 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
-import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User, Search } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { ScheduledTransaction } from '@/types';
-import { isAfter, isToday, isYesterday, isWithinInterval, startOfDay, endOfDay, addDays, startOfMonth, endOfMonth, startOfYear, endOfYear, addMonths, addYears, format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { isAfter, isToday, isYesterday, isWithinInterval, startOfDay, endOfDay, addDays, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { toast } from 'sonner';
 import ContaForm from '@/components/contas/ContaForm';
 
@@ -35,7 +34,6 @@ const ContasPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [dateFilter, setDateFilter] = useState<string>('todos');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
@@ -53,7 +51,7 @@ const ContasPage = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [contas, statusFilter, dateFilter, searchQuery, selectedDate]);
+  }, [contas, statusFilter, dateFilter, searchQuery]);
 
   const loadContas = async () => {
     setLoading(true);
@@ -104,7 +102,7 @@ const ContasPage = () => {
 
     // Apply date filter
     if (dateFilter !== 'todos') {
-      const now = selectedDate; // Use selected date instead of current date
+      const now = new Date();
       filtered = filtered.filter((conta) => {
         const scheduledDate = new Date(conta.scheduledDate);
         
@@ -132,38 +130,9 @@ const ContasPage = () => {
             return true;
         }
       });
-    } else {
-      // If no specific date filter is applied, show accounts for the selected month
-      filtered = filtered.filter((conta) => {
-        const scheduledDate = new Date(conta.scheduledDate);
-        return isWithinInterval(scheduledDate, {
-          start: startOfMonth(selectedDate),
-          end: endOfMonth(selectedDate)
-        });
-      });
     }
     
     setFilteredContas(filtered);
-  };
-
-  const handlePreviousMonth = () => {
-    setSelectedDate(addMonths(selectedDate, -1));
-  };
-
-  const handleNextMonth = () => {
-    setSelectedDate(addMonths(selectedDate, 1));
-  };
-
-  const handlePreviousYear = () => {
-    setSelectedDate(addYears(selectedDate, -1));
-  };
-
-  const handleNextYear = () => {
-    setSelectedDate(addYears(selectedDate, 1));
-  };
-
-  const handleToday = () => {
-    setSelectedDate(new Date());
   };
 
   const getContaStatus = (conta: ScheduledTransaction): string => {
@@ -295,63 +264,6 @@ const ContasPage = () => {
                 />
               </DialogContent>
             </Dialog>
-          </div>
-          
-          {/* Navegação de Mês/Ano */}
-          <div className="flex items-center justify-between mb-4 p-3 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePreviousYear}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <ChevronLeft className="h-4 w-4 -ml-2" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePreviousMonth}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="text-center">
-              <div className="font-semibold text-lg">
-                {format(selectedDate, 'MMMM yyyy', { locale: ptBR })}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleToday}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                Hoje
-              </Button>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleNextMonth}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleNextYear}
-                className="h-8 w-8 p-0"
-              >
-                <ChevronRight className="h-4 w-4" />
-                <ChevronRight className="h-4 w-4 -ml-2" />
-              </Button>
-            </div>
           </div>
           
           {/* Filtros */}

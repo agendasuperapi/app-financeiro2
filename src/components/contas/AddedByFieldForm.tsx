@@ -95,7 +95,7 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
             <PopoverContent className="w-full p-0 z-50 border bg-popover text-popover-foreground shadow-md">
               <Command>
                 <CommandInput
-                  placeholder="Buscar nome..."
+                  placeholder="Buscar ou adicionar nome..."
                   value={field.value || ''}
                   onValueChange={(value) => {
                     field.onChange(value);
@@ -103,7 +103,45 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
                 />
                 <CommandList>
                   <CommandEmpty>
-                    {loading ? "Carregando nomes..." : "Nenhum nome encontrado."}
+                    {loading ? "Carregando nomes..." : (
+                      <div className="p-2">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Nenhum nome encontrado.
+                        </p>
+                        {field.value && field.value.trim() && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={async () => {
+                              try {
+                                // Adicionar novo nome na tabela poupeja_transactions
+                                const { error } = await (supabase as any)
+                                  .from('poupeja_transactions')
+                                  .insert({
+                                    name: field.value.trim(),
+                                    amount: 0,
+                                    description: 'Nome adicionado automaticamente',
+                                    category: 'Outros',
+                                    type: 'expense',
+                                    conta: 'Sistema'
+                                  });
+
+                                if (error) throw error;
+
+                                // Recarregar a lista de nomes
+                                window.location.reload();
+                              } catch (error) {
+                                console.error('Erro ao adicionar nome:', error);
+                              }
+                            }}
+                          >
+                            Adicionar "{field.value.trim()}"
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </CommandEmpty>
                   <CommandGroup>
                     {users.map((user) => (

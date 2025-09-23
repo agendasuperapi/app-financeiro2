@@ -84,12 +84,52 @@ const ContasPage = () => {
         return;
       }
       const data = await getScheduledTransactions(targetUserId);
-      setContas(data);
+      
+      // Gerar simulações para transações mensais
+      const simulatedTransactions = generateMonthlySimulations(data);
+      setContas([...data, ...simulatedTransactions]);
     } catch (error) {
       console.error('Error loading contas:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Função para gerar simulações de transações mensais
+  const generateMonthlySimulations = (transactions: ScheduledTransaction[]): ScheduledTransaction[] => {
+    const simulations: ScheduledTransaction[] = [];
+    const currentDate = new Date();
+    
+    // Filtrar apenas transações mensais que ainda não foram pagas
+    const monthlyTransactions = transactions.filter(
+      transaction => transaction.recurrence === 'monthly' && transaction.status !== 'paid'
+    );
+    
+    monthlyTransactions.forEach(transaction => {
+      const originalDate = new Date(transaction.scheduledDate);
+      
+      // Gerar simulações para os próximos 12 meses
+      for (let i = 1; i <= 12; i++) {
+        const simulatedDate = addMonths(originalDate, i);
+        
+        // Só adicionar se a data simulada for futura
+        if (simulatedDate > currentDate) {
+          const simulatedTransaction: ScheduledTransaction = {
+            ...transaction,
+            id: `${transaction.id}_simulated_${i}`,
+            scheduledDate: simulatedDate.toISOString(),
+            status: 'pending',
+            description: `${transaction.description} (Simulação)`,
+            // Marcar como simulação para distinguir visualmente
+            __isSimulation: true
+          };
+          
+          simulations.push(simulatedTransaction);
+        }
+      }
+    });
+    
+    return simulations;
   };
 
   const applyFilters = () => {
@@ -478,106 +518,123 @@ const ContasPage = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {filteredContas.map((conta) => {
-                    const status = getStatus(conta);
-                    const isPaid = conta.status === 'paid';
-                    
-                    return (
-                      <Card key={conta.id} className="transition-all hover:shadow-md">
-                        <CardContent className="p-2 md:p-4">
-                          {/* Primeira linha: Descrição e Status */}
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-xs md:text-lg">
-                                {conta.description || 'Conta sem descrição'}
-                              </h3>
-                            </div>
-                            <Badge variant={status.variant} className="ml-2">
-                              {status.label}
-                            </Badge>
-                          </div>
+                   {filteredContas.map((conta) => {
+                     const status = getStatus(conta);
+                     const isPaid = conta.status === 'paid';
+                     const isSimulation = conta.__isSimulation;
+                     
+                     return (
+                       <Card key={conta.id} className={`transition-all hover:shadow-md ${isSimulation ? 'border-dashed border-2 border-orange-300 bg-orange-50/30' : ''}`}>
+                         <CardContent className="p-2 md:p-4">
+                           {/* Primeira linha: Descrição e Status */}
+                           <div className="flex items-center justify-between mb-3">
+                             <div className="flex-1">
+                               <h3 className="font-semibold text-xs md:text-lg flex items-center gap-2">
+                                 {conta.description || 'Conta sem descrição'}
+                                 {isSimulation && (
+                                   <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800">
+                                     Simulação
+                                   </Badge>
+                                 )}
+                               </h3>
+                             </div>
+                             <Badge variant={isSimulation ? 'outline' : status.variant} className="ml-2">
+                               {isSimulation ? 'Previsto' : status.label}
+                             </Badge>
+                           </div>
 
-                          {/* Segunda linha: Data, Recorrência e Categoria */}
-                          <div className="flex items-center gap-1 md:gap-4 mb-2 md:mb-3 text-[10px] md:text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <CalendarIcon className="h-2.5 w-2.5 md:h-4 md:w-4" />
-                              <span>{formatDate(conta.scheduledDate, 'dd/MM/yyyy HH:mm')}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <span>•</span>
-                              {conta.creatorName && (
-                                <span className="inline-flex items-center px-1 py-0.5 rounded-md bg-primary/10 text-primary text-[8px] md:text-[9px] font-medium mr-1">
-                                  {conta.creatorName}
-                                </span>
-                              )}
-                              <span>{formatRecurrence(conta.recurrence)}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <span>•</span>
-                              <span className="truncate">{conta.category}</span>
-                            </div>
-                          </div>
+                           {/* Segunda linha: Data, Recorrência e Categoria */}
+                           <div className="flex items-center gap-1 md:gap-4 mb-2 md:mb-3 text-[10px] md:text-sm text-muted-foreground">
+                             <div className="flex items-center gap-1">
+                               <CalendarIcon className="h-2.5 w-2.5 md:h-4 md:w-4" />
+                               <span>{formatDate(conta.scheduledDate, 'dd/MM/yyyy HH:mm')}</span>
+                             </div>
+                             <div className="flex items-center gap-1">
+                               <span>•</span>
+                               {conta.creatorName && (
+                                 <span className="inline-flex items-center px-1 py-0.5 rounded-md bg-primary/10 text-primary text-[8px] md:text-[9px] font-medium mr-1">
+                                   {conta.creatorName}
+                                 </span>
+                               )}
+                               <span>{formatRecurrence(conta.recurrence)}</span>
+                             </div>
+                             <div className="flex items-center gap-1">
+                               <span>•</span>
+                               <span className="truncate">{conta.category}</span>
+                             </div>
+                           </div>
 
-                          {/* Terceira linha: Valor e Ações */}
-                          <div className="flex items-center justify-between">
-            <div className="font-bold text-sm md:text-xl">
-              {formatCurrency(Math.abs(conta.amount))}
-            </div>
-                            
-                            <div className="flex items-center gap-1 flex-wrap">
-                              {!isPaid && (
-                                <Button
+                           {/* Terceira linha: Valor e Ações */}
+                           <div className="flex items-center justify-between">
+             <div className="font-bold text-sm md:text-xl">
+               {formatCurrency(Math.abs(conta.amount))}
+             </div>
+                             
+                             <div className="flex items-center gap-1 flex-wrap">
+                               {!isSimulation && !isPaid && (
+                                 <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      console.log('🖱️ Button clicked for ID:', conta.id);
+                                      handleMarkAsPaid(conta.id);
+                                    }}
+                                    className="text-green-600 border-green-600 hover:bg-green-50 text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7"
+                                  >
+                                   <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
+                                   Marcar como Pago
+                                 </Button>
+                               )}
+                               
+                               {!isSimulation && isPaid && (
+                                 <Button
                                    size="sm"
                                    variant="outline"
-                                   onClick={() => {
-                                     console.log('🖱️ Button clicked for ID:', conta.id);
-                                     handleMarkAsPaid(conta.id);
-                                   }}
-                                   className="text-green-600 border-green-600 hover:bg-green-50 text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7"
+                                   disabled
+                                   className="text-green-600 border-green-600 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7"
                                  >
-                                  <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
-                                  Marcar como Pago
-                                </Button>
-                              )}
-                              
-                              {isPaid && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  disabled
-                                  className="text-green-600 border-green-600 text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7"
-                                >
-                                  <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
-                                  Pago
-                                </Button>
-                              )}
-                              
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEdit(conta)}
-                                className="h-6 md:h-7 w-6 md:w-7 p-0"
-                              >
-                                <Edit className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                              </Button>
-                              
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDeleteClick(conta)}
-                                className="text-red-600 border-red-600 hover:bg-red-50 h-6 md:h-7 w-6 md:w-7 p-0"
-                              >
-                                <Trash2 className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                              </Button>
-                            </div>
-                          </div>
+                                   <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
+                                   Pago
+                                 </Button>
+                               )}
+                               
+                               {!isSimulation && (
+                                 <>
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     onClick={() => handleEdit(conta)}
+                                     className="h-6 md:h-7 w-6 md:w-7 p-0"
+                                   >
+                                     <Edit className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                                   </Button>
+                                   
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     onClick={() => handleDeleteClick(conta)}
+                                     className="text-red-600 border-red-600 hover:bg-red-50 h-6 md:h-7 w-6 md:w-7 p-0"
+                                   >
+                                     <Trash2 className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                                   </Button>
+                                 </>
+                               )}
+                             </div>
+                           </div>
 
-                          {/* Mostrar data de pagamento se foi pago */}
-                          {isPaid && conta.paidDate && (
-                            <div className="mt-2 text-sm text-green-600">
-                              Pago em: {formatDate(conta.paidDate)}
-                            </div>
-                          )}
+                           {/* Mostrar data de pagamento se foi pago */}
+                           {!isSimulation && isPaid && conta.paidDate && (
+                             <div className="mt-2 text-sm text-green-600">
+                               Pago em: {formatDate(conta.paidDate)}
+                             </div>
+                           )}
+
+                           {/* Informação adicional para simulações */}
+                           {isSimulation && (
+                             <div className="mt-2 text-sm text-orange-700 bg-orange-50 p-2 rounded">
+                               Esta é uma simulação da recorrência mensal desta transação
+                             </div>
+                           )}
                         </CardContent>
                       </Card>
                     );

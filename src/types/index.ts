@@ -64,6 +64,7 @@ export interface ScheduledTransaction {
   parcela?: string; // Installment information
   creatorName?: string; // Name of who created the scheduled transaction (for dependents)
   conta?: string; // Account field
+  __isSimulation?: boolean; // Flag to mark simulated transactions
   // Database fields for compatibility
   category_id?: string;
   goal_id?: string;

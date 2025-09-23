@@ -81,10 +81,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           const hasRealTransaction = filteredTransactions.some((realTx: any) => {
             const realDesc = realTx.description ? String(realTx.description).toLowerCase() : '';
             const realDate = new Date(realTx.date);
-            
-            return realDate.getFullYear() === y && 
-                   realDate.getMonth() === m && 
-                   realDesc.includes(desc) || desc.includes(realDesc);
+            const sameMonth = realDate.getFullYear() === y && realDate.getMonth() === m;
+            const similarDesc = realDesc && desc && (realDesc.includes(desc) || desc.includes(realDesc));
+            return sameMonth && similarDesc;
           });
           
           return !hasRealTransaction;

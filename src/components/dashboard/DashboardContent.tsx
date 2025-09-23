@@ -66,11 +66,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             const realDesc = realTx.description ? String(realTx.description).toLowerCase() : '';
             const realDate = new Date(realTx.date);
             
-            return (
-              realDate.getFullYear() === y && 
-              realDate.getMonth() === m && 
-              (realDesc.includes(desc) || desc.includes(realDesc))
-            );
+            return realDate.getFullYear() === y && 
+                   realDate.getMonth() === m && 
+                   realDesc.includes(desc) || desc.includes(realDesc);
           });
           
           return !hasRealTransaction;
@@ -142,7 +140,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         <DashboardCharts 
           currentMonth={currentMonth} 
           hideValues={hideValues}
-          monthTransactions={transactionsWithSimulations}
+          monthTransactions={filteredTransactions}
         />
       </motion.div>
 

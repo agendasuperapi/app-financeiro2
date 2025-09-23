@@ -99,6 +99,28 @@ const Index = () => {
     }
   }, [transactions, scheduledTransactions, currentMonth]);
 
+  // Função para simular transações mensais para visualização (apenas do mês selecionado)
+  const generateMonthlySimulationsForDisplay = React.useCallback((scheduledTransactions: any[]) => {
+    // Não gerar simulações - o usuário não quer transações "inventadas"
+    return [];
+  }, []);
+
+  // Combinar transações reais com simulações para visualização
+  const transactionsWithDisplaySimulations = React.useMemo(() => {
+    const simulations = generateMonthlySimulationsForDisplay(scheduledTransactions);
+    
+    // Filtrar simulações para o mês atual
+    const currentMonthSimulations = simulations.filter(sim => {
+      const simDate = new Date(sim.date);
+      return simDate.getMonth() === currentMonth.getMonth() && 
+             simDate.getFullYear() === currentMonth.getFullYear();
+    });
+    
+    // Combinar transações do mês com simulações e ordenar por data
+    const monthTransactions = monthlyData?.monthTransactions || [];
+    const combined = [...monthTransactions.filter((t: any) => !t.__isSimulation), ...currentMonthSimulations];
+    return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [monthlyData, scheduledTransactions, generateMonthlySimulationsForDisplay, currentMonth]);
 
   const monthlyGoals = React.useMemo(() => {
     try {
@@ -279,7 +301,7 @@ const Index = () => {
 
           {/* Conteúdo do dashboard - com fallback para evitar erro */}
           <DashboardContent
-            filteredTransactions={filteredTransactions}
+            filteredTransactions={transactionsWithDisplaySimulations}
             goals={monthlyGoals || []}
             currentGoalIndex={currentGoalIndex}
             currentMonth={currentMonth}

@@ -40,8 +40,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  // More items per page for tablets
-  const itemsPerPage = isMobile ? 10 : 15;
+  // Show 10 transactions per page
+  const itemsPerPage = 10;
 
   // Calculate pagination
   const totalPages = Math.ceil(transactions.length / itemsPerPage);

@@ -24,6 +24,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { useDateFormat } from '@/hooks/useDateFormat';
+import { supabase } from '@/integrations/supabase/client';
 
 const TransactionsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
@@ -36,10 +37,70 @@ const TransactionsPage = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+  const [simulatedTransactions, setSimulatedTransactions] = useState<Transaction[]>([]);
   const { transactions, deleteTransaction, isClientView, selectedUser, targetUserId, refetchClientData } = useClientAwareData();
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const { formatDate } = useDateFormat();
+
+  // Função para gerar simulações de transações mensais
+  const generateMonthlySimulations = (): Transaction[] => {
+    const simulations: Transaction[] = [];
+    
+    if (!transactions) return simulations;
+    
+    try {
+      // Filtrar transações que têm recorrência mensal (se a propriedade existir)
+      // Como não temos essa informação nas transações atuais, vamos simular baseado em um padrão
+      // Por enquanto, vamos criar simulações para transações que acontecem todo mês
+      const currentDate = new Date();
+      
+      // Agrupar transações por descrição e valor para identificar padrões mensais
+      const transactionGroups = transactions.reduce((groups, transaction) => {
+        const key = `${transaction.description}-${transaction.amount}-${transaction.type}`;
+        if (!groups[key]) {
+          groups[key] = [];
+        }
+        groups[key].push(transaction);
+        return groups;
+      }, {} as Record<string, Transaction[]>);
+      
+      // Identificar transações que aparecem mensalmente (pelo menos 2 vezes em meses diferentes)
+      Object.values(transactionGroups).forEach((group: Transaction[]) => {
+        if (group.length >= 2) {
+          const latestTransaction = group.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+          
+          // Gerar simulações para os próximos 12 meses
+          for (let i = 1; i <= 12; i++) {
+            const simulatedDate = addMonths(new Date(latestTransaction.date), i);
+            
+            if (simulatedDate > currentDate) {
+              const simulatedTransaction: Transaction = {
+                id: `${latestTransaction.id}_simulated_${i}`,
+                description: `${latestTransaction.description} (Simulação)`,
+                amount: latestTransaction.amount,
+                type: latestTransaction.type,
+                category: latestTransaction.category,
+                date: simulatedDate.toISOString(),
+                created_at: latestTransaction.created_at,
+                userId: latestTransaction.userId,
+                creatorName: 'Sistema',
+                goalId: latestTransaction.goalId,
+                __isSimulation: true
+              };
+              
+              simulations.push(simulatedTransaction);
+            }
+          }
+        }
+      });
+      
+      return simulations;
+    } catch (error) {
+      console.error('Error generating simulations:', error);
+      return simulations;
+    }
+  };
 
   // Função para navegação de data
   const handleDateNavigation = (direction: 'prev' | 'next') => {
@@ -68,8 +129,18 @@ const TransactionsPage = () => {
     }
   };
 
+  // Load simulations when transactions or targetUserId changes
+  React.useEffect(() => {
+    if (targetUserId && transactions.length > 0) {
+      const sims = generateMonthlySimulations();
+      setSimulatedTransactions(sims);
+    } else {
+      setSimulatedTransactions([]);
+    }
+  }, [targetUserId, transactions]);
+
   // Filter transactions based on search, status, and date
-  const baseFilteredTransactions = transactions.filter(transaction => transaction.amount !== 0);
+  const baseFilteredTransactions = [...transactions.filter(transaction => transaction.amount !== 0), ...simulatedTransactions];
 
   // Apply filters
   React.useEffect(() => {

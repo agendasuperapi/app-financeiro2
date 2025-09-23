@@ -11,6 +11,7 @@ interface DashboardStatCardsProps {
   totalExpenses: number;
   balance: number;
   hideValues: boolean;
+  transactionsWithSimulations?: any[];
   onNavigateToTransactionType: (type: 'income' | 'expense') => void;
 }
 
@@ -19,9 +20,23 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
   totalExpenses,
   balance,
   hideValues,
+  transactionsWithSimulations = [],
   onNavigateToTransactionType
 }) => {
   const { t, currency } = usePreferences();
+  
+  // Total de despesas (reais + simulações) - mesma lógica do DashboardContent
+  const totalExpensesCombined = React.useMemo(() => {
+    if (transactionsWithSimulations.length === 0) return totalExpenses;
+    
+    return transactionsWithSimulations
+      .filter((tx: any) => (tx.type === 'expense') || (typeof tx.amount === 'number' && tx.amount < 0))
+      .reduce((sum: number, tx: any) => {
+        const amt = Number(tx.amount) || 0;
+        // Considerar valor absoluto para despesas negativas ou tipo 'expense'
+        return sum + (amt < 0 ? -amt : (tx.type === 'expense' ? amt : 0));
+      }, 0);
+  }, [transactionsWithSimulations, totalExpenses]);
   
   const renderHiddenValue = () => '******';
 
@@ -113,7 +128,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                 </p>
               </div>
               <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-red-700 dark:text-red-400">
-                {hideValues ? renderHiddenValue() : formatCurrency(totalExpenses, currency)}
+                {hideValues ? renderHiddenValue() : formatCurrency(totalExpensesCombined, currency)}
               </p>
             </div>
             <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-red-200/30 dark:bg-red-800/20 rounded-full" />

@@ -24,6 +24,7 @@ interface DashboardContentProps {
   onDeleteTransaction: (id: string) => void;
   onMarkScheduledAsPaid: (transaction: ScheduledTransaction) => void;
   scheduledTransactions?: ScheduledTransaction[];
+  onTransactionsWithSimulationsUpdate?: (transactions: any[]) => void;
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
@@ -36,7 +37,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   onEditTransaction,
   onDeleteTransaction,
   onMarkScheduledAsPaid,
-  scheduledTransactions = []
+  scheduledTransactions = [],
+  onTransactionsWithSimulationsUpdate
 }) => {
   const { t, currency } = usePreferences();
 
@@ -110,6 +112,11 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     const combined = [...filteredTransactions, ...monthlySimulations];
     return combined.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [filteredTransactions, monthlySimulations]);
+
+  // Atualizar parent component com transações combinadas
+  React.useEffect(() => {
+    onTransactionsWithSimulationsUpdate?.(transactionsWithSimulations);
+  }, [transactionsWithSimulations, onTransactionsWithSimulationsUpdate]);
 
   // Total de despesas (reais + simulações) no mês atual
   const totalExpensesCombined = React.useMemo(() => {

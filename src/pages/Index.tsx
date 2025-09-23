@@ -48,6 +48,7 @@ const Index = () => {
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [currentGoalIndex, setCurrentGoalIndex] = useState(0);
+  const [transactionsWithSimulations, setTransactionsWithSimulations] = useState<any[]>([]);
   
   console.log("Dashboard rendered with:", {
     transactionsCount: transactions.length, 
@@ -296,6 +297,7 @@ const Index = () => {
             totalExpenses={totalExpenses}
             balance={balance}
             hideValues={hideValues}
+            transactionsWithSimulations={transactionsWithSimulations}
             onNavigateToTransactionType={navigateToTransactionType}
           />
 
@@ -311,6 +313,7 @@ const Index = () => {
             onDeleteTransaction={handleDeleteTransaction}
             onMarkScheduledAsPaid={handleMarkScheduledAsPaid}
             scheduledTransactions={scheduledTransactions}
+            onTransactionsWithSimulationsUpdate={setTransactionsWithSimulations}
           />
         </div>
       </SubscriptionGuard>

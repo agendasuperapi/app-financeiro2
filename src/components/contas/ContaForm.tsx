@@ -277,17 +277,32 @@ const ContaForm: React.FC<ContaFormProps> = ({
             field
           }) => <FormItem>
                 <FormLabel>Tipo de Transação</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="income">Receita</SelectItem>
-                    <SelectItem value="expense">Despesa</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      variant={field.value === 'income' ? 'default' : 'outline'}
+                      onClick={() => field.onChange('income')}
+                      className={`${field.value === 'income' 
+                        ? 'bg-green-600 hover:bg-green-700 text-white border-green-600' 
+                        : 'border-green-600 text-green-600 hover:bg-green-50'
+                      }`}
+                    >
+                      Receita
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={field.value === 'expense' ? 'default' : 'outline'}
+                      onClick={() => field.onChange('expense')}
+                      className={`${field.value === 'expense'
+                        ? 'bg-red-600 hover:bg-red-700 text-white border-red-600'
+                        : 'border-red-600 text-red-600 hover:bg-red-50'
+                      }`}
+                    >
+                      Despesa
+                    </Button>
+                  </div>
+                </FormControl>
                 <FormMessage />
               </FormItem>} />
           

@@ -24,7 +24,6 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { useDateFormat } from '@/hooks/useDateFormat';
-import { supabase } from '@/integrations/supabase/client';
 
 const TransactionsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
@@ -37,23 +36,10 @@ const TransactionsPage = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
-  const [simulatedTransactions, setSimulatedTransactions] = useState<Transaction[]>([]);
   const { transactions, deleteTransaction, isClientView, selectedUser, targetUserId, refetchClientData } = useClientAwareData();
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const { formatDate } = useDateFormat();
-
-  // Função para gerar simulações de transações mensais
-  const generateMonthlySimulations = async (): Promise<Transaction[]> => {
-    const simulations: Transaction[] = [];
-    
-    if (!targetUserId) return simulations;
-    
-    // Temporariamente desabilitado devido a problemas de tipo do Supabase
-    // TODO: Implementar quando os tipos estiverem corretos
-    console.log('Monthly simulations temporarily disabled');
-    return simulations;
-  };
 
   // Função para navegação de data
   const handleDateNavigation = (direction: 'prev' | 'next') => {
@@ -82,22 +68,8 @@ const TransactionsPage = () => {
     }
   };
 
-  // Load simulations when transactions or targetUserId changes
-  React.useEffect(() => {
-    const loadSimulations = async () => {
-      if (targetUserId) {
-        const sims = await generateMonthlySimulations();
-        setSimulatedTransactions(sims);
-      } else {
-        setSimulatedTransactions([]);
-      }
-    };
-    
-    loadSimulations();
-  }, [targetUserId]);
-
   // Filter transactions based on search, status, and date
-  const baseFilteredTransactions = [...transactions.filter(transaction => transaction.amount !== 0), ...simulatedTransactions];
+  const baseFilteredTransactions = transactions.filter(transaction => transaction.amount !== 0);
 
   // Apply filters
   React.useEffect(() => {

@@ -15,8 +15,6 @@ export interface Transaction {
   goalId?: string; // Optional reference to a goal
   conta?: string; // Account name
   creatorName?: string; // Name of who created the transaction (for dependents)
-  userId?: string; // User ID
-  __isSimulation?: boolean; // Flag to mark simulated transactions
   // Database fields for compatibility
   category_id?: string;
   goal_id?: string;

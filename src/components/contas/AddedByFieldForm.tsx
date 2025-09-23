@@ -31,8 +31,8 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
 
         // Buscar nomes e telefones únicos da view "view_cadastros_unificados"
         const { data, error } = await (supabase as any)
-          .from('view_cadastros_unificados')
-          .select('id, name, phone')
+          .from('poupeja_transactions')
+          .select('name')
           .not('name', 'is', null);
 
         if (error) throw error;
@@ -46,7 +46,7 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
                 item.name,
                 {
                   name: item.name,
-                  phone: item.phone || ''
+                  phone: ''
                 }
               ])
           ).values()

@@ -178,6 +178,7 @@ export const useTransactionForm = ({
         description: initialData.description || '',
         date: new Date(initialData.date).toISOString().split('T')[0],
         goalId: initialData.goalId,
+        name: initialData.creatorName || '',
       });
     } else {
       setSelectedType(defaultType);
@@ -189,6 +190,7 @@ export const useTransactionForm = ({
         description: '',
         date: new Date().toISOString().split('T')[0],
         goalId: undefined,
+        name: '',
       });
     }
   }, [initialData, defaultType]);

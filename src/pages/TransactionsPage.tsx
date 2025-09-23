@@ -49,62 +49,10 @@ const TransactionsPage = () => {
     
     if (!targetUserId) return simulations;
     
-    try {
-      // Buscar transações com recorrência mensal da tabela poupeja_transactions
-      // Use RPC call to avoid type issues
-      const { data: monthlyTransactions, error } = await (supabase.rpc as any)('get_monthly_transactions', { 
-        p_user_id: targetUserId 
-      }) || { data: null, error: 'RPC not available' };
-      
-      // If RPC fails, try a simpler approach
-      if (error) {
-        console.log('RPC failed, using fallback method');
-        // For now, return empty simulations until we can fix the query
-        return simulations;
-      }
-      
-      if (error) {
-        console.error('Error fetching monthly transactions:', error);
-        return simulations;
-      }
-      
-      if (!monthlyTransactions) return simulations;
-      
-      const currentDate = new Date();
-      
-      monthlyTransactions.forEach(transaction => {
-        const originalDate = new Date(transaction.date);
-        
-        // Gerar simulações para os próximos 12 meses
-        for (let i = 1; i <= 12; i++) {
-          const simulatedDate = addMonths(originalDate, i);
-          
-          // Só adicionar se a data simulada for futura
-          if (simulatedDate > currentDate) {
-            const simulatedTransaction: Transaction = {
-              id: `${transaction.id}_simulated_${i}`,
-              description: `${transaction.description} (Simulação)`,
-              amount: transaction.amount,
-              type: transaction.type as 'income' | 'expense',
-              category: transaction.category_id || 'Sem categoria',
-              date: simulatedDate.toISOString(),
-              created_at: transaction.created_at,
-              userId: transaction.user_id,
-              creatorName: 'Sistema',
-              goalId: transaction.goal_id,
-              __isSimulation: true
-            };
-            
-            simulations.push(simulatedTransaction);
-          }
-        }
-      });
-      
-      return simulations;
-    } catch (error) {
-      console.error('Error generating simulations:', error);
-      return simulations;
-    }
+    // Temporariamente desabilitado devido a problemas de tipo do Supabase
+    // TODO: Implementar quando os tipos estiverem corretos
+    console.log('Monthly simulations temporarily disabled');
+    return simulations;
   };
 
   // Função para navegação de data

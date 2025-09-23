@@ -55,7 +55,7 @@ const LembrarPage = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [searchQuery, setSearchQuery] = useState('');
-  const [dateFilter, setDateFilter] = useState('todos');
+  const [dateFilter, setDateFilter] = useState('mes');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);

@@ -111,7 +111,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   </TableCell>
                   <TableCell className="font-medium text-[10px] md:text-xs">
                      <div className="space-y-1">
-                       <div className="font-medium">{formatDateTime(transaction.created_at || transaction.date)}</div>
+                       <div className="font-medium">{formatDateTime(transaction.date)}</div>
                        <div className="lg:hidden text-[10px] text-muted-foreground break-words">
                          {transaction.description}
                        </div>

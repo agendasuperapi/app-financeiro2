@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -17,7 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
-import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User } from 'lucide-react';
+import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User, Search } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
@@ -32,6 +33,7 @@ const ContasPage = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [dateFilter, setDateFilter] = useState<string>('todos');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
@@ -49,7 +51,7 @@ const ContasPage = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [contas, statusFilter, dateFilter]);
+  }, [contas, statusFilter, dateFilter, searchQuery]);
 
   const loadContas = async () => {
     setLoading(true);
@@ -69,6 +71,16 @@ const ContasPage = () => {
 
   const applyFilters = () => {
     let filtered = contas;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((conta) => 
+        (conta.description?.toLowerCase().includes(query)) ||
+        (conta.category?.toLowerCase().includes(query)) ||
+        (conta.creatorName?.toLowerCase().includes(query))
+      );
+    }
 
     // Apply status filter
     if (statusFilter !== 'todos') {
@@ -257,6 +269,17 @@ const ContasPage = () => {
           {/* Filtros */}
           <div className="flex items-center gap-2 mb-2 md:mb-4 flex-wrap">
             <Filter className="h-4 w-4 text-muted-foreground" />
+            
+            {/* Campo de Pesquisa */}
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Pesquisar..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 w-32 md:w-48"
+              />
+            </div>
             
             {/* Filtro de Status */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>

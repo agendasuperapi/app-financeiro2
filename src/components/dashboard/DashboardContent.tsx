@@ -48,6 +48,19 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   React.useEffect(() => {
     const fetchMensalAndSimulate = async () => {
       try {
+        // Verificar se o mês atual é passado - não gerar simulações para meses passados
+        const today = new Date();
+        const currentYear = currentMonth.getFullYear();
+        const currentMonthIndex = currentMonth.getMonth();
+        const todayYear = today.getFullYear();
+        const todayMonth = today.getMonth();
+        
+        // Se o mês selecionado é anterior ao mês atual, não gerar simulações
+        if (currentYear < todayYear || (currentYear === todayYear && currentMonthIndex < todayMonth)) {
+          setMonthlySimulations([]);
+          return;
+        }
+
         const { data, error } = await (supabase as any)
           .from('poupeja_transactions')
           .select(`*, category:poupeja_categories(id, name, icon, color, type) `)

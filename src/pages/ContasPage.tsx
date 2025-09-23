@@ -17,12 +17,29 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
-import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User } from 'lucide-react';
+import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { ScheduledTransaction } from '@/types';
-import { isAfter, isToday } from 'date-fns';
+import { 
+  isAfter, 
+  isToday, 
+  isYesterday, 
+  isTomorrow, 
+  isWithinInterval, 
+  startOfDay, 
+  endOfDay, 
+  addDays, 
+  startOfMonth, 
+  endOfMonth, 
+  startOfYear, 
+  endOfYear, 
+  addMonths, 
+  addYears, 
+  subMonths, 
+  subYears 
+} from 'date-fns';
 import { toast } from 'sonner';
 import ContaForm from '@/components/contas/ContaForm';
 
@@ -31,6 +48,8 @@ const ContasPage = () => {
   const [filteredContas, setFilteredContas] = useState<ScheduledTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('todos');
+  const [dateFilter, setDateFilter] = useState<string>('todos');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
@@ -47,8 +66,8 @@ const ContasPage = () => {
   }, [targetUserId]);
 
   useEffect(() => {
-    applyStatusFilter();
-  }, [contas, statusFilter]);
+    applyFilters();
+  }, [contas, statusFilter, dateFilter, selectedDate]);
 
   const loadContas = async () => {
     setLoading(true);
@@ -66,28 +85,83 @@ const ContasPage = () => {
     }
   };
 
-  const applyStatusFilter = () => {
-    if (statusFilter === 'todos') {
-      setFilteredContas(contas);
-      return;
+  const applyFilters = () => {
+    let filtered = contas;
+
+    // Apply status filter
+    if (statusFilter !== 'todos') {
+      filtered = filtered.filter((conta) => {
+        const status = getContaStatus(conta);
+        
+        switch (statusFilter) {
+          case 'pendente':
+            return status === 'Pendente';
+          case 'pago':
+            return status === 'Pago';
+          case 'vencido':
+            return status === 'Vencido' || status === 'Vence Hoje';
+          default:
+            return true;
+        }
+      });
     }
 
-    const filtered = contas.filter((conta) => {
-      const status = getContaStatus(conta);
-      
-      switch (statusFilter) {
-        case 'pendente':
-          return status === 'Pendente';
-        case 'pago':
-          return status === 'Pago';
-        case 'vencido':
-          return status === 'Vencido' || status === 'Vence Hoje';
-        default:
-          return true;
-      }
-    });
+    // Apply date filter
+    if (dateFilter !== 'todos') {
+      filtered = filtered.filter((conta) => {
+        const contaDate = new Date(conta.scheduledDate);
+        const today = new Date();
+        
+        switch (dateFilter) {
+          case 'ontem':
+            return isYesterday(contaDate);
+          case 'hoje':
+            return isToday(contaDate);
+          case 'amanha':
+            return isTomorrow(contaDate);
+          case 'proximos7dias':
+            return isWithinInterval(contaDate, {
+              start: startOfDay(today),
+              end: endOfDay(addDays(today, 7))
+            });
+          case 'mes':
+            return isWithinInterval(contaDate, {
+              start: startOfMonth(selectedDate),
+              end: endOfMonth(selectedDate)
+            });
+          case 'ano':
+            return isWithinInterval(contaDate, {
+              start: startOfYear(selectedDate),
+              end: endOfYear(selectedDate)
+            });
+          default:
+            return true;
+        }
+      });
+    }
     
     setFilteredContas(filtered);
+  };
+
+  const handleDateNavigation = (direction: 'prev' | 'next') => {
+    if (dateFilter === 'mes') {
+      setSelectedDate(direction === 'prev' ? subMonths(selectedDate, 1) : addMonths(selectedDate, 1));
+    } else if (dateFilter === 'ano') {
+      setSelectedDate(direction === 'prev' ? subYears(selectedDate, 1) : addYears(selectedDate, 1));
+    }
+  };
+
+  const getDateFilterLabel = () => {
+    const { formatMonth } = useDateFormat();
+    
+    switch (dateFilter) {
+      case 'mes':
+        return formatMonth(selectedDate);
+      case 'ano':
+        return selectedDate.getFullYear().toString();
+      default:
+        return '';
+    }
   };
 
   const getContaStatus = (conta: ScheduledTransaction): string => {
@@ -221,20 +295,65 @@ const ContasPage = () => {
             </Dialog>
           </div>
           
-          {/* Filtro de Status */}
-          <div className="flex items-center gap-2 mb-2 md:mb-4">
+          {/* Filtros */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-2 md:mb-4">
             <Filter className="h-4 w-4 text-muted-foreground" />
+            
+            {/* Filtro de Status */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filtrar por status" />
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="todos">Todos Status</SelectItem>
                 <SelectItem value="pendente">Pendente</SelectItem>
                 <SelectItem value="pago">Pago</SelectItem>
                 <SelectItem value="vencido">Vencido</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Filtro de Data */}
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Data" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todas as Datas</SelectItem>
+                <SelectItem value="ontem">Ontem</SelectItem>
+                <SelectItem value="hoje">Hoje</SelectItem>
+                <SelectItem value="amanha">Amanhã</SelectItem>
+                <SelectItem value="proximos7dias">Próximos 7 dias</SelectItem>
+                <SelectItem value="mes">Mês</SelectItem>
+                <SelectItem value="ano">Ano</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Navegação de Data */}
+            {(dateFilter === 'mes' || dateFilter === 'ano') && (
+              <div className="flex items-center gap-1 bg-muted rounded-md p-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDateNavigation('prev')}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <span className="text-sm font-medium px-2 min-w-[120px] text-center">
+                  {getDateFilterLabel()}
+                </span>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDateNavigation('next')}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
           <Card>
             <CardHeader>
@@ -248,7 +367,10 @@ const ContasPage = () => {
                 </div>
               ) : filteredContas.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  {statusFilter === 'todos' ? 'Nenhuma conta encontrada' : `Nenhuma conta ${statusFilter} encontrada`}
+                  {statusFilter === 'todos' && dateFilter === 'todos' ? 
+                    'Nenhuma conta encontrada' : 
+                    'Nenhuma conta encontrada para os filtros selecionados'
+                  }
                 </div>
               ) : (
                 <div className="space-y-4">

@@ -19,15 +19,25 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
 import { ScheduledTransaction } from '@/types';
-import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User, Search } from 'lucide-react';
+import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User, Search, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
-import { isAfter, isToday } from 'date-fns';
+import { 
+  isAfter, 
+  isToday, 
+  addMonths, 
+  subMonths, 
+  addYears, 
+  subYears 
+} from 'date-fns';
 import { toast } from 'sonner';
 import AddContaForm from '@/components/contas/AddContaForm';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 const LembrarPage = () => {
   
@@ -56,6 +66,9 @@ const LembrarPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('mes');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
@@ -65,13 +78,40 @@ const LembrarPage = () => {
   const { currency } = usePreferences();
   const { isClientView, selectedUser, targetUserId } = useClientAwareData();
 
+  // Função para navegação de data
+  const handleDateNavigation = (direction: 'prev' | 'next') => {
+    if (dateFilter === 'mes') {
+      setSelectedDate(direction === 'prev' ? subMonths(selectedDate, 1) : addMonths(selectedDate, 1));
+    } else if (dateFilter === 'ano') {
+      setSelectedDate(direction === 'prev' ? subYears(selectedDate, 1) : addYears(selectedDate, 1));
+    }
+  };
+
+  const getDateFilterLabel = () => {
+    const { formatMonth } = useDateFormat();
+    
+    switch (dateFilter) {
+      case 'mes':
+        return formatMonth(selectedDate);
+      case 'ano':
+        return selectedDate.getFullYear().toString();
+      case 'periodo':
+        if (startDate && endDate) {
+          return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+        }
+        return 'Selecionar período';
+      default:
+        return '';
+    }
+  };
+
   useEffect(() => {
     loadContas();
   }, [targetUserId]);
 
   useEffect(() => {
     applyFilters();
-  }, [contas, statusFilter, searchQuery, dateFilter]);
+  }, [contas, statusFilter, searchQuery, dateFilter, selectedDate, startDate, endDate]);
 
   const loadContas = async () => {
     setLoading(true);
@@ -175,9 +215,16 @@ const LembrarPage = () => {
             next7Days.setDate(next7Days.getDate() + 7);
             return contaDateOnly >= today && contaDateOnly <= next7Days;
           case 'mes':
-            return contaDate.getMonth() === now.getMonth() && contaDate.getFullYear() === now.getFullYear();
+            return contaDate.getMonth() === selectedDate.getMonth() && contaDate.getFullYear() === selectedDate.getFullYear();
           case 'ano':
-            return contaDate.getFullYear() === now.getFullYear();
+            return contaDate.getFullYear() === selectedDate.getFullYear();
+          case 'periodo':
+            if (startDate && endDate) {
+              const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+              const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+              return contaDateOnly >= startDateOnly && contaDateOnly <= endDateOnly;
+            }
+            return true;
           default:
             return true;
         }
@@ -377,6 +424,92 @@ const LembrarPage = () => {
               </SelectContent>
             </Select>
           </div>
+          
+          {/* Controles de Navegação de Data */}
+          {(dateFilter === 'mes' || dateFilter === 'ano') && (
+            <div className="flex justify-center mb-2 md:mb-4">
+              <div className="flex items-center gap-1 bg-muted rounded-md p-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDateNavigation('prev')}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <span className="text-sm font-medium px-2 min-w-[120px] text-center">
+                  {getDateFilterLabel()}
+                </span>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDateNavigation('next')}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Seletor de Período */}
+          {dateFilter === 'periodo' && (
+            <div className="flex justify-center mb-2 md:mb-4">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "justify-start text-left font-normal w-full sm:w-[140px]",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? formatDate(startDate) : "Data inicial"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "justify-start text-left font-normal w-full sm:w-[140px]",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? formatDate(endDate) : "Data final"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          )}
           
           <Card>
             <CardHeader className="p-4 md:p-6">

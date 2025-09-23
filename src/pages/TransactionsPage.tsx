@@ -7,7 +7,7 @@ import TransactionTable from '@/components/common/TransactionTable';
 import TransactionForm from '@/components/common/TransactionForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, User, RotateCcw, Filter, Search } from 'lucide-react';
+import { Plus, User, RotateCcw, Filter, Search, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { Transaction } from '@/types';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -15,6 +15,15 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  addMonths, 
+  subMonths, 
+  addYears, 
+  subYears 
+} from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { useDateFormat } from '@/hooks/useDateFormat';
 
 const TransactionsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
@@ -23,10 +32,41 @@ const TransactionsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [dateFilter, setDateFilter] = useState('mes');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const { transactions, deleteTransaction, isClientView, selectedUser, targetUserId, refetchClientData } = useClientAwareData();
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const { formatDate } = useDateFormat();
+
+  // Função para navegação de data
+  const handleDateNavigation = (direction: 'prev' | 'next') => {
+    if (dateFilter === 'mes') {
+      setSelectedDate(direction === 'prev' ? subMonths(selectedDate, 1) : addMonths(selectedDate, 1));
+    } else if (dateFilter === 'ano') {
+      setSelectedDate(direction === 'prev' ? subYears(selectedDate, 1) : addYears(selectedDate, 1));
+    }
+  };
+
+  const getDateFilterLabel = () => {
+    const { formatMonth } = useDateFormat();
+    
+    switch (dateFilter) {
+      case 'mes':
+        return formatMonth(selectedDate);
+      case 'ano':
+        return selectedDate.getFullYear().toString();
+      case 'periodo':
+        if (startDate && endDate) {
+          return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+        }
+        return 'Selecionar período';
+      default:
+        return '';
+    }
+  };
 
   // Filter transactions based on search, status, and date
   const baseFilteredTransactions = transactions.filter(transaction => transaction.amount !== 0);
@@ -34,7 +74,7 @@ const TransactionsPage = () => {
   // Apply filters
   React.useEffect(() => {
     applyFilters();
-  }, [baseFilteredTransactions, searchQuery, statusFilter, dateFilter]);
+  }, [baseFilteredTransactions, searchQuery, statusFilter, dateFilter, selectedDate, startDate, endDate]);
 
   const applyFilters = () => {
     let filtered = [...baseFilteredTransactions];
@@ -88,9 +128,16 @@ const TransactionsPage = () => {
             next7Days.setDate(next7Days.getDate() + 7);
             return transactionDateOnly >= today && transactionDateOnly <= next7Days;
           case 'mes':
-            return transactionDate.getMonth() === now.getMonth() && transactionDate.getFullYear() === now.getFullYear();
+            return transactionDate.getMonth() === selectedDate.getMonth() && transactionDate.getFullYear() === selectedDate.getFullYear();
           case 'ano':
-            return transactionDate.getFullYear() === now.getFullYear();
+            return transactionDate.getFullYear() === selectedDate.getFullYear();
+          case 'periodo':
+            if (startDate && endDate) {
+              const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+              const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+              return transactionDateOnly >= startDateOnly && transactionDateOnly <= endDateOnly;
+            }
+            return true;
           default:
             return true;
         }
@@ -227,6 +274,92 @@ const TransactionsPage = () => {
               </SelectContent>
             </Select>
           </div>
+          
+          {/* Controles de Navegação de Data */}
+          {(dateFilter === 'mes' || dateFilter === 'ano') && (
+            <div className="flex justify-center mb-2 md:mb-4">
+              <div className="flex items-center gap-1 bg-muted rounded-md p-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDateNavigation('prev')}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <span className="text-sm font-medium px-2 min-w-[120px] text-center">
+                  {getDateFilterLabel()}
+                </span>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDateNavigation('next')}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Seletor de Período */}
+          {dateFilter === 'periodo' && (
+            <div className="flex justify-center mb-2 md:mb-4">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "justify-start text-left font-normal w-full sm:w-[140px]",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? formatDate(startDate) : "Data inicial"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "justify-start text-left font-normal w-full sm:w-[140px]",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? formatDate(endDate) : "Data final"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          )}
           
           {/* Content Container */}
           <div className="space-y-4">

@@ -21,11 +21,12 @@ interface ContaFormProps {
   mode: 'create' | 'edit';
   onSuccess?: () => void;
   onCancel?: () => void;
-  defaultType?: 'expense';
+  defaultType?: 'income' | 'expense';
 }
 
-// Schema for the conta form (expense only with installments)
+// Schema for the conta form (income or expense with installments)
 const contaFormSchema = z.object({
+  type: z.enum(['income', 'expense']),
   description: z.string().min(1, 'Descrição é obrigatória'),
   amount: z.number().min(0.01, 'Valor deve ser maior que zero'),
   installments: z.number().min(1, 'Número de parcelas deve ser maior que zero').int('Deve ser um número inteiro').optional(),
@@ -57,13 +58,14 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
-  // Default form values for contas (expense only) - simplified approach
+  // Default form values for contas (income or expense) - simplified approach
   const getDefaultValues = (): ContaFormValues => {
     const now = new Date();
     now.setHours(now.getHours() + 1, 0, 0, 0);
     if (mode === 'edit' && initialData) {
       const hasInstallments = initialData.parcela && parseInt(initialData.parcela) > 1;
       return {
+        type: (initialData.type === 'income' || initialData.type === 'expense') ? initialData.type : 'expense',
         description: initialData.description || '',
         amount: Math.abs(initialData.amount || 100),
         installments: hasInstallments ? parseInt(initialData.parcela || '1') : undefined,
@@ -78,6 +80,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
       };
     }
     return {
+      type: defaultType,
       description: '',
       amount: 100,
       installments: undefined,
@@ -100,13 +103,14 @@ const ContaForm: React.FC<ContaFormProps> = ({
     mode: 'onChange'
   });
 
-  // Load categories for expense type only
+  // Load categories based on selected transaction type
   useEffect(() => {
     const loadCategories = async () => {
       setLoadingCategories(true);
       try {
-        const categoryData = await getCategoriesByType('expense');
-        console.log(`Loaded ${categoryData.length} categories for expense:`, categoryData);
+        const transactionType = form.watch('type');
+        const categoryData = await getCategoriesByType(transactionType);
+        console.log(`Loaded ${categoryData.length} categories for ${transactionType}:`, categoryData);
         setCategories(categoryData);
 
         // Set default category if none selected and categories are available
@@ -126,7 +130,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
       }
     };
     loadCategories();
-  }, [form]);
+  }, [form.watch('type')]);
 
   // Reset form when initialData changes (only for edit mode)
   useEffect(() => {
@@ -166,9 +170,9 @@ const ContaForm: React.FC<ContaFormProps> = ({
         // Determine target user id (admin visualizando um cliente)
         const targetUserId = selectedUser?.id || user?.id || undefined;
         const transactionData = {
-          type: 'expense' as const,
+          type: values.type,
           description: values.description,
-          amount: -values.amount,
+          amount: values.type === 'expense' ? -values.amount : values.amount,
           installments: values.recurrence === 'installments' ? values.installments || 1 : 1,
           category: selectedCategory?.name || 'Outros',
           category_id: values.category,
@@ -213,9 +217,9 @@ const ContaForm: React.FC<ContaFormProps> = ({
         // Determine target user id (admin visualizando um cliente)
         const targetUserId = selectedUser?.id || user?.id || undefined;
         const updateData = {
-          type: 'expense' as const,
+          type: values.type,
           description: values.description,
-          amount: -values.amount,
+          amount: values.type === 'expense' ? -values.amount : values.amount,
           installments: values.recurrence === 'installments' ? values.installments || 1 : 1,
           category: selectedCategory?.name || 'Outros',
           category_id: values.category,
@@ -268,6 +272,24 @@ const ContaForm: React.FC<ContaFormProps> = ({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           
+          {/* Transaction Type Field */}
+          <FormField control={form.control} name="type" render={({
+            field
+          }) => <FormItem>
+                <FormLabel>Tipo de Transação</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="income">Receita</SelectItem>
+                    <SelectItem value="expense">Despesa</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>} />
           
           {/* Description Field - moved to top */}
           <FormField control={form.control} name="description" render={({

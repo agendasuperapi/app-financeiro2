@@ -31,23 +31,55 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
 
   // Calcular despesas reais e simuladas separadamente
   const { realExpenses, simulatedExpenses } = React.useMemo(() => {
+    console.log('🔍 DashboardStatCards DEBUG:', {
+      combinedTransactionsLength: combinedTransactions?.length || 0,
+      currentMonth: currentMonth.toDateString(),
+      totalExpenses,
+      sampleTransactions: combinedTransactions?.slice(0, 3)
+    });
+
     if (!combinedTransactions || combinedTransactions.length === 0) {
+      console.log('📊 Using totalExpenses fallback:', totalExpenses);
       return { realExpenses: totalExpenses, simulatedExpenses: 0 };
     }
 
     const currentMonthTransactions = combinedTransactions.filter((t: any) => {
       const transactionDate = new Date(t.date);
-      return transactionDate.getMonth() === currentMonth.getMonth() && 
+      const isCurrentMonth = transactionDate.getMonth() === currentMonth.getMonth() && 
              transactionDate.getFullYear() === currentMonth.getFullYear();
+      return isCurrentMonth;
     });
 
-    const real = currentMonthTransactions
-      .filter((t: any) => t.type === 'expense' && !t.description?.includes('(Simulação)'))
+    console.log('📅 Current month transactions:', {
+      totalTransactions: combinedTransactions.length,
+      currentMonthCount: currentMonthTransactions.length,
+      currentMonthTransactions: currentMonthTransactions.map(t => ({
+        date: t.date,
+        type: t.type,
+        amount: t.amount,
+        description: t.description
+      }))
+    });
+
+    const realExpenseTransactions = currentMonthTransactions
+      .filter((t: any) => t.type === 'expense' && !t.description?.includes('(Simulação)'));
+    
+    const simulatedExpenseTransactions = currentMonthTransactions
+      .filter((t: any) => t.type === 'expense' && t.description?.includes('(Simulação)'));
+
+    const real = realExpenseTransactions
       .reduce((sum: number, t: any) => sum + Math.abs(t.amount || 0), 0);
 
-    const simulated = currentMonthTransactions
-      .filter((t: any) => t.type === 'expense' && t.description?.includes('(Simulação)'))
+    const simulated = simulatedExpenseTransactions
       .reduce((sum: number, t: any) => sum + Math.abs(t.amount || 0), 0);
+
+    console.log('💰 Expense calculation:', {
+      realExpenseTransactions: realExpenseTransactions.length,
+      simulatedExpenseTransactions: simulatedExpenseTransactions.length,
+      real,
+      simulated,
+      total: real + simulated
+    });
 
     return { realExpenses: real, simulatedExpenses: simulated };
   }, [combinedTransactions, currentMonth, totalExpenses]);

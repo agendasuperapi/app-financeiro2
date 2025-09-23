@@ -8,8 +8,9 @@ import UpcomingExpensesAlert from '@/components/dashboard/UpcomingExpensesAlert'
 import GoalNavigation from '@/components/common/GoalNavigation';
 import DashboardCharts from '@/components/dashboard/DashboardCharts';
 import { usePreferences } from '@/contexts/PreferencesContext';
-import { Goal, ScheduledTransaction } from '@/types';
+import { Goal, ScheduledTransaction, Transaction } from '@/types';
 import { motion } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DashboardContentProps {
   filteredTransactions: any[];
@@ -38,17 +39,56 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 }) => {
   const { t } = usePreferences();
 
-  // Função para simular transações mensais
-  const generateMonthlySimulations = (scheduledTransactions: ScheduledTransaction[]) => {
-    // This function is now just for display - calculations include simulations in Index.tsx
-    return [];
-  };
+  // Simulações mensais baseadas em poupeja_transactions.recurrence = 'Mensal'
+  const [monthlySimulations, setMonthlySimulations] = React.useState<Transaction[]>([]);
 
-  // Combinar transações reais com simulações (agora recebidas via props)
+  React.useEffect(() => {
+    const fetchMensalAndSimulate = async () => {
+      try {
+        const { data, error } = await (supabase as any)
+          .from('poupeja_transactions')
+          .select(`*, category:poupeja_categories(id, name, icon, color, type) `)
+          .eq('recurrence', 'Mensal');
+
+        if (error) throw error;
+
+        const y = currentMonth.getFullYear();
+        const m = currentMonth.getMonth();
+        const sims: Transaction[] = ((data as any[]) || []).map((item: any) => {
+          const baseDate = item.date ? new Date(item.date) : new Date(y, m, 1);
+          const day = baseDate.getDate() || 1;
+          const simDate = new Date(y, m, Math.min(day, 28));
+          const desc = item.description ? String(item.description) : '';
+          return {
+            id: `mensal-sim-${item.id}-${y}-${m + 1}`,
+            type: item.type,
+            amount: Number(item.amount) || 0,
+            category: item.category?.name || 'Outros',
+            categoryIcon: item.category?.icon || 'circle',
+            categoryColor: item.category?.color || '#607D8B',
+            description: desc ? `${desc} (Simulação)` : 'Simulação',
+            date: simDate.toISOString(),
+            goalId: item.goal_id || undefined,
+            conta: item.conta || undefined,
+            creatorName: item.name || undefined,
+          } as Transaction;
+        });
+
+        setMonthlySimulations(sims);
+      } catch (e) {
+        console.error('DashboardContent: erro ao buscar Mensal:', e);
+        setMonthlySimulations([]);
+      }
+    };
+
+    fetchMensalAndSimulate();
+  }, [currentMonth]);
+
+  // Combinar transações reais com simulações mensais
   const transactionsWithSimulations = React.useMemo(() => {
-    // Since simulations are now included in filteredTransactions from parent, just use them
-    return filteredTransactions;
-  }, [filteredTransactions]);
+    const combined = [...filteredTransactions, ...monthlySimulations];
+    return combined.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [filteredTransactions, monthlySimulations]);
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },

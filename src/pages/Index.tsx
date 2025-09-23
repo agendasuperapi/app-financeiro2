@@ -112,10 +112,20 @@ const Index = () => {
       
       const baseData = calculateMonthlyFinancialData(transactionsWithSimulations, currentMonth);
       
-      // Return enhanced data with simulations included
+      // Calculate simulation impact on current balance
+      const simulationImpact = simulations.reduce((impact, sim) => {
+        return impact + sim.amount; // Amount is already negative for expenses
+      }, 0);
+      
+      // Adjust accumulated balance by subtracting simulation impact from future projections
+      const adjustedBalance = baseData.accumulatedBalance - simulationImpact;
+      
+      // Return enhanced data with simulations included and adjusted balance
       return {
         ...baseData,
-        monthTransactions: baseData.monthTransactions || []
+        accumulatedBalance: adjustedBalance,
+        monthTransactions: baseData.monthTransactions || [],
+        simulationImpact // Add this for debugging
       };
     } catch (error) {
       console.error('Dashboard: Error calculating monthly data:', error);

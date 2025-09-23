@@ -23,7 +23,6 @@ interface DashboardContentProps {
   onDeleteTransaction: (id: string) => void;
   onMarkScheduledAsPaid: (transaction: ScheduledTransaction) => void;
   scheduledTransactions?: ScheduledTransaction[];
-  onCombinedUpdate?: (combined: any[]) => void;
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
@@ -36,8 +35,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   onEditTransaction,
   onDeleteTransaction,
   onMarkScheduledAsPaid,
-  scheduledTransactions = [],
-  onCombinedUpdate
+  scheduledTransactions = []
 }) => {
   const { t } = usePreferences();
 
@@ -113,10 +111,6 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     const combined = [...filteredTransactions, ...monthlySimulations];
     return combined.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [filteredTransactions, monthlySimulations]);
-
-  React.useEffect(() => {
-    onCombinedUpdate?.(transactionsWithSimulations);
-  }, [transactionsWithSimulations, onCombinedUpdate]);
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },

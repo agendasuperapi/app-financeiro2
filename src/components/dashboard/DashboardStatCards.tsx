@@ -12,8 +12,6 @@ interface DashboardStatCardsProps {
   balance: number;
   hideValues: boolean;
   onNavigateToTransactionType: (type: 'income' | 'expense') => void;
-  combinedTransactions?: any[];
-  currentMonth: Date;
 }
 
 const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
@@ -21,68 +19,11 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
   totalExpenses,
   balance,
   hideValues,
-  onNavigateToTransactionType,
-  combinedTransactions = [],
-  currentMonth
+  onNavigateToTransactionType
 }) => {
   const { t, currency } = usePreferences();
   
   const renderHiddenValue = () => '******';
-
-  // Calcular despesas reais e simuladas separadamente
-  const { realExpenses, simulatedExpenses } = React.useMemo(() => {
-    console.log('🔍 DashboardStatCards DEBUG:', {
-      combinedTransactionsLength: combinedTransactions?.length || 0,
-      currentMonth: currentMonth.toDateString(),
-      totalExpenses,
-      sampleTransactions: combinedTransactions?.slice(0, 3)
-    });
-
-    if (!combinedTransactions || combinedTransactions.length === 0) {
-      console.log('📊 Using totalExpenses fallback:', totalExpenses);
-      return { realExpenses: totalExpenses, simulatedExpenses: 0 };
-    }
-
-    const currentMonthTransactions = combinedTransactions.filter((t: any) => {
-      const transactionDate = new Date(t.date);
-      const isCurrentMonth = transactionDate.getMonth() === currentMonth.getMonth() && 
-             transactionDate.getFullYear() === currentMonth.getFullYear();
-      return isCurrentMonth;
-    });
-
-    console.log('📅 Current month transactions:', {
-      totalTransactions: combinedTransactions.length,
-      currentMonthCount: currentMonthTransactions.length,
-      currentMonthTransactions: currentMonthTransactions.map(t => ({
-        date: t.date,
-        type: t.type,
-        amount: t.amount,
-        description: t.description
-      }))
-    });
-
-    const realExpenseTransactions = currentMonthTransactions
-      .filter((t: any) => t.type === 'expense' && !t.description?.includes('(Simulação)'));
-    
-    const simulatedExpenseTransactions = currentMonthTransactions
-      .filter((t: any) => t.type === 'expense' && t.description?.includes('(Simulação)'));
-
-    const real = realExpenseTransactions
-      .reduce((sum: number, t: any) => sum + Math.abs(t.amount || 0), 0);
-
-    const simulated = simulatedExpenseTransactions
-      .reduce((sum: number, t: any) => sum + Math.abs(t.amount || 0), 0);
-
-    console.log('💰 Expense calculation:', {
-      realExpenseTransactions: realExpenseTransactions.length,
-      simulatedExpenseTransactions: simulatedExpenseTransactions.length,
-      real,
-      simulated,
-      total: real + simulated
-    });
-
-    return { realExpenses: real, simulatedExpenses: simulated };
-  }, [combinedTransactions, currentMonth, totalExpenses]);
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
@@ -172,14 +113,8 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                 </p>
               </div>
               <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-red-700 dark:text-red-400">
-                {hideValues ? renderHiddenValue() : formatCurrency(realExpenses + simulatedExpenses, currency)}
+                {hideValues ? renderHiddenValue() : formatCurrency(totalExpenses, currency)}
               </p>
-              {simulatedExpenses > 0 && !hideValues && (
-                <div className="mt-2 text-xs text-red-600 dark:text-red-300">
-                  <div>Real: {formatCurrency(realExpenses, currency)}</div>
-                  <div>Simulado: {formatCurrency(simulatedExpenses, currency)}</div>
-                </div>
-              )}
             </div>
             <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-red-200/30 dark:bg-red-800/20 rounded-full" />
           </CardContent>

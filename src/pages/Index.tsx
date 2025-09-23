@@ -68,7 +68,55 @@ const Index = () => {
           accumulatedBalance: 0
         };
       }
-      return calculateMonthlyFinancialData(transactions, currentMonth);
+
+      // Generate monthly simulations for calculations
+      const generateMonthlySimulations = (scheduledTransactions: any[]) => {
+        const simulations: any[] = [];
+        
+        scheduledTransactions
+          .filter(scheduled => scheduled.recurrence === 'monthly')
+          .forEach(scheduled => {
+            // Generate simulation for current month only for calculations
+            const simulationDate = new Date(currentMonth);
+            simulationDate.setDate(new Date(scheduled.scheduled_date || scheduled.scheduledDate).getDate());
+            
+            // Check if simulation is for current month
+            const isCurrentMonth = simulationDate.getMonth() === currentMonth.getMonth() && 
+                                 simulationDate.getFullYear() === currentMonth.getFullYear();
+            
+            if (isCurrentMonth) {
+              const simulation = {
+                id: `calc-simulation-${scheduled.id}`,
+                type: scheduled.type,
+                amount: scheduled.amount,
+                category: scheduled.category,
+                categoryIcon: scheduled.categoryIcon,
+                categoryColor: scheduled.categoryColor,
+                description: `${scheduled.description} (Simulação)`,
+                date: simulationDate.toISOString(),
+                conta: scheduled.conta,
+                creatorName: scheduled.creatorName,
+                __isSimulation: true,
+                __originalScheduledId: scheduled.id
+              };
+              simulations.push(simulation);
+            }
+          });
+        
+        return simulations;
+      };
+
+      // Include simulations in transactions for calculation
+      const simulations = generateMonthlySimulations(scheduledTransactions);
+      const transactionsWithSimulations = [...transactions, ...simulations];
+      
+      const baseData = calculateMonthlyFinancialData(transactionsWithSimulations, currentMonth);
+      
+      // Return enhanced data with simulations included
+      return {
+        ...baseData,
+        monthTransactions: baseData.monthTransactions || []
+      };
     } catch (error) {
       console.error('Dashboard: Error calculating monthly data:', error);
       return {
@@ -78,7 +126,63 @@ const Index = () => {
         accumulatedBalance: 0
       };
     }
-  }, [transactions, currentMonth]);
+  }, [transactions, scheduledTransactions, currentMonth]);
+
+  // Função para simular transações mensais para visualização
+  const generateMonthlySimulationsForDisplay = React.useCallback((scheduledTransactions: any[]) => {
+    const simulations: any[] = [];
+    
+    scheduledTransactions
+      .filter(scheduled => scheduled.recurrence === 'monthly')
+      .forEach(scheduled => {
+        // Gerar simulações para os próximos 12 meses
+        for (let i = 0; i < 12; i++) {
+          const simulationDate = new Date(currentMonth);
+          simulationDate.setMonth(simulationDate.getMonth() + i);
+          simulationDate.setDate(new Date(scheduled.scheduled_date || scheduled.scheduledDate).getDate());
+          
+          // Verificar se a simulação é para o mês atual ou futuro
+          const isCurrentOrFuture = simulationDate >= new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+          
+          if (isCurrentOrFuture) {
+            const simulation = {
+              id: `display-simulation-${scheduled.id}-${i}`,
+              type: scheduled.type,
+              amount: scheduled.amount,
+              category: scheduled.category,
+              categoryIcon: scheduled.categoryIcon,
+              categoryColor: scheduled.categoryColor,
+              description: `${scheduled.description} (Simulação)`,
+              date: simulationDate.toISOString(),
+              conta: scheduled.conta,
+              creatorName: scheduled.creatorName,
+              __isSimulation: true,
+              __originalScheduledId: scheduled.id
+            };
+            simulations.push(simulation);
+          }
+        }
+      });
+    
+    return simulations;
+  }, [currentMonth]);
+
+  // Combinar transações reais com simulações para visualização
+  const transactionsWithDisplaySimulations = React.useMemo(() => {
+    const simulations = generateMonthlySimulationsForDisplay(scheduledTransactions);
+    
+    // Filtrar simulações para o mês atual
+    const currentMonthSimulations = simulations.filter(sim => {
+      const simDate = new Date(sim.date);
+      return simDate.getMonth() === currentMonth.getMonth() && 
+             simDate.getFullYear() === currentMonth.getFullYear();
+    });
+    
+    // Combinar transações do mês com simulações e ordenar por data
+    const monthTransactions = monthlyData?.monthTransactions || [];
+    const combined = [...monthTransactions.filter((t: any) => !t.__isSimulation), ...currentMonthSimulations];
+    return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [monthlyData, scheduledTransactions, generateMonthlySimulationsForDisplay, currentMonth]);
 
   const monthlyGoals = React.useMemo(() => {
     try {
@@ -253,7 +357,7 @@ const Index = () => {
 
           {/* Conteúdo do dashboard - com fallback para evitar erro */}
           <DashboardContent
-            filteredTransactions={monthlyData?.monthTransactions || []}
+            filteredTransactions={transactionsWithDisplaySimulations}
             goals={monthlyGoals || []}
             currentGoalIndex={currentGoalIndex}
             currentMonth={currentMonth}

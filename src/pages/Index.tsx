@@ -97,24 +97,38 @@ const Index = () => {
             }
 
             if (includeThisMonth) {
-              const day = baseDate.getDate() || 1;
-              const simulationDate = new Date(currentMonth);
-              simulationDate.setDate(Math.min(day, 28)); // avoid invalid dates for short months
-
-              simulations.push({
-                id: `calc-simulation-${s.id}`,
-                type: s.type,
-                amount: s.amount,
-                category: s.category,
-                categoryIcon: s.categoryIcon,
-                categoryColor: s.categoryColor,
-                description: `${s.description} (Simulação)`,
-                date: simulationDate.toISOString(),
-                conta: s.conta,
-                creatorName: s.creatorName,
-                __isSimulation: true,
-                __originalScheduledId: s.id,
+              // Verificar se já existe uma transação real com descrição similar no mês atual
+              const desc = s.description ? String(s.description).toLowerCase() : '';
+              const hasRealTransaction = transactions.some((realTx: any) => {
+                const realDesc = realTx.description ? String(realTx.description).toLowerCase() : '';
+                const realDate = new Date(realTx.date);
+                
+                return realDate.getFullYear() === currentMonth.getFullYear() && 
+                       realDate.getMonth() === currentMonth.getMonth() && 
+                       (realDesc.includes(desc) || desc.includes(realDesc));
               });
+              
+              // Só incluir simulação se não existir transação real similar
+              if (!hasRealTransaction) {
+                const day = baseDate.getDate() || 1;
+                const simulationDate = new Date(currentMonth);
+                simulationDate.setDate(Math.min(day, 28)); // avoid invalid dates for short months
+
+                simulations.push({
+                  id: `calc-simulation-${s.id}`,
+                  type: s.type,
+                  amount: s.amount,
+                  category: s.category,
+                  categoryIcon: s.categoryIcon,
+                  categoryColor: s.categoryColor,
+                  description: `${s.description} (Simulação)`,
+                  date: simulationDate.toISOString(),
+                  conta: s.conta,
+                  creatorName: s.creatorName,
+                  __isSimulation: true,
+                  __originalScheduledId: s.id,
+                });
+              }
             }
           });
 
@@ -170,29 +184,43 @@ const Index = () => {
         }
 
         if (includeThisMonth) {
-          const day = baseDate.getDate() || 1;
-          const simulationDate = new Date(currentMonth);
-          simulationDate.setDate(Math.min(day, 28));
-
-          simulations.push({
-            id: `display-simulation-${s.id}-${monthKey(selectedMonthStart)}`,
-            type: s.type,
-            amount: s.amount,
-            category: s.category,
-            categoryIcon: s.categoryIcon,
-            categoryColor: s.categoryColor,
-            description: `${s.description} (Simulação)`,
-            date: simulationDate.toISOString(),
-            conta: s.conta,
-            creatorName: s.creatorName,
-            __isSimulation: true,
-            __originalScheduledId: s.id,
+          // Verificar se já existe uma transação real com descrição similar no mês atual
+          const desc = s.description ? String(s.description).toLowerCase() : '';
+          const hasRealTransaction = transactions.some((realTx: any) => {
+            const realDesc = realTx.description ? String(realTx.description).toLowerCase() : '';
+            const realDate = new Date(realTx.date);
+            
+            return realDate.getFullYear() === currentMonth.getFullYear() && 
+                   realDate.getMonth() === currentMonth.getMonth() && 
+                   (realDesc.includes(desc) || desc.includes(realDesc));
           });
+          
+          // Só incluir simulação se não existir transação real similar
+          if (!hasRealTransaction) {
+            const day = baseDate.getDate() || 1;
+            const simulationDate = new Date(currentMonth);
+            simulationDate.setDate(Math.min(day, 28));
+
+            simulations.push({
+              id: `display-simulation-${s.id}-${monthKey(selectedMonthStart)}`,
+              type: s.type,
+              amount: s.amount,
+              category: s.category,
+              categoryIcon: s.categoryIcon,
+              categoryColor: s.categoryColor,
+              description: `${s.description} (Simulação)`,
+              date: simulationDate.toISOString(),
+              conta: s.conta,
+              creatorName: s.creatorName,
+              __isSimulation: true,
+              __originalScheduledId: s.id,
+            });
+          }
         }
       });
     
     return simulations;
-  }, [currentMonth]);
+  }, [currentMonth, transactions]);
 
   // Combinar transações reais com simulações para visualização
   const transactionsWithDisplaySimulations = React.useMemo(() => {

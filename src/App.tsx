@@ -25,6 +25,7 @@ import ExpensesPage from "./pages/ExpensesPage";
 import GoalsPage from "./pages/GoalsPage";
 import ReportsPage from "./pages/ReportsPage";
 import NotesPage from "./pages/NotesPage";
+import RulesPage from "./pages/RulesPage";
 import SchedulePage from "./pages/SchedulePage";
 import ContasPage from "./pages/ContasPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -72,6 +73,7 @@ function App() {
                         <Route path="/goals" element={<GoalsPage />} />
                         <Route path="/reports" element={<ReportsPage />} />
                         <Route path="/notes" element={<NotesPage />} />
+                        <Route path="/rules" element={<RulesPage />} />
                         <Route path="/schedule" element={<SchedulePage />} />
                         <Route path="/contas" element={<ContasPage />} />
                         <Route path="/lembrar" element={<LembrarPage />} />

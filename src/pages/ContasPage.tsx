@@ -100,9 +100,11 @@ const ContasPage = () => {
     const simulations: ScheduledTransaction[] = [];
     const currentDate = new Date();
     
-    // Filtrar apenas transações mensais que ainda não foram pagas
+    // Filtrar apenas receitas mensais que ainda não foram pagas
     const monthlyTransactions = transactions.filter(
-      transaction => transaction.recurrence === 'monthly' && transaction.status !== 'paid'
+      transaction => transaction.recurrence === 'monthly' && 
+                    transaction.status !== 'paid' && 
+                    transaction.amount > 0  // Apenas receitas (valores positivos)
     );
     
     monthlyTransactions.forEach(transaction => {

@@ -29,24 +29,24 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
       try {
         setLoading(true);
 
-        // Buscar contas únicas da tabela "poupeja_transactions"
+        // Buscar nomes e telefones únicos da view "view_cadastros_unificados"
         const { data, error } = await (supabase as any)
-          .from('poupeja_transactions')
-          .select('conta')
-          .not('conta', 'is', null);
+          .from('view_cadastros_unificados')
+          .select('id, name, phone')
+          .not('name', 'is', null);
 
         if (error) throw error;
 
-        // Extrair contas únicas e filtrar valores vazios
+        // Extrair dados únicos e filtrar valores vazios
         const uniqueUsers = Array.from(
           new Map(
             (data as any[])
-              .filter(item => item.conta && item.conta.trim() !== '')
+              .filter(item => item.name && item.name.trim() !== '')
               .map(item => [
-                item.conta,
+                item.name,
                 {
-                  name: item.conta,
-                  phone: ''
+                  name: item.name,
+                  phone: item.phone || ''
                 }
               ])
           ).values()
@@ -95,7 +95,7 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
             <PopoverContent className="w-full p-0 z-50 border bg-popover text-popover-foreground shadow-md">
               <Command>
                 <CommandInput
-                  placeholder="Buscar conta..."
+                  placeholder="Buscar nome..."
                   value={field.value || ''}
                   onValueChange={(value) => {
                     field.onChange(value);
@@ -103,7 +103,7 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
                 />
                 <CommandList>
                   <CommandEmpty>
-                    {loading ? "Carregando contas..." : "Nenhuma conta encontrada."}
+                    {loading ? "Carregando nomes..." : "Nenhum nome encontrado."}
                   </CommandEmpty>
                   <CommandGroup>
                     {users.map((user) => (

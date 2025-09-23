@@ -106,7 +106,7 @@ export const getScheduledTransactions = async (userId?: string): Promise<Schedul
         lastExecutionDate: undefined,
         nextExecutionDate: undefined,
         creatorName: creatorName,
-        conta: item.conta || '',
+        conta: item.conta || undefined,
         phone: item.phone || undefined,
       };
     });

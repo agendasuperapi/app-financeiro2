@@ -70,8 +70,8 @@ const LembrarPage = () => {
   }, [targetUserId]);
 
   useEffect(() => {
-    applyStatusFilter();
-  }, [contas, statusFilter]);
+    applyFilters();
+  }, [contas, statusFilter, searchQuery, dateFilter]);
 
   const loadContas = async () => {
     setLoading(true);
@@ -115,13 +115,22 @@ const LembrarPage = () => {
     }
   };
 
-  const applyStatusFilter = () => {
-    if (statusFilter === 'todos') {
-      setFilteredContas(contas);
-      return;
+  const applyFilters = () => {
+    let filtered = [...contas];
+
+    // Aplicar filtro de pesquisa
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((conta) => 
+        conta.description?.toLowerCase().includes(query) ||
+        conta.category?.toLowerCase().includes(query) ||
+        conta.creatorName?.toLowerCase().includes(query)
+      );
     }
 
-      const filtered = contas.filter((conta) => {
+    // Aplicar filtro de status
+    if (statusFilter !== 'todos') {
+      filtered = filtered.filter((conta) => {
         const status = getContaStatus(conta);
         
         switch (statusFilter) {
@@ -139,7 +148,42 @@ const LembrarPage = () => {
             return true;
         }
       });
-    
+    }
+
+    // Aplicar filtro de data
+    if (dateFilter !== 'todos') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      filtered = filtered.filter((conta) => {
+        const contaDate = new Date(conta.scheduledDate);
+        const contaDateOnly = new Date(contaDate.getFullYear(), contaDate.getMonth(), contaDate.getDate());
+
+        switch (dateFilter) {
+          case 'hoje':
+            return contaDateOnly.getTime() === today.getTime();
+          case 'ontem':
+            return contaDateOnly.getTime() === yesterday.getTime();
+          case 'amanha':
+            return contaDateOnly.getTime() === tomorrow.getTime();
+          case 'proximos7dias':
+            const next7Days = new Date(today);
+            next7Days.setDate(next7Days.getDate() + 7);
+            return contaDateOnly >= today && contaDateOnly <= next7Days;
+          case 'mes':
+            return contaDate.getMonth() === now.getMonth() && contaDate.getFullYear() === now.getFullYear();
+          case 'ano':
+            return contaDate.getFullYear() === now.getFullYear();
+          default:
+            return true;
+        }
+      });
+    }
+
     setFilteredContas(filtered);
   };
 
@@ -346,7 +390,10 @@ const LembrarPage = () => {
                 </div>
               ) : filteredContas.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  {statusFilter === 'todos' ? 'Nenhum lembrete encontrado' : `Nenhum lembrete ${statusFilter} encontrado`}
+                  {searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos' 
+                    ? 'Nenhum lembrete encontrado com os filtros aplicados' 
+                    : 'Nenhum lembrete encontrado'
+                  }
                 </div>
               ) : (
                 <>

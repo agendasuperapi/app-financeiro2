@@ -38,21 +38,11 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
       }, 0);
   }, [transactionsWithSimulations, totalExpenses]);
 
-  // Saldo final = saldo anterior + receitas - despesas do mês atual
-  const saldoFinal = balance + totalIncome - totalExpensesCombined;
-  
-  // Debug logs para verificar cálculos
-  console.log('[SALDO DEBUG]', {
-    saldoAnterior: balance,
-    receitasMes: totalIncome, 
-    despesasMes: totalExpensesCombined,
-    saldoFinal: saldoFinal,
-    transactionsWithSimulations: transactionsWithSimulations.length
-  });
+  // Saldo final já calculado no Index: saldo anterior + receitas do mês - despesas do mês
+  const finalBalance = balance;
   
   // Cores dinâmicas baseadas no saldo final
-  const saldoColor = saldoFinal >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-  const saldoBgGradient = saldoFinal >= 0 
+  const saldoBgGradient = finalBalance >= 0 
     ? 'bg-gradient-to-br from-green-500 via-green-600 to-green-700' 
     : 'bg-gradient-to-br from-red-500 via-red-600 to-red-700';
   
@@ -89,7 +79,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                 <p className="text-xs lg:text-sm font-medium opacity-90">{t('stats.currentBalance')}</p>
               </div>
               <p className={`text-xl lg:text-2xl xl:text-3xl font-bold text-white`}>
-                {hideValues ? renderHiddenValue() : formatCurrency(saldoFinal, currency)}
+                {hideValues ? renderHiddenValue() : formatCurrency(finalBalance, currency)}
               </p>
             </div>
             <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-white/10 rounded-full" />

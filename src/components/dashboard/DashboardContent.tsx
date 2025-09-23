@@ -141,6 +141,17 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       }, 0);
   }, [transactionsWithSimulations]);
 
+  // Total de receitas (reais + simulações) no mês atual
+  const totalIncomesCombined = React.useMemo(() => {
+    return transactionsWithSimulations
+      .filter((tx: any) => (tx.type === 'income') || (typeof tx.amount === 'number' && tx.amount > 0))
+      .reduce((sum: number, tx: any) => {
+        const amt = Number(tx.amount) || 0;
+        // Considerar valor absoluto para receitas positivas ou tipo 'income'
+        return sum + (amt > 0 ? amt : (tx.type === 'income' ? amt : 0));
+      }, 0);
+  }, [transactionsWithSimulations]);
+
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
@@ -182,9 +193,14 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="text-xl font-semibold">{t('transactions.recent')}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {t('common.expense')}: {hideValues ? '******' : formatCurrency(totalExpensesCombined, currency)}
-                </p>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">
+                    {t('common.income')}: <span className="text-green-600 font-medium">{hideValues ? '******' : formatCurrency(totalIncomesCombined, currency)}</span>
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {t('common.expense')}: <span className="text-red-600 font-medium">{hideValues ? '******' : formatCurrency(totalExpensesCombined, currency)}</span>
+                  </p>
+                </div>
               </div>
               <Button variant="outline" asChild>
                 <Link to="/transactions">{t('common.viewAll')}</Link>

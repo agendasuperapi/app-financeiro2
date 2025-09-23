@@ -199,7 +199,13 @@ const Index = () => {
   
   const totalIncome = monthlyData.monthlyIncome;
   const totalExpenses = monthlyData.monthlyExpenses;
-  const balance = monthlyData.accumulatedBalance;
+  // Saldo exibido: saldo base até o início do mês + resultado do mês (inclui simulações do mês)
+  const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+  const baseBalanceBeforeMonth = transactions.reduce((sum: number, t: any) => {
+    const d = new Date(t.date);
+    return d < monthStart ? sum + (t.amount || 0) : sum;
+  }, 0);
+  const balance = baseBalanceBeforeMonth + (totalIncome || 0) - (totalExpenses || 0);
   
   // Load initial data only once when component mounts
   useEffect(() => {

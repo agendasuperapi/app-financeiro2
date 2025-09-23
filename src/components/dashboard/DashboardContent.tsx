@@ -56,7 +56,25 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
         const y = currentMonth.getFullYear();
         const m = currentMonth.getMonth();
-        const sims: Transaction[] = ((data as any[]) || []).map((item: any) => {
+        
+        // Filtrar simulações que já existem como transações reais no mês atual
+        const filteredData = ((data as any[]) || []).filter((item: any) => {
+          const desc = item.description ? String(item.description).toLowerCase() : '';
+          
+          // Verificar se já existe uma transação real com descrição similar no mês atual
+          const hasRealTransaction = filteredTransactions.some((realTx: any) => {
+            const realDesc = realTx.description ? String(realTx.description).toLowerCase() : '';
+            const realDate = new Date(realTx.date);
+            
+            return realDate.getFullYear() === y && 
+                   realDate.getMonth() === m && 
+                   realDesc.includes(desc) || desc.includes(realDesc);
+          });
+          
+          return !hasRealTransaction;
+        });
+        
+        const sims: Transaction[] = filteredData.map((item: any) => {
           const baseDate = item.date ? new Date(item.date) : new Date(y, m, 1);
           const day = baseDate.getDate() || 1;
           const simDate = new Date(y, m, Math.min(day, 28));
@@ -84,7 +102,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     };
 
     fetchMensalAndSimulate();
-  }, [currentMonth]);
+  }, [currentMonth, filteredTransactions]);
 
   // Combinar transações reais com simulações mensais
   const transactionsWithSimulations = React.useMemo(() => {

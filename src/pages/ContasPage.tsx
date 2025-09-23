@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +20,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
-import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Edit, Trash2, CheckCircle, Plus, Filter, User, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
@@ -50,6 +53,8 @@ const ContasPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [dateFilter, setDateFilter] = useState<string>('todos');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
@@ -67,7 +72,7 @@ const ContasPage = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [contas, statusFilter, dateFilter, selectedDate]);
+  }, [contas, statusFilter, dateFilter, selectedDate, startDate, endDate]);
 
   const loadContas = async () => {
     setLoading(true);
@@ -134,6 +139,14 @@ const ContasPage = () => {
               start: startOfYear(selectedDate),
               end: endOfYear(selectedDate)
             });
+          case 'periodo':
+            if (startDate && endDate) {
+              return isWithinInterval(contaDate, {
+                start: startOfDay(startDate),
+                end: endOfDay(endDate)
+              });
+            }
+            return true;
           default:
             return true;
         }
@@ -159,6 +172,11 @@ const ContasPage = () => {
         return formatMonth(selectedDate);
       case 'ano':
         return selectedDate.getFullYear().toString();
+      case 'periodo':
+        if (startDate && endDate) {
+          return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+        }
+        return 'Selecionar período';
       default:
         return '';
     }
@@ -325,6 +343,7 @@ const ContasPage = () => {
                 <SelectItem value="proximos7dias">Próximos 7 dias</SelectItem>
                 <SelectItem value="mes">Mês</SelectItem>
                 <SelectItem value="ano">Ano</SelectItem>
+                <SelectItem value="periodo">Período</SelectItem>
               </SelectContent>
             </Select>
 
@@ -352,6 +371,62 @@ const ContasPage = () => {
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
+              </div>
+            )}
+
+            {/* Seletor de Período */}
+            {dateFilter === 'periodo' && (
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "justify-start text-left font-normal w-full sm:w-[140px]",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? formatDate(startDate) : "Data inicial"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        "justify-start text-left font-normal w-full sm:w-[140px]",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? formatDate(endDate) : "Data final"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      initialFocus
+                      disabled={(date) => startDate ? date < startDate : false}
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             )}
           </div>
@@ -396,7 +471,7 @@ const ContasPage = () => {
                           {/* Segunda linha: Data, Recorrência e Categoria */}
                           <div className="flex items-center gap-1 md:gap-4 mb-2 md:mb-3 text-[10px] md:text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
-                              <Calendar className="h-2.5 w-2.5 md:h-4 md:w-4" />
+                              <CalendarIcon className="h-2.5 w-2.5 md:h-4 md:w-4" />
                               <span>{formatDate(conta.scheduledDate, 'dd/MM/yyyy HH:mm')}</span>
                             </div>
                             <div className="flex items-center gap-1">

@@ -134,9 +134,9 @@ const TransactionsPage = () => {
           </div>
         </div>
 
-        {/* Mobile Floating Action Buttons */}
+        {/* Mobile Fixed Action Buttons in Transactions Row */}
         {isMobile && (
-          <div className="fixed bottom-20 right-4 z-50 flex flex-col gap-3">
+          <div className="fixed top-20 right-4 z-50 flex flex-col gap-3">
             <Button 
               variant="outline"
               size="lg"

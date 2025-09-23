@@ -322,7 +322,7 @@ const ContasPage = () => {
     const isDueToday = isToday(scheduledDate);
     const isPaid = conta.status === 'paid';
 
-    if (isPaid) return { label: 'Pago', variant: 'default' as const };
+    if (isPaid) return { label: conta.amount > 0 ? 'Recebido' : 'Pago', variant: 'default' as const };
     if (isDueToday) return { label: 'Vence Hoje', variant: 'destructive' as const };
     if (isOverdue) return { label: 'Vencido', variant: 'destructive' as const };
     return { label: 'Pendente', variant: 'secondary' as const };

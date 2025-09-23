@@ -69,7 +69,7 @@ const Index = () => {
         };
       }
 
-      // Generate monthly simulations for calculations
+      // Generate monthly simulations for calculations (current month only)
       const generateMonthlySimulations = (scheduledTransactions: any[]) => {
         const simulations: any[] = [];
         
@@ -106,26 +106,46 @@ const Index = () => {
         return simulations;
       };
 
+      // Calculate accumulated impact of future monthly transactions
+      const calculateFutureImpact = (scheduledTransactions: any[]) => {
+        let totalImpact = 0;
+        
+        scheduledTransactions
+          .filter(scheduled => scheduled.recurrence === 'monthly')
+          .forEach(scheduled => {
+            // Calculate impact for next 12 months from current month
+            for (let i = 0; i < 12; i++) {
+              const futureDate = new Date(currentMonth);
+              futureDate.setMonth(futureDate.getMonth() + i);
+              
+              // Only count future months (not current month as it's already in transactions)
+              if (i > 0) {
+                totalImpact += scheduled.amount; // Amount is already positive/negative
+              }
+            }
+          });
+        
+        return totalImpact;
+      };
+
       // Include simulations in transactions for calculation
       const simulations = generateMonthlySimulations(scheduledTransactions);
       const transactionsWithSimulations = [...transactions, ...simulations];
       
       const baseData = calculateMonthlyFinancialData(transactionsWithSimulations, currentMonth);
       
-      // Calculate simulation impact on current balance
-      const simulationImpact = simulations.reduce((impact, sim) => {
-        return impact + sim.amount; // Amount is already negative for expenses
-      }, 0);
+      // Calculate future impact of all monthly recurring transactions
+      const futureImpact = calculateFutureImpact(scheduledTransactions);
       
-      // Adjust accumulated balance by subtracting simulation impact from future projections
-      const adjustedBalance = baseData.accumulatedBalance - simulationImpact;
+      // Adjust accumulated balance by subtracting future recurring impacts
+      const adjustedBalance = baseData.accumulatedBalance + futureImpact;
       
       // Return enhanced data with simulations included and adjusted balance
       return {
         ...baseData,
         accumulatedBalance: adjustedBalance,
         monthTransactions: baseData.monthTransactions || [],
-        simulationImpact // Add this for debugging
+        futureImpact // Add this for debugging
       };
     } catch (error) {
       console.error('Dashboard: Error calculating monthly data:', error);

@@ -69,6 +69,27 @@ const Index = () => {
         };
       }
 
+      // Helper: normalize recurrence values (supports PT labels)
+      const normalizeRecurrence = (rec: any): 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'installments' => {
+        const v = String(rec || '').toLowerCase();
+        const map: Record<string, 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'installments'> = {
+          'uma vez': 'once',
+          'once': 'once',
+          'diário': 'daily',
+          'diario': 'daily',
+          'daily': 'daily',
+          'semanal': 'weekly',
+          'weekly': 'weekly',
+          'mensal': 'monthly',
+          'monthly': 'monthly',
+          'anual': 'yearly',
+          'yearly': 'yearly',
+          'parcelas': 'installments',
+          'installments': 'installments'
+        };
+        return map[v] || 'once';
+      };
+
       // Generate simulations for calculations (only for the selected month)
       const generateMonthlySimulations = (scheduledTransactions: any[]) => {
         const simulations: any[] = [];
@@ -78,7 +99,7 @@ const Index = () => {
 
         scheduledTransactions
           .filter((s) => (s.type === 'income' || s.type === 'expense'))
-          .filter((s) => ['monthly', 'installments'].includes(s.recurrence))
+          .filter((s) => ['monthly', 'installments'].includes(normalizeRecurrence(s.recurrence)))
           .forEach((s) => {
             const baseDateStr = s.scheduled_date || s.scheduledDate || s.nextExecutionDate || s.date;
             const baseDate = baseDateStr ? new Date(baseDateStr) : null;
@@ -150,9 +171,22 @@ const Index = () => {
     const monthKey = (d: Date) => d.getFullYear() * 12 + d.getMonth();
     const selectedMonthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
 
+    const normalizeRecurrence = (rec: any): 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'installments' => {
+      const v = String(rec || '').toLowerCase();
+      const map: Record<string, 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'installments'> = {
+        'uma vez': 'once', 'once': 'once',
+        'diário': 'daily', 'diario': 'daily', 'daily': 'daily',
+        'semanal': 'weekly', 'weekly': 'weekly',
+        'mensal': 'monthly', 'monthly': 'monthly',
+        'anual': 'yearly', 'yearly': 'yearly',
+        'parcelas': 'installments', 'installments': 'installments'
+      };
+      return map[v] || 'once';
+    };
+
     scheduledTransactions
       .filter((s: any) => (s.type === 'income' || s.type === 'expense'))
-      .filter((s: any) => ['monthly', 'installments'].includes(s.recurrence))
+      .filter((s: any) => ['monthly', 'installments'].includes(normalizeRecurrence(s.recurrence)))
       .forEach((s: any) => {
         const baseDateStr = s.scheduled_date || s.scheduledDate || s.nextExecutionDate || s.date;
         const baseDate = baseDateStr ? new Date(baseDateStr) : null;
@@ -161,10 +195,11 @@ const Index = () => {
         const startMonth = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
         const monthsSinceStart = monthKey(selectedMonthStart) - monthKey(startMonth);
 
+        const rec = normalizeRecurrence(s.recurrence);
         let includeThisMonth = false;
-        if (s.recurrence === 'monthly') {
+        if (rec === 'monthly') {
           includeThisMonth = monthsSinceStart >= 0;
-        } else if (s.recurrence === 'installments') {
+        } else if (rec === 'installments') {
           const total = parseInt(String(s.installments ?? s.parcela ?? 1));
           includeThisMonth = monthsSinceStart >= 0 && monthsSinceStart < total;
         }

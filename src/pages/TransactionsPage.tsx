@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, User, RotateCcw, Filter, Search, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
+import { useAppContext } from '@/contexts/AppContext';
 import { Transaction } from '@/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -37,6 +38,7 @@ const TransactionsPage = () => {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const { transactions, deleteTransaction, isClientView, selectedUser, targetUserId, refetchClientData } = useClientAwareData();
+  const { scheduledTransactions } = useAppContext();
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const { formatDate } = useDateFormat();
@@ -68,8 +70,91 @@ const TransactionsPage = () => {
     }
   };
 
+  // Função para gerar simulações de transações mensais/parceladas
+  const generateMonthlySimulations = React.useCallback((scheduledTransactions: any[], targetDate?: Date) => {
+    const simulations: any[] = [];
+    const monthKey = (d: Date) => d.getFullYear() * 12 + d.getMonth();
+    
+    // Se não especificar data, usar mês/ano dos filtros
+    let targetMonth: Date;
+    if (targetDate) {
+      targetMonth = targetDate;
+    } else if (dateFilter === 'mes') {
+      targetMonth = selectedDate;
+    } else if (dateFilter === 'ano') {
+      // Para filtro anual, gerar simulações para todos os meses do ano
+      const year = selectedDate.getFullYear();
+      for (let month = 0; month < 12; month++) {
+        const monthDate = new Date(year, month, 1);
+        simulations.push(...generateMonthlySimulations(scheduledTransactions, monthDate));
+      }
+      return simulations;
+    } else {
+      return []; // Não gerar simulações para outros filtros
+    }
+
+    const selectedMonthStart = new Date(targetMonth.getFullYear(), targetMonth.getMonth(), 1);
+
+    scheduledTransactions
+      .filter((s: any) => (s.type === 'income' || s.type === 'expense'))
+      .filter((s: any) => {
+        const recurrence = s.recurrence?.toLowerCase() || 'once';
+        // Normalizar recorrência em português para inglês
+        if (recurrence === 'mensal') return true;
+        if (recurrence === 'parcelas' || recurrence === 'installments') return true;
+        return ['monthly', 'installments'].includes(recurrence);
+      })
+      .forEach((s: any) => {
+        const baseDateStr = s.scheduled_date || s.scheduledDate || s.nextExecutionDate || s.date;
+        const baseDate = baseDateStr ? new Date(baseDateStr) : null;
+        if (!baseDate || isNaN(baseDate.getTime())) return;
+
+        const startMonth = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+        const monthsSinceStart = monthKey(selectedMonthStart) - monthKey(startMonth);
+
+        let includeThisMonth = false;
+        const recurrence = s.recurrence?.toLowerCase() || 'once';
+        
+        if (recurrence === 'monthly' || recurrence === 'mensal') {
+          includeThisMonth = monthsSinceStart >= 0;
+        } else if (recurrence === 'installments' || recurrence === 'parcelas') {
+          const total = parseInt(String(s.installments ?? s.parcela ?? 1));
+          includeThisMonth = monthsSinceStart >= 0 && monthsSinceStart < total;
+        }
+
+        if (includeThisMonth) {
+          const day = baseDate.getDate() || 1;
+          const simulationDate = new Date(targetMonth);
+          simulationDate.setDate(Math.min(day, 28)); // evitar datas inválidas
+
+          simulations.push({
+            id: `simulation-${s.id}-${monthKey(selectedMonthStart)}`,
+            type: s.type,
+            amount: s.amount,
+            category: s.category,
+            categoryIcon: s.categoryIcon,
+            categoryColor: s.categoryColor,
+            description: `${s.description} (Simulação)`,
+            date: simulationDate.toISOString(),
+            conta: s.conta,
+            creatorName: s.creatorName,
+            __isSimulation: true,
+            __originalScheduledId: s.id,
+          });
+        }
+      });
+    
+    return simulations;
+  }, [dateFilter, selectedDate]);
+
+  // Combinar transações reais com simulações
+  const transactionsWithSimulations = React.useMemo(() => {
+    const simulations = generateMonthlySimulations(scheduledTransactions);
+    return [...transactions.filter(t => t.amount !== 0), ...simulations];
+  }, [transactions, scheduledTransactions, generateMonthlySimulations]);
+
   // Filter transactions based on search, status, and date
-  const baseFilteredTransactions = transactions.filter(transaction => transaction.amount !== 0);
+  const baseFilteredTransactions = transactionsWithSimulations;
 
   // Apply filters
   React.useEffect(() => {

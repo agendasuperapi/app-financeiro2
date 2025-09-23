@@ -346,9 +346,11 @@ const ContasPage = () => {
                 <SelectItem value="periodo">Período</SelectItem>
               </SelectContent>
             </Select>
+          </div>
 
-            {/* Navegação de Data */}
-            {(dateFilter === 'mes' || dateFilter === 'ano') && (
+          {/* Controles de Navegação de Data */}
+          {(dateFilter === 'mes' || dateFilter === 'ano') && (
+            <div className="flex justify-center mb-2 md:mb-4">
               <div className="flex items-center gap-1 bg-muted rounded-md p-1">
                 <Button
                   variant="ghost"
@@ -372,10 +374,12 @@ const ContasPage = () => {
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Seletor de Período */}
-            {dateFilter === 'periodo' && (
+          {/* Seletor de Período */}
+          {dateFilter === 'periodo' && (
+            <div className="flex justify-center mb-2 md:mb-4">
               <div className="flex flex-col sm:flex-row gap-2">
                 <Popover>
                   <PopoverTrigger asChild>
@@ -428,8 +432,8 @@ const ContasPage = () => {
                   </PopoverContent>
                 </Popover>
               </div>
+            </div>
             )}
-          </div>
           <Card>
             <CardHeader>
               <CardTitle className="text-base md:text-2xl font-bold">Agendadas</CardTitle>

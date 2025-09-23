@@ -12,6 +12,8 @@ interface DashboardStatCardsProps {
   balance: number;
   hideValues: boolean;
   onNavigateToTransactionType: (type: 'income' | 'expense') => void;
+  combinedTransactions?: any[];
+  currentMonth: Date;
 }
 
 const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
@@ -19,11 +21,36 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
   totalExpenses,
   balance,
   hideValues,
-  onNavigateToTransactionType
+  onNavigateToTransactionType,
+  combinedTransactions = [],
+  currentMonth
 }) => {
   const { t, currency } = usePreferences();
   
   const renderHiddenValue = () => '******';
+
+  // Calcular despesas reais e simuladas separadamente
+  const { realExpenses, simulatedExpenses } = React.useMemo(() => {
+    if (!combinedTransactions || combinedTransactions.length === 0) {
+      return { realExpenses: totalExpenses, simulatedExpenses: 0 };
+    }
+
+    const currentMonthTransactions = combinedTransactions.filter((t: any) => {
+      const transactionDate = new Date(t.date);
+      return transactionDate.getMonth() === currentMonth.getMonth() && 
+             transactionDate.getFullYear() === currentMonth.getFullYear();
+    });
+
+    const real = currentMonthTransactions
+      .filter((t: any) => t.type === 'expense' && !t.description?.includes('(Simulação)'))
+      .reduce((sum: number, t: any) => sum + Math.abs(t.amount || 0), 0);
+
+    const simulated = currentMonthTransactions
+      .filter((t: any) => t.type === 'expense' && t.description?.includes('(Simulação)'))
+      .reduce((sum: number, t: any) => sum + Math.abs(t.amount || 0), 0);
+
+    return { realExpenses: real, simulatedExpenses: simulated };
+  }, [combinedTransactions, currentMonth, totalExpenses]);
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
@@ -113,8 +140,14 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                 </p>
               </div>
               <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-red-700 dark:text-red-400">
-                {hideValues ? renderHiddenValue() : formatCurrency(totalExpenses, currency)}
+                {hideValues ? renderHiddenValue() : formatCurrency(realExpenses + simulatedExpenses, currency)}
               </p>
+              {simulatedExpenses > 0 && !hideValues && (
+                <div className="mt-2 text-xs text-red-600 dark:text-red-300">
+                  <div>Real: {formatCurrency(realExpenses, currency)}</div>
+                  <div>Simulado: {formatCurrency(simulatedExpenses, currency)}</div>
+                </div>
+              )}
             </div>
             <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-red-200/30 dark:bg-red-800/20 rounded-full" />
           </CardContent>

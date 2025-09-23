@@ -22,13 +22,83 @@ const TransactionsPage = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
-  const [dateFilter, setDateFilter] = useState('todos');
+  const [dateFilter, setDateFilter] = useState('mes');
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const { transactions, deleteTransaction, isClientView, selectedUser, targetUserId, refetchClientData } = useClientAwareData();
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
-  // Filter out transactions with zero amount
-  const filteredTransactions = transactions.filter(transaction => transaction.amount !== 0);
+  // Filter transactions based on search, status, and date
+  const baseFilteredTransactions = transactions.filter(transaction => transaction.amount !== 0);
+
+  // Apply filters
+  React.useEffect(() => {
+    applyFilters();
+  }, [baseFilteredTransactions, searchQuery, statusFilter, dateFilter]);
+
+  const applyFilters = () => {
+    let filtered = [...baseFilteredTransactions];
+
+    // Aplicar filtro de pesquisa
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((transaction) => 
+        transaction.description?.toLowerCase().includes(query) ||
+        transaction.category?.toLowerCase().includes(query) ||
+        transaction.creatorName?.toLowerCase().includes(query)
+      );
+    }
+
+    // Aplicar filtro de status (tipo de transação)
+    if (statusFilter !== 'todos') {
+      filtered = filtered.filter((transaction) => {
+        switch (statusFilter) {
+          case 'receita':
+            return transaction.type === 'income';
+          case 'despesa':
+            return transaction.type === 'expense';
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Aplicar filtro de data
+    if (dateFilter !== 'todos') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      filtered = filtered.filter((transaction) => {
+        const transactionDate = new Date(transaction.date);
+        const transactionDateOnly = new Date(transactionDate.getFullYear(), transactionDate.getMonth(), transactionDate.getDate());
+
+        switch (dateFilter) {
+          case 'hoje':
+            return transactionDateOnly.getTime() === today.getTime();
+          case 'ontem':
+            return transactionDateOnly.getTime() === yesterday.getTime();
+          case 'amanha':
+            return transactionDateOnly.getTime() === tomorrow.getTime();
+          case 'proximos7dias':
+            const next7Days = new Date(today);
+            next7Days.setDate(next7Days.getDate() + 7);
+            return transactionDateOnly >= today && transactionDateOnly <= next7Days;
+          case 'mes':
+            return transactionDate.getMonth() === now.getMonth() && transactionDate.getFullYear() === now.getFullYear();
+          case 'ano':
+            return transactionDate.getFullYear() === now.getFullYear();
+          default:
+            return true;
+        }
+      });
+    }
+
+    setFilteredTransactions(filtered);
+  };
 
   const handleAddTransaction = () => {
     setEditingTransaction(null);
@@ -171,13 +241,27 @@ const TransactionsPage = () => {
               <Card className="animate-fade-in p-1">
                 <CardHeader className="pb-6">
                   <CardTitle className="text-xl">Lista de Transações</CardTitle>
+                  {(searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos') && (
+                    <p className="text-sm text-muted-foreground">
+                      {filteredTransactions.length} transação{filteredTransactions.length !== 1 ? 'ões' : ''} encontrada{filteredTransactions.length !== 1 ? 's' : ''}
+                    </p>
+                  )}
                 </CardHeader>
                 <CardContent className="pt-0 px-8">
-                  <TransactionTable 
-                    transactions={filteredTransactions}
-                    onEdit={handleEditTransaction}
-                    onDelete={handleDeleteTransaction}
-                  />
+                  {filteredTransactions.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      {searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos' 
+                        ? 'Nenhuma transação encontrada com os filtros aplicados' 
+                        : 'Nenhuma transação encontrada'
+                      }
+                    </div>
+                  ) : (
+                    <TransactionTable 
+                      transactions={filteredTransactions}
+                      onEdit={handleEditTransaction}
+                      onDelete={handleDeleteTransaction}
+                    />
+                  )}
                 </CardContent>
               </Card>
             )}

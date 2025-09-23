@@ -54,7 +54,10 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
-      className="bg-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+      className={cn(
+        "bg-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow",
+        (transaction as any).__isSimulation && "border-dashed border-orange-400"
+      )}
     >
       {/* Header: Type Icon + Amount */}
       <div className="flex items-start justify-between mb-3">
@@ -83,30 +86,39 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
           </div>
         </div>
         
-        {/* Actions Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">{t('common.edit')}</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {onEdit && (
-              <DropdownMenuItem onClick={() => onEdit(transaction)}>
-                {t('common.edit')}
-              </DropdownMenuItem>
-            )}
-            {onDelete && (
-              <DropdownMenuItem 
-                onClick={() => onDelete(transaction.id)}
-                className="text-red-600"
-              >
-                {t('common.delete')}
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Status Badge for simulations */}
+        {(transaction as any).__isSimulation && (
+          <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200">
+            Simulação
+          </Badge>
+        )}
+        
+        {/* Actions Menu - Hide for simulations */}
+        {!(transaction as any).__isSimulation && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">{t('common.edit')}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {onEdit && (
+                <DropdownMenuItem onClick={() => onEdit(transaction)}>
+                  {t('common.edit')}
+                </DropdownMenuItem>
+              )}
+              {onDelete && (
+                <DropdownMenuItem 
+                  onClick={() => onDelete(transaction.id)}
+                  className="text-red-600"
+                >
+                  {t('common.delete')}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Category and Description */}

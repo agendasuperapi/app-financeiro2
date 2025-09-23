@@ -83,7 +83,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05, duration: 0.3 }}
-                  className="group"
+                  className={cn(
+                    "group",
+                    (transaction as any).__isSimulation && "border-dashed border-orange-400"
+                  )}
                 >
                   <TableCell>
                     {transaction.type === 'income' ? (
@@ -146,6 +149,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                             {transaction.creatorName}
                           </span>
                         )}
+                        {(transaction as any).__isSimulation && (
+                          <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200 text-[10px]">
+                            Simulação
+                          </Badge>
+                        )}
                       </div>
                       <div className="md:flex md:flex-col md:items-start md:gap-1 lg:hidden mt-1">
                         <div
@@ -176,7 +184,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   </TableCell>
                   <TableCell className="pl-2 pr-2 w-[12%] min-w-[90px]">
                     <div className="flex justify-end gap-1">
-                      {onEdit && (
+                      {!(transaction as any).__isSimulation && onEdit && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -187,7 +195,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                           <span className="sr-only">{t('common.edit')}</span>
                         </Button>
                       )}
-                      {onDelete && (
+                      {!(transaction as any).__isSimulation && onDelete && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -197,6 +205,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                           <Trash2 className="h-3 w-3" />
                           <span className="sr-only">{t('common.delete')}</span>
                         </Button>
+                      )}
+                      {(transaction as any).__isSimulation && (
+                        <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200 text-[10px]">
+                          Previsto
+                        </Badge>
                       )}
                     </div>
                   </TableCell>

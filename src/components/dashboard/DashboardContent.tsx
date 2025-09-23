@@ -21,6 +21,7 @@ interface DashboardContentProps {
   onEditTransaction: (transaction: any) => void;
   onDeleteTransaction: (id: string) => void;
   onMarkScheduledAsPaid: (transaction: ScheduledTransaction) => void;
+  scheduledTransactions?: ScheduledTransaction[];
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
@@ -32,9 +33,65 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   onGoalChange,
   onEditTransaction,
   onDeleteTransaction,
-  onMarkScheduledAsPaid
+  onMarkScheduledAsPaid,
+  scheduledTransactions = []
 }) => {
   const { t } = usePreferences();
+
+  // Função para simular transações mensais
+  const generateMonthlySimulations = (scheduledTransactions: ScheduledTransaction[]) => {
+    const simulations: any[] = [];
+    
+    scheduledTransactions
+      .filter(scheduled => scheduled.recurrence === 'monthly')
+      .forEach(scheduled => {
+        // Gerar simulações para os próximos 12 meses
+        for (let i = 0; i < 12; i++) {
+          const simulationDate = new Date(currentMonth);
+          simulationDate.setMonth(simulationDate.getMonth() + i);
+          simulationDate.setDate(new Date(scheduled.scheduled_date || scheduled.scheduledDate).getDate());
+          
+          // Verificar se a simulação é para o mês atual ou futuro
+          const isCurrentOrFuture = simulationDate >= new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+          
+          if (isCurrentOrFuture) {
+            const simulation = {
+              id: `simulation-${scheduled.id}-${i}`,
+              type: scheduled.type,
+              amount: scheduled.amount,
+              category: scheduled.category,
+              categoryIcon: scheduled.categoryIcon,
+              categoryColor: scheduled.categoryColor,
+              description: `${scheduled.description} (Simulação)`,
+              date: simulationDate.toISOString(),
+              conta: scheduled.conta,
+              creatorName: scheduled.creatorName,
+              __isSimulation: true,
+              __originalScheduledId: scheduled.id
+            };
+            simulations.push(simulation);
+          }
+        }
+      });
+    
+    return simulations;
+  };
+
+  // Combinar transações reais com simulações
+  const transactionsWithSimulations = React.useMemo(() => {
+    const simulations = generateMonthlySimulations(scheduledTransactions);
+    
+    // Filtrar simulações para o mês atual
+    const currentMonthSimulations = simulations.filter(sim => {
+      const simDate = new Date(sim.date);
+      return simDate.getMonth() === currentMonth.getMonth() && 
+             simDate.getFullYear() === currentMonth.getFullYear();
+    });
+    
+    // Combinar e ordenar por data
+    const combined = [...filteredTransactions, ...currentMonthSimulations];
+    return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [filteredTransactions, scheduledTransactions, currentMonth]);
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
@@ -81,12 +138,12 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
               </Button>
             </div>
             <TransactionList 
-              transactions={filteredTransactions.slice(0, 5)} 
+              transactions={transactionsWithSimulations.slice(0, 5)} 
               onEdit={onEditTransaction} 
               onDelete={onDeleteTransaction} 
               hideValues={hideValues} 
             />
-            {filteredTransactions.length > 5 && (
+            {transactionsWithSimulations.length > 5 && (
               <div className="mt-6 text-center">
                 <Button variant="outline" asChild>
                   <Link to="/transactions">{t('common.viewAll')}</Link>

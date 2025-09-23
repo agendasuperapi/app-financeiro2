@@ -262,6 +262,7 @@ const Index = () => {
             onEditTransaction={handleEditTransaction}
             onDeleteTransaction={handleDeleteTransaction}
             onMarkScheduledAsPaid={handleMarkScheduledAsPaid}
+            scheduledTransactions={scheduledTransactions}
           />
         </div>
       </SubscriptionGuard>

@@ -37,6 +37,15 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
         return sum + (amt < 0 ? -amt : (tx.type === 'expense' ? amt : 0));
       }, 0);
   }, [transactionsWithSimulations, totalExpenses]);
+
+  // Saldo do mês = receitas - despesas do mês atual
+  const monthlySaldo = totalIncome - totalExpensesCombined;
+  
+  // Cores dinâmicas baseadas no saldo
+  const saldoColor = monthlySaldo >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+  const saldoBgGradient = monthlySaldo >= 0 
+    ? 'bg-gradient-to-br from-green-500 via-green-600 to-green-700' 
+    : 'bg-gradient-to-br from-red-500 via-red-600 to-red-700';
   
   const renderHiddenValue = () => '******';
 
@@ -61,7 +70,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
         whileHover={{ scale: 1.02, y: -4 }}
         transition={{ duration: 0.2 }}
       >
-        <Card className="relative overflow-hidden border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-primary via-primary/90 to-primary/80">
+        <Card className={`relative overflow-hidden border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 ${saldoBgGradient}`}>
           <CardContent className="p-4 lg:p-6">
             <div className="text-center text-white relative z-10">
               <div className="flex items-center justify-center gap-2 mb-2">
@@ -70,8 +79,8 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                 </div>
                 <p className="text-xs lg:text-sm font-medium opacity-90">{t('stats.currentBalance')}</p>
               </div>
-              <p className="text-xl lg:text-2xl xl:text-3xl font-bold">
-                {hideValues ? renderHiddenValue() : formatCurrency(balance, currency)}
+              <p className={`text-xl lg:text-2xl xl:text-3xl font-bold text-white`}>
+                {hideValues ? renderHiddenValue() : formatCurrency(monthlySaldo, currency)}
               </p>
             </div>
             <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-white/10 rounded-full" />

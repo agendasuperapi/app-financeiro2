@@ -74,13 +74,18 @@ const Index = () => {
         const simulations: any[] = [];
         
         scheduledTransactions
-          .filter(scheduled => scheduled.recurrence === 'monthly')
-          .forEach(scheduled => {
+          .filter((scheduled) => ['monthly', 'installments'].includes(scheduled.recurrence))
+          .forEach((scheduled) => {
             // Generate simulation for current month only for calculations
             const simulationDate = new Date(currentMonth);
-            simulationDate.setDate(new Date(scheduled.scheduled_date || scheduled.scheduledDate).getDate());
+
+            // Robust day-of-month extraction with fallbacks
+            const baseDateStr = scheduled.scheduled_date || scheduled.scheduledDate || scheduled.nextExecutionDate || scheduled.date;
+            const baseDate = baseDateStr ? new Date(baseDateStr) : null;
+            const day = baseDate && !isNaN(baseDate.getTime()) ? baseDate.getDate() : 1;
+            simulationDate.setDate(day);
             
-            // Check if simulation is for current month
+            // Ensure month/year stays as selected
             const isCurrentMonth = simulationDate.getMonth() === currentMonth.getMonth() && 
                                  simulationDate.getFullYear() === currentMonth.getFullYear();
             
@@ -133,16 +138,27 @@ const Index = () => {
     const simulations: any[] = [];
     
     scheduledTransactions
-      .filter(scheduled => scheduled.recurrence === 'monthly')
-      .forEach(scheduled => {
-        // Gerar simulações para os próximos 12 meses
-        for (let i = 0; i < 12; i++) {
+      .filter((scheduled) => ['monthly', 'installments'].includes(scheduled.recurrence))
+      .forEach((scheduled) => {
+        // Determine how many months to simulate
+        const totalMonths = scheduled.recurrence === 'installments'
+          ? parseInt(String((scheduled.installments ?? scheduled.parcela ?? 12)))
+          : 12;
+
+        // Resolve base day-of-month robustly
+        const baseDateStr = scheduled.scheduled_date || scheduled.scheduledDate || scheduled.nextExecutionDate || scheduled.date;
+        const baseDate = baseDateStr ? new Date(baseDateStr) : null;
+        const day = baseDate && !isNaN(baseDate.getTime()) ? baseDate.getDate() : 1;
+        
+        // Generate simulations for the next N months starting from selected month
+        for (let i = 0; i < totalMonths; i++) {
           const simulationDate = new Date(currentMonth);
           simulationDate.setMonth(simulationDate.getMonth() + i);
-          simulationDate.setDate(new Date(scheduled.scheduled_date || scheduled.scheduledDate).getDate());
+          simulationDate.setDate(day);
           
-          // Verificar se a simulação é para o mês atual ou futuro
-          const isCurrentOrFuture = simulationDate >= new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+          // Only include current or future months relative to selected month start
+          const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+          const isCurrentOrFuture = simulationDate >= monthStart;
           
           if (isCurrentOrFuture) {
             const simulation = {

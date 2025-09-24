@@ -74,12 +74,26 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
       form.reset(defaultValues);
     } else if (open && initialData) {
       // Populate form with initial data when editing
+      const dateValue = (initialData as any).scheduledDate || (initialData as any).date;
+      let formattedDate = '';
+      
+      if (dateValue) {
+        try {
+          const date = new Date(dateValue);
+          if (!isNaN(date.getTime())) {
+            formattedDate = date.toISOString().slice(0, 16);
+          }
+        } catch (error) {
+          console.error('Error parsing date:', dateValue, error);
+        }
+      }
+      
       form.reset({
-        description: initialData.description,
-        scheduledDate: new Date(initialData.scheduledDate).toISOString().slice(0, 16),
+        description: initialData.description || '',
+        scheduledDate: formattedDate,
         recurrence: (initialData.recurrence || 'once') as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly',
-        name: initialData.creatorName || '',
-        phone: initialData.phone || '',
+        name: (initialData as any).creatorName || (initialData as any).name || '',
+        phone: (initialData as any).phone || '',
       });
     }
   }, [open, initialData, form]);

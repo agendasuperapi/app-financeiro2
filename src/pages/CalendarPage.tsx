@@ -36,16 +36,23 @@ const CalendarPage: React.FC = () => {
   const { toast } = useToast();
 
   const handleEditTransaction = (transaction: Transaction) => {
+    console.log('Editando transação:', transaction);
+    console.log('Campo formato:', (transaction as any).formato);
     setSelectedTransaction(transaction);
     
     // Verificar o campo formato para abrir o diálogo correto
     const formato = (transaction as any).formato || 'transacao';
     
+    console.log('Formato determinado:', formato);
+    
     if (formato === 'agenda') {
+      console.log('Abrindo formulário de contas');
       setEditContaDialogOpen(true);
     } else if (formato === 'lembrete') {
+      console.log('Abrindo formulário de lembretes');
       setEditReminderDialogOpen(true);
     } else {
+      console.log('Abrindo formulário de transações');
       // formato === 'transacao' ou qualquer outro valor
       setEditDialogOpen(true);
     }
@@ -488,11 +495,11 @@ const CalendarPage: React.FC = () => {
         />
       )}
 
-      {selectedReminder && (
+      {selectedTransaction && editReminderDialogOpen && (
         <ScheduledTransactionForm
           open={editReminderDialogOpen}
           onOpenChange={setEditReminderDialogOpen}
-          initialData={selectedReminder}
+          initialData={selectedTransaction as any}
           mode="edit"
           onSuccess={handleTransactionSuccess}
         />

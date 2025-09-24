@@ -10,7 +10,7 @@ export default {
     delete: 'Excluir',
     cancel: 'Cancelar',
     update: 'Atualizar',
-    add: 'Adicionar',
+    add: 'Transação',
     view: 'Ver',
     details: 'Detalhes',
     date: 'Data',

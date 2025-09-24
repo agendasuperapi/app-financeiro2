@@ -150,16 +150,53 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     // Buscar todas as transações até o final do mês anterior
     const endOfPreviousMonth = new Date(previousMonth.getFullYear(), previousMonth.getMonth() + 1, 0);
     
+    console.log('🔍 Previous month balance calculation:', {
+      currentMonth: currentMonth.toISOString(),
+      previousMonth: previousMonth.toISOString(),
+      endOfPreviousMonth: endOfPreviousMonth.toISOString(),
+      totalTransactions: filteredTransactions.length
+    });
+    
     const transactionsUntilPreviousMonth = filteredTransactions.filter((tx: any) => {
       const txDate = new Date(tx.date);
-      return txDate <= endOfPreviousMonth;
+      const isBeforeOrEqual = txDate <= endOfPreviousMonth;
+      
+      if (tx.description?.includes('Aluguel') || tx.description?.includes('salario')) {
+        console.log('🔍 Transaction check:', {
+          description: tx.description,
+          date: tx.date,
+          txDate: txDate.toISOString(),
+          endOfPreviousMonth: endOfPreviousMonth.toISOString(),
+          isBeforeOrEqual,
+          amount: tx.amount
+        });
+      }
+      
+      return isBeforeOrEqual;
+    });
+    
+    console.log('🔍 Filtered transactions until previous month:', {
+      count: transactionsUntilPreviousMonth.length,
+      transactions: transactionsUntilPreviousMonth.slice(0, 5).map(tx => ({
+        id: tx.id,
+        description: tx.description,
+        date: tx.date,
+        amount: tx.amount
+      }))
     });
     
     // Calcular saldo acumulado até o mês anterior
-    return transactionsUntilPreviousMonth.reduce((acc: number, tx: any) => {
+    const balance = transactionsUntilPreviousMonth.reduce((acc: number, tx: any) => {
       const amount = Number(tx.amount) || 0;
       return acc + amount;
     }, 0);
+    
+    console.log('🔍 Previous month balance result:', {
+      balance,
+      transactionCount: transactionsUntilPreviousMonth.length
+    });
+    
+    return balance;
   }, [filteredTransactions, currentMonth]);
 
   const monthlyBalance = totalIncomesCombined - totalExpensesCombined;

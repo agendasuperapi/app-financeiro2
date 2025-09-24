@@ -231,7 +231,8 @@ export const addScheduledTransaction = async (
           phone: transaction.phone,
           name: transaction.creatorName,
           conta: transaction.conta,
-          recurrence: convertRecurrenceToPortuguese('once') // Convert to Portuguese
+          recurrence: convertRecurrenceToPortuguese('once'), // Convert to Portuguese
+          formato: 'agenda' // Transações criadas via agendamento
         };
         
         // Ensure no unwanted properties are added
@@ -308,7 +309,8 @@ export const addScheduledTransaction = async (
         date: transaction.scheduledDate,
         goal_id: transaction.goalId,
         reference_code: referenceCode,
-        status: 'pending'
+        status: 'pending',
+        formato: 'agenda' // Transações criadas via agendamento
       };
 
       // Add additional fields if they exist
@@ -568,7 +570,8 @@ export const markAsPaid = async (
       reference_code: newReferenceCode,
       phone: (originalTransaction as any).phone,
       parcela: (originalTransaction as any).parcela,
-      user_id: originalTransaction.user_id
+      user_id: originalTransaction.user_id,
+      formato: 'agenda' // Transações criadas via agendamento
     };
 
     console.log('📝 Creating new transaction:', newTransactionData);

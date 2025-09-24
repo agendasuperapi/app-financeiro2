@@ -215,6 +215,32 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Nova row - Cálculo do Saldo */}
+      <motion.div
+        whileHover={{ scale: 1.02, y: -4 }}
+        transition={{ duration: 0.2 }}
+        className="sm:col-span-2 lg:col-span-3"
+      >
+        <Card className="relative overflow-hidden border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
+          <CardContent className="p-4 lg:p-6">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                  <Wallet className="h-4 w-4 lg:h-5 lg:w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <p className="text-xs lg:text-sm font-medium text-blue-700 dark:text-blue-400">
+                  Saldo Calculado (Mês Anterior + Income + Expense)
+                </p>
+              </div>
+              <p id="calculated-balance-value" className="text-xl lg:text-2xl xl:text-3xl font-bold text-blue-700 dark:text-blue-400">
+                {hideValues ? renderHiddenValue() : formatCurrency(calculatedBalance, currency)}
+              </p>
+            </div>
+            <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-blue-200/30 dark:bg-blue-800/20 rounded-full" />
+          </CardContent>
+        </Card>
+      </motion.div>
     </motion.div>
   );
 };

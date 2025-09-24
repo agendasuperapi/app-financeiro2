@@ -25,37 +25,53 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
   onNavigateToTransactionType,
   currentMonth
 }) => {
-  // Puxar valor do elemento income-total
+  // Puxar valores dos elementos income-total e expense-total (prompts)
   const [incomeFromTotal, setIncomeFromTotal] = React.useState(totalIncome);
+  const [expenseFromTotal, setExpenseFromTotal] = React.useState(totalExpenses);
   
   React.useEffect(() => {
-    const getIncomeFromElement = () => {
-      const element = document.getElementById('income-total');
-      if (element && element.textContent && !element.textContent.includes('*')) {
-        // Tratar formato brasileiro: R$ 5.850,00
-        let text = element.textContent;
-        // Remover símbolos de moeda e espaços
+    const getTotalsFromElements = () => {
+      // Income
+      const incomeEl = document.getElementById('income-total');
+      if (incomeEl && incomeEl.textContent && !incomeEl.textContent.includes('*')) {
+        let text = incomeEl.textContent;
         text = text.replace(/[R$\s]/g, '');
-        // Remover pontos de milhares e substituir vírgula decimal por ponto
         text = text.replace(/\./g, '').replace(',', '.');
         const value = parseFloat(text) || totalIncome;
-        setIncomeFromTotal(value);
+        setIncomeFromTotal(Math.abs(value));
       } else {
         setIncomeFromTotal(totalIncome);
       }
+      // Expense
+      const expenseEl = document.getElementById('expense-total');
+      if (expenseEl && expenseEl.textContent && !expenseEl.textContent.includes('*')) {
+        let text = expenseEl.textContent;
+        text = text.replace(/[R$\s]/g, '');
+        text = text.replace(/\./g, '').replace(',', '.');
+        const value = parseFloat(text) || totalExpenses;
+        setExpenseFromTotal(Math.abs(value));
+      } else {
+        setExpenseFromTotal(totalExpenses);
+      }
     };
 
-    // Observar mudanças no elemento
-    const observer = new MutationObserver(getIncomeFromElement);
-    const targetElement = document.getElementById('income-total');
+    // Observar mudanças nos elementos
+    const incomeTarget = document.getElementById('income-total');
+    const expenseTarget = document.getElementById('expense-total');
+    const observerIncome = incomeTarget ? new MutationObserver(getTotalsFromElements) : null;
+    const observerExpense = expenseTarget ? new MutationObserver(getTotalsFromElements) : null;
     
-    if (targetElement) {
-      observer.observe(targetElement, { childList: true, characterData: true, subtree: true });
-      getIncomeFromElement(); // Executar uma vez
-    }
+    if (incomeTarget) observerIncome?.observe(incomeTarget, { childList: true, characterData: true, subtree: true });
+    if (expenseTarget) observerExpense?.observe(expenseTarget, { childList: true, characterData: true, subtree: true });
 
-    return () => observer.disconnect();
-  }, [totalIncome]);
+    // Executar uma vez inicialmente
+    getTotalsFromElements();
+
+    return () => {
+      observerIncome?.disconnect();
+      observerExpense?.disconnect();
+    };
+  }, [totalIncome, totalExpenses]);
 
   const { t, currency } = usePreferences();
   
@@ -153,8 +169,10 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
   // então: saldo do mês anterior = balance - receitas reais + despesas reais
   const previousMonthBalance = balance - totalIncome + totalExpenses;
   
-  // adjustedBalance = saldo do mês anterior + (valores exibidos nos cards)
-  const adjustedBalance = previousMonthBalance + incomeFromCards - expensesFromCards;
+  // adjustedBalance = saldo do mês anterior + (valores dos prompts)
+  const effectiveIncome = Number.isFinite(incomeFromTotal) ? incomeFromTotal : incomeFromCards;
+  const effectiveExpense = Number.isFinite(expenseFromTotal) ? expenseFromTotal : expensesFromCards;
+  const adjustedBalance = previousMonthBalance + effectiveIncome - effectiveExpense;
 
   // Cores/fundo conforme sinal do saldo ajustado
   const saldoBgGradient = adjustedBalance >= 0 

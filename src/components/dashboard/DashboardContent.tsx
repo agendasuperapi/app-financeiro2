@@ -198,7 +198,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
                     {t('common.income')}: <span className="text-green-600 font-medium" id="income-total">{hideValues ? '******' : formatCurrency(totalIncomesCombined, currency)}</span>
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {t('common.expense')}: <span className="text-red-600 font-medium">{hideValues ? '******' : formatCurrency(totalExpensesCombined, currency)}</span>
+                    {t('common.expense')}: <span className="text-red-600 font-medium" id="expense-total">{hideValues ? '******' : formatCurrency(totalExpensesCombined, currency)}</span>
                   </p>
                 </div>
               </div>

@@ -91,8 +91,8 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
         const incomeValue = extractValue(incomeElement);
         const expenseValue = extractValue(expenseElement);
         
-        // Saldo = valor do mês passado + income - expense
-        const newBalance = balance + incomeValue - expenseValue;
+        // Saldo = valor do mês passado + income - expense (sempre descontando o valor absoluto da despesa)
+        const newBalance = balance + incomeValue - Math.abs(expenseValue);
         setCalculatedBalance(newBalance);
       } else {
         setCalculatedBalance(balance);

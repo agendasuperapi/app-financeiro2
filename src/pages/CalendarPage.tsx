@@ -50,6 +50,13 @@ const CalendarPage: React.FC = () => {
       setEditContaDialogOpen(true);
     } else if (formato === 'lembrete') {
       console.log('Abrindo formulário de lembretes');
+      // Converter transaction para ScheduledTransaction
+      const scheduledTransaction: ScheduledTransaction = {
+        ...transaction,
+        scheduledDate: transaction.date,
+        type: transaction.type as any
+      };
+      setSelectedReminder(scheduledTransaction);
       setEditReminderDialogOpen(true);
     } else {
       console.log('Abrindo formulário de transações');
@@ -495,11 +502,11 @@ const CalendarPage: React.FC = () => {
         />
       )}
 
-      {selectedTransaction && editReminderDialogOpen && (
+      {selectedTransaction && editReminderDialogOpen && selectedReminder && (
         <ScheduledTransactionForm
           open={editReminderDialogOpen}
           onOpenChange={setEditReminderDialogOpen}
-          initialData={selectedTransaction as any}
+          initialData={selectedReminder}
           mode="edit"
           onSuccess={handleTransactionSuccess}
         />

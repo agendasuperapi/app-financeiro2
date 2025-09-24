@@ -45,21 +45,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   // Simulações mensais baseadas em poupeja_transactions.recurrence = 'Mensal'
   const [monthlySimulations, setMonthlySimulations] = React.useState<Transaction[]>([]);
 
-  // Props para calcular saldo atual (recebidos do componente pai)
-  const [totalIncome, setTotalIncome] = React.useState(0);
-  const [totalExpenses, setTotalExpenses] = React.useState(0);
-  const [balance, setBalance] = React.useState(0);
-  React.useEffect(() => {
-    // Simular recebimento dos valores do componente pai
-    // Em um cenário real, estes valores viriam como props
-    const mockTotalIncome = 2000; // valor exemplo
-    const mockTotalExpenses = 1200; // valor exemplo  
-    const mockBalance = 1347.52; // saldo exemplo do mês anterior
-
-    setTotalIncome(mockTotalIncome);
-    setTotalExpenses(mockTotalExpenses);
-    setBalance(mockBalance);
-  }, []);
+  // Usar apenas dados reais das transações - sem valores mockados
   React.useEffect(() => {
     const fetchMensalAndSimulate = async () => {
       try {
@@ -154,9 +140,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     }, 0);
   }, [transactionsWithSimulations]);
 
-  // Calcular saldo do mês anterior e saldo atual
+  // Calcular saldo baseado apenas em dados reais das transações
   const monthlyBalance = totalIncomesCombined - totalExpensesCombined;
-  const previousMonthBalance = balance - totalIncome + totalExpenses;
+  const previousMonthBalance = 0; // Por enquanto, sem dados do saldo anterior real
   const currentBalance = previousMonthBalance + monthlyBalance;
   const itemVariants = {
     hidden: {

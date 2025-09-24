@@ -142,7 +142,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     }, 0);
   }, [transactionsWithSimulations]);
 
-  // Calcular saldo dos meses anteriores (receitas reais + simuladas) - (despesas reais + simuladas)
+  // Calcular saldo dos meses anteriores (receitas reais + simuladas com recurrence "Mensal")
   const [previousMonthsBalance, setPreviousMonthsBalance] = React.useState(0);
 
   React.useEffect(() => {
@@ -151,80 +151,70 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         // Data limite: fim do mês anterior ao mês atual
         const endOfPreviousMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0);
         
-        // 1. Buscar transações reais dos meses anteriores
+        // 1. Buscar todas as transações reais dos meses anteriores
         const realTransactionsUntilPreviousMonth = filteredTransactions.filter((tx: any) => {
           const txDate = new Date(tx.date);
           return txDate <= endOfPreviousMonth;
         });
 
-        // 2. Buscar simulações mensais e gerar para todos os meses anteriores
-        const { data: mensalData, error } = await (supabase as any)
+        // 2. Buscar transações com recurrence = "Mensal" para simular
+        const { data: mensalTransactions, error } = await (supabase as any)
           .from('poupeja_transactions')
-          .select(`*, category:poupeja_categories(id, name, icon, color, type)`)
+          .select('*')
           .eq('recurrence', 'Mensal')
           .eq('status', 'pending')
           .eq('situacao', 'ativo');
 
         if (error) throw error;
 
-        // 3. Gerar simulações para cada mês anterior
+        // 3. Simular transações mensais apenas da data original para frente
         const simulatedTransactions: any[] = [];
-        if (mensalData) {
-          // Calcular quantos meses anteriores simular (até 12 meses atrás)
-          const startDate = new Date(currentMonth);
-          startDate.setMonth(startDate.getMonth() - 12); // Limitar a 12 meses atrás
-          
-          for (let date = new Date(startDate); date <= endOfPreviousMonth; date.setMonth(date.getMonth() + 1)) {
-            const year = date.getFullYear();
-            const month = date.getMonth();
+        if (mensalTransactions) {
+          mensalTransactions.forEach((transaction: any) => {
+            const originalDate = new Date(transaction.date);
             
-            mensalData.forEach((item: any) => {
-              const baseDate = item.date ? new Date(item.date) : new Date(year, month, 1);
-              const day = baseDate.getDate() || 1;
-              const simDate = new Date(year, month, Math.min(day, 28));
-              
+            // Simular apenas para meses após a data original até o mês anterior ao atual
+            let simDate = new Date(originalDate);
+            simDate.setMonth(simDate.getMonth() + 1); // Começar do mês seguinte
+            
+            while (simDate <= endOfPreviousMonth) {
               // Verificar se já existe transação real similar neste mês
               const hasRealTransaction = realTransactionsUntilPreviousMonth.some((realTx: any) => {
                 const realDesc = realTx.description ? String(realTx.description).toLowerCase() : '';
-                const desc = item.description ? String(item.description).toLowerCase() : '';
+                const transactionDesc = transaction.description ? String(transaction.description).toLowerCase() : '';
                 const realDate = new Date(realTx.date);
-                const sameMonth = realDate.getFullYear() === year && realDate.getMonth() === month;
-                const similarDesc = realDesc && desc && (realDesc.includes(desc) || desc.includes(realDesc));
+                const sameMonth = realDate.getFullYear() === simDate.getFullYear() && 
+                                 realDate.getMonth() === simDate.getMonth();
+                const similarDesc = realDesc && transactionDesc && 
+                                   (realDesc.includes(transactionDesc) || transactionDesc.includes(realDesc));
                 return sameMonth && similarDesc;
               });
 
               if (!hasRealTransaction) {
                 simulatedTransactions.push({
-                  id: `mensal-sim-${item.id}-${year}-${month + 1}`,
-                  type: item.type,
-                  amount: Number(item.amount) || 0,
+                  id: `mensal-sim-${transaction.id}-${simDate.getFullYear()}-${simDate.getMonth() + 1}`,
+                  type: transaction.type,
+                  amount: Number(transaction.amount) || 0,
                   date: simDate.toISOString(),
-                  description: item.description || 'Simulação Mensal'
+                  description: transaction.description
                 });
               }
-            });
-          }
+              
+              // Próximo mês
+              simDate.setMonth(simDate.getMonth() + 1);
+            }
+          });
         }
 
         // 4. Combinar transações reais e simuladas
         const allTransactions = [...realTransactionsUntilPreviousMonth, ...simulatedTransactions];
         
-        // 5. Calcular receitas e despesas
-        const totalIncomes = allTransactions
-          .filter((tx: any) => tx.type === 'income' || (tx.amount && tx.amount > 0))
-          .reduce((sum: number, tx: any) => {
-            const amount = Number(tx.amount) || 0;
-            return sum + (amount > 0 ? amount : tx.type === 'income' ? Math.abs(amount) : 0);
-          }, 0);
+        // 5. Calcular saldo (receitas - despesas)
+        const balance = allTransactions.reduce((acc: number, tx: any) => {
+          const amount = Number(tx.amount) || 0;
+          return acc + amount;
+        }, 0);
 
-        const totalExpenses = allTransactions
-          .filter((tx: any) => tx.type === 'expense' || (tx.amount && tx.amount < 0))
-          .reduce((sum: number, tx: any) => {
-            const amount = Number(tx.amount) || 0;
-            return sum + (amount < 0 ? -amount : tx.type === 'expense' ? amount : 0);
-          }, 0);
-
-        const balance = totalIncomes - totalExpenses;
         setPreviousMonthsBalance(balance);
 
       } catch (error) {

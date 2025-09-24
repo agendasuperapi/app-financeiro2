@@ -22,6 +22,7 @@ import TransactionForm from '@/components/common/TransactionForm';
 import ScheduledTransactionForm from '@/components/schedule/ScheduledTransactionForm';
 import AddContaForm from '@/components/contas/AddContaForm';
 import ContaFormFields from '@/components/common/ContaFormFields';
+import TransactionFormFields from '@/components/common/TransactionFormFields';
 
 const CalendarPage: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -34,6 +35,7 @@ const CalendarPage: React.FC = () => {
   const [editReminderDialogOpen, setEditReminderDialogOpen] = useState(false);
   const [editContaDialogOpen, setEditContaDialogOpen] = useState(false);
   const [editContaFormDialogOpen, setEditContaFormDialogOpen] = useState(false);
+  const [editTransactionFormDialogOpen, setEditTransactionFormDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [selectedReminder, setSelectedReminder] = useState<ScheduledTransaction | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -51,6 +53,20 @@ const CalendarPage: React.FC = () => {
       category: '',
       scheduledDate: '',
       installments: 1
+    }
+  });
+
+  // Form for TransactionFormFields
+  const transactionForm = useForm({
+    defaultValues: {
+      type: 'expense',
+      description: '',
+      amount: 0,
+      conta: '',
+      addedBy: '',
+      category: '',
+      date: '',
+      goalId: ''
     }
   });
 
@@ -77,8 +93,21 @@ const CalendarPage: React.FC = () => {
     } else if (formato === 'lembrete') {
       // Abrir formulário da aba "contas" (AddContaForm que usa ReminderForm para lembretes)
       setEditContaDialogOpen(true);
+    } else if (formato === 'transacao') {
+      // Abrir TransactionFormFields quando formato for "transacao"
+      transactionForm.reset({
+        type: transaction.type as 'income' | 'expense',
+        description: transaction.description || '',
+        amount: transaction.amount,
+        conta: (transaction as any).conta || '',
+        addedBy: (transaction as any).addedBy || '',
+        category: transaction.category,
+        date: transaction.date,
+        goalId: (transaction as any).goalId || ''
+      });
+      setEditTransactionFormDialogOpen(true);
     } else {
-      // formato === 'transacao' - abrir formulário da aba "transactions"
+      // formato padrão - abrir formulário da aba "transactions"
       setEditDialogOpen(true);
     }
   };
@@ -138,6 +167,7 @@ const CalendarPage: React.FC = () => {
     setEditReminderDialogOpen(false);
     setEditContaDialogOpen(false);
     setEditContaFormDialogOpen(false);
+    setEditTransactionFormDialogOpen(false);
     setSelectedTransaction(null);
     setSelectedReminder(null);
     await loadData();
@@ -553,6 +583,30 @@ const CalendarPage: React.FC = () => {
                   form={contaForm}
                   mode="edit"
                   onCancel={() => setEditContaFormDialogOpen(false)}
+                  onSubmit={() => handleTransactionSuccess()}
+                  submitLabel="Atualizar"
+                  cancelLabel="Cancelar"
+                />
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* TransactionFormFields Dialog for "transacao" format */}
+      {selectedTransaction && editTransactionFormDialogOpen && (
+        <Dialog open={editTransactionFormDialogOpen} onOpenChange={setEditTransactionFormDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Editar Transação</DialogTitle>
+            </DialogHeader>
+            <Form {...transactionForm}>
+              <form onSubmit={transactionForm.handleSubmit(() => handleTransactionSuccess())}>
+                <TransactionFormFields
+                  form={transactionForm}
+                  mode="edit"
+                  selectedType={transactionForm.watch('type') as 'income' | 'expense'}
+                  onCancel={() => setEditTransactionFormDialogOpen(false)}
                   onSubmit={() => handleTransactionSuccess()}
                   submitLabel="Atualizar"
                   cancelLabel="Cancelar"

@@ -70,7 +70,9 @@ export const getTransactions = async (): Promise<Transaction[]> => {
         date: item.date,
         goalId: item.goal_id || undefined,
         // Mostrar nome de quem adicionou quando houver nome na transação
-        creatorName: creatorName
+        creatorName: creatorName,
+        conta: item.conta || undefined,
+        formato: item.formato || undefined,
       };
     });
   } catch (error) {
@@ -223,7 +225,10 @@ export const createTransactionForUser = async (transactionData: {
       categoryColor: data.category?.color || "#607D8B",
       description: data.description || "",
       date: data.date,
-      goalId: data.goal_id || undefined
+      goalId: data.goal_id || undefined,
+      conta: (data as any).conta || undefined,
+      creatorName: (data as any).name || undefined,
+      formato: (data as any).formato || undefined,
     };
   } catch (error) {
     console.error("Error creating transaction for user:", error);
@@ -320,7 +325,10 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
       categoryColor: data.category?.color || "#607D8B",
       description: data.description || "",
       date: data.date,
-      goalId: data.goal_id || undefined
+      goalId: data.goal_id || undefined,
+      conta: (data as any).conta || undefined,
+      creatorName: (data as any).name || undefined,
+      formato: (data as any).formato || undefined,
     };
   } catch (error) {
     console.error("Error updating transaction:", error);

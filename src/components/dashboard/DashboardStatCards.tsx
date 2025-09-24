@@ -139,7 +139,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                   {t('common.income')}
                 </p>
               </div>
-              <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-green-700 dark:text-green-400">
+              <p id="income-card-value" className="text-xl lg:text-2xl xl:text-3xl font-bold text-green-700 dark:text-green-400">
                 {hideValues ? renderHiddenValue() : formatCurrency(incomeFromTotal, currency)}
               </p>
             </div>

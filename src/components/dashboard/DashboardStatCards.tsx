@@ -70,12 +70,52 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
       }, 0);
   }, [transactionsWithSimulations, totalExpenses]);
 
-  // Cálculo do saldo total: Saldo do mês anterior + receita + despesa
-  // balance = saldo do mês anterior, incomeFromTotal = receita, totalExpensesCombined = despesa (subtraída)
+  // Puxar valores dos cards para calcular saldo
   const adjustedBalance = balance + incomeFromTotal - totalExpensesCombined;
+  const [calculatedBalance, setCalculatedBalance] = React.useState(adjustedBalance);
+  
+  React.useEffect(() => {
+    const calculateBalanceFromCards = () => {
+      const incomeElement = document.getElementById('income-card-value');
+      const expenseElement = document.getElementById('expense-card-value');
+      
+      if (incomeElement && expenseElement && !hideValues) {
+        // Extrair valores dos elementos
+        const extractValue = (element: HTMLElement) => {
+          if (!element.textContent || element.textContent.includes('*')) return 0;
+          let text = element.textContent;
+          text = text.replace(/[R$\s]/g, '');
+          text = text.replace(/\./g, '').replace(',', '.');
+          return parseFloat(text) || 0;
+        };
+        
+        const incomeValue = extractValue(incomeElement);
+        const expenseValue = extractValue(expenseElement);
+        
+        // Saldo Atual = balance + income + expense
+        const newBalance = balance + incomeValue + expenseValue;
+        setCalculatedBalance(newBalance);
+      } else {
+        setCalculatedBalance(adjustedBalance);
+      }
+    };
 
-  // Cores/fundo conforme sinal do saldo ajustado
-  const saldoBgGradient = adjustedBalance >= 0 
+    // Observar mudanças nos elementos dos cards
+    const observer = new MutationObserver(calculateBalanceFromCards);
+    const incomeElement = document.getElementById('income-card-value');
+    const expenseElement = document.getElementById('expense-card-value');
+    
+    if (incomeElement && expenseElement) {
+      observer.observe(incomeElement, { childList: true, characterData: true, subtree: true });
+      observer.observe(expenseElement, { childList: true, characterData: true, subtree: true });
+      calculateBalanceFromCards(); // Executar uma vez
+    }
+
+    return () => observer.disconnect();
+  }, [balance, adjustedBalance, hideValues]);
+
+  // Cores/fundo conforme sinal do saldo calculado
+  const saldoBgGradient = calculatedBalance >= 0
     ? 'bg-gradient-to-br from-green-500 via-green-600 to-green-700' 
     : 'bg-gradient-to-br from-red-500 via-red-600 to-red-700';
   
@@ -112,7 +152,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                 <p className="text-xs lg:text-sm font-medium opacity-90">{t('stats.currentBalance')}</p>
               </div>
               <p id="balance-card-value" className={`text-xl lg:text-2xl xl:text-3xl font-bold text-white`}>
-                {hideValues ? renderHiddenValue() : formatCurrency(adjustedBalance, currency)}
+                {hideValues ? renderHiddenValue() : formatCurrency(calculatedBalance, currency)}
               </p>
             </div>
             <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-white/10 rounded-full" />

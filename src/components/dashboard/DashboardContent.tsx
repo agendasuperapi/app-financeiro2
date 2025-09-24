@@ -142,65 +142,102 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     }, 0);
   }, [transactionsWithSimulations]);
 
-  // Calcular saldo do mês anterior baseado em transações reais
-  const previousMonthBalance = React.useMemo(() => {
-    const previousMonth = new Date(currentMonth);
-    previousMonth.setMonth(previousMonth.getMonth() - 1);
-    
-    // Buscar todas as transações até o final do mês anterior
-    const endOfPreviousMonth = new Date(previousMonth.getFullYear(), previousMonth.getMonth() + 1, 0);
-    
-    console.log('🔍 Previous month balance calculation:', {
-      currentMonth: currentMonth.toISOString(),
-      previousMonth: previousMonth.toISOString(),
-      endOfPreviousMonth: endOfPreviousMonth.toISOString(),
-      totalTransactions: filteredTransactions.length
-    });
-    
-    const transactionsUntilPreviousMonth = filteredTransactions.filter((tx: any) => {
-      const txDate = new Date(tx.date);
-      const isBeforeOrEqual = txDate <= endOfPreviousMonth;
-      
-      if (tx.description?.includes('Aluguel') || tx.description?.includes('salario')) {
-        console.log('🔍 Transaction check:', {
-          description: tx.description,
-          date: tx.date,
-          txDate: txDate.toISOString(),
-          endOfPreviousMonth: endOfPreviousMonth.toISOString(),
-          isBeforeOrEqual,
-          amount: tx.amount
+  // Calcular saldo dos meses anteriores (receitas reais + simuladas) - (despesas reais + simuladas)
+  const [previousMonthsBalance, setPreviousMonthsBalance] = React.useState(0);
+
+  React.useEffect(() => {
+    const calculatePreviousMonthsBalance = async () => {
+      try {
+        // Data limite: fim do mês anterior ao mês atual
+        const endOfPreviousMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0);
+        
+        // 1. Buscar transações reais dos meses anteriores
+        const realTransactionsUntilPreviousMonth = filteredTransactions.filter((tx: any) => {
+          const txDate = new Date(tx.date);
+          return txDate <= endOfPreviousMonth;
         });
+
+        // 2. Buscar simulações mensais e gerar para todos os meses anteriores
+        const { data: mensalData, error } = await (supabase as any)
+          .from('poupeja_transactions')
+          .select(`*, category:poupeja_categories(id, name, icon, color, type)`)
+          .eq('recurrence', 'Mensal')
+          .eq('status', 'pending')
+          .eq('situacao', 'ativo');
+
+        if (error) throw error;
+
+        // 3. Gerar simulações para cada mês anterior
+        const simulatedTransactions: any[] = [];
+        if (mensalData) {
+          // Calcular quantos meses anteriores simular (até 12 meses atrás)
+          const startDate = new Date(currentMonth);
+          startDate.setMonth(startDate.getMonth() - 12); // Limitar a 12 meses atrás
+          
+          for (let date = new Date(startDate); date <= endOfPreviousMonth; date.setMonth(date.getMonth() + 1)) {
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            
+            mensalData.forEach((item: any) => {
+              const baseDate = item.date ? new Date(item.date) : new Date(year, month, 1);
+              const day = baseDate.getDate() || 1;
+              const simDate = new Date(year, month, Math.min(day, 28));
+              
+              // Verificar se já existe transação real similar neste mês
+              const hasRealTransaction = realTransactionsUntilPreviousMonth.some((realTx: any) => {
+                const realDesc = realTx.description ? String(realTx.description).toLowerCase() : '';
+                const desc = item.description ? String(item.description).toLowerCase() : '';
+                const realDate = new Date(realTx.date);
+                const sameMonth = realDate.getFullYear() === year && realDate.getMonth() === month;
+                const similarDesc = realDesc && desc && (realDesc.includes(desc) || desc.includes(realDesc));
+                return sameMonth && similarDesc;
+              });
+
+              if (!hasRealTransaction) {
+                simulatedTransactions.push({
+                  id: `mensal-sim-${item.id}-${year}-${month + 1}`,
+                  type: item.type,
+                  amount: Number(item.amount) || 0,
+                  date: simDate.toISOString(),
+                  description: item.description || 'Simulação Mensal'
+                });
+              }
+            });
+          }
+        }
+
+        // 4. Combinar transações reais e simuladas
+        const allTransactions = [...realTransactionsUntilPreviousMonth, ...simulatedTransactions];
+        
+        // 5. Calcular receitas e despesas
+        const totalIncomes = allTransactions
+          .filter((tx: any) => tx.type === 'income' || (tx.amount && tx.amount > 0))
+          .reduce((sum: number, tx: any) => {
+            const amount = Number(tx.amount) || 0;
+            return sum + (amount > 0 ? amount : tx.type === 'income' ? Math.abs(amount) : 0);
+          }, 0);
+
+        const totalExpenses = allTransactions
+          .filter((tx: any) => tx.type === 'expense' || (tx.amount && tx.amount < 0))
+          .reduce((sum: number, tx: any) => {
+            const amount = Number(tx.amount) || 0;
+            return sum + (amount < 0 ? -amount : tx.type === 'expense' ? amount : 0);
+          }, 0);
+
+        const balance = totalIncomes - totalExpenses;
+        setPreviousMonthsBalance(balance);
+
+      } catch (error) {
+        console.error('Erro ao calcular saldo dos meses anteriores:', error);
+        setPreviousMonthsBalance(0);
       }
-      
-      return isBeforeOrEqual;
-    });
-    
-    console.log('🔍 Filtered transactions until previous month:', {
-      count: transactionsUntilPreviousMonth.length,
-      transactions: transactionsUntilPreviousMonth.slice(0, 5).map(tx => ({
-        id: tx.id,
-        description: tx.description,
-        date: tx.date,
-        amount: tx.amount
-      }))
-    });
-    
-    // Calcular saldo acumulado até o mês anterior
-    const balance = transactionsUntilPreviousMonth.reduce((acc: number, tx: any) => {
-      const amount = Number(tx.amount) || 0;
-      return acc + amount;
-    }, 0);
-    
-    console.log('🔍 Previous month balance result:', {
-      balance,
-      transactionCount: transactionsUntilPreviousMonth.length
-    });
-    
-    return balance;
+    };
+
+    calculatePreviousMonthsBalance();
   }, [filteredTransactions, currentMonth]);
 
   const monthlyBalance = totalIncomesCombined - totalExpensesCombined;
-  const currentBalance = previousMonthBalance + monthlyBalance;
+  const currentBalance = previousMonthsBalance + monthlyBalance;
   const itemVariants = {
     hidden: {
       y: 20,
@@ -244,12 +281,12 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
                   <p className="text-sm text-muted-foreground">
                     {t('common.expense')}: <span className="text-red-600 font-medium" id="expense-total">{hideValues ? '******' : formatCurrency(totalExpensesCombined, currency)}</span>
                   </p>
-                   <p className="text-sm text-muted-foreground">
-                     Saldo Mês {format(currentMonth, 'MMM/yyyy', { locale: ptBR })}: <span className={`font-medium ${monthlyBalance >= 0 ? 'text-green-600' : 'text-red-600'}`} id="monthly-balance">{hideValues ? '******' : formatCurrency(monthlyBalance, currency)}</span>
-                   </p>
-                   <p className="text-sm text-muted-foreground">
-                     Saldo Mês {format(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1), 'MMM/yyyy', { locale: ptBR })}: <span className={`font-medium ${previousMonthBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>{hideValues ? '******' : formatCurrency(previousMonthBalance, currency)}</span>
-                   </p>
+                    <p className="text-sm text-muted-foreground">
+                      Saldo Atual Mês {format(currentMonth, 'MMM/yyyy', { locale: ptBR })}: <span className={`font-medium ${monthlyBalance >= 0 ? 'text-green-600' : 'text-red-600'}`} id="monthly-balance">{hideValues ? '******' : formatCurrency(monthlyBalance, currency)}</span>
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Saldo Meses Anteriores {format(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1), 'MMM/yyyy', { locale: ptBR })}: <span className={`font-medium ${previousMonthsBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>{hideValues ? '******' : formatCurrency(previousMonthsBalance, currency)}</span>
+                    </p>
                   
                 </div>
               </div>

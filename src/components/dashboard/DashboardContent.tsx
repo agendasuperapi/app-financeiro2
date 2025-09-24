@@ -200,6 +200,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
                   <p className="text-sm text-muted-foreground">
                     {t('common.expense')}: <span className="text-red-600 font-medium" id="expense-total">{hideValues ? '******' : formatCurrency(totalExpensesCombined, currency)}</span>
                   </p>
+                  <p className="text-sm text-muted-foreground">
+                    Saldo Mês: <span className={`font-medium ${(totalIncomesCombined - totalExpensesCombined) >= 0 ? 'text-green-600' : 'text-red-600'}`}>{hideValues ? '******' : formatCurrency(totalIncomesCombined - totalExpensesCombined, currency)}</span>
+                  </p>
                 </div>
               </div>
               <Button variant="outline" asChild>

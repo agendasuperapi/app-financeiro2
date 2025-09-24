@@ -13,6 +13,7 @@ interface DashboardStatCardsProps {
   hideValues: boolean;
   transactionsWithSimulations?: any[];
   onNavigateToTransactionType: (type: 'income' | 'expense') => void;
+  currentMonth: Date;
 }
 
 const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
@@ -21,7 +22,8 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
   balance,
   hideValues,
   transactionsWithSimulations = [],
-  onNavigateToTransactionType
+  onNavigateToTransactionType,
+  currentMonth
 }) => {
   // Puxar valor do elemento income-total
   const [incomeFromTotal, setIncomeFromTotal] = React.useState(totalIncome);
@@ -57,31 +59,42 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
 
   const { t, currency } = usePreferences();
   
-  // Total de receitas (reais + simulações)
-  const totalIncomesCombined = React.useMemo(() => {
-    if (transactionsWithSimulations.length === 0) return totalIncome;
+  // Filtrar transações do mês selecionado
+  const monthlyTransactions = React.useMemo(() => {
+    const selectedYear = currentMonth.getFullYear();
+    const selectedMonthIndex = currentMonth.getMonth();
     
-    return transactionsWithSimulations
+    return transactionsWithSimulations.filter((tx: any) => {
+      const txDate = new Date(tx.date);
+      return txDate.getFullYear() === selectedYear && txDate.getMonth() === selectedMonthIndex;
+    });
+  }, [transactionsWithSimulations, currentMonth]);
+  
+  // Total de receitas (reais + simulações) do mês selecionado
+  const totalIncomesCombined = React.useMemo(() => {
+    if (monthlyTransactions.length === 0) return totalIncome;
+    
+    return monthlyTransactions
       .filter((tx: any) => (tx.type === 'income') || (typeof tx.amount === 'number' && tx.amount > 0))
       .reduce((sum: number, tx: any) => {
         const amt = Number(tx.amount) || 0;
         // Considerar receitas positivas ou tipo 'income'
         return sum + (amt > 0 ? amt : (tx.type === 'income' ? Math.abs(amt) : 0));
       }, 0);
-  }, [transactionsWithSimulations, totalIncome]);
+  }, [monthlyTransactions, totalIncome]);
   
-  // Total de despesas (reais + simulações) - mesma lógica do DashboardContent
+  // Total de despesas (reais + simulações) do mês selecionado
   const totalExpensesCombined = React.useMemo(() => {
-    if (transactionsWithSimulations.length === 0) return totalExpenses;
+    if (monthlyTransactions.length === 0) return totalExpenses;
     
-    return transactionsWithSimulations
+    return monthlyTransactions
       .filter((tx: any) => (tx.type === 'expense') || (typeof tx.amount === 'number' && tx.amount < 0))
       .reduce((sum: number, tx: any) => {
         const amt = Number(tx.amount) || 0;
         // Considerar valor absoluto para despesas negativas ou tipo 'expense'
         return sum + (amt < 0 ? -amt : (tx.type === 'expense' ? amt : 0));
       }, 0);
-  }, [transactionsWithSimulations, totalExpenses]);
+  }, [monthlyTransactions, totalExpenses]);
 
   // Calcular saldo do mês anterior
   // balance = saldo anterior + receitas reais - despesas reais

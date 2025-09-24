@@ -299,6 +299,7 @@ const Index = () => {
             hideValues={hideValues}
             transactionsWithSimulations={transactionsWithSimulations}
             onNavigateToTransactionType={navigateToTransactionType}
+            currentMonth={currentMonth}
           />
 
           {/* Conteúdo do dashboard - com fallback para evitar erro */}

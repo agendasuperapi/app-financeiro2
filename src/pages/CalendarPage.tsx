@@ -18,6 +18,7 @@ import { Edit, Trash2, MoreVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import TransactionForm from '@/components/common/TransactionForm';
 import ScheduledTransactionForm from '@/components/schedule/ScheduledTransactionForm';
+import AddContaForm from '@/components/contas/AddContaForm';
 
 const CalendarPage: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -28,6 +29,7 @@ const CalendarPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editReminderDialogOpen, setEditReminderDialogOpen] = useState(false);
+  const [editContaDialogOpen, setEditContaDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [selectedReminder, setSelectedReminder] = useState<ScheduledTransaction | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -35,7 +37,18 @@ const CalendarPage: React.FC = () => {
 
   const handleEditTransaction = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
-    setEditDialogOpen(true);
+    
+    // Verificar o campo formato para abrir o diálogo correto
+    const formato = (transaction as any).formato || 'transacao';
+    
+    if (formato === 'agenda') {
+      setEditContaDialogOpen(true);
+    } else if (formato === 'lembrete') {
+      setEditReminderDialogOpen(true);
+    } else {
+      // formato === 'transacao' ou qualquer outro valor
+      setEditDialogOpen(true);
+    }
   };
 
   const handleDeleteTransaction = (transaction: Transaction) => {
@@ -91,6 +104,7 @@ const CalendarPage: React.FC = () => {
   const handleTransactionSuccess = async () => {
     setEditDialogOpen(false);
     setEditReminderDialogOpen(false);
+    setEditContaDialogOpen(false);
     setSelectedTransaction(null);
     setSelectedReminder(null);
     await loadData();
@@ -481,6 +495,15 @@ const CalendarPage: React.FC = () => {
           initialData={selectedReminder}
           mode="edit"
           onSuccess={handleTransactionSuccess}
+        />
+      )}
+
+      {selectedTransaction && editContaDialogOpen && (
+        <AddContaForm
+          onSuccess={handleTransactionSuccess}
+          onCancel={() => setEditContaDialogOpen(false)}
+          initialData={selectedTransaction}
+          mode="edit"
         />
       )}
 

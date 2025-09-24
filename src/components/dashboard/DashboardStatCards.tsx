@@ -168,7 +168,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                   {t('common.expense')}
                 </p>
               </div>
-              <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-red-700 dark:text-red-400">
+              <p id="expense-card-value" className="text-xl lg:text-2xl xl:text-3xl font-bold text-red-700 dark:text-red-400">
                 {hideValues ? renderHiddenValue() : formatCurrency(totalExpensesCombined, currency)}
               </p>
             </div>

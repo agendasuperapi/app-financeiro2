@@ -57,6 +57,19 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
 
   const { t, currency } = usePreferences();
   
+  // Total de receitas (reais + simulações)
+  const totalIncomesCombined = React.useMemo(() => {
+    if (transactionsWithSimulations.length === 0) return totalIncome;
+    
+    return transactionsWithSimulations
+      .filter((tx: any) => (tx.type === 'income') || (typeof tx.amount === 'number' && tx.amount > 0))
+      .reduce((sum: number, tx: any) => {
+        const amt = Number(tx.amount) || 0;
+        // Considerar receitas positivas ou tipo 'income'
+        return sum + (amt > 0 ? amt : (tx.type === 'income' ? Math.abs(amt) : 0));
+      }, 0);
+  }, [transactionsWithSimulations, totalIncome]);
+  
   // Total de despesas (reais + simulações) - mesma lógica do DashboardContent
   const totalExpensesCombined = React.useMemo(() => {
     if (transactionsWithSimulations.length === 0) return totalExpenses;
@@ -70,10 +83,10 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
       }, 0);
   }, [transactionsWithSimulations, totalExpenses]);
 
-  // Ajuste do saldo usando os valores já exibidos nos cards
-  // balance (já inclui: saldo anterior + receitas do mês - despesas reais do mês)
-  // Precisamos substituir as despesas reais pelas despesas combinadas (reais + simulações)
-  const adjustedBalance = balance + totalExpenses - totalExpensesCombined;
+  // balance = saldo que vem dos props (já inclui saldo anterior + receitas - despesas reais)
+  // income-card-value = soma das receitas reais + simulações
+  // totalExpensesCombined = despesas reais + simulações
+  const adjustedBalance = balance;
 
   // Cores/fundo conforme sinal do saldo ajustado
   const saldoBgGradient = adjustedBalance >= 0 
@@ -141,7 +154,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                 </p>
               </div>
               <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-green-700 dark:text-green-400">
-                {hideValues ? renderHiddenValue() : formatCurrency(incomeFromTotal, currency)}
+                {hideValues ? renderHiddenValue() : formatCurrency(totalIncomesCombined, currency)}
               </p>
             </div>
             <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-green-200/30 dark:bg-green-800/20 rounded-full" />

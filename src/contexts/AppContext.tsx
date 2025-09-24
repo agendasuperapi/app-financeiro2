@@ -732,6 +732,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           conta: (transaction as any).conta,
           name: nameValue,
           phone: phoneValue,
+          formato: 'transacao',
         })
         .select(`
           *,

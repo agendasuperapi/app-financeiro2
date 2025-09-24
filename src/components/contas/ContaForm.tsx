@@ -184,6 +184,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           phone: values.phone || userPhone,
           parcela: values.recurrence === 'installments' ? (values.installments || 1).toString() : '1',
           user_id: targetUserId,
+          formato: 'agenda',
           // Campos obrigatórios do ContaInput e AddedByField
           conta: values.conta,
           creatorName: values.name

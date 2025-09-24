@@ -140,9 +140,27 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     }, 0);
   }, [transactionsWithSimulations]);
 
-  // Calcular saldo baseado apenas em dados reais das transações
+  // Calcular saldo do mês anterior baseado em transações reais
+  const previousMonthBalance = React.useMemo(() => {
+    const previousMonth = new Date(currentMonth);
+    previousMonth.setMonth(previousMonth.getMonth() - 1);
+    
+    // Buscar todas as transações até o final do mês anterior
+    const endOfPreviousMonth = new Date(previousMonth.getFullYear(), previousMonth.getMonth() + 1, 0);
+    
+    const transactionsUntilPreviousMonth = filteredTransactions.filter((tx: any) => {
+      const txDate = new Date(tx.date);
+      return txDate <= endOfPreviousMonth;
+    });
+    
+    // Calcular saldo acumulado até o mês anterior
+    return transactionsUntilPreviousMonth.reduce((acc: number, tx: any) => {
+      const amount = Number(tx.amount) || 0;
+      return acc + amount;
+    }, 0);
+  }, [filteredTransactions, currentMonth]);
+
   const monthlyBalance = totalIncomesCombined - totalExpensesCombined;
-  const previousMonthBalance = 0; // Por enquanto, sem dados do saldo anterior real
   const currentBalance = previousMonthBalance + monthlyBalance;
   const itemVariants = {
     hidden: {

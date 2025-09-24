@@ -70,9 +70,8 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
       }, 0);
   }, [transactionsWithSimulations, totalExpenses]);
 
-  // Puxar valores dos cards para calcular saldo
-  const adjustedBalance = balance + incomeFromTotal - totalExpensesCombined;
-  const [calculatedBalance, setCalculatedBalance] = React.useState(adjustedBalance);
+  // Cálculo do saldo: valor do mês passado + income + expense dos cards
+  const [calculatedBalance, setCalculatedBalance] = React.useState(balance);
   
   React.useEffect(() => {
     const calculateBalanceFromCards = () => {
@@ -92,11 +91,11 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
         const incomeValue = extractValue(incomeElement);
         const expenseValue = extractValue(expenseElement);
         
-        // Saldo Atual = balance + income + expense
+        // Saldo = valor do mês passado + income + expense
         const newBalance = balance + incomeValue + expenseValue;
         setCalculatedBalance(newBalance);
       } else {
-        setCalculatedBalance(adjustedBalance);
+        setCalculatedBalance(balance);
       }
     };
 
@@ -112,7 +111,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
     }
 
     return () => observer.disconnect();
-  }, [balance, adjustedBalance, hideValues]);
+  }, [balance, hideValues]);
 
   // Cores/fundo conforme sinal do saldo calculado
   const saldoBgGradient = calculatedBalance >= 0

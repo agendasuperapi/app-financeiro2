@@ -140,38 +140,24 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     }, 0);
   }, [transactionsWithSimulations]);
 
-  // Calcular saldo do mês anterior baseado em todas as transações históricas
+  // Calcular saldo do mês anterior baseado em transações reais
   const previousMonthBalance = React.useMemo(() => {
     const previousMonth = new Date(currentMonth);
     previousMonth.setMonth(previousMonth.getMonth() - 1);
     
-    // Data limite: final do mês anterior
+    // Buscar todas as transações até o final do mês anterior
     const endOfPreviousMonth = new Date(previousMonth.getFullYear(), previousMonth.getMonth() + 1, 0);
-    endOfPreviousMonth.setHours(23, 59, 59, 999);
     
-    // Buscar todas as transações até o final do mês anterior (não apenas filteredTransactions)
-    const allTransactionsUntilPreviousMonth = React.useMemo(() => {
-      // Aqui precisaria buscar todas as transações do usuário, não apenas as filtradas
-      // Por enquanto, vamos usar as filteredTransactions mas expandir o filtro
-      return filteredTransactions.filter((tx: any) => {
-        const txDate = new Date(tx.date);
-        return txDate <= endOfPreviousMonth;
-      });
-    }, [filteredTransactions, endOfPreviousMonth]);
+    const transactionsUntilPreviousMonth = filteredTransactions.filter((tx: any) => {
+      const txDate = new Date(tx.date);
+      return txDate <= endOfPreviousMonth;
+    });
     
     // Calcular saldo acumulado até o mês anterior
-    const calculatedBalance = allTransactionsUntilPreviousMonth.reduce((acc: number, tx: any) => {
+    return transactionsUntilPreviousMonth.reduce((acc: number, tx: any) => {
       const amount = Number(tx.amount) || 0;
       return acc + amount;
     }, 0);
-    
-    console.log('Previous month balance calculation:', {
-      endOfPreviousMonth: endOfPreviousMonth.toISOString(),
-      transactionsCount: allTransactionsUntilPreviousMonth.length,
-      calculatedBalance
-    });
-    
-    return calculatedBalance;
   }, [filteredTransactions, currentMonth]);
 
   const monthlyBalance = totalIncomesCombined - totalExpensesCombined;
@@ -223,7 +209,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
                      Saldo Mês: <span className={`font-medium ${monthlyBalance >= 0 ? 'text-green-600' : 'text-red-600'}`} id="monthly-balance">{hideValues ? '******' : formatCurrency(monthlyBalance, currency)}</span>
                    </p>
                    <p className="text-sm text-muted-foreground">
-                     Saldo Mês anterior: <span className={`font-medium ${previousMonthBalance >= 0 ? 'text-green-600' : 'text-red-600'}`} id="previous-monthly-balance">{hideValues ? '******' : formatCurrency(previousMonthBalance, currency)}</span>
+                     Saldo Mês anterior: <span className={`font-medium ${previousMonthBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>{hideValues ? '******' : formatCurrency(previousMonthBalance, currency)}</span>
                    </p>
                   
                 </div>

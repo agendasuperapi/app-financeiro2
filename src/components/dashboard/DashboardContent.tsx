@@ -211,7 +211,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
                      Saldo Mês {format(currentMonth, 'MMM/yyyy', { locale: ptBR })}: <span className={`font-medium ${monthlyBalance >= 0 ? 'text-green-600' : 'text-red-600'}`} id="monthly-balance">{hideValues ? '******' : formatCurrency(monthlyBalance, currency)}</span>
                    </p>
                    <p className="text-sm text-muted-foreground">
-                     Saldo Mês anterior: <span className={`font-medium ${previousMonthBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>{hideValues ? '******' : formatCurrency(previousMonthBalance, currency)}</span>
+                     Saldo Mês {format(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1), 'MMM/yyyy', { locale: ptBR })}: <span className={`font-medium ${previousMonthBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>{hideValues ? '******' : formatCurrency(previousMonthBalance, currency)}</span>
                    </p>
                   
                 </div>

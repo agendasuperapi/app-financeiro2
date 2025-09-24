@@ -70,51 +70,13 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
       }, 0);
   }, [transactionsWithSimulations, totalExpenses]);
 
-  // Cálculo do saldo: valor do mês passado + income + expense dos cards
-  const [calculatedBalance, setCalculatedBalance] = React.useState(balance);
-  
-  React.useEffect(() => {
-    const calculateBalanceFromCards = () => {
-      const incomeElement = document.getElementById('income-card-value');
-      const expenseElement = document.getElementById('expense-card-value');
-      
-      if (incomeElement && expenseElement && !hideValues) {
-        // Extrair valores dos elementos
-        const extractValue = (element: HTMLElement) => {
-          if (!element.textContent || element.textContent.includes('*')) return 0;
-          let text = element.textContent;
-          text = text.replace(/[R$\s]/g, '');
-          text = text.replace(/\./g, '').replace(',', '.');
-          return parseFloat(text) || 0;
-        };
-        
-        const incomeValue = extractValue(incomeElement);
-        const expenseValue = extractValue(expenseElement);
-        
-        // Saldo = valor do mês anterior + income + expense
-        const newBalance = balance + incomeValue + expenseValue;
-        setCalculatedBalance(newBalance);
-      } else {
-        setCalculatedBalance(balance);
-      }
-    };
+  // Ajuste do saldo usando os valores já exibidos nos cards
+  // balance (já inclui: saldo anterior + receitas do mês - despesas reais do mês)
+  // Precisamos substituir as despesas reais pelas despesas combinadas (reais + simulações)
+  const adjustedBalance = balance + totalExpenses - totalExpensesCombined;
 
-    // Observar mudanças nos elementos dos cards
-    const observer = new MutationObserver(calculateBalanceFromCards);
-    const incomeElement = document.getElementById('income-card-value');
-    const expenseElement = document.getElementById('expense-card-value');
-    
-    if (incomeElement && expenseElement) {
-      observer.observe(incomeElement, { childList: true, characterData: true, subtree: true });
-      observer.observe(expenseElement, { childList: true, characterData: true, subtree: true });
-      calculateBalanceFromCards(); // Executar uma vez
-    }
-
-    return () => observer.disconnect();
-  }, [balance, hideValues]);
-
-  // Cores/fundo conforme sinal do saldo calculado
-  const saldoBgGradient = calculatedBalance >= 0
+  // Cores/fundo conforme sinal do saldo ajustado
+  const saldoBgGradient = adjustedBalance >= 0 
     ? 'bg-gradient-to-br from-green-500 via-green-600 to-green-700' 
     : 'bg-gradient-to-br from-red-500 via-red-600 to-red-700';
   
@@ -150,8 +112,8 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                 </div>
                 <p className="text-xs lg:text-sm font-medium opacity-90">{t('stats.currentBalance')}</p>
               </div>
-              <p id="balance-card-value" className={`text-xl lg:text-2xl xl:text-3xl font-bold text-white`}>
-                {hideValues ? renderHiddenValue() : formatCurrency(calculatedBalance, currency)}
+              <p className={`text-xl lg:text-2xl xl:text-3xl font-bold text-white`}>
+                {hideValues ? renderHiddenValue() : formatCurrency(adjustedBalance, currency)}
               </p>
             </div>
             <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-white/10 rounded-full" />
@@ -178,7 +140,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                   {t('common.income')}
                 </p>
               </div>
-              <p id="income-card-value" className="text-xl lg:text-2xl xl:text-3xl font-bold text-green-700 dark:text-green-400">
+              <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-green-700 dark:text-green-400">
                 {hideValues ? renderHiddenValue() : formatCurrency(incomeFromTotal, currency)}
               </p>
             </div>
@@ -207,37 +169,11 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                   {t('common.expense')}
                 </p>
               </div>
-              <p id="expense-card-value" className="text-xl lg:text-2xl xl:text-3xl font-bold text-red-700 dark:text-red-400">
+              <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-red-700 dark:text-red-400">
                 {hideValues ? renderHiddenValue() : formatCurrency(totalExpensesCombined, currency)}
               </p>
             </div>
             <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-red-200/30 dark:bg-red-800/20 rounded-full" />
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Nova row - Cálculo do Saldo */}
-      <motion.div
-        whileHover={{ scale: 1.02, y: -4 }}
-        transition={{ duration: 0.2 }}
-        className="sm:col-span-2 lg:col-span-3"
-      >
-        <Card className="relative overflow-hidden border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
-          <CardContent className="p-4 lg:p-6">
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
-                  <Wallet className="h-4 w-4 lg:h-5 lg:w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <p className="text-xs lg:text-sm font-medium text-blue-700 dark:text-blue-400">
-                  Saldo Calculado (Mês Anterior + Income + Expense)
-                </p>
-              </div>
-              <p id="calculated-balance-value" className="text-xl lg:text-2xl xl:text-3xl font-bold text-blue-700 dark:text-blue-400">
-                {hideValues ? renderHiddenValue() : formatCurrency(calculatedBalance, currency)}
-              </p>
-            </div>
-            <div className="absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 bg-blue-200/30 dark:bg-blue-800/20 rounded-full" />
           </CardContent>
         </Card>
       </motion.div>

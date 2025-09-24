@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,6 @@ import { Goal, ScheduledTransaction, Transaction } from '@/types';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/utils/transactionUtils';
-
 interface DashboardContentProps {
   filteredTransactions: any[];
   goals: Goal[];
@@ -26,7 +24,6 @@ interface DashboardContentProps {
   scheduledTransactions?: ScheduledTransaction[];
   onTransactionsWithSimulationsUpdate?: (transactions: any[]) => void;
 }
-
 const DashboardContent: React.FC<DashboardContentProps> = ({
   filteredTransactions,
   goals,
@@ -40,7 +37,10 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   scheduledTransactions = [],
   onTransactionsWithSimulationsUpdate
 }) => {
-  const { t, currency } = usePreferences();
+  const {
+    t,
+    currency
+  } = usePreferences();
 
   // Simulações mensais baseadas em poupeja_transactions.recurrence = 'Mensal'
   const [monthlySimulations, setMonthlySimulations] = React.useState<Transaction[]>([]);
@@ -49,19 +49,17 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   const [totalIncome, setTotalIncome] = React.useState(0);
   const [totalExpenses, setTotalExpenses] = React.useState(0);
   const [balance, setBalance] = React.useState(0);
-
   React.useEffect(() => {
     // Simular recebimento dos valores do componente pai
     // Em um cenário real, estes valores viriam como props
     const mockTotalIncome = 2000; // valor exemplo
     const mockTotalExpenses = 1200; // valor exemplo  
     const mockBalance = 1347.52; // saldo exemplo do mês anterior
-    
+
     setTotalIncome(mockTotalIncome);
     setTotalExpenses(mockTotalExpenses);
     setBalance(mockBalance);
   }, []);
-
   React.useEffect(() => {
     const fetchMensalAndSimulate = async () => {
       try {
@@ -71,29 +69,24 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         const currentMonthIndex = currentMonth.getMonth();
         const todayYear = today.getFullYear();
         const todayMonth = today.getMonth();
-        
+
         // Se o mês selecionado é anterior ao mês atual, não gerar simulações
-        if (currentYear < todayYear || (currentYear === todayYear && currentMonthIndex < todayMonth)) {
+        if (currentYear < todayYear || currentYear === todayYear && currentMonthIndex < todayMonth) {
           setMonthlySimulations([]);
           return;
         }
-
-        const { data, error } = await (supabase as any)
-          .from('poupeja_transactions')
-          .select(`*, category:poupeja_categories(id, name, icon, color, type) `)
-          .eq('recurrence', 'Mensal')
-          .eq('status', 'pending')
-          .eq('situacao', 'ativo');
-
+        const {
+          data,
+          error
+        } = await (supabase as any).from('poupeja_transactions').select(`*, category:poupeja_categories(id, name, icon, color, type) `).eq('recurrence', 'Mensal').eq('status', 'pending').eq('situacao', 'ativo');
         if (error) throw error;
-
         const y = currentMonth.getFullYear();
         const m = currentMonth.getMonth();
-        
+
         // Filtrar simulações que já existem como transações reais no mês atual
-        const filteredData = ((data as any[]) || []).filter((item: any) => {
+        const filteredData = (data as any[] || []).filter((item: any) => {
           const desc = item.description ? String(item.description).toLowerCase() : '';
-          
+
           // Verificar se já existe uma transação real com descrição similar no mês atual
           const hasRealTransaction = filteredTransactions.some((realTx: any) => {
             const realDesc = realTx.description ? String(realTx.description).toLowerCase() : '';
@@ -102,10 +95,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             const similarDesc = realDesc && desc && (realDesc.includes(desc) || desc.includes(realDesc));
             return sameMonth && similarDesc;
           });
-          
           return !hasRealTransaction;
         });
-        
         const sims: Transaction[] = filteredData.map((item: any) => {
           const baseDate = item.date ? new Date(item.date) : new Date(y, m, 1);
           const day = baseDate.getDate() || 1;
@@ -122,17 +113,15 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             date: simDate.toISOString(),
             goalId: item.goal_id || undefined,
             conta: item.conta || undefined,
-            creatorName: item.name || undefined,
+            creatorName: item.name || undefined
           } as Transaction;
         });
-
         setMonthlySimulations(sims);
       } catch (e) {
         console.error('DashboardContent: erro ao buscar Mensal:', e);
         setMonthlySimulations([]);
       }
     };
-
     fetchMensalAndSimulate();
   }, [currentMonth, filteredTransactions]);
 
@@ -149,33 +138,31 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
   // Total de despesas (reais + simulações) no mês atual
   const totalExpensesCombined = React.useMemo(() => {
-    return transactionsWithSimulations
-      .filter((tx: any) => (tx.type === 'expense') || (typeof tx.amount === 'number' && tx.amount < 0))
-      .reduce((sum: number, tx: any) => {
-        const amt = Number(tx.amount) || 0;
-        // Considerar valor absoluto para despesas negativas ou tipo 'expense'
-        return sum + (amt < 0 ? -amt : (tx.type === 'expense' ? amt : 0));
-      }, 0);
+    return transactionsWithSimulations.filter((tx: any) => tx.type === 'expense' || typeof tx.amount === 'number' && tx.amount < 0).reduce((sum: number, tx: any) => {
+      const amt = Number(tx.amount) || 0;
+      // Considerar valor absoluto para despesas negativas ou tipo 'expense'
+      return sum + (amt < 0 ? -amt : tx.type === 'expense' ? amt : 0);
+    }, 0);
   }, [transactionsWithSimulations]);
 
   // Total de receitas (reais + simulações) no mês atual
   const totalIncomesCombined = React.useMemo(() => {
-    return transactionsWithSimulations
-      .filter((tx: any) => (tx.type === 'income') || (typeof tx.amount === 'number' && tx.amount > 0))
-      .reduce((sum: number, tx: any) => {
-        const amt = Number(tx.amount) || 0;
-        // Considerar valor absoluto para receitas positivas ou tipo 'income'
-        return sum + (amt > 0 ? amt : (tx.type === 'income' ? amt : 0));
-      }, 0);
+    return transactionsWithSimulations.filter((tx: any) => tx.type === 'income' || typeof tx.amount === 'number' && tx.amount > 0).reduce((sum: number, tx: any) => {
+      const amt = Number(tx.amount) || 0;
+      // Considerar valor absoluto para receitas positivas ou tipo 'income'
+      return sum + (amt > 0 ? amt : tx.type === 'income' ? amt : 0);
+    }, 0);
   }, [transactionsWithSimulations]);
 
   // Calcular saldo do mês anterior e saldo atual
   const monthlyBalance = totalIncomesCombined - totalExpensesCombined;
   const previousMonthBalance = balance - totalIncome + totalExpenses;
   const currentBalance = previousMonthBalance + monthlyBalance;
-
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: {
+      y: 20,
+      opacity: 0
+    },
     visible: {
       y: 0,
       opacity: 1,
@@ -184,14 +171,10 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       }
     }
   };
-
-  return (
-    <>
+  return <>
       {/* Alerta de despesas próximas */}
       <motion.div variants={itemVariants}>
-        <UpcomingExpensesAlert 
-          onMarkAsPaid={onMarkScheduledAsPaid}
-        />
+        <UpcomingExpensesAlert onMarkAsPaid={onMarkScheduledAsPaid} />
       </motion.div>
       
       {/* Progresso das metas */}
@@ -201,11 +184,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
       {/* Seção de gráficos */}
       <motion.div variants={itemVariants}>
-        <DashboardCharts 
-          currentMonth={currentMonth} 
-          hideValues={hideValues}
-          monthTransactions={filteredTransactions}
-        />
+        <DashboardCharts currentMonth={currentMonth} hideValues={hideValues} monthTransactions={filteredTransactions} />
       </motion.div>
 
       {/* Transações recentes */}
@@ -225,33 +204,22 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
                   <p className="text-sm text-muted-foreground">
                     Saldo Mês: <span className={`font-medium ${monthlyBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>{hideValues ? '******' : formatCurrency(monthlyBalance, currency)}</span>
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    Saldo Atual: <span className={`font-medium ${currentBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>{hideValues ? '******' : formatCurrency(currentBalance, currency)}</span>
-                  </p>
+                  
                 </div>
               </div>
               <Button variant="outline" asChild>
                 <Link to="/transactions">{t('common.viewAll')}</Link>
               </Button>
             </div>
-            <TransactionList 
-              transactions={transactionsWithSimulations.slice(0, 10)} 
-              onEdit={onEditTransaction} 
-              onDelete={onDeleteTransaction} 
-              hideValues={hideValues} 
-            />
-            {transactionsWithSimulations.length > 10 && (
-              <div className="mt-6 text-center">
+            <TransactionList transactions={transactionsWithSimulations.slice(0, 10)} onEdit={onEditTransaction} onDelete={onDeleteTransaction} hideValues={hideValues} />
+            {transactionsWithSimulations.length > 10 && <div className="mt-6 text-center">
                 <Button variant="outline" asChild>
                   <Link to="/transactions">{t('common.viewAll')}</Link>
                 </Button>
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>
       </motion.div>
-    </>
-  );
+    </>;
 };
-
 export default DashboardContent;

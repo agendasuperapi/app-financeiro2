@@ -191,7 +191,7 @@ export const createTransactionForUser = async (transactionData: {
         conta: transactionData.conta,
         name: transactionData.name,
         phone: phoneValue,
-        formato: 'manual', // Transações criadas manualmente
+        formato: 'transacao', // Transações criadas manualmente
       })
       .select(`
         *,
@@ -286,7 +286,7 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
         name: (transaction as any).name,
         phone: (transaction as any).phone,
         reference_code: await getNextReferenceCode(), // Generate new reference code for updates
-        formato: 'manual', // Mantém como manual em atualizações
+        formato: 'transacao', // Mantém como transacao em atualizações
       })
       .eq("id", transaction.id)
       .select(`

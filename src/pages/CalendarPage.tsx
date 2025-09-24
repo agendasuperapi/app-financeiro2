@@ -360,55 +360,66 @@ const CalendarPage: React.FC = () => {
                   {(selectedDateTransactions.length > 0 || selectedDateReminders.length > 0) ? (
                     <>
                       {/* Transações */}
-                      {selectedDateTransactions.map((transaction) => (
-                        <div
-                          key={transaction.id}
-                          className="flex items-center justify-between p-3 border rounded-lg"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: transaction.categoryColor }}
-                            />
-                            <div>
-                              <p className="font-medium">{transaction.category}</p>
-                              {transaction.description && (
-                                <p className="text-sm text-muted-foreground">
-                                  {transaction.description}
-                                </p>
-                              )}
+                      {selectedDateTransactions.map((transaction) => {
+                        const formato = (transaction as any).formato || 'transacao';
+                        const transactionDate = parseISO(transaction.date);
+                        const hora = format(transactionDate, 'HH:mm');
+                        
+                        // Definir cor da bolinha baseada no formato
+                        let bolinhaColor = 'bg-gray-900'; // Preta para "transacao"
+                        if (formato === 'agenda') {
+                          bolinhaColor = 'bg-purple-500'; // Roxa para "agenda"
+                        } else if (formato === 'lembrete') {
+                          bolinhaColor = 'bg-blue-500'; // Azul para "lembrete"
+                        }
+                        
+                        return (
+                          <div
+                            key={transaction.id}
+                            className="flex items-center justify-between p-3 border rounded-lg"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-3 h-3 rounded-full ${bolinhaColor}`} />
+                              <div>
+                                <p className="font-medium">{transaction.description || transaction.category}</p>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  {(formato === 'agenda' || formato === 'lembrete') && (
+                                    <span>{hora}</span>
+                                  )}
+                                  {(formato === 'agenda' || formato === 'transacao') && (
+                                    <span>
+                                      {transaction.type === 'income' ? '+' : '-'}
+                                      R$ {transaction.amount.toFixed(2)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                  <DropdownMenuItem onClick={() => handleEditTransaction(transaction)}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleDeleteTransaction(transaction)}
+                                    className="text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Excluir
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant={transaction.type === 'income' ? 'default' : 'destructive'}
-                            >
-                              {transaction.type === 'income' ? '+' : '-'}
-                              R$ {transaction.amount.toFixed(2)}
-                            </Badge>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent>
-                                <DropdownMenuItem onClick={() => handleEditTransaction(transaction)}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Editar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => handleDeleteTransaction(transaction)}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Excluir
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                       
                       {/* Lembretes */}
                       {selectedDateReminders.map((reminder) => (

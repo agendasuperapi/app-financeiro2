@@ -74,12 +74,25 @@ export const useTransactionForm = ({
     console.log("Form validation state:", form.formState);
     console.log("Target User ID for transaction:", targetUserId);
     
+    // Handle goalId processing more robustly
+    let goalIdValue = values.goalId;
+    
+    // Check if goalId is an object (from Zod processing) and extract the actual value  
+    if (goalIdValue && typeof goalIdValue === 'object' && (goalIdValue as any).value) {
+      goalIdValue = (goalIdValue as any).value;
+    }
+    
+    // Normalize goalId: convert "none", null, "undefined" to undefined
+    if (!goalIdValue || goalIdValue === "none" || goalIdValue === "undefined") {
+      goalIdValue = undefined;
+    }
+    
     // Convert "none" value and null back to undefined for goalId
     // Make amount negative for expenses
     const processedValues = {
       ...values,
       amount: values.type === 'expense' ? -Math.abs(values.amount) : values.amount,
-      goalId: values.goalId === "none" || values.goalId === null ? undefined : values.goalId
+      goalId: goalIdValue
     };
     
     try {

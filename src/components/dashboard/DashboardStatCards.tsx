@@ -96,13 +96,65 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
       }, 0);
   }, [monthlyTransactions, totalExpenses]);
 
+  // Estados para valores lidos diretamente dos cards (garante consistência visual)
+  const [incomeFromCards, setIncomeFromCards] = React.useState<number>(totalIncomesCombined);
+  const [expensesFromCards, setExpensesFromCards] = React.useState<number>(totalExpensesCombined);
+
+  // Util para parsear moeda no formato pt-BR (ex: R$ 5.850,00)
+  const parseCurrencyText = (text: string): number => {
+    let v = text.trim();
+    v = v.replace(/[^0-9,.-]/g, ''); // mantém dígitos, vírgula, ponto e sinal
+    // se tiver mais de um separador, remover milhares
+    // primeiro remove pontos (milhares) e troca vírgula por ponto
+    v = v.replace(/\./g, '').replace(',', '.');
+    const n = parseFloat(v);
+    return isNaN(n) ? 0 : Math.abs(n);
+  };
+
+  // Ler valores mostrados nos cards por ID e observar mudanças
+  React.useEffect(() => {
+    const readFromCards = () => {
+      // Income
+      const incomeEl = document.getElementById('income-card-value');
+      if (incomeEl && incomeEl.textContent && !incomeEl.textContent.includes('*')) {
+        setIncomeFromCards(parseCurrencyText(incomeEl.textContent));
+      } else {
+        setIncomeFromCards(totalIncomesCombined);
+      }
+      // Expense
+      const expenseEl = document.getElementById('expense-card-value');
+      if (expenseEl && expenseEl.textContent && !expenseEl.textContent.includes('*')) {
+        setExpensesFromCards(parseCurrencyText(expenseEl.textContent));
+      } else {
+        setExpensesFromCards(totalExpensesCombined);
+      }
+    };
+
+    // Observers para reagir a mudanças de conteúdo
+    const incomeEl = document.getElementById('income-card-value');
+    const expenseEl = document.getElementById('expense-card-value');
+    const obsIncome = incomeEl ? new MutationObserver(readFromCards) : null;
+    const obsExpense = expenseEl ? new MutationObserver(readFromCards) : null;
+
+    if (incomeEl && obsIncome) obsIncome.observe(incomeEl, { childList: true, characterData: true, subtree: true });
+    if (expenseEl && obsExpense) obsExpense.observe(expenseEl, { childList: true, characterData: true, subtree: true });
+
+    // Leitura inicial
+    readFromCards();
+
+    return () => {
+      obsIncome?.disconnect();
+      obsExpense?.disconnect();
+    };
+  }, [monthlyTransactions, totalIncomesCombined, totalExpensesCombined, hideValues, currency]);
+
   // Calcular saldo do mês anterior
   // balance = saldo anterior + receitas reais - despesas reais
   // então: saldo do mês anterior = balance - receitas reais + despesas reais
   const previousMonthBalance = balance - totalIncome + totalExpenses;
   
-  // adjustedBalance = saldo do mês anterior + totalIncomesCombined - totalExpensesCombined
-  const adjustedBalance = previousMonthBalance + totalIncomesCombined - totalExpensesCombined;
+  // adjustedBalance = saldo do mês anterior + (valores exibidos nos cards)
+  const adjustedBalance = previousMonthBalance + incomeFromCards - expensesFromCards;
 
   // Cores/fundo conforme sinal do saldo ajustado
   const saldoBgGradient = adjustedBalance >= 0 
@@ -169,7 +221,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                   {t('common.income')}
                 </p>
               </div>
-              <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-green-700 dark:text-green-400">
+              <p id="income-card-value" className="text-xl lg:text-2xl xl:text-3xl font-bold text-green-700 dark:text-green-400">
                 {hideValues ? renderHiddenValue() : formatCurrency(totalIncomesCombined, currency)}
               </p>
             </div>
@@ -198,7 +250,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                   {t('common.expense')}
                 </p>
               </div>
-              <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-red-700 dark:text-red-400">
+              <p id="expense-card-value" className="text-xl lg:text-2xl xl:text-3xl font-bold text-red-700 dark:text-red-400">
                 {hideValues ? renderHiddenValue() : formatCurrency(totalExpensesCombined, currency)}
               </p>
             </div>

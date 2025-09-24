@@ -42,7 +42,10 @@ const CalendarPage: React.FC = () => {
     const formato = (transaction as any).formato || 'transacao';
     
     if (formato === 'agenda') {
-      // Abrir formulário da aba "lembrar" (ScheduledTransactionForm para transações agendadas)
+      // Abrir formulário da aba "contas"
+      setEditContaDialogOpen(true);
+    } else if (formato === 'lembrete') {
+      // Abrir formulário da aba "lembrar"
       // Converter transaction para ScheduledTransaction
       const scheduledTransaction: ScheduledTransaction = {
         ...transaction,
@@ -51,9 +54,6 @@ const CalendarPage: React.FC = () => {
       };
       setSelectedReminder(scheduledTransaction);
       setEditReminderDialogOpen(true);
-    } else if (formato === 'lembrete') {
-      // Abrir formulário da aba "contas" (AddContaForm que usa ReminderForm para lembretes)
-      setEditContaDialogOpen(true);
     } else {
       // formato === 'transacao' - abrir formulário da aba "transactions"
       setEditDialogOpen(true);

@@ -16,6 +16,7 @@ export interface Transaction {
   conta?: string; // Account name
   creatorName?: string; // Name of who created the transaction (for dependents)
   formato?: string; // Origem/forma de criação (agenda, manual, etc.)
+  status?: string; // Status da transação (paid, recebido, etc.)
   // Database fields for compatibility
   category_id?: string;
   goal_id?: string;

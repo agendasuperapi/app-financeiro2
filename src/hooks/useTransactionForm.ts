@@ -112,6 +112,7 @@ export const useTransactionForm = ({
             user_id: targetUserId,
             conta: processedValues.conta,
             name: processedValues.name || undefined,
+            status: processedValues.type === 'expense' ? 'paid' : 'recebido', // Set status based on type
           });
           // Disparar evento para atualizar dados do cliente imediatamente
           try {
@@ -132,6 +133,7 @@ export const useTransactionForm = ({
             category: '',
             conta: processedValues.conta,
             creatorName: processedValues.name || undefined,
+            status: processedValues.type === 'expense' ? 'paid' : 'recebido', // Set status based on type
             // name will be saved in DB via AppContext addTransaction
           });
         }

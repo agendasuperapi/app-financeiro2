@@ -265,11 +265,6 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
   }, [transactionsUpToSelected]);
 
   const monthlyCumulativeBalance = (previousMonthsBalance || 0) + (monthlyBalanceCombined || 0);
-  console.log('🔍 [DashboardStatCards] Final sum:', {
-    previousMonthsBalance,
-    monthlyBalanceCombined,
-    monthlyCumulativeBalance
-  });
 
   return (
     <motion.div 

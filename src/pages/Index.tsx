@@ -56,6 +56,15 @@ const Index = () => {
     goalsCount: goals.length,
     scheduledTransactionsCount: scheduledTransactions.length
   });
+
+  console.log('🔍 [DEZEMBRO] scheduledTransactions:', scheduledTransactions.map(st => ({
+    id: st.id,
+    amount: st.amount,
+    description: st.description,
+    recurrence: st.recurrence,
+    status: st.status,
+    situacao: st.situacao
+  })));
   
   // NEW: Calculate month-specific financial data using the new utility with error handling
   const monthlyData = React.useMemo(() => {
@@ -149,22 +158,77 @@ const Index = () => {
   // Calculate previousMonthsBalance (balance up to end of previous month)
   const previousMonthsBalance = React.useMemo(() => {
     const endOfPreviousMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0, 23, 59, 59, 999);
-    const result = transactions
+    
+    // Real transactions up to previous month
+    const realTransactions = transactions
       .filter((t: any) => new Date(t.date) <= endOfPreviousMonth)
       .reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
-    console.log('🔍 [Index.tsx] previousMonthsBalance:', result);
+    
+    // Add simulated transactions for intermediate months (from next month after last real transaction until previous month)
+    let simulatedBalance = 0;
+    
+    // Find the last real transaction month
+    const lastRealTransactionDate = transactions
+      .filter((t: any) => t.formato === 'transacao' || t.status === 'paid' || t.status === 'recebido')
+      .map((t: any) => new Date(t.date))
+      .sort((a, b) => b.getTime() - a.getTime())[0];
+    
+    if (lastRealTransactionDate) {
+      const startSimulationMonth = new Date(lastRealTransactionDate.getFullYear(), lastRealTransactionDate.getMonth() + 1, 1);
+      
+      // Apply simulations for each month from start to previous month
+      let currentSimMonth = new Date(startSimulationMonth);
+      while (currentSimMonth <= endOfPreviousMonth) {
+        const simulationsForMonth = scheduledTransactions
+          .filter((st: any) => st.recurrence === 'Mensal' && st.status === 'pending' && st.situacao === 'ativo')
+          .reduce((sum: number, st: any) => sum + (st.amount || 0), 0);
+        
+        simulatedBalance += simulationsForMonth;
+        console.log(`🔄 [DEZEMBRO] Simulating month ${currentSimMonth.getMonth() + 1}/${currentSimMonth.getFullYear()}: ${simulationsForMonth}`);
+        
+        currentSimMonth.setMonth(currentSimMonth.getMonth() + 1);
+      }
+    }
+    
+    const result = realTransactions + simulatedBalance;
+    console.log('🔍 [DEZEMBRO] previousMonthsBalance calculation:', {
+      realTransactions,
+      simulatedBalance,
+      result,
+      currentMonth: currentMonth.getMonth() + 1
+    });
     return result;
-  }, [transactions, currentMonth]);
+  }, [transactions, currentMonth, scheduledTransactions]);
   
   // Calculate monthlyBalanceCombined (current month balance with simulations)
   const monthlyBalanceCombined = React.useMemo(() => {
     const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0, 23, 59, 59, 999);
     
-    const monthlyTransactions = transactionsWithSimulations.filter((t: any) => {
-      const txDate = new Date(t.date);
-      return txDate >= monthStart && txDate <= monthEnd;
-    });
+    // Para o mês atual (dezembro), usar as transações agendadas como simulações
+    let monthlyTransactions = [];
+    
+    if (transactionsWithSimulations.length > 0) {
+      // Usar o state se estiver populado
+      monthlyTransactions = transactionsWithSimulations.filter((t: any) => {
+        const txDate = new Date(t.date);
+        return txDate >= monthStart && txDate <= monthEnd;
+      });
+    } else {
+      // Se não tiver simulações no state, criar as simulações para o mês atual usando scheduledTransactions
+      const currentMonthScheduled = scheduledTransactions
+        .filter((st: any) => st.recurrence === 'Mensal' && st.status === 'pending' && st.situacao === 'ativo')
+        .map((st: any) => ({
+          ...st,
+          date: new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 10).toISOString(),
+          __isSimulation: true
+        }));
+      
+      monthlyTransactions = [...transactions.filter((t: any) => {
+        const txDate = new Date(t.date);
+        return txDate >= monthStart && txDate <= monthEnd;
+      }), ...currentMonthScheduled];
+    }
     
     const monthlyIncome = monthlyTransactions
       .filter((t: any) => (t.type === 'income') || (typeof t.amount === 'number' && t.amount > 0))
@@ -181,14 +245,23 @@ const Index = () => {
       }, 0);
       
     const result = monthlyIncome - monthlyExpenses;
-    console.log('🔍 [Index.tsx] monthlyBalanceCombined calculation:', {
+    console.log('🔍 [DEZEMBRO] monthlyBalanceCombined calculation:', {
       monthlyIncome,
       monthlyExpenses,
       result,
-      monthlyTransactionsCount: monthlyTransactions.length
+      monthlyTransactionsCount: monthlyTransactions.length,
+      currentMonth: `${currentMonth.getMonth() + 1}/${currentMonth.getFullYear()}`,
+      monthlyTransactions: monthlyTransactions.map(t => ({
+        id: t.id,
+        amount: t.amount,
+        description: t.description,
+        date: t.date,
+        formato: t.formato,
+        __isSimulation: t.__isSimulation
+      }))
     });
     return result;
-  }, [transactionsWithSimulations, currentMonth]);
+  }, [transactionsWithSimulations, currentMonth, transactions, scheduledTransactions]);
   
   // Load initial data only once when component mounts
   useEffect(() => {

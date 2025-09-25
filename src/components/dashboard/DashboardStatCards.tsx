@@ -264,17 +264,18 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
       }, 0);
   }, [transactionsUpToSelected]);
 
-  // Saldo Mês = "Saldo Meses Anteriores" (linha) + "Saldo Atual Mês" (linha), com fallback para props
-  const getParsedById = (id: string) => {
-    const el = typeof document !== 'undefined' ? document.getElementById(id) : null;
-    if (el && el.textContent && !el.textContent.includes('*')) {
-      return parseCurrencyText(el.textContent);
-    }
-    return undefined;
-  };
-  const monthlyFromLine = getParsedById('monthly-balance');
-  const previousFromLine = getParsedById('previous-balance');
-  const monthlyCumulativeBalance = (previousFromLine ?? (previousMonthsBalance || 0)) + (monthlyFromLine ?? (monthlyBalanceCombined || 0));
+  // Saldo Mês = Saldo Meses Anteriores + Saldo Atual do Mês (usando apenas props, sem múltiplas operações DOM)
+  const monthlyCumulativeBalance = (previousMonthsBalance || 0) + (monthlyBalanceCombined || 0);
+  
+  // Log para debug - evitar cálculos múltiplos
+  React.useEffect(() => {
+    console.log('💰 [SALDO MÊS DEBUG] Cálculo único:', {
+      previousMonthsBalance,
+      monthlyBalanceCombined,
+      monthlyCumulativeBalance,
+      timestamp: new Date().toISOString()
+    });
+  }, [previousMonthsBalance, monthlyBalanceCombined, monthlyCumulativeBalance]);
 
   return (
     <motion.div 

@@ -196,19 +196,27 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
         console.log('📊 [BALANCE DEBUG] Real transactions until previous month:', realTransactionsUntilPreviousMonth.length);
         
-        // Log específico para outubro
+        // Log específico para outubro - DETALHADO
         if (currentMonth.getMonth() === 9) { // outubro = mês 9 (0-indexed)
           console.log('🔍 [OCTOBER DEBUG] Current month is October, checking transactions...');
-          const octoberTransactions = realTransactionsUntilPreviousMonth.filter(tx => {
-            const txDate = new Date(tx.date);
-            return txDate.getMonth() <= 8; // setembro e anteriores (0-indexed)
-          });
-          console.log('🔍 [OCTOBER DEBUG] Transactions until September:', octoberTransactions.length);
-          console.log('🔍 [OCTOBER DEBUG] Sample transactions:', octoberTransactions.slice(0, 5).map(tx => ({
+          console.log('🔍 [OCTOBER DEBUG] Real transactions until previous month:', realTransactionsUntilPreviousMonth.length);
+          console.log('🔍 [OCTOBER DEBUG] ALL Real transactions details:', realTransactionsUntilPreviousMonth.map(tx => ({
+            id: tx.id,
             date: tx.date,
             amount: tx.amount,
-            description: tx.description
+            description: tx.description,
+            month: new Date(tx.date).getMonth() + 1,
+            year: new Date(tx.date).getFullYear()
           })));
+          
+          // Verificar se há duplicatas por ID
+          const ids = realTransactionsUntilPreviousMonth.map(tx => tx.id);
+          const uniqueIds = [...new Set(ids)];
+          if (ids.length !== uniqueIds.length) {
+            console.log('⚠️ [OCTOBER DEBUG] DUPLICATED TRANSACTIONS DETECTED!');
+            console.log('🔍 [OCTOBER DEBUG] Total transactions:', ids.length);
+            console.log('🔍 [OCTOBER DEBUG] Unique IDs:', uniqueIds.length);
+          }
         }
 
         // 2. Buscar transações com recurrence = "Mensal" para simular
@@ -273,13 +281,35 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
         console.log('📊 [BALANCE DEBUG] Previous months balance:', balance);
         
-        // Log específico para outubro
+        // Log específico para outubro - FINAL DETALHADO
         if (currentMonth.getMonth() === 9) { // outubro = mês 9 (0-indexed)
           console.log('🔍 [OCTOBER DEBUG] Final balance calculation:', balance);
+          console.log('🔍 [OCTOBER DEBUG] Combined transactions count:', combinedTransactions.length);
+          console.log('🔍 [OCTOBER DEBUG] Real transactions count:', realTransactionsUntilPreviousMonth.length);
+          console.log('🔍 [OCTOBER DEBUG] Simulated transactions count:', simulatedTransactions.length);
+          
+          console.log('🔍 [OCTOBER DEBUG] ALL COMBINED TRANSACTIONS:', combinedTransactions.map(tx => ({
+            id: tx.id,
+            date: tx.date,
+            amount: tx.amount,
+            description: tx.description,
+            type: tx.type,
+            source: tx.id.includes('mensal-sim-') ? 'SIMULATED' : 'REAL'
+          })));
+          
           const incomes = combinedTransactions.filter(tx => tx.amount > 0);
           const expenses = combinedTransactions.filter(tx => tx.amount < 0);
-          console.log('🔍 [OCTOBER DEBUG] Incomes:', incomes.reduce((sum, tx) => sum + tx.amount, 0));
-          console.log('🔍 [OCTOBER DEBUG] Expenses:', expenses.reduce((sum, tx) => sum + tx.amount, 0));
+          console.log('🔍 [OCTOBER DEBUG] Incomes count:', incomes.length);
+          console.log('🔍 [OCTOBER DEBUG] Expenses count:', expenses.length);
+          console.log('🔍 [OCTOBER DEBUG] Incomes total:', incomes.reduce((sum, tx) => sum + tx.amount, 0));
+          console.log('🔍 [OCTOBER DEBUG] Expenses total:', expenses.reduce((sum, tx) => sum + tx.amount, 0));
+          
+          // Verificar se há duplicatas nas transações combinadas
+          const allIds = combinedTransactions.map(tx => tx.id);
+          const uniqueAllIds = [...new Set(allIds)];
+          if (allIds.length !== uniqueAllIds.length) {
+            console.log('⚠️ [OCTOBER DEBUG] DUPLICATED TRANSACTIONS IN COMBINED LIST!');
+          }
         }
         
         setPreviousMonthsBalance(balance);

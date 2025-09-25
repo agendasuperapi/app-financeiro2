@@ -101,6 +101,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
         href: '/limits'
       },
       {
+        icon: CreditCard,
+        label: 'Contas a Pagar',
+        href: '/contas'
+      },
+      {
         icon: Wallet,
         label: 'Contas&Cartões',
         href: '/saldo'
@@ -259,6 +264,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       icon: AlertTriangle,
       label: 'Metas/Limites',
       href: '/limits'
+    },
+    {
+      icon: CreditCard,
+      label: 'Contas a Pagar',
+      href: '/contas'
     },
     {
       icon: Wallet,

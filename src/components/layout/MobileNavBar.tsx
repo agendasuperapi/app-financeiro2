@@ -59,16 +59,6 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       bgColor: 'bg-green-50 hover:bg-green-100'
     },
     {
-      icon: Calendar,
-      label: t('schedule.title'),
-      action: () => {
-        navigate('/schedule');
-        setIsQuickActionsOpen(false);
-      },
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50 hover:bg-purple-100'
-    },
-    {
       icon: AlertTriangle,
       label: 'Metas/Limites',
       action: () => {

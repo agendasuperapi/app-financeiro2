@@ -149,9 +149,11 @@ const Index = () => {
   // Calculate previousMonthsBalance (balance up to end of previous month)
   const previousMonthsBalance = React.useMemo(() => {
     const endOfPreviousMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0, 23, 59, 59, 999);
-    return transactions
+    const result = transactions
       .filter((t: any) => new Date(t.date) <= endOfPreviousMonth)
       .reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
+    console.log('🔍 [Index.tsx] previousMonthsBalance:', result);
+    return result;
   }, [transactions, currentMonth]);
   
   // Calculate monthlyBalanceCombined (current month balance with simulations)
@@ -178,7 +180,14 @@ const Index = () => {
         return sum + (amt < 0 ? -amt : (t.type === 'expense' ? amt : 0));
       }, 0);
       
-    return monthlyIncome - monthlyExpenses;
+    const result = monthlyIncome - monthlyExpenses;
+    console.log('🔍 [Index.tsx] monthlyBalanceCombined calculation:', {
+      monthlyIncome,
+      monthlyExpenses,
+      result,
+      monthlyTransactionsCount: monthlyTransactions.length
+    });
+    return result;
   }, [transactionsWithSimulations, currentMonth]);
   
   // Load initial data only once when component mounts

@@ -115,7 +115,13 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
   // Combinar transações reais com simulações mensais
   const transactionsWithSimulations = React.useMemo(() => {
-    const combined = [...filteredTransactions, ...monthlySimulations];
+    // Filtrar transações por formato = "agenda" ou "transacao"
+    const filteredByFormato = filteredTransactions.filter((tx: any) => {
+      const formato = tx.formato || tx.format;
+      return formato === 'agenda' || formato === 'transacao';
+    });
+    
+    const combined = [...filteredByFormato, ...monthlySimulations];
     return combined.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [filteredTransactions, monthlySimulations]);
 

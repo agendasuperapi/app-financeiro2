@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import CategoryIcon from '../categories/CategoryIcon';
 import { usePreferences } from '@/contexts/PreferencesContext';
-import { ArrowUp, ArrowDown, Edit, Trash2 } from 'lucide-react';
+import { ArrowUp, ArrowDown, Edit, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -33,6 +33,8 @@ interface TransactionTableProps {
   onDelete?: (id: string) => void;
   hideValues?: boolean;
 }
+
+type SortDirection = 'asc' | 'desc' | null;
 
 const TransactionTable: React.FC<TransactionTableProps> = ({
   transactions,
@@ -43,6 +45,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const { t, currency } = usePreferences();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // Default to newest first
 
   const renderHiddenValue = () => '******';
 
@@ -59,6 +62,29 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     setTransactionToDelete(null);
   };
 
+  const handleDateSort = () => {
+    if (sortDirection === null || sortDirection === 'desc') {
+      setSortDirection('asc');
+    } else {
+      setSortDirection('desc');
+    }
+  };
+
+  const sortedTransactions = React.useMemo(() => {
+    if (!sortDirection) return transactions;
+    
+    return [...transactions].sort((a, b) => {
+      const dateA = new Date(a.date || a.created_at || '');
+      const dateB = new Date(b.date || b.created_at || '');
+      
+      if (sortDirection === 'asc') {
+        return dateA.getTime() - dateB.getTime();
+      } else {
+        return dateB.getTime() - dateA.getTime();
+      }
+    });
+  }, [transactions, sortDirection]);
+
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
@@ -66,7 +92,20 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           <TableHeader className="bg-muted/30">
             <TableRow>
               <TableHead className="w-[12%] min-w-[70px]">{t('common.type')}</TableHead>
-              <TableHead className="w-[13%] min-w-[90px]">{t('common.date')}</TableHead>
+              <TableHead className="w-[13%] min-w-[90px]">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 font-medium text-xs hover:bg-transparent"
+                  onClick={handleDateSort}
+                >
+                  <div className="flex items-center gap-1">
+                    {t('common.date')}
+                    {sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
+                    {sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
+                  </div>
+                </Button>
+              </TableHead>
               <TableHead className="w-[22%] min-w-[110px]">{t('common.category')}</TableHead>
               <TableHead className="w-[24%] hidden lg:table-cell">{t('common.description')}</TableHead>
               <TableHead className="text-right w-[10%] min-w-[75px] hidden lg:table-cell">{t('common.amount')}</TableHead>
@@ -74,7 +113,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.map((transaction, index) => {
+            {sortedTransactions.map((transaction, index) => {
               const iconColor = transaction.type === 'income' ? '#26DE81' : '#EF4444';
 
               return (

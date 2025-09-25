@@ -1,12 +1,14 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Transaction } from '@/types';
 import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useTransactionForm } from '@/hooks/useTransactionForm';
+import { checkRelatedTransactions, updateRelatedTransactions } from '@/services/transactionService';
 import TransactionTypeSelector from './TransactionTypeSelector';
 import AmountInput from './AmountInput';
 import CategoryDateFields from './CategoryDateFields';
@@ -37,6 +39,9 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const { setCustomDateRange, getTransactions, getGoals } = useAppContext();
   const { toast } = useToast();
   const { selectedUser } = useClientView();
+  const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false);
+  const [relatedTransactionInfo, setRelatedTransactionInfo] = useState<{ count: number, codigoTrans?: string } | null>(null);
+  const [pendingFormValues, setPendingFormValues] = useState<any>(null);
   
   // Initialize form
   const { form, selectedType, handleTypeChange, onSubmit } = useTransactionForm({
@@ -152,6 +157,36 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             </form>
           </Form>
         </div>
+        
+        <AlertDialog open={bulkEditDialogOpen} onOpenChange={setBulkEditDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Editar Transações Relacionadas</AlertDialogTitle>
+              <AlertDialogDescription>
+                Encontramos {relatedTransactionInfo?.count} transações com o mesmo código.
+                Deseja editar todas as transações futuras ou apenas esta?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setBulkEditDialogOpen(false);
+                if (pendingFormValues?.resolve) {
+                  pendingFormValues.resolve('single');
+                }
+              }}>
+                Apenas Esta
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => {
+                setBulkEditDialogOpen(false);
+                if (pendingFormValues?.resolve) {
+                  pendingFormValues.resolve('all');
+                }
+              }}>
+                Todas Futuras
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );

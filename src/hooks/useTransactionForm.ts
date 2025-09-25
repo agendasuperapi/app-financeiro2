@@ -7,7 +7,7 @@ import { createTransactionSchema, TransactionFormValues } from '@/schemas/transa
 import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { getCategoriesByType } from '@/services/categoryService';
-import { createTransactionForUser } from '@/services/transactionService';
+import { createTransactionForUser, checkRelatedTransactions } from '@/services/transactionService';
 
 interface UseTransactionFormProps {
   initialData?: Transaction;
@@ -140,11 +140,22 @@ export const useTransactionForm = ({
       } else if (initialData) {
         console.log("Updating transaction...");
         
-        // Para edição, usar método normal (transações só podem ser editadas pelo próprio usuário)
-        await updateTransaction(initialData.id, {
+        // Check if there are related transactions with the same codigo-trans
+        const relatedCheck = await checkRelatedTransactions(initialData.id);
+        
+        if (relatedCheck.hasRelated) {
+          console.log(`Found ${relatedCheck.count} related transactions with same codigo-trans`);
+          
+          // Show confirmation dialog (this will be handled by the TransactionForm component)
+          throw new Error('BULK_EDIT_CONFIRMATION_REQUIRED');
+        }
+        
+        // Para edição normal, usar método normal (transações só podem ser editadas pelo próprio usuário)
+        await updateTransaction({
+          ...initialData,
           type: processedValues.type,
           amount: processedValues.amount,
-          category_id: processedValues.category,
+          category: processedValues.category,
           description: processedValues.description || '',
           date: new Date(processedValues.date).toISOString(),
           goalId: processedValues.goalId,

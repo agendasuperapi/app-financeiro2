@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Transaction } from "@/types";
 import { v4 as uuidv4 } from "uuid";
@@ -188,7 +187,6 @@ export const createTransactionForUser = async (transactionData: {
         goal_id: transactionData.goalId,
         user_id: transactionData.user_id,
         reference_code: referenceCode,
-        "codigo-trans": referenceCode, // Store reference code in codigo-trans column
         conta: transactionData.conta,
         name: transactionData.name,
         phone: phoneValue,
@@ -290,7 +288,7 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
         date: transaction.date,
         goal_id: transaction.goalId,
         conta: transaction.conta,
-        name: (transaction as any).name,
+        name: (transaction as any).creatorName,
         phone: (transaction as any).phone,
         reference_code: await getNextReferenceCode(), // Generate new reference code for updates
         formato: 'transacao', // Mantém como transacao em atualizações
@@ -336,7 +334,7 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
       conta: (data as any).conta || undefined,
       creatorName: (data as any).name || undefined,
       formato: (data as any).formato || undefined,
-    };
+    } as Transaction;
   } catch (error) {
     console.error("Error updating transaction:", error);
     return null;
@@ -370,6 +368,93 @@ export const deleteTransaction = async (id: string): Promise<boolean> => {
     return true;
   } catch (error) {
     console.error("Error deleting transaction:", error);
+    return false;
+  }
+};
+
+// Function to check if there are multiple transactions with the same codigo-trans
+export const checkRelatedTransactions = async (transactionId: string): Promise<{ hasRelated: boolean, count: number, codigoTrans?: string }> => {
+  try {
+    // First get the current transaction's codigo-trans
+    const { data: currentTransaction } = await supabase
+      .from("poupeja_transactions")
+      .select("codigo-trans")
+      .eq("id", transactionId)
+      .single();
+
+    if (!currentTransaction || !currentTransaction["codigo-trans"]) {
+      return { hasRelated: false, count: 0 };
+    }
+
+    const codigoTrans = currentTransaction["codigo-trans"];
+
+    // Count how many transactions have the same codigo-trans
+    const { data: relatedTransactions, error } = await supabase
+      .from("poupeja_transactions")
+      .select("id, date")
+      .eq("codigo-trans", codigoTrans)
+      .neq("id", transactionId); // Exclude current transaction
+
+    if (error) throw error;
+
+    return {
+      hasRelated: relatedTransactions && relatedTransactions.length > 0,
+      count: relatedTransactions ? relatedTransactions.length : 0,
+      codigoTrans
+    };
+  } catch (error) {
+    console.error("Error checking related transactions:", error);
+    return { hasRelated: false, count: 0 };
+  }
+};
+
+// Function to update all transactions with the same codigo-trans
+export const updateRelatedTransactions = async (
+  transactionId: string,
+  codigoTrans: string,
+  updateData: Partial<Transaction>,
+  updateAllFuture: boolean = false
+): Promise<boolean> => {
+  try {
+    let query = supabase
+      .from("poupeja_transactions")
+      .update({
+        type: updateData.type,
+        amount: updateData.amount,
+        category_id: updateData.category_id || updateData.category,
+        description: updateData.description,
+        date: updateData.date,
+        goal_id: updateData.goalId,
+        conta: updateData.conta,
+        name: (updateData as any).name,
+        phone: (updateData as any).phone,
+        formato: 'transacao',
+      })
+      .eq("codigo-trans", codigoTrans);
+
+    if (updateAllFuture) {
+      // Get the current transaction date
+      const { data: currentTx } = await supabase
+        .from("poupeja_transactions")
+        .select("date")
+        .eq("id", transactionId)
+        .single();
+
+      if (currentTx) {
+        // Only update transactions with dates >= current transaction date
+        query = query.gte("date", currentTx.date);
+      }
+    } else {
+      // Update all transactions with the same codigo-trans
+      // (this will include the current transaction)
+    }
+
+    const { error } = await query;
+    if (error) throw error;
+
+    return true;
+  } catch (error) {
+    console.error("Error updating related transactions:", error);
     return false;
   }
 };

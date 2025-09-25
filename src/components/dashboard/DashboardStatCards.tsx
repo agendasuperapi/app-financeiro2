@@ -14,6 +14,8 @@ interface DashboardStatCardsProps {
   transactionsWithSimulations?: any[];
   onNavigateToTransactionType: (type: 'income' | 'expense') => void;
   currentMonth: Date;
+  previousMonthsBalance?: number;
+  monthlyBalanceCombined?: number;
 }
 
 const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
@@ -23,7 +25,9 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
   hideValues,
   transactionsWithSimulations = [],
   onNavigateToTransactionType,
-  currentMonth
+  currentMonth,
+  previousMonthsBalance = 0,
+  monthlyBalanceCombined = 0
 }) => {
   // Puxar valores dos elementos income-total e expense-total (prompts)
   const [incomeFromTotal, setIncomeFromTotal] = React.useState(totalIncome);
@@ -260,7 +264,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
       }, 0);
   }, [transactionsUpToSelected]);
 
-  const monthlyCumulativeBalance = previousMonthBalance + (totalIncomesUpToSelected - totalExpensesUpToSelected);
+  const monthlyCumulativeBalance = previousMonthsBalance + monthlyBalanceCombined;
 
   return (
     <motion.div 

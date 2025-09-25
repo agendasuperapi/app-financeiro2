@@ -146,6 +146,41 @@ const Index = () => {
   }, 0);
   const balance = baseBalanceBeforeMonth + (totalIncome || 0) - (totalExpenses || 0);
   
+  // Calculate previousMonthsBalance (balance up to end of previous month)
+  const previousMonthsBalance = React.useMemo(() => {
+    const endOfPreviousMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0, 23, 59, 59, 999);
+    return transactions
+      .filter((t: any) => new Date(t.date) <= endOfPreviousMonth)
+      .reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
+  }, [transactions, currentMonth]);
+  
+  // Calculate monthlyBalanceCombined (current month balance with simulations)
+  const monthlyBalanceCombined = React.useMemo(() => {
+    const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0, 23, 59, 59, 999);
+    
+    const monthlyTransactions = transactionsWithSimulations.filter((t: any) => {
+      const txDate = new Date(t.date);
+      return txDate >= monthStart && txDate <= monthEnd;
+    });
+    
+    const monthlyIncome = monthlyTransactions
+      .filter((t: any) => (t.type === 'income') || (typeof t.amount === 'number' && t.amount > 0))
+      .reduce((sum: number, t: any) => {
+        const amt = Number(t.amount) || 0;
+        return sum + (amt > 0 ? amt : (t.type === 'income' ? Math.abs(amt) : 0));
+      }, 0);
+      
+    const monthlyExpenses = monthlyTransactions
+      .filter((t: any) => (t.type === 'expense') || (typeof t.amount === 'number' && t.amount < 0))
+      .reduce((sum: number, t: any) => {
+        const amt = Number(t.amount) || 0;
+        return sum + (amt < 0 ? -amt : (t.type === 'expense' ? amt : 0));
+      }, 0);
+      
+    return monthlyIncome - monthlyExpenses;
+  }, [transactionsWithSimulations, currentMonth]);
+  
   // Load initial data only once when component mounts
   useEffect(() => {
     const loadInitialData = async () => {
@@ -300,6 +335,8 @@ const Index = () => {
             transactionsWithSimulations={transactionsWithSimulations}
             onNavigateToTransactionType={navigateToTransactionType}
             currentMonth={currentMonth}
+            previousMonthsBalance={previousMonthsBalance}
+            monthlyBalanceCombined={monthlyBalanceCombined}
           />
 
           {/* Conteúdo do dashboard - com fallback para evitar erro */}

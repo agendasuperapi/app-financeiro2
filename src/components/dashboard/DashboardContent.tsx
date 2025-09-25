@@ -108,7 +108,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
               date: simDate.toISOString(),
               goalId: item.goal_id || undefined,
               conta: item.conta || undefined,
-              creatorName: item.name || undefined
+              creatorName: item.name || undefined,
+              formato: 'transacao'
             } as Transaction;
           })
           .filter(Boolean);
@@ -132,7 +133,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       format: tx.format
     })));
     
-    // Filtrar transações por formato = "agenda" ou "transacao"
+    // Filtrar transações por formato = "agenda" ou "transacao", e incluir simulações
     const filteredByFormato = filteredTransactions.filter((tx: any) => {
       const formato = tx.formato || tx.format;
       const shouldInclude = formato === 'agenda' || formato === 'transacao';
@@ -149,6 +150,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     
     console.log('✅ [DASHBOARD DEBUG] Filtered transactions by formato:', filteredByFormato.length);
     
+    // Combinar transações reais filtradas com simulações (que já têm formato: 'transacao')
     const combined = [...filteredByFormato, ...monthlySimulations];
     return combined.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [filteredTransactions, monthlySimulations]);

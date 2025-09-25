@@ -97,6 +97,16 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       },
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-50 hover:bg-indigo-100'
+    },
+    {
+      icon: Wallet,
+      label: 'Contas&Cartões',
+      action: () => {
+        navigate('/saldo');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-teal-600',
+      bgColor: 'bg-teal-50 hover:bg-teal-100'
     }
   ];
 
@@ -191,11 +201,6 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       icon: Plus,
       label: '',
       href: '#'
-    },
-    {
-      icon: Wallet,
-      label: 'Contas&Cartões',
-      href: '/saldo'
     },
     {
       icon: Calendar,

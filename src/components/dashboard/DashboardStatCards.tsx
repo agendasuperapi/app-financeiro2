@@ -264,7 +264,9 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
       }, 0);
   }, [transactionsUpToSelected]);
 
-  const monthlyCumulativeBalance = (previousMonthsBalance || 0) + (monthlyBalanceCombined || 0);
+  // Saldo Mês = Saldo Meses Anteriores + Saldo Atual do Mês (receitas - despesas do mês atual)
+  const currentMonthBalance = totalIncomesCombined - totalExpensesCombined;
+  const monthlyCumulativeBalance = (previousMonthsBalance || 0) + currentMonthBalance;
 
   return (
     <motion.div 

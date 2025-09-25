@@ -23,7 +23,6 @@ import ScheduledTransactionForm from '@/components/schedule/ScheduledTransaction
 import AddContaForm from '@/components/contas/AddContaForm';
 import ContaFormFields from '@/components/common/ContaFormFields';
 import TransactionFormFields from '@/components/common/TransactionFormFields';
-
 const CalendarPage: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -39,7 +38,9 @@ const CalendarPage: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [selectedReminder, setSelectedReminder] = useState<ScheduledTransaction | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
 
   // Form for ContaFormFields
   const contaForm = useForm({
@@ -69,13 +70,11 @@ const CalendarPage: React.FC = () => {
       goalId: ''
     }
   });
-
   const handleEditTransaction = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
-    
+
     // Verificar o campo formato para abrir o diálogo correto
     const formato = (transaction as any).formato || 'transacao';
-    
     if (formato === 'agenda') {
       // Abrir ContaFormFields quando formato for "agenda"
       contaForm.reset({
@@ -111,41 +110,35 @@ const CalendarPage: React.FC = () => {
       setEditDialogOpen(true);
     }
   };
-
   const handleDeleteTransaction = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setDeleteDialogOpen(true);
   };
-
   const handleEditReminder = (reminder: ScheduledTransaction) => {
     setSelectedReminder(reminder);
     setEditReminderDialogOpen(true);
   };
-
   const handleDeleteReminder = (reminder: ScheduledTransaction) => {
     setSelectedReminder(reminder);
     setDeleteDialogOpen(true);
   };
-
   const confirmDelete = async () => {
     if (!selectedTransaction && !selectedReminder) return;
-    
     setIsDeleting(true);
     try {
       if (selectedTransaction) {
         await deleteTransaction(selectedTransaction.id);
         toast({
           title: "Sucesso",
-          description: "Transação excluída com sucesso!",
+          description: "Transação excluída com sucesso!"
         });
       } else if (selectedReminder) {
         await deleteScheduledTransaction(selectedReminder.id);
         toast({
           title: "Sucesso",
-          description: "Lembrete excluído com sucesso!",
+          description: "Lembrete excluído com sucesso!"
         });
       }
-      
       await loadData();
       setDeleteDialogOpen(false);
       setSelectedTransaction(null);
@@ -155,13 +148,12 @@ const CalendarPage: React.FC = () => {
       toast({
         title: "Erro",
         description: "Erro ao excluir. Tente novamente.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsDeleting(false);
     }
   };
-
   const handleTransactionSuccess = async () => {
     setEditDialogOpen(false);
     setEditReminderDialogOpen(false);
@@ -172,30 +164,20 @@ const CalendarPage: React.FC = () => {
     setSelectedReminder(null);
     await loadData();
   };
-
   useEffect(() => {
     loadData();
   }, []);
-
   const loadData = async () => {
     setLoading(true);
     try {
-      const [transactionsData, scheduledData] = await Promise.all([
-        getTransactions(),
-        getScheduledTransactions()
-      ]);
-      
+      const [transactionsData, scheduledData] = await Promise.all([getTransactions(), getScheduledTransactions()]);
       setTransactions(transactionsData);
-      
       console.log('DEBUG Calendar: Scheduled data loaded:', scheduledData);
       console.log('DEBUG Calendar: First scheduled item:', scheduledData[0]);
-      
+
       // Filtrar lembretes - incluir todas as transações agendadas com status pending
       // pois os lembretes estão salvos como transações normais mas com status pending
-      const remindersList = scheduledData.filter(item => 
-        item.status === 'pending' || item.type === 'lembrete' || item.type === 'reminder'
-      );
-      
+      const remindersList = scheduledData.filter(item => item.status === 'pending' || item.type === 'lembrete' || item.type === 'reminder');
       console.log('DEBUG Calendar: Filtered reminders:', remindersList);
       setReminders(remindersList);
     } catch (error) {
@@ -207,45 +189,31 @@ const CalendarPage: React.FC = () => {
 
   // Agrupa transações por data
   const getTransactionsForDate = (date: Date) => {
-    return transactions.filter(transaction => 
-      isSameDay(parseISO(transaction.date), date)
-    );
+    return transactions.filter(transaction => isSameDay(parseISO(transaction.date), date));
   };
 
   // Agrupa lembretes por data
   const getRemindersForDate = (date: Date) => {
-    return reminders.filter(reminder => 
-      isSameDay(parseISO(reminder.scheduledDate), date)
-    );
+    return reminders.filter(reminder => isSameDay(parseISO(reminder.scheduledDate), date));
   };
 
   // Obtém todas as datas que têm transações no mês atual
   const getDatesWithTransactions = () => {
     const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
-    
-    const transactionDates = transactions
-      .filter(transaction => {
-        const transactionDate = parseISO(transaction.date);
-        return transactionDate >= startOfMonth && transactionDate <= endOfMonth;
-      })
-      .map(transaction => parseISO(transaction.date));
-
-    const reminderDates = reminders
-      .filter(reminder => {
-        const reminderDate = parseISO(reminder.scheduledDate);
-        return reminderDate >= startOfMonth && reminderDate <= endOfMonth;
-      })
-      .map(reminder => parseISO(reminder.scheduledDate));
-
+    const transactionDates = transactions.filter(transaction => {
+      const transactionDate = parseISO(transaction.date);
+      return transactionDate >= startOfMonth && transactionDate <= endOfMonth;
+    }).map(transaction => parseISO(transaction.date));
+    const reminderDates = reminders.filter(reminder => {
+      const reminderDate = parseISO(reminder.scheduledDate);
+      return reminderDate >= startOfMonth && reminderDate <= endOfMonth;
+    }).map(reminder => parseISO(reminder.scheduledDate));
     return [...transactionDates, ...reminderDates];
   };
-
   const selectedDateTransactions = selectedDate ? getTransactionsForDate(selectedDate) : [];
   const selectedDateReminders = selectedDate ? getRemindersForDate(selectedDate) : [];
-
-  return (
-    <MainLayout>
+  return <MainLayout>
       <div className="container mx-auto p-4 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Calendário</h1>
@@ -257,73 +225,40 @@ const CalendarPage: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Calendário de Transações</span>
-                <MonthNavigation
-                  currentMonth={currentMonth}
-                  onMonthChange={setCurrentMonth}
-                />
+                <MonthNavigation currentMonth={currentMonth} onMonthChange={setCurrentMonth} />
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex justify-center">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  month={currentMonth}
-                  onMonthChange={setCurrentMonth}
-                  locale={ptBR}
-                  className="rounded-md border p-3 pointer-events-auto"
-                  classNames={{
-                    day: cn(
-                      "h-12 w-12 p-0 font-normal aria-selected:opacity-100 relative cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                    ),
-                    day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                    day_today: "bg-accent text-accent-foreground",
-                  }}
-                  modifiers={{
-                    hasTransactions: getDatesWithTransactions()
-                  }}
-                  modifiersClassNames={{
-                    hasTransactions: "font-semibold"
-                  }}
-                  components={{
-                    Day: ({ date, displayMonth, ...props }) => {
-                      const dayTransactions = getTransactionsForDate(date);
-                      const dayReminders = getRemindersForDate(date);
-                      const incomeCount = dayTransactions.filter(t => t.type === 'income').length;
-                      const expenseCount = dayTransactions.filter(t => t.type === 'expense').length;
-                      const reminderCount = dayReminders.length;
-                      
-                      return (
-                        <button
-                          {...props}
-                          className={cn(
-                            "relative w-full h-full flex flex-col items-center justify-center rounded-md transition-colors",
-                            "hover:bg-accent hover:text-accent-foreground",
-                            selectedDate && isSameDay(date, selectedDate) && "bg-primary text-primary-foreground",
-                            isSameDay(date, new Date()) && !selectedDate && "bg-accent text-accent-foreground"
-                          )}
-                          onClick={() => setSelectedDate(date)}
-                        >
+                <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} month={currentMonth} onMonthChange={setCurrentMonth} locale={ptBR} className="rounded-md border p-3 pointer-events-auto" classNames={{
+                day: cn("h-12 w-12 p-0 font-normal aria-selected:opacity-100 relative cursor-pointer hover:bg-accent hover:text-accent-foreground"),
+                day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                day_today: "bg-accent text-accent-foreground"
+              }} modifiers={{
+                hasTransactions: getDatesWithTransactions()
+              }} modifiersClassNames={{
+                hasTransactions: "font-semibold"
+              }} components={{
+                Day: ({
+                  date,
+                  displayMonth,
+                  ...props
+                }) => {
+                  const dayTransactions = getTransactionsForDate(date);
+                  const dayReminders = getRemindersForDate(date);
+                  const incomeCount = dayTransactions.filter(t => t.type === 'income').length;
+                  const expenseCount = dayTransactions.filter(t => t.type === 'expense').length;
+                  const reminderCount = dayReminders.length;
+                  return <button {...props} className={cn("relative w-full h-full flex flex-col items-center justify-center rounded-md transition-colors", "hover:bg-accent hover:text-accent-foreground", selectedDate && isSameDay(date, selectedDate) && "bg-primary text-primary-foreground", isSameDay(date, new Date()) && !selectedDate && "bg-accent text-accent-foreground")} onClick={() => setSelectedDate(date)}>
                           <span>{format(date, 'd')}</span>
-                          {(dayTransactions.length > 0 || dayReminders.length > 0) && (
-                            <div className="absolute bottom-1 flex gap-1">
-                              {incomeCount > 0 && (
-                                <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                              )}
-                              {expenseCount > 0 && (
-                                <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
-                              )}
-                              {reminderCount > 0 && (
-                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                              )}
-                            </div>
-                          )}
-                        </button>
-                      );
-                    }
-                  }}
-                />
+                          {(dayTransactions.length > 0 || dayReminders.length > 0) && <div className="absolute bottom-1 flex gap-1">
+                              {incomeCount > 0 && <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />}
+                              {expenseCount > 0 && <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />}
+                              {reminderCount > 0 && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />}
+                            </div>}
+                        </button>;
+                }
+              }} />
               </div>
               
               {/* Legenda */}
@@ -348,50 +283,38 @@ const CalendarPage: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>
-                {selectedDate
-                  ? `Transações - ${format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })}`
-                  : 'Selecione uma data'
-                }
+                {selectedDate ? `Transações - ${format(selectedDate, 'dd/MM/yyyy', {
+                locale: ptBR
+              })}` : 'Selecione uma data'}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {selectedDate ? (
-                <div className="space-y-3">
-                  {(selectedDateTransactions.length > 0 || selectedDateReminders.length > 0) ? (
-                    <>
+              {selectedDate ? <div className="space-y-3">
+                  {selectedDateTransactions.length > 0 || selectedDateReminders.length > 0 ? <>
                       {/* Transações */}
-                      {selectedDateTransactions.map((transaction) => {
-                        const formato = (transaction as any).formato || 'transacao';
-                        const transactionDate = parseISO(transaction.date);
-                        const hora = format(transactionDate, 'HH:mm');
-                        
-                        // Definir cor da bolinha baseada no formato
-                        let bolinhaColor = 'bg-gray-900'; // Preta para "transacao"
-                        if (formato === 'agenda') {
-                          bolinhaColor = 'bg-purple-500'; // Roxa para "agenda"
-                        } else if (formato === 'lembrete') {
-                          bolinhaColor = 'bg-blue-500'; // Azul para "lembrete"
-                        }
-                        
-                        return (
-                          <div
-                            key={transaction.id}
-                            className="flex items-center justify-between p-3 border rounded-lg"
-                          >
+                      {selectedDateTransactions.map(transaction => {
+                  const formato = (transaction as any).formato || 'transacao';
+                  const transactionDate = parseISO(transaction.date);
+                  const hora = format(transactionDate, 'HH:mm');
+
+                  // Definir cor da bolinha baseada no formato
+                  let bolinhaColor = 'bg-gray-900'; // Preta para "transacao"
+                  if (formato === 'agenda') {
+                    bolinhaColor = 'bg-purple-500'; // Roxa para "agenda"
+                  } else if (formato === 'lembrete') {
+                    bolinhaColor = 'bg-blue-500'; // Azul para "lembrete"
+                  }
+                  return <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
                             <div className="flex items-center gap-3">
                               <div className={`w-3 h-3 rounded-full ${bolinhaColor}`} />
                               <div>
                                 <p className="font-medium">{transaction.description || transaction.category}</p>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  {(formato === 'agenda' || formato === 'lembrete') && (
-                                    <span>{hora}</span>
-                                  )}
-                                  {(formato === 'agenda' || formato === 'transacao') && (
-                                    <span>
+                                  {(formato === 'agenda' || formato === 'lembrete') && <span>{hora}</span>}
+                                  {(formato === 'agenda' || formato === 'transacao') && <span>
                                       {transaction.type === 'income' ? '+' : '-'}
                                       R$ {transaction.amount.toFixed(2)}
-                                    </span>
-                                  )}
+                                    </span>}
                                 </div>
                               </div>
                             </div>
@@ -407,35 +330,25 @@ const CalendarPage: React.FC = () => {
                                     <Edit className="h-4 w-4 mr-2" />
                                     Editar
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem 
-                                    onClick={() => handleDeleteTransaction(transaction)}
-                                    className="text-destructive"
-                                  >
+                                  <DropdownMenuItem onClick={() => handleDeleteTransaction(transaction)} className="text-destructive">
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     Excluir
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
-                          </div>
-                        );
-                      })}
+                          </div>;
+                })}
                       
                       {/* Lembretes */}
-                      {selectedDateReminders.map((reminder) => (
-                        <div
-                          key={reminder.id}
-                          className="flex items-center justify-between p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20"
-                        >
+                      {selectedDateReminders.map(reminder => <div key={reminder.id} className="flex items-center justify-between p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20">
                           <div className="flex items-center gap-3">
                             <div className="w-3 h-3 rounded-full bg-blue-500" />
                             <div>
                               <p className="font-medium">{reminder.category}</p>
-                              {reminder.description && (
-                                <p className="text-sm text-muted-foreground">
+                              {reminder.description && <p className="text-sm text-muted-foreground">
                                   {reminder.description}
-                                </p>
-                              )}
+                                </p>}
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -453,180 +366,62 @@ const CalendarPage: React.FC = () => {
                                   <Edit className="h-4 w-4 mr-2" />
                                   Editar
                                 </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => handleDeleteReminder(reminder)}
-                                  className="text-destructive"
-                                >
+                                <DropdownMenuItem onClick={() => handleDeleteReminder(reminder)} className="text-destructive">
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   Excluir
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
-                        </div>
-                      ))}
-                    </>
-                  ) : (
-                    <p className="text-muted-foreground text-center">
+                        </div>)}
+                    </> : <p className="text-muted-foreground text-center">
                       Nenhuma transação ou lembrete nesta data
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-center">
+                    </p>}
+                </div> : <p className="text-muted-foreground text-center">
                   Clique em uma data para ver as transações e lembretes
-                </p>
-              )}
+                </p>}
             </CardContent>
           </Card>
         </div>
 
         {/* Resumo do mês */}
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              Resumo de {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 border rounded-lg">
-                <p className="text-2xl font-bold text-green-600">
-                  {transactions
-                    .filter(t => {
-                      const date = parseISO(t.date);
-                      return date.getMonth() === currentMonth.getMonth() &&
-                             date.getFullYear() === currentMonth.getFullYear() &&
-                             t.type === 'income';
-                    })
-                    .length}
-                </p>
-                <p className="text-sm text-muted-foreground">Receitas</p>
-              </div>
-              <div className="text-center p-4 border rounded-lg">
-                <p className="text-2xl font-bold text-red-600">
-                  {transactions
-                    .filter(t => {
-                      const date = parseISO(t.date);
-                      return date.getMonth() === currentMonth.getMonth() &&
-                             date.getFullYear() === currentMonth.getFullYear() &&
-                             t.type === 'expense';
-                    })
-                    .length}
-                </p>
-                <p className="text-sm text-muted-foreground">Despesas</p>
-              </div>
-              <div className="text-center p-4 border rounded-lg">
-                <p className="text-2xl font-bold text-blue-600">
-                  {reminders
-                    .filter(r => {
-                      const date = parseISO(r.scheduledDate);
-                      return date.getMonth() === currentMonth.getMonth() &&
-                             date.getFullYear() === currentMonth.getFullYear();
-                    })
-                    .length}
-                </p>
-                <p className="text-sm text-muted-foreground">Lembretes</p>
-              </div>
-              <div className="text-center p-4 border rounded-lg">
-                <p className="text-2xl font-bold">
-                  {transactions
-                    .filter(t => {
-                      const date = parseISO(t.date);
-                      return date.getMonth() === currentMonth.getMonth() &&
-                             date.getFullYear() === currentMonth.getFullYear();
-                    })
-                    .length + 
-                  reminders
-                    .filter(r => {
-                      const date = parseISO(r.scheduledDate);
-                      return date.getMonth() === currentMonth.getMonth() &&
-                             date.getFullYear() === currentMonth.getFullYear();
-                    })
-                    .length}
-                </p>
-                <p className="text-sm text-muted-foreground">Total</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        
       </div>
 
       {/* Dialogs */}
-      {selectedTransaction && (
-        <TransactionForm
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          initialData={selectedTransaction}
-          mode="edit"
-        />
-      )}
+      {selectedTransaction && <TransactionForm open={editDialogOpen} onOpenChange={setEditDialogOpen} initialData={selectedTransaction} mode="edit" />}
 
-      {selectedTransaction && editReminderDialogOpen && selectedReminder && (
-        <ScheduledTransactionForm
-          open={editReminderDialogOpen}
-          onOpenChange={setEditReminderDialogOpen}
-          initialData={selectedReminder}
-          mode="edit"
-          onSuccess={handleTransactionSuccess}
-        />
-      )}
+      {selectedTransaction && editReminderDialogOpen && selectedReminder && <ScheduledTransactionForm open={editReminderDialogOpen} onOpenChange={setEditReminderDialogOpen} initialData={selectedReminder} mode="edit" onSuccess={handleTransactionSuccess} />}
 
-      {selectedTransaction && editContaDialogOpen && (
-        <AddContaForm
-          onSuccess={handleTransactionSuccess}
-          onCancel={() => setEditContaDialogOpen(false)}
-          initialData={selectedTransaction}
-          mode="edit"
-        />
-      )}
+      {selectedTransaction && editContaDialogOpen && <AddContaForm onSuccess={handleTransactionSuccess} onCancel={() => setEditContaDialogOpen(false)} initialData={selectedTransaction} mode="edit" />}
 
       {/* ContaFormFields Dialog for "agenda" format */}
-      {selectedTransaction && editContaFormDialogOpen && (
-        <Dialog open={editContaFormDialogOpen} onOpenChange={setEditContaFormDialogOpen}>
+      {selectedTransaction && editContaFormDialogOpen && <Dialog open={editContaFormDialogOpen} onOpenChange={setEditContaFormDialogOpen}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Editar Transação (Formato Agenda)</DialogTitle>
             </DialogHeader>
             <Form {...contaForm}>
               <form onSubmit={contaForm.handleSubmit(() => handleTransactionSuccess())}>
-                <ContaFormFields
-                  form={contaForm}
-                  mode="edit"
-                  onCancel={() => setEditContaFormDialogOpen(false)}
-                  onSubmit={() => handleTransactionSuccess()}
-                  submitLabel="Atualizar"
-                  cancelLabel="Cancelar"
-                />
+                <ContaFormFields form={contaForm} mode="edit" onCancel={() => setEditContaFormDialogOpen(false)} onSubmit={() => handleTransactionSuccess()} submitLabel="Atualizar" cancelLabel="Cancelar" />
               </form>
             </Form>
           </DialogContent>
-        </Dialog>
-      )}
+        </Dialog>}
 
       {/* TransactionFormFields Dialog for "transacao" format */}
-      {selectedTransaction && editTransactionFormDialogOpen && (
-        <Dialog open={editTransactionFormDialogOpen} onOpenChange={setEditTransactionFormDialogOpen}>
+      {selectedTransaction && editTransactionFormDialogOpen && <Dialog open={editTransactionFormDialogOpen} onOpenChange={setEditTransactionFormDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Editar Transação</DialogTitle>
             </DialogHeader>
             <Form {...transactionForm}>
               <form onSubmit={transactionForm.handleSubmit(() => handleTransactionSuccess())}>
-                <TransactionFormFields
-                  form={transactionForm}
-                  mode="edit"
-                  selectedType={transactionForm.watch('type') as 'income' | 'expense'}
-                  onCancel={() => setEditTransactionFormDialogOpen(false)}
-                  onSubmit={() => handleTransactionSuccess()}
-                  submitLabel="Atualizar"
-                  cancelLabel="Cancelar"
-                />
+                <TransactionFormFields form={transactionForm} mode="edit" selectedType={transactionForm.watch('type') as 'income' | 'expense'} onCancel={() => setEditTransactionFormDialogOpen(false)} onSubmit={() => handleTransactionSuccess()} submitLabel="Atualizar" cancelLabel="Cancelar" />
               </form>
             </Form>
           </DialogContent>
-        </Dialog>
-      )}
+        </Dialog>}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -638,18 +433,12 @@ const CalendarPage: React.FC = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={confirmDelete} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {isDeleting ? "Excluindo..." : "Excluir"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </MainLayout>
-  );
+    </MainLayout>;
 };
-
 export default CalendarPage;

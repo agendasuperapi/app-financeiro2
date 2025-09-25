@@ -462,9 +462,6 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
                      <p className="text-sm text-muted-foreground">
                        Saldo Atual Mês {format(currentMonth, 'MMM/yyyy', { locale: ptBR })}: <span className={`font-medium ${monthlyBalanceCombined >= 0 ? 'text-green-600' : 'text-red-600'}`} id="monthly-balance">{hideValues ? '******' : formatCurrency(monthlyBalanceCombined, currency)}</span>
                      </p>
-                    <p className="text-sm text-muted-foreground">
-                      Saldo Meses Anteriores {format(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1), 'MMM/yyyy', { locale: ptBR })}: <span id="previous-balance" className={`font-medium ${previousMonthsBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>{hideValues ? '******' : formatCurrency(previousMonthsBalance, currency)}</span>
-                    </p>
                   
                 </div>
               </div>

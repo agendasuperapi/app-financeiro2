@@ -198,6 +198,11 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       href: '/contas'
     },
     {
+      icon: Calendar,
+      label: 'Calendário',
+      href: '/calendar'
+    },
+    {
       icon: User,
       label: t('nav.profile'),
       href: '/profile'

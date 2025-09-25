@@ -69,7 +69,9 @@ const TransactionsPage = () => {
   };
 
   // Filter transactions based on search, status, and date
-  const baseFilteredTransactions = transactions.filter(transaction => transaction.amount !== 0);
+  const baseFilteredTransactions = transactions.filter(transaction => 
+    transaction.formato === 'agenda' || transaction.formato === 'transacao'
+  );
 
   // Apply filters
   React.useEffect(() => {

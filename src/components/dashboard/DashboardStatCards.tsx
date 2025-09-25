@@ -229,8 +229,38 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
     }
   };
 
-  // Saldo do mês atual (receitas - despesas combinadas, incluindo simulações)
-  const monthlyBalance = totalIncomesCombined - totalExpensesCombined;
+  // Saldo acumulado até o mês selecionado (receitas - despesas, reais + simulações, do início até o fim do mês selecionado)
+  const transactionsUpToSelected = React.useMemo(() => {
+    const selectedYear = currentMonth.getFullYear();
+    const selectedMonthIndex = currentMonth.getMonth();
+    const endOfSelectedMonth = new Date(selectedYear, selectedMonthIndex + 1, 0, 23, 59, 59, 999);
+    return transactionsWithSimulations.filter((tx: any) => {
+      const txDate = new Date(tx.date);
+      return txDate <= endOfSelectedMonth;
+    });
+  }, [transactionsWithSimulations, currentMonth]);
+
+  const totalIncomesUpToSelected = React.useMemo(() => {
+    if (transactionsUpToSelected.length === 0) return 0;
+    return transactionsUpToSelected
+      .filter((tx: any) => (tx.type === 'income') || (typeof tx.amount === 'number' && tx.amount > 0))
+      .reduce((sum: number, tx: any) => {
+        const amt = Number(tx.amount) || 0;
+        return sum + (amt > 0 ? amt : (tx.type === 'income' ? Math.abs(amt) : 0));
+      }, 0);
+  }, [transactionsUpToSelected]);
+
+  const totalExpensesUpToSelected = React.useMemo(() => {
+    if (transactionsUpToSelected.length === 0) return 0;
+    return transactionsUpToSelected
+      .filter((tx: any) => (tx.type === 'expense') || (typeof tx.amount === 'number' && tx.amount < 0))
+      .reduce((sum: number, tx: any) => {
+        const amt = Number(tx.amount) || 0;
+        return sum + (amt < 0 ? -amt : (tx.type === 'expense' ? amt : 0));
+      }, 0);
+  }, [transactionsUpToSelected]);
+
+  const monthlyCumulativeBalance = totalIncomesUpToSelected - totalExpensesUpToSelected;
 
   return (
     <motion.div 
@@ -321,22 +351,22 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
         whileHover={{ scale: 1.02, y: -4 }}
         transition={{ duration: 0.2 }}
       >
-        <Card className={`relative overflow-hidden border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 ${monthlyBalance >= 0 ? 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20' : 'bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-950/20 dark:to-yellow-950/20'}`}>
+        <Card className={`relative overflow-hidden border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 ${monthlyCumulativeBalance >= 0 ? 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20' : 'bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-950/20 dark:to-yellow-950/20'}`}>
           <CardContent className="p-4 lg:p-6">
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <div className={`p-2 rounded-full ${monthlyBalance >= 0 ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-orange-100 dark:bg-orange-900/30'}`}>
-                  <Wallet className={`h-4 w-4 lg:h-5 lg:w-5 ${monthlyBalance >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-orange-600 dark:text-orange-400'}`} />
+                <div className={`p-2 rounded-full ${monthlyCumulativeBalance >= 0 ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-orange-100 dark:bg-orange-900/30'}`}>
+                  <Wallet className={`h-4 w-4 lg:h-5 lg:w-5 ${monthlyCumulativeBalance >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-orange-600 dark:text-orange-400'}`} />
                 </div>
-                <p className={`text-xs lg:text-sm font-medium ${monthlyBalance >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}>
+                <p className={`text-xs lg:text-sm font-medium ${monthlyCumulativeBalance >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}>
                   Saldo Mês
                 </p>
               </div>
-              <p className={`text-xl lg:text-2xl xl:text-3xl font-bold ${monthlyBalance >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}>
-                {hideValues ? renderHiddenValue() : formatCurrency(monthlyBalance, currency)}
+              <p className={`text-xl lg:text-2xl xl:text-3xl font-bold ${monthlyCumulativeBalance >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}>
+                {hideValues ? renderHiddenValue() : formatCurrency(monthlyCumulativeBalance, currency)}
               </p>
             </div>
-            <div className={`absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 ${monthlyBalance >= 0 ? 'bg-blue-200/30 dark:bg-blue-800/20' : 'bg-orange-200/30 dark:bg-orange-800/20'} rounded-full`} />
+            <div className={`absolute -bottom-2 -right-2 w-12 h-12 lg:w-16 lg:h-16 ${monthlyCumulativeBalance >= 0 ? 'bg-blue-200/30 dark:bg-blue-800/20' : 'bg-orange-200/30 dark:bg-orange-800/20'} rounded-full`} />
           </CardContent>
         </Card>
       </motion.div>

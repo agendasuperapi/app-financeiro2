@@ -25,6 +25,7 @@ interface DashboardContentProps {
   onMarkScheduledAsPaid: (transaction: ScheduledTransaction) => void;
   scheduledTransactions?: ScheduledTransaction[];
   onTransactionsWithSimulationsUpdate?: (transactions: any[]) => void;
+  onBalancesUpdate?: (balances: { previousMonthsBalance: number; monthlyBalanceCombined: number }) => void;
 }
 const DashboardContent: React.FC<DashboardContentProps> = ({
   filteredTransactions,
@@ -37,7 +38,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   onDeleteTransaction,
   onMarkScheduledAsPaid,
   scheduledTransactions = [],
-  onTransactionsWithSimulationsUpdate
+  onTransactionsWithSimulationsUpdate,
+  onBalancesUpdate
 }) => {
   const {
     t,
@@ -406,9 +408,14 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   const monthlyBalanceReal = totalIncomesReal - totalExpensesReal;
   const currentBalanceReal = previousMonthsBalance + monthlyBalanceReal;
 
-  // Saldo combinado (com simulações) para exibição de comparação
+// Saldo combinado (com simulações) para exibição de comparação
   const monthlyBalanceCombined = totalIncomesCombined - totalExpensesCombined;
   const currentBalanceCombined = previousMonthsBalance + monthlyBalanceCombined;
+
+  // Notificar o componente pai com os saldos calculados (fonte única de verdade)
+  React.useEffect(() => {
+    onBalancesUpdate?.({ previousMonthsBalance, monthlyBalanceCombined });
+  }, [previousMonthsBalance, monthlyBalanceCombined, onBalancesUpdate]);
   const itemVariants = {
     hidden: {
       y: 20,

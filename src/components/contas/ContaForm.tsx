@@ -16,6 +16,8 @@ import { getCategoriesByType } from '@/services/categoryService';
 import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
 import ContaAddedByGrid from '@/components/common/ContaAddedByGrid';
+import BulkEditDialog from '@/components/contas/BulkEditDialog';
+import { toast } from 'sonner';
 interface ContaFormProps {
   initialData?: ScheduledTransaction | null;
   mode: 'create' | 'edit';
@@ -57,6 +59,29 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const [isOnline] = useState(navigator.onLine);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false);
+  const [futureTransactions, setFutureTransactions] = useState<any[]>([]);
+
+  // Função para buscar transações futuras com mesmo código
+  const checkForRelatedTransactions = async (referenceCode: string, currentId: string) => {
+    if (!referenceCode) return [];
+    
+    try {
+      // Simplified query to avoid type issues
+      const { count } = await supabase
+        .from("poupeja_transactions")
+        .select("*", { count: 'exact', head: true })
+        .eq("reference_code", referenceCode)
+        .neq("id", currentId)
+        .gte("date", new Date().toISOString())
+        .eq("status", "pending");
+
+      return Array(count || 0).fill({ id: 'temp' });
+    } catch (error) {
+      console.error("Error checking related transactions:", error);
+      return [];
+    }
+  };
 
   // Default form values for contas (income or expense) - simplified approach
   const getDefaultValues = (): ContaFormValues => {
@@ -143,6 +168,29 @@ const ContaForm: React.FC<ContaFormProps> = ({
   // Form submission handler
   const onSubmit = async (values: ContaFormValues) => {
     console.log('🚀 Conta form submitted with values:', values);
+    try {
+      if (mode === 'edit' && initialData?.reference_code) {
+        // Check for related future transactions
+        const relatedTransactions = await checkForRelatedTransactions(
+          initialData.reference_code, 
+          String(initialData.id)
+        );
+        
+        if (relatedTransactions.length > 0) {
+          setFutureTransactions(relatedTransactions);
+          setBulkEditDialogOpen(true);
+          return; // Wait for user decision
+        }
+      }
+
+      await performUpdate(values, false);
+    } catch (error) {
+      console.error('❌ Error in onSubmit:', error);
+    }
+  };
+
+  // Perform the actual update
+  const performUpdate = async (values: ContaFormValues, editAll: boolean) => {
     try {
       if (mode === 'create') {
         console.log('➕ Creating scheduled transaction...');
@@ -252,10 +300,22 @@ const ContaForm: React.FC<ContaFormProps> = ({
         console.log('🔄 Calling onSuccess callback');
         onSuccess();
       }
+
+      if (editAll && futureTransactions.length > 0) {
+        toast.success(`Atualizada a transação atual e mais ${futureTransactions.length} transações futuras`);
+      } else {
+        toast.success('Transação atualizada com sucesso');
+      }
     } catch (error) {
-      console.error('❌ Error in onSubmit:', error);
-      // Don't close dialog on error, let user try again
+      console.error('❌ Error in performUpdate:', error);
+      toast.error('Erro ao atualizar transação');
     }
+  };
+
+  const handleBulkEditConfirm = (editAll: boolean) => {
+    setBulkEditDialogOpen(false);
+    const values = form.getValues();
+    performUpdate(values, editAll);
   };
 
   // Delete handler
@@ -416,6 +476,14 @@ const ContaForm: React.FC<ContaFormProps> = ({
             </p>}
         </form>
       </Form>
+      
+      {/* Bulk Edit Dialog */}
+      <BulkEditDialog
+        open={bulkEditDialogOpen}
+        onOpenChange={setBulkEditDialogOpen}
+        futureTransactionsCount={futureTransactions.length}
+        onConfirm={handleBulkEditConfirm}
+      />
       
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

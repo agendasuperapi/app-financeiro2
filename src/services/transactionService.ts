@@ -216,6 +216,12 @@ export const createTransactionForUser = async (transactionData: {
       }
     }
 
+    // Dispatch custom event to update UI immediately
+    console.log("🚀 Dispatching transaction-created event");
+    window.dispatchEvent(new CustomEvent('transaction-created', { 
+      detail: { transaction: data } 
+    }));
+
     return {
       id: data.id,
       type: data.type as 'income' | 'expense',

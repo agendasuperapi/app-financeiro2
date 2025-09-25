@@ -380,6 +380,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Setup auth state listener and initial session check
   useEffect(() => {
     let mounted = true;
+    let realtimeSubscription: any = null;
     
     // console.log('AppContext: Setting up auth listener and checking session');
     
@@ -399,6 +400,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!isInitialized || state.user?.id !== session.user.id) {
           // console.log('AppContext: Loading user data for:', session.user.email);
           await loadUserData(session.user);
+          
+          // Setup realtime subscription for transactions
+          setupRealtimeSubscription(session.user.id);
         }
       } else {
         // console.log('AppContext: No session, clearing user data');
@@ -409,7 +413,72 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         dispatch({ type: 'SET_SCHEDULED_TRANSACTIONS', payload: [] });
         dispatch({ type: 'SET_LOADING', payload: false });
         setIsInitialized(true);
+        
+        // Cleanup realtime subscription
+        if (realtimeSubscription) {
+          realtimeSubscription.unsubscribe();
+          realtimeSubscription = null;
+        }
       }
+    };
+
+    const setupRealtimeSubscription = (userId: string) => {
+      console.log('🔄 Setting up realtime subscription for user:', userId);
+      
+      // Clean up existing subscription
+      if (realtimeSubscription) {
+        realtimeSubscription.unsubscribe();
+      }
+      
+      realtimeSubscription = supabase
+        .channel('transactions-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'poupeja_transactions',
+            filter: `user_id=eq.${userId}`
+          },
+          async (payload) => {
+            console.log('🔄 Real-time transaction change detected:', payload);
+            
+            // Reload transactions to get fresh data with category info
+            try {
+              const { data, error } = await supabase
+                .from('poupeja_transactions')
+                .select(`
+                  *,
+                  category:poupeja_categories(id, name, icon, color, type)
+                `)
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
+              if (!error && data) {
+                const transformedTransactions = data.map((item: any) => ({
+                  id: item.id,
+                  type: item.type as 'income' | 'expense',
+                  amount: item.amount,
+                  category: item.category?.name || "Outros",
+                  categoryIcon: item.category?.icon || "circle",
+                  categoryColor: item.category?.color || "#607D8B",
+                  description: item.description || "",
+                  date: item.date,
+                  goalId: item.goal_id || undefined,
+                  creatorName: item.name || undefined,
+                  conta: item.conta || undefined,
+                  formato: item.formato || undefined,
+                }));
+                
+                console.log('🔄 Updated transactions from realtime:', transformedTransactions.length);
+                dispatch({ type: 'SET_TRANSACTIONS', payload: transformedTransactions });
+              }
+            } catch (error) {
+              console.error('Error reloading transactions after realtime change:', error);
+            }
+          }
+        )
+        .subscribe();
     };
 
     // Set up auth state listener
@@ -442,6 +511,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       mounted = false;
       // console.log('AppContext: Cleaning up auth listener');
       subscription.unsubscribe();
+      
+      // Cleanup realtime subscription
+      if (realtimeSubscription) {
+        realtimeSubscription.unsubscribe();
+      }
     };
   }, []);
 

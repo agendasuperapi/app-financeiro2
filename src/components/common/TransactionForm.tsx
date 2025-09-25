@@ -55,8 +55,16 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       // Close dialog
       onOpenChange(false);
       
-      // Data is already updated by the AppContext after add/update operations
-      // No need for additional refresh calls here
+      // Force a quick refresh of transactions data
+      try {
+        console.log("🔄 Forcing transaction refresh after form completion");
+        await getTransactions();
+        if (selectedType === 'income') {
+          await getGoals(); // Refresh goals if income was added/updated
+        }
+      } catch (error) {
+        console.error("Error refreshing data after transaction completion:", error);
+      }
     },
     defaultType,
   });

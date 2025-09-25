@@ -177,6 +177,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         // Data limite: fim do mês anterior ao mês atual
         const endOfPreviousMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0);
         
+        console.log('📊 [BALANCE DEBUG] Calculating for month:', format(currentMonth, 'MMM/yyyy', { locale: ptBR }));
+        console.log('📊 [BALANCE DEBUG] End of previous month:', format(endOfPreviousMonth, 'dd/MM/yyyy', { locale: ptBR }));
+        
         // 1. Buscar TODAS as transações reais dos meses anteriores (sem filtro de formato)
         // Usar todas as transações disponíveis no contexto, não apenas as filtradas
         const { data: allRealTransactions, error: txError } = await (supabase as any)
@@ -192,6 +195,21 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         });
 
         console.log('📊 [BALANCE DEBUG] Real transactions until previous month:', realTransactionsUntilPreviousMonth.length);
+        
+        // Log específico para outubro
+        if (currentMonth.getMonth() === 9) { // outubro = mês 9 (0-indexed)
+          console.log('🔍 [OCTOBER DEBUG] Current month is October, checking transactions...');
+          const octoberTransactions = realTransactionsUntilPreviousMonth.filter(tx => {
+            const txDate = new Date(tx.date);
+            return txDate.getMonth() <= 8; // setembro e anteriores (0-indexed)
+          });
+          console.log('🔍 [OCTOBER DEBUG] Transactions until September:', octoberTransactions.length);
+          console.log('🔍 [OCTOBER DEBUG] Sample transactions:', octoberTransactions.slice(0, 5).map(tx => ({
+            date: tx.date,
+            amount: tx.amount,
+            description: tx.description
+          })));
+        }
 
         // 2. Buscar transações com recurrence = "Mensal" para simular
         const { data: mensalTransactions, error } = await (supabase as any)
@@ -254,6 +272,16 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         }, 0);
 
         console.log('📊 [BALANCE DEBUG] Previous months balance:', balance);
+        
+        // Log específico para outubro
+        if (currentMonth.getMonth() === 9) { // outubro = mês 9 (0-indexed)
+          console.log('🔍 [OCTOBER DEBUG] Final balance calculation:', balance);
+          const incomes = combinedTransactions.filter(tx => tx.amount > 0);
+          const expenses = combinedTransactions.filter(tx => tx.amount < 0);
+          console.log('🔍 [OCTOBER DEBUG] Incomes:', incomes.reduce((sum, tx) => sum + tx.amount, 0));
+          console.log('🔍 [OCTOBER DEBUG] Expenses:', expenses.reduce((sum, tx) => sum + tx.amount, 0));
+        }
+        
         setPreviousMonthsBalance(balance);
 
       } catch (error) {

@@ -177,11 +177,21 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         // Data limite: fim do mês anterior ao mês atual
         const endOfPreviousMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0);
         
-        // 1. Buscar todas as transações reais dos meses anteriores
-        const realTransactionsUntilPreviousMonth = filteredTransactions.filter((tx: any) => {
+        // 1. Buscar TODAS as transações reais dos meses anteriores (sem filtro de formato)
+        // Usar todas as transações disponíveis no contexto, não apenas as filtradas
+        const { data: allRealTransactions, error: txError } = await (supabase as any)
+          .from('poupeja_transactions')
+          .select('*')
+          .lte('date', endOfPreviousMonth.toISOString());
+          
+        if (txError) throw txError;
+        
+        const realTransactionsUntilPreviousMonth = (allRealTransactions || []).filter((tx: any) => {
           const txDate = new Date(tx.date);
           return txDate <= endOfPreviousMonth;
         });
+
+        console.log('📊 [BALANCE DEBUG] Real transactions until previous month:', realTransactionsUntilPreviousMonth.length);
 
         // 2. Buscar transações com recurrence = "Mensal" para simular
         const { data: mensalTransactions, error } = await (supabase as any)
@@ -233,14 +243,17 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         }
 
         // 4. Combinar transações reais e simuladas
-        const allTransactions = [...realTransactionsUntilPreviousMonth, ...simulatedTransactions];
+        const combinedTransactions = [...realTransactionsUntilPreviousMonth, ...simulatedTransactions];
+        
+        console.log('📊 [BALANCE DEBUG] All transactions (real + simulated):', combinedTransactions.length);
         
         // 5. Calcular saldo (receitas - despesas)
-        const balance = allTransactions.reduce((acc: number, tx: any) => {
+        const balance = combinedTransactions.reduce((acc: number, tx: any) => {
           const amount = Number(tx.amount) || 0;
           return acc + amount;
         }, 0);
 
+        console.log('📊 [BALANCE DEBUG] Previous months balance:', balance);
         setPreviousMonthsBalance(balance);
 
       } catch (error) {
@@ -250,7 +263,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     };
 
     calculatePreviousMonthsBalance();
-  }, [filteredTransactions, currentMonth]);
+  }, [currentMonth]);
 
   const monthlyBalance = totalIncomesCombined - totalExpensesCombined;
   const currentBalance = previousMonthsBalance + monthlyBalance;

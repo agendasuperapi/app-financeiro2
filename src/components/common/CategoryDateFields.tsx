@@ -17,7 +17,7 @@ interface CategoryDateFieldsProps {
 const CategoryDateFields: React.FC<CategoryDateFieldsProps> = ({ form, transactionType }) => {
   const { t } = usePreferences();
   
-  console.log("CategoryDateFields rendering with transactionType:", transactionType);
+  
   
   // Use state for categories since we need to load them asynchronously
   const [categories, setCategories] = React.useState<any[]>([]);
@@ -30,7 +30,6 @@ const CategoryDateFields: React.FC<CategoryDateFieldsProps> = ({ form, transacti
       setLoading(true);
       try {
         const filteredCategories = await getCategoriesByType(transactionType);
-        console.log("Loaded categories from Supabase for", transactionType, ":", filteredCategories);
         setCategories(filteredCategories);
         
         // Set default category if none selected
@@ -39,7 +38,6 @@ const CategoryDateFields: React.FC<CategoryDateFieldsProps> = ({ form, transacti
           const categoryExists = filteredCategories.some(c => c.id === currentCategory || c.name === currentCategory);
           
           if (!categoryExists) {
-            console.log("Setting default category to:", filteredCategories[0].id);
             form.setValue('category', filteredCategories[0].id);
           }
         }
@@ -66,9 +64,8 @@ const CategoryDateFields: React.FC<CategoryDateFieldsProps> = ({ form, transacti
             <FormLabel>{t('transactions.category')}</FormLabel>
             <Select 
               onValueChange={(value) => {
-                console.log("Category selected:", value);
                 field.onChange(value);
-              }} 
+              }}
               value={field.value}
               defaultValue={field.value}
               disabled={loading}

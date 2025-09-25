@@ -115,11 +115,31 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
   // Combinar transações reais com simulações mensais
   const transactionsWithSimulations = React.useMemo(() => {
+    // Debug: verificar transações disponíveis
+    console.log('🔍 [DASHBOARD DEBUG] Total transactions received:', filteredTransactions.length);
+    console.log('🔍 [DASHBOARD DEBUG] Sample transactions:', filteredTransactions.slice(0, 3).map(tx => ({
+      id: tx.id,
+      description: tx.description,
+      formato: tx.formato,
+      format: tx.format
+    })));
+    
     // Filtrar transações por formato = "agenda" ou "transacao"
     const filteredByFormato = filteredTransactions.filter((tx: any) => {
       const formato = tx.formato || tx.format;
-      return formato === 'agenda' || formato === 'transacao';
+      const shouldInclude = formato === 'agenda' || formato === 'transacao';
+      if (!shouldInclude) {
+        console.log('🚫 [DASHBOARD DEBUG] Excluding transaction:', {
+          id: tx.id,
+          description: tx.description,
+          formato: tx.formato,
+          format: tx.format
+        });
+      }
+      return shouldInclude;
     });
+    
+    console.log('✅ [DASHBOARD DEBUG] Filtered transactions by formato:', filteredByFormato.length);
     
     const combined = [...filteredByFormato, ...monthlySimulations];
     return combined.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());

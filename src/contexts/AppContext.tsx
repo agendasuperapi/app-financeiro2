@@ -238,6 +238,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       created_at: dbTransaction.created_at,
       creatorName: dbTransaction.name || undefined,
       conta: dbTransaction.conta || undefined,
+      formato: dbTransaction.formato || undefined,
     };
   };
 

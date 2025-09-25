@@ -54,56 +54,56 @@ function App() {
           <BrandingProvider>
             <PreferencesProvider>
               <SubscriptionProvider>
-                <AppProvider>
-                  <ClientViewProvider>
-                    <SupabaseInitializer>
-                    <BrowserRouter>
-                      <Routes>
-                        <Route path="/" element={<LandingPage />} />
-                        <Route path="/dashboard" element={<Index />} />
-                        <Route path="/landing" element={<LandingPage />} />
-                        <Route path="/login" element={<LoginPage />} />
-                        <Route path="/register" element={<RegisterPage />} />
-                        <Route path="/register/:planType" element={<RegisterWithPlanPage />} />
-                        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                        <Route path="/reset-password" element={<ResetPasswordPage />} />
-                        <Route path="/profile" element={<ProfilePage />} />
-                        <Route path="/transactions" element={<TransactionsPage />} />
-                        <Route path="/expenses" element={<ExpensesPage />} />
-                        <Route path="/goals" element={<GoalsPage />} />
-                        <Route path="/reports" element={<ReportsPage />} />
-                        <Route path="/notes" element={<NotesPage />} />
-                        <Route path="/rules" element={<RulesPage />} />
-                        <Route path="/schedule" element={<SchedulePage />} />
-                        <Route path="/contas" element={<ContasPage />} />
-                        <Route path="/lembrar" element={<LembrarPage />} />
-                        <Route path="/lembretes" element={<LembretesPage />} />
-                        <Route path="/settings" element={<SettingsPage />} />
-                        <Route path="/categories" element={<CategoriesPage />} />
-                        <Route path="/plans" element={<PlansPage />} />
-                        <Route path="/checkout/:planType" element={<CheckoutPage />} />
-                        <Route path="/payment-success" element={<PaymentSuccessPage />} />
-                        <Route path="/thank-you" element={<ThankYouPage />} />
-                        <Route path="/achievements" element={<AchievementsPage />} />
-                        <Route path="/limits" element={<LimitsPage />} />
-                        <Route path="/saldo" element={<SaldoPage />} />
-                        <Route path="/calendar" element={<CalendarPage />} />
-                        <Route 
-                          path="/admin" 
-                          element={
-                            <AdminRoute>
-                              <AdminDashboard />
-                            </AdminRoute>
-                          } 
-                        />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </BrowserRouter>
-                    <Toaster />
-                    <Sonner />
-                    </SupabaseInitializer>
-                  </ClientViewProvider>
-                </AppProvider>
+                <SupabaseInitializer>
+                  <AppProvider>
+                    <ClientViewProvider>
+                      <BrowserRouter>
+                        <Routes>
+                          <Route path="/" element={<LandingPage />} />
+                          <Route path="/dashboard" element={<Index />} />
+                          <Route path="/landing" element={<LandingPage />} />
+                          <Route path="/login" element={<LoginPage />} />
+                          <Route path="/register" element={<RegisterPage />} />
+                          <Route path="/register/:planType" element={<RegisterWithPlanPage />} />
+                          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                          <Route path="/reset-password" element={<ResetPasswordPage />} />
+                          <Route path="/profile" element={<ProfilePage />} />
+                          <Route path="/transactions" element={<TransactionsPage />} />
+                          <Route path="/expenses" element={<ExpensesPage />} />
+                          <Route path="/goals" element={<GoalsPage />} />
+                          <Route path="/reports" element={<ReportsPage />} />
+                          <Route path="/notes" element={<NotesPage />} />
+                          <Route path="/rules" element={<RulesPage />} />
+                          <Route path="/schedule" element={<SchedulePage />} />
+                          <Route path="/contas" element={<ContasPage />} />
+                          <Route path="/lembrar" element={<LembrarPage />} />
+                          <Route path="/lembretes" element={<LembretesPage />} />
+                          <Route path="/settings" element={<SettingsPage />} />
+                          <Route path="/categories" element={<CategoriesPage />} />
+                          <Route path="/plans" element={<PlansPage />} />
+                          <Route path="/checkout/:planType" element={<CheckoutPage />} />
+                          <Route path="/payment-success" element={<PaymentSuccessPage />} />
+                          <Route path="/thank-you" element={<ThankYouPage />} />
+                          <Route path="/achievements" element={<AchievementsPage />} />
+                          <Route path="/limits" element={<LimitsPage />} />
+                          <Route path="/saldo" element={<SaldoPage />} />
+                          <Route path="/calendar" element={<CalendarPage />} />
+                          <Route 
+                            path="/admin" 
+                            element={
+                              <AdminRoute>
+                                <AdminDashboard />
+                              </AdminRoute>
+                            } 
+                          />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </BrowserRouter>
+                      <Toaster />
+                      <Sonner />
+                    </ClientViewProvider>
+                  </AppProvider>
+                </SupabaseInitializer>
               </SubscriptionProvider>
             </PreferencesProvider>
           </BrandingProvider>

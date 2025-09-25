@@ -260,7 +260,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
       }, 0);
   }, [transactionsUpToSelected]);
 
-  const monthlyCumulativeBalance = totalIncomesUpToSelected - totalExpensesUpToSelected;
+  const monthlyCumulativeBalance = previousMonthBalance + (totalIncomesUpToSelected - totalExpensesUpToSelected);
 
   return (
     <motion.div 

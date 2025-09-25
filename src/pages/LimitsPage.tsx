@@ -82,7 +82,7 @@ const LimitsPage: React.FC = () => {
           {!isClientView && (
             <Button onClick={handleAddLimit} className="gap-2">
               <Plus className="h-4 w-4" />
-              Adicionar
+              + Adicionar Limite
             </Button>
           )}
         </div>

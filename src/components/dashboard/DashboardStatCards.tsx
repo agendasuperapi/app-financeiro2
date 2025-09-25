@@ -75,7 +75,20 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
 
   const { t, currency } = usePreferences();
   
-  // Filtrar transações do mês selecionado
+  // Filtrar transações do mês selecionado - APENAS REAIS
+  const monthlyRealTransactions = React.useMemo(() => {
+    const selectedYear = currentMonth.getFullYear();
+    const selectedMonthIndex = currentMonth.getMonth();
+    
+    return transactionsWithSimulations
+      .filter((tx: any) => !tx.id.includes('mensal-sim-')) // Apenas transações reais
+      .filter((tx: any) => {
+        const txDate = new Date(tx.date);
+        return txDate.getFullYear() === selectedYear && txDate.getMonth() === selectedMonthIndex;
+      });
+  }, [transactionsWithSimulations, currentMonth]);
+
+  // Filtrar transações do mês selecionado - COMBINADAS (reais + simulações)
   const monthlyTransactions = React.useMemo(() => {
     const selectedYear = currentMonth.getFullYear();
     const selectedMonthIndex = currentMonth.getMonth();
@@ -85,6 +98,30 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
       return txDate.getFullYear() === selectedYear && txDate.getMonth() === selectedMonthIndex;
     });
   }, [transactionsWithSimulations, currentMonth]);
+  
+  // Total de receitas REAIS do mês selecionado (para cálculo do saldo real)
+  const totalIncomesReal = React.useMemo(() => {
+    if (monthlyRealTransactions.length === 0) return totalIncome;
+    
+    return monthlyRealTransactions
+      .filter((tx: any) => (tx.type === 'income') || (typeof tx.amount === 'number' && tx.amount > 0))
+      .reduce((sum: number, tx: any) => {
+        const amt = Number(tx.amount) || 0;
+        return sum + (amt > 0 ? amt : (tx.type === 'income' ? Math.abs(amt) : 0));
+      }, 0);
+  }, [monthlyRealTransactions, totalIncome]);
+  
+  // Total de despesas REAIS do mês selecionado (para cálculo do saldo real)
+  const totalExpensesReal = React.useMemo(() => {
+    if (monthlyRealTransactions.length === 0) return totalExpenses;
+    
+    return monthlyRealTransactions
+      .filter((tx: any) => (tx.type === 'expense') || (typeof tx.amount === 'number' && tx.amount < 0))
+      .reduce((sum: number, tx: any) => {
+        const amt = Number(tx.amount) || 0;
+        return sum + (amt < 0 ? -amt : (tx.type === 'expense' ? amt : 0));
+      }, 0);
+  }, [monthlyRealTransactions, totalExpenses]);
   
   // Total de receitas (reais + simulações) do mês selecionado
   const totalIncomesCombined = React.useMemo(() => {
@@ -164,15 +201,15 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
     };
   }, [monthlyTransactions, totalIncomesCombined, totalExpensesCombined, hideValues, currency]);
 
-  // Calcular saldo do mês anterior
+  // Calcular saldo do mês anterior baseado nas transações REAIS
   // balance = saldo anterior + receitas reais - despesas reais
   // então: saldo do mês anterior = balance - receitas reais + despesas reais
-  const previousMonthBalance = balance - totalIncome + totalExpenses;
+  const previousMonthBalance = balance - totalIncomesReal + totalExpensesReal;
   
-  // adjustedBalance = saldo do mês anterior + (valores dos prompts)
-  const effectiveIncome = Number.isFinite(incomeFromTotal) ? incomeFromTotal : incomeFromCards;
-  const effectiveExpense = Number.isFinite(expenseFromTotal) ? expenseFromTotal : expensesFromCards;
-  const adjustedBalance = previousMonthBalance + effectiveIncome - effectiveExpense;
+  // adjustedBalance = saldo do mês anterior + receitas reais atuais - despesas reais atuais (apenas transações reais)
+  const effectiveIncomeReal = Number.isFinite(incomeFromTotal) && incomeFromTotal > 0 ? incomeFromTotal : totalIncomesReal;
+  const effectiveExpenseReal = Number.isFinite(expenseFromTotal) && expenseFromTotal > 0 ? expenseFromTotal : totalExpensesReal;
+  const adjustedBalance = previousMonthBalance + effectiveIncomeReal - effectiveExpenseReal;
 
   // Cores/fundo conforme sinal do saldo ajustado
   const saldoBgGradient = adjustedBalance >= 0 

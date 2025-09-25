@@ -150,7 +150,32 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     onTransactionsWithSimulationsUpdate?.(transactionsWithSimulations);
   }, [transactionsWithSimulations, onTransactionsWithSimulationsUpdate]);
 
-  // Total de despesas (reais + simulações) no mês atual
+  // Separar transações reais das simuladas para diferentes cálculos
+  const realTransactionsOnly = React.useMemo(() => {
+    return transactionsWithSimulations.filter((tx: any) => !tx.id.includes('mensal-sim-'));
+  }, [transactionsWithSimulations]);
+
+  const simulatedTransactionsOnly = React.useMemo(() => {
+    return transactionsWithSimulations.filter((tx: any) => tx.id.includes('mensal-sim-'));
+  }, [transactionsWithSimulations]);
+
+  // Total de despesas REAIS no mês atual (para cálculo do saldo real)
+  const totalExpensesReal = React.useMemo(() => {
+    return realTransactionsOnly.filter((tx: any) => tx.type === 'expense' || typeof tx.amount === 'number' && tx.amount < 0).reduce((sum: number, tx: any) => {
+      const amt = Number(tx.amount) || 0;
+      return sum + (amt < 0 ? -amt : tx.type === 'expense' ? amt : 0);
+    }, 0);
+  }, [realTransactionsOnly]);
+
+  // Total de receitas REAIS no mês atual (para cálculo do saldo real)
+  const totalIncomesReal = React.useMemo(() => {
+    return realTransactionsOnly.filter((tx: any) => tx.type === 'income' || typeof tx.amount === 'number' && tx.amount > 0).reduce((sum: number, tx: any) => {
+      const amt = Number(tx.amount) || 0;
+      return sum + (amt > 0 ? amt : tx.type === 'income' ? amt : 0);
+    }, 0);
+  }, [realTransactionsOnly]);
+
+  // Total de despesas (reais + simulações) no mês atual - para exibição
   const totalExpensesCombined = React.useMemo(() => {
     return transactionsWithSimulations.filter((tx: any) => tx.type === 'expense' || typeof tx.amount === 'number' && tx.amount < 0).reduce((sum: number, tx: any) => {
       const amt = Number(tx.amount) || 0;
@@ -159,7 +184,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     }, 0);
   }, [transactionsWithSimulations]);
 
-  // Total de receitas (reais + simulações) no mês atual
+  // Total de receitas (reais + simulações) no mês atual - para exibição
   const totalIncomesCombined = React.useMemo(() => {
     return transactionsWithSimulations.filter((tx: any) => tx.type === 'income' || typeof tx.amount === 'number' && tx.amount > 0).reduce((sum: number, tx: any) => {
       const amt = Number(tx.amount) || 0;
@@ -365,8 +390,13 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     calculatePreviousMonthsBalance();
   }, [currentMonth]);
 
-  const monthlyBalance = totalIncomesCombined - totalExpensesCombined;
-  const currentBalance = previousMonthsBalance + monthlyBalance;
+  // Calcular saldo REAL (sem simulações) para o saldo atual
+  const monthlyBalanceReal = totalIncomesReal - totalExpensesReal;
+  const currentBalanceReal = previousMonthsBalance + monthlyBalanceReal;
+
+  // Saldo combinado (com simulações) para exibição de comparação
+  const monthlyBalanceCombined = totalIncomesCombined - totalExpensesCombined;
+  const currentBalanceCombined = previousMonthsBalance + monthlyBalanceCombined;
   const itemVariants = {
     hidden: {
       y: 20,
@@ -411,7 +441,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
                     {t('common.expense')}: <span className="text-red-600 font-medium" id="expense-total">{hideValues ? '******' : formatCurrency(totalExpensesCombined, currency)}</span>
                   </p>
                     <p className="text-sm text-muted-foreground">
-                      Saldo Atual Mês {format(currentMonth, 'MMM/yyyy', { locale: ptBR })}: <span className={`font-medium ${monthlyBalance >= 0 ? 'text-green-600' : 'text-red-600'}`} id="monthly-balance">{hideValues ? '******' : formatCurrency(monthlyBalance, currency)}</span>
+                      Saldo Atual Mês {format(currentMonth, 'MMM/yyyy', { locale: ptBR })}: <span className={`font-medium ${monthlyBalanceReal >= 0 ? 'text-green-600' : 'text-red-600'}`} id="monthly-balance">{hideValues ? '******' : formatCurrency(monthlyBalanceReal, currency)}</span>
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Saldo Meses Anteriores {format(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1), 'MMM/yyyy', { locale: ptBR })}: <span className={`font-medium ${previousMonthsBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>{hideValues ? '******' : formatCurrency(previousMonthsBalance, currency)}</span>

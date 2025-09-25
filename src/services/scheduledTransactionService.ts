@@ -59,25 +59,22 @@ export const getScheduledTransactions = async (userId?: string): Promise<Schedul
       targetUserId = session?.user?.id;
     }
 
-    let query = supabase
+    const { data, error } = await supabase
       .from("poupeja_transactions")
       .select(`
         *,
         category:poupeja_categories(id, name, icon, color, type)
       `)
+      .eq('user_id', targetUserId)
       .order("date", { ascending: true });
-
-    if (targetUserId) {
-      query = query.eq('user_id', targetUserId);
-    }
-
-    const { data, error } = await query;
 
     if (error) throw error;
 
-    // Filtrar apenas transações com status pending, paid, recebido e amount ≠ 0
+    // Filtrar apenas transações com formato "agenda", status pending/paid/recebido e amount ≠ 0
     const filteredData = (data || []).filter((item: any) => 
-      (item.status === 'pending' || item.status === 'paid' || item.status === 'recebido') && item.amount !== 0
+      item.formato === 'agenda' &&
+      (item.status === 'pending' || item.status === 'paid' || item.status === 'recebido') && 
+      item.amount !== 0
     );
 
     console.log("DEBUG Scheduled: Transações carregadas:", filteredData.length);

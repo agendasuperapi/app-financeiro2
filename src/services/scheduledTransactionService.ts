@@ -621,7 +621,9 @@ const handleRecurrenceAfterStatusChange = async (
       phone: (originalTransaction as any).phone,
       parcela: (originalTransaction as any).parcela,
       user_id: originalTransaction.user_id,
-      formato: 'agenda' // Transações criadas via agendamento
+      formato: 'agenda', // Transações criadas via agendamento
+      name: (originalTransaction as any).name, // Copiar campo "name"
+      conta: (originalTransaction as any).conta // Copiar campo "conta"
     };
 
     console.log('📝 Creating new transaction:', newTransactionData);

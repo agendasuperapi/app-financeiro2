@@ -288,14 +288,54 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           console.log('🔍 [OCTOBER DEBUG] Real transactions count:', realTransactionsUntilPreviousMonth.length);
           console.log('🔍 [OCTOBER DEBUG] Simulated transactions count:', simulatedTransactions.length);
           
-          console.log('🔍 [OCTOBER DEBUG] ALL COMBINED TRANSACTIONS:', combinedTransactions.map(tx => ({
-            id: tx.id,
-            date: tx.date,
-            amount: tx.amount,
-            description: tx.description,
-            type: tx.type,
-            source: tx.id.includes('mensal-sim-') ? 'SIMULATED' : 'REAL'
-          })));
+          // Verificar duplicatas por ID
+          const allIds = combinedTransactions.map(tx => tx.id);
+          const uniqueAllIds = [...new Set(allIds)];
+          if (allIds.length !== uniqueAllIds.length) {
+            console.log('⚠️ [OCTOBER DEBUG] DUPLICATED TRANSACTIONS DETECTED!');
+            console.log('🔍 [OCTOBER DEBUG] Total IDs:', allIds.length);
+            console.log('🔍 [OCTOBER DEBUG] Unique IDs:', uniqueAllIds.length);
+            
+            // Encontrar duplicatas
+            const duplicateIds = allIds.filter((id, index) => allIds.indexOf(id) !== index);
+            console.log('🔍 [OCTOBER DEBUG] Duplicate IDs:', [...new Set(duplicateIds)]);
+            
+            // Mostrar transações duplicadas
+            duplicateIds.forEach(duplicateId => {
+              const duplicatedTransactions = combinedTransactions.filter(tx => tx.id === duplicateId);
+              console.log(`🔍 [OCTOBER DEBUG] Duplicated transaction ${duplicateId}:`, duplicatedTransactions);
+            });
+          }
+          
+          // Separar por mês para verificar se há transações de outubro sendo contadas
+          const transactionsByMonth = {};
+          combinedTransactions.forEach(tx => {
+            const txDate = new Date(tx.date);
+            const monthKey = `${txDate.getFullYear()}-${txDate.getMonth() + 1}`;
+            if (!transactionsByMonth[monthKey]) {
+              transactionsByMonth[monthKey] = { count: 0, incomes: 0, expenses: 0, transactions: [] };
+            }
+            transactionsByMonth[monthKey].count++;
+            transactionsByMonth[monthKey].transactions.push({
+              id: tx.id,
+              amount: tx.amount,
+              description: tx.description,
+              date: tx.date
+            });
+            if (tx.amount > 0) {
+              transactionsByMonth[monthKey].incomes += tx.amount;
+            } else {
+              transactionsByMonth[monthKey].expenses += tx.amount;
+            }
+          });
+          
+          console.log('🔍 [OCTOBER DEBUG] Transactions by month:', transactionsByMonth);
+          
+          // Verificar se há transações de outubro (mês 10) sendo contadas incorretamente
+          if (transactionsByMonth['2025-10']) {
+            console.log('⚠️ [OCTOBER DEBUG] OCTOBER TRANSACTIONS FOUND IN PREVIOUS MONTHS CALCULATION!');
+            console.log('🔍 [OCTOBER DEBUG] October transactions:', transactionsByMonth['2025-10']);
+          }
           
           const incomes = combinedTransactions.filter(tx => tx.amount > 0);
           const expenses = combinedTransactions.filter(tx => tx.amount < 0);
@@ -304,12 +344,14 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           console.log('🔍 [OCTOBER DEBUG] Incomes total:', incomes.reduce((sum, tx) => sum + tx.amount, 0));
           console.log('🔍 [OCTOBER DEBUG] Expenses total:', expenses.reduce((sum, tx) => sum + tx.amount, 0));
           
-          // Verificar se há duplicatas nas transações combinadas
-          const allIds = combinedTransactions.map(tx => tx.id);
-          const uniqueAllIds = [...new Set(allIds)];
-          if (allIds.length !== uniqueAllIds.length) {
-            console.log('⚠️ [OCTOBER DEBUG] DUPLICATED TRANSACTIONS IN COMBINED LIST!');
-          }
+          // Verificar receitas detalhadamente
+          console.log('🔍 [OCTOBER DEBUG] DETAILED INCOMES:', incomes.map(tx => ({
+            id: tx.id,
+            amount: tx.amount,
+            description: tx.description,
+            date: tx.date,
+            month: new Date(tx.date).getMonth() + 1
+          })));
         }
         
         setPreviousMonthsBalance(balance);

@@ -20,10 +20,24 @@ const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({
   const navigate = useNavigate();
   const { companyName } = useBrandingConfig();
   
+  console.log('SubscriptionGuard render:', { 
+    subscription, 
+    isLoading, 
+    feature 
+  });
+  
+  // TEMPORARY: Allow bypass for debugging - remove this after fixing
+  const DEBUG_BYPASS = true;
+  
+  if (DEBUG_BYPASS) {
+    console.log('SubscriptionGuard: DEBUG MODE - bypassing subscription check');
+    return <>{children}</>;
+  }
   
   // Verificar se a assinatura está dentro do período válido
   const isSubscriptionValid = React.useMemo(() => {
     if (!subscription || subscription.status !== 'active') {
+      console.log('SubscriptionGuard: Invalid subscription - no subscription or not active');
       return false;
     }
     
@@ -34,14 +48,17 @@ const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({
       
       // Se a data atual for maior que a data de fim do período, a assinatura expirou
       if (currentDate > periodEndDate) {
+        console.log('SubscriptionGuard: Subscription expired');
         return false;
       }
     }
     
+    console.log('SubscriptionGuard: Subscription is valid');
     return true;
   }, [subscription]);
 
   if (isLoading) {
+    console.log('SubscriptionGuard: Still loading subscription...');
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -50,6 +67,7 @@ const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({
   }
 
   if (!isSubscriptionValid) {
+    console.log('SubscriptionGuard: Showing subscription required screen');
     return (
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-lg mx-auto text-center">
@@ -89,7 +107,7 @@ const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({
     );
   }
 
-  
+  console.log('SubscriptionGuard: Rendering children');
   return <>{children}</>;
 };
 

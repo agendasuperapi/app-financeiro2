@@ -151,10 +151,11 @@ export const useTransactionForm = ({
         }
         
         // Para edição normal, usar método normal (transações só podem ser editadas pelo próprio usuário)
-        await updateTransaction(initialData.id, {
+        await updateTransaction({
+          ...initialData,
           type: processedValues.type,
           amount: processedValues.amount,
-          category_id: processedValues.category,
+          category: processedValues.category,
           description: processedValues.description || '',
           date: new Date(processedValues.date).toISOString(),
           goalId: processedValues.goalId,

@@ -375,40 +375,36 @@ export const deleteTransaction = async (id: string): Promise<boolean> => {
 // Function to check if there are multiple transactions with the same codigo-trans
 export const checkRelatedTransactions = async (transactionId: string): Promise<{ hasRelated: boolean, count: number, codigoTrans?: string }> => {
   try {
-    // First get the current transaction's codigo-trans using rpc to avoid type issues
-    const currentResult = await (supabase as any).rpc('get_transaction_codigo_trans', {
-      transaction_id: transactionId
-    });
-    
-    if (!currentResult.data || !currentResult.data[0]?.codigo_trans) {
+    // First get the current transaction's codigo-trans
+    const { data: currentTransaction } = await supabase
+      .from("poupeja_transactions")
+      .select("codigo-trans")
+      .eq("id", transactionId)
+      .single();
+
+    if (!currentTransaction || !currentTransaction["codigo-trans"]) {
       return { hasRelated: false, count: 0 };
     }
 
-    const codigoTrans = currentResult.data[0].codigo_trans;
+    const codigoTrans = currentTransaction["codigo-trans"];
 
-    // Count related transactions using rpc
-    const countResult = await (supabase as any).rpc('count_related_transactions', {
-      codigo_trans: codigoTrans,
-      exclude_id: transactionId
-    });
-    
-    const count = countResult.data || 0;
+    // Count how many transactions have the same codigo-trans
+    const { data: relatedTransactions, error } = await supabase
+      .from("poupeja_transactions")
+      .select("id, date")
+      .eq("codigo-trans", codigoTrans)
+      .neq("id", transactionId); // Exclude current transaction
+
+    if (error) throw error;
 
     return {
-      hasRelated: count > 0,
-      count: count,
+      hasRelated: relatedTransactions && relatedTransactions.length > 0,
+      count: relatedTransactions ? relatedTransactions.length : 0,
       codigoTrans
     };
   } catch (error) {
-    // Fallback to simple approach if rpc fails
-    console.warn("RPC query failed, using fallback:", error);
-    try {
-      // Simple fallback - assume no related transactions to avoid blocking the feature
-      return { hasRelated: false, count: 0 };
-    } catch (fallbackError) {
-      console.error("Error checking related transactions:", fallbackError);
-      return { hasRelated: false, count: 0 };
-    }
+    console.error("Error checking related transactions:", error);
+    return { hasRelated: false, count: 0 };
   }
 };
 
@@ -420,7 +416,6 @@ export const updateRelatedTransactions = async (
   updateAllFuture: boolean = false
 ): Promise<boolean> => {
   try {
-    // @ts-ignore - Avoiding complex Supabase type inference issue
     let query = supabase
       .from("poupeja_transactions")
       .update({

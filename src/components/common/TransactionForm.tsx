@@ -110,28 +110,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         
         <div className="p-6 max-h-[calc(85vh-120px)] overflow-y-auto">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(async (values) => {
-              try {
-                await onSubmit(values);
-              } catch (error: any) {
-                if (error.message === 'BULK_EDIT_CONFIRMATION_REQUIRED') {
-                  // Show bulk edit confirmation dialog
-                  setBulkEditDialogOpen(true);
-                  // Store form values and resolve function for later use
-                  setPendingFormValues({
-                    values,
-                    resolve: (choice: 'single' | 'all') => {
-                      // Handle the bulk edit choice
-                      console.log('User chose:', choice);
-                      // For now, just continue with single edit
-                      // TODO: Implement bulk edit logic
-                    }
-                  });
-                } else {
-                  throw error;
-                }
-              }
-            })} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <TransactionTypeSelector form={form} onTypeChange={handleTypeChange} />
               <DescriptionField form={form} />
               <AmountInput form={form} />

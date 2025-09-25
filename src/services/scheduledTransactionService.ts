@@ -225,6 +225,7 @@ export const addScheduledTransaction = async (
           date: installmentDate.toISOString(),
           goal_id: transaction.goalId,
           reference_code: uniqueReferenceCode,
+          "codigo-trans": referenceCode, // Store pure reference code without letter
           status: 'pending',
           parcela: `${i + 1}`,
           situacao: transaction.situacao || 'ativo',
@@ -309,6 +310,7 @@ export const addScheduledTransaction = async (
         date: transaction.scheduledDate,
         goal_id: transaction.goalId,
         reference_code: referenceCode,
+        "codigo-trans": referenceCode, // Store reference code in codigo-trans column
         status: 'pending',
         formato: 'agenda' // Transações criadas via agendamento
       };

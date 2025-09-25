@@ -188,6 +188,7 @@ export const createTransactionForUser = async (transactionData: {
         goal_id: transactionData.goalId,
         user_id: transactionData.user_id,
         reference_code: referenceCode,
+        "codigo-trans": referenceCode, // Store reference code in codigo-trans column
         conta: transactionData.conta,
         name: transactionData.name,
         phone: phoneValue,

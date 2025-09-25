@@ -54,7 +54,7 @@ export interface ScheduledTransaction {
   scheduledDate: string; // ISO date string
   recurrence?: 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'installments';
   goalId?: string; // Optional reference to a goal
-  status?: 'pending' | 'paid' | 'overdue' | 'upcoming';
+  status?: 'pending' | 'paid' | 'recebido' | 'overdue' | 'upcoming';
   paidDate?: string; // ISO date string
   paidAmount?: number;
   lastExecutionDate?: string; // ISO date string

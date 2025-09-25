@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
+import { getScheduledTransactions, markAsPaid, markAsReceived, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
 import { Loader2, Edit, Trash2, CheckCircle, Plus, Filter, User, ChevronLeft, ChevronRight, CalendarIcon, Search } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -240,9 +240,11 @@ const ContasPage = () => {
     const scheduledDate = new Date(conta.scheduledDate);
     const isOverdue = isAfter(new Date(), scheduledDate) && !isToday(scheduledDate);
     const isDueToday = isToday(scheduledDate);
-    const isPaid = conta.status === 'paid';
+    const isPaid = conta.status === 'paid' || conta.status === 'recebido';
 
-    if (isPaid) return 'Pago';
+    if (isPaid) {
+      return conta.status === 'recebido' ? 'Recebido' : 'Pago';
+    }
     if (isDueToday) return 'Vence Hoje';
     if (isOverdue) return 'Vencido';
     return 'Pendente';
@@ -263,6 +265,23 @@ const ContasPage = () => {
     } catch (error) {
       console.error('❌ Error marking as paid:', error);
       toast.error('Erro ao marcar conta como paga: ' + error);
+    }
+  };
+
+  const handleMarkAsReceived = async (id: string) => {
+    console.log('🎯 handleMarkAsReceived called with ID:', id);
+    try {
+      const success = await markAsReceived(id);
+      console.log('📊 markAsReceived result:', success);
+      if (success) {
+        toast.success('Conta marcada como recebida');
+        await loadContas();
+      } else {
+        toast.error('Erro ao marcar conta como recebida');
+      }
+    } catch (error) {
+      console.error('❌ Error marking as received:', error);
+      toast.error('Erro ao marcar conta como recebida: ' + error);
     }
   };
 
@@ -570,25 +589,42 @@ const ContasPage = () => {
                {formatCurrency(Math.abs(conta.amount))}
              </div>
                              
-                             <div className="flex items-center gap-1 flex-wrap">
-                                {!isSimulation && !isPaid && (
-                                   <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => {
-                                        console.log('🖱️ Button clicked for ID:', conta.id);
-                                        handleMarkAsPaid(conta.id);
-                                      }}
-                                      className={`text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7 ${
-                                        conta.amount > 0 
-                                          ? 'text-green-600 border-green-600 hover:bg-green-50' 
-                                          : 'text-red-600 border-red-600 hover:bg-red-50'
-                                      }`}
-                                    >
-                                     <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
-                                     {conta.amount > 0 ? 'Marcar como Recebido' : 'Marcar como Pago'}
-                                   </Button>
-                                )}
+                              <div className="flex items-center gap-1 flex-wrap">
+                                 {!isSimulation && !isPaid && (
+                                   <>
+                                     {/* Botão para Marcar como Pago (despesas) */}
+                                     {conta.amount < 0 && (
+                                       <Button
+                                         size="sm"
+                                         variant="outline"
+                                         onClick={() => {
+                                           console.log('🖱️ Mark as Paid clicked for ID:', conta.id);
+                                           handleMarkAsPaid(conta.id);
+                                         }}
+                                         className="text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7 text-red-600 border-red-600 hover:bg-red-50"
+                                       >
+                                        <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
+                                        Marcar como Pago
+                                       </Button>
+                                     )}
+                                     
+                                     {/* Botão para Marcar como Recebido (receitas) */}
+                                     {conta.amount > 0 && (
+                                       <Button
+                                         size="sm"
+                                         variant="outline"
+                                         onClick={() => {
+                                           console.log('🖱️ Mark as Received clicked for ID:', conta.id);
+                                           handleMarkAsReceived(conta.id);
+                                         }}
+                                         className="text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7 text-green-600 border-green-600 hover:bg-green-50"
+                                       >
+                                        <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
+                                        Marcar como Recebido
+                                       </Button>
+                                     )}
+                                   </>
+                                 )}
                                
                                 {!isSimulation && isPaid && (
                                    <Button

@@ -496,6 +496,54 @@ export const markAsPaid = async (
 
     if (updateError) throw updateError;
 
+    return await handleRecurrenceAfterStatusChange(originalTransaction, transactionId);
+  } catch (error) {
+    console.error("Error marking transaction as paid:", error);
+    return false;
+  }
+};
+
+export const markAsReceived = async (
+  transactionId: string,
+  receivedAmount?: number
+): Promise<boolean> => {
+  console.log('🔄 markAsReceived called with:', { transactionId, receivedAmount });
+  try {
+    // First, get the original transaction to check recurrence
+    const { data: originalTransaction, error: fetchError } = await supabase
+      .from("poupeja_transactions")
+      .select("*")
+      .eq("id", transactionId)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!originalTransaction) throw new Error("Transaction not found");
+
+    console.log('📋 Original transaction found:', originalTransaction);
+
+    // Update the original transaction status to "recebido"
+    const { error: updateError } = await supabase
+      .from("poupeja_transactions")
+      .update({
+        status: "recebido"
+      } as any)
+      .eq("id", transactionId);
+
+    if (updateError) throw updateError;
+
+    return await handleRecurrenceAfterStatusChange(originalTransaction, transactionId);
+  } catch (error) {
+    console.error("Error marking transaction as received:", error);
+    return false;
+  }
+};
+
+const handleRecurrenceAfterStatusChange = async (
+  originalTransaction: any, 
+  transactionId: string
+): Promise<boolean> => {
+  try {
+
     // Check if transaction is completed - if so, only change status, don't create new one
     if ((originalTransaction as any).situacao === "concluido") {
       console.log('✅ Transaction marked as completed, no new record needed');

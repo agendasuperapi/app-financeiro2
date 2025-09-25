@@ -69,9 +69,16 @@ const TransactionsPage = () => {
   };
 
   // Filter transactions based on search, status, and date
-  const baseFilteredTransactions = transactions.filter(transaction => 
-    transaction.formato === 'agenda' || transaction.formato === 'transacao'
-  );
+  const baseFilteredTransactions = transactions.filter(transaction => {
+    const formato = transaction.formato;
+    
+    // Se não tem formato definido, considera como 'transacao' (padrão)
+    if (!formato) {
+      return true; // Inclui transações sem formato definido
+    }
+    
+    return formato === 'agenda' || formato === 'transacao';
+  });
 
   // Apply filters
   React.useEffect(() => {

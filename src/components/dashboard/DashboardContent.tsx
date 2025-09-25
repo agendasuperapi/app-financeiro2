@@ -25,7 +25,10 @@ interface DashboardContentProps {
   onMarkScheduledAsPaid: (transaction: ScheduledTransaction) => void;
   scheduledTransactions?: ScheduledTransaction[];
   onTransactionsWithSimulationsUpdate?: (transactions: any[]) => void;
-  onBalancesUpdate?: (balances: { previousMonthsBalance: number; monthlyBalanceCombined: number }) => void;
+  onBalancesUpdate?: (balances: {
+    previousMonthsBalance: number;
+    monthlyBalanceCombined: number;
+  }) => void;
 }
 const DashboardContent: React.FC<DashboardContentProps> = ({
   filteredTransactions,
@@ -87,34 +90,31 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           });
           return !hasRealTransaction;
         });
-        const sims: Transaction[] = filteredData
-          .map((item: any) => {
-            const baseDate = item.date ? new Date(item.date) : new Date(y, m, 1);
-            const day = baseDate.getDate() || 1;
-            const simDate = new Date(y, m, Math.min(day, 28));
-            
-            // Simular apenas se a data simulada for posterior ou igual à data original
-            if (simDate < baseDate) {
-              return null;
-            }
-            
-            const desc = item.description ? String(item.description) : '';
-            return {
-              id: `mensal-sim-${item.id}-${y}-${m + 1}`,
-              type: item.type,
-              amount: Number(item.amount) || 0,
-              category: item.category?.name || 'Outros',
-              categoryIcon: item.category?.icon || 'circle',
-              categoryColor: item.category?.color || '#607D8B',
-              description: desc ? `${desc} (Simulação)` : 'Simulação',
-              date: simDate.toISOString(),
-              goalId: item.goal_id || undefined,
-              conta: item.conta || undefined,
-              creatorName: item.name || undefined,
-              formato: 'transacao'
-            } as Transaction;
-          })
-          .filter(Boolean);
+        const sims: Transaction[] = filteredData.map((item: any) => {
+          const baseDate = item.date ? new Date(item.date) : new Date(y, m, 1);
+          const day = baseDate.getDate() || 1;
+          const simDate = new Date(y, m, Math.min(day, 28));
+
+          // Simular apenas se a data simulada for posterior ou igual à data original
+          if (simDate < baseDate) {
+            return null;
+          }
+          const desc = item.description ? String(item.description) : '';
+          return {
+            id: `mensal-sim-${item.id}-${y}-${m + 1}`,
+            type: item.type,
+            amount: Number(item.amount) || 0,
+            category: item.category?.name || 'Outros',
+            categoryIcon: item.category?.icon || 'circle',
+            categoryColor: item.category?.color || '#607D8B',
+            description: desc ? `${desc} (Simulação)` : 'Simulação',
+            date: simDate.toISOString(),
+            goalId: item.goal_id || undefined,
+            conta: item.conta || undefined,
+            creatorName: item.name || undefined,
+            formato: 'transacao'
+          } as Transaction;
+        }).filter(Boolean);
         setMonthlySimulations(sims);
       } catch (e) {
         console.error('DashboardContent: erro ao buscar Mensal:', e);
@@ -134,7 +134,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       formato: tx.formato,
       format: tx.format
     })));
-    
+
     // Filtrar transações por formato = "agenda" ou "transacao", e incluir simulações
     const filteredByFormato = filteredTransactions.filter((tx: any) => {
       const formato = tx.formato || tx.format;
@@ -149,9 +149,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       }
       return shouldInclude;
     });
-    
     console.log('✅ [DASHBOARD DEBUG] Filtered transactions by formato:', filteredByFormato.length);
-    
+
     // Combinar transações reais filtradas com simulações (que já têm formato: 'transacao')
     const combined = [...filteredByFormato, ...monthlySimulations];
     return combined.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -166,7 +165,6 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   const realTransactionsOnly = React.useMemo(() => {
     return transactionsWithSimulations.filter((tx: any) => !tx.id.includes('mensal-sim-'));
   }, [transactionsWithSimulations]);
-
   const simulatedTransactionsOnly = React.useMemo(() => {
     return transactionsWithSimulations.filter((tx: any) => tx.id.includes('mensal-sim-'));
   }, [transactionsWithSimulations]);
@@ -207,34 +205,34 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
   // Calcular saldo dos meses anteriores (receitas reais + simuladas com recurrence "Mensal")
   const [previousMonthsBalance, setPreviousMonthsBalance] = React.useState(0);
-
   React.useEffect(() => {
     const calculatePreviousMonthsBalance = async () => {
       try {
         // Data limite: fim do mês anterior ao mês atual
         const endOfPreviousMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0);
-        
-        console.log('📊 [BALANCE DEBUG] Calculating for month:', format(currentMonth, 'MMM/yyyy', { locale: ptBR }));
-        console.log('📊 [BALANCE DEBUG] End of previous month:', format(endOfPreviousMonth, 'dd/MM/yyyy', { locale: ptBR }));
-        
+        console.log('📊 [BALANCE DEBUG] Calculating for month:', format(currentMonth, 'MMM/yyyy', {
+          locale: ptBR
+        }));
+        console.log('📊 [BALANCE DEBUG] End of previous month:', format(endOfPreviousMonth, 'dd/MM/yyyy', {
+          locale: ptBR
+        }));
+
         // 1. Buscar TODAS as transações reais dos meses anteriores (sem filtro de formato)
         // Usar todas as transações disponíveis no contexto, não apenas as filtradas
-        const { data: allRealTransactions, error: txError } = await (supabase as any)
-          .from('poupeja_transactions')
-          .select('*')
-          .lte('date', endOfPreviousMonth.toISOString());
-          
+        const {
+          data: allRealTransactions,
+          error: txError
+        } = await (supabase as any).from('poupeja_transactions').select('*').lte('date', endOfPreviousMonth.toISOString());
         if (txError) throw txError;
-        
         const realTransactionsUntilPreviousMonth = (allRealTransactions || []).filter((tx: any) => {
           const txDate = new Date(tx.date);
           return txDate <= endOfPreviousMonth;
         });
-
         console.log('📊 [BALANCE DEBUG] Real transactions until previous month:', realTransactionsUntilPreviousMonth.length);
-        
+
         // Log específico para outubro - DETALHADO
-        if (currentMonth.getMonth() === 9) { // outubro = mês 9 (0-indexed)
+        if (currentMonth.getMonth() === 9) {
+          // outubro = mês 9 (0-indexed)
           console.log('🔍 [OCTOBER DEBUG] Current month is October, checking transactions...');
           console.log('🔍 [OCTOBER DEBUG] Real transactions until previous month:', realTransactionsUntilPreviousMonth.length);
           console.log('🔍 [OCTOBER DEBUG] ALL Real transactions details:', realTransactionsUntilPreviousMonth.map(tx => ({
@@ -245,7 +243,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             month: new Date(tx.date).getMonth() + 1,
             year: new Date(tx.date).getFullYear()
           })));
-          
+
           // Verificar se há duplicatas por ID
           const ids = realTransactionsUntilPreviousMonth.map(tx => tx.id);
           const uniqueIds = [...new Set(ids)];
@@ -257,13 +255,10 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         }
 
         // 2. Buscar transações com recurrence = "Mensal" para simular
-        const { data: mensalTransactions, error } = await (supabase as any)
-          .from('poupeja_transactions')
-          .select('*')
-          .eq('recurrence', 'Mensal')
-          .eq('status', 'pending')
-          .eq('situacao', 'ativo');
-
+        const {
+          data: mensalTransactions,
+          error
+        } = await (supabase as any).from('poupeja_transactions').select('*').eq('recurrence', 'Mensal').eq('status', 'pending').eq('situacao', 'ativo');
         if (error) throw error;
 
         // 3. Simular transações mensais apenas da data original para frente
@@ -271,10 +266,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         if (mensalTransactions) {
           mensalTransactions.forEach((transaction: any) => {
             const originalDate = new Date(transaction.date);
-            
+
             // Simular apenas para meses a partir da data original até o mês anterior ao atual
             let simDate = new Date(originalDate.getFullYear(), originalDate.getMonth(), originalDate.getDate());
-            
             while (simDate <= endOfPreviousMonth) {
               // Só simular se a data simulada for igual ou posterior à data original
               if (simDate >= originalDate) {
@@ -283,13 +277,10 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
                   const realDesc = realTx.description ? String(realTx.description).toLowerCase() : '';
                   const transactionDesc = transaction.description ? String(transaction.description).toLowerCase() : '';
                   const realDate = new Date(realTx.date);
-                  const sameMonth = realDate.getFullYear() === simDate.getFullYear() && 
-                                   realDate.getMonth() === simDate.getMonth();
-                  const similarDesc = realDesc && transactionDesc && 
-                                     (realDesc.includes(transactionDesc) || transactionDesc.includes(realDesc));
+                  const sameMonth = realDate.getFullYear() === simDate.getFullYear() && realDate.getMonth() === simDate.getMonth();
+                  const similarDesc = realDesc && transactionDesc && (realDesc.includes(transactionDesc) || transactionDesc.includes(realDesc));
                   return sameMonth && similarDesc;
                 });
-
                 if (!hasRealTransaction) {
                   simulatedTransactions.push({
                     id: `mensal-sim-${transaction.id}-${simDate.getFullYear()}-${simDate.getMonth() + 1}`,
@@ -300,7 +291,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
                   });
                 }
               }
-              
+
               // Próximo mês
               simDate.setMonth(simDate.getMonth() + 1);
             }
@@ -309,24 +300,23 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
         // 4. Combinar transações reais e simuladas
         const combinedTransactions = [...realTransactionsUntilPreviousMonth, ...simulatedTransactions];
-        
         console.log('📊 [BALANCE DEBUG] All transactions (real + simulated):', combinedTransactions.length);
-        
+
         // 5. Calcular saldo (receitas - despesas)
         const balance = combinedTransactions.reduce((acc: number, tx: any) => {
           const amount = Number(tx.amount) || 0;
           return acc + amount;
         }, 0);
-
         console.log('📊 [BALANCE DEBUG] Previous months balance:', balance);
-        
+
         // Log específico para outubro - FINAL DETALHADO
-        if (currentMonth.getMonth() === 9) { // outubro = mês 9 (0-indexed)
+        if (currentMonth.getMonth() === 9) {
+          // outubro = mês 9 (0-indexed)
           console.log('🔍 [OCTOBER DEBUG] Final balance calculation:', balance);
           console.log('🔍 [OCTOBER DEBUG] Combined transactions count:', combinedTransactions.length);
           console.log('🔍 [OCTOBER DEBUG] Real transactions count:', realTransactionsUntilPreviousMonth.length);
           console.log('🔍 [OCTOBER DEBUG] Simulated transactions count:', simulatedTransactions.length);
-          
+
           // Verificar duplicatas por ID
           const allIds = combinedTransactions.map(tx => tx.id);
           const uniqueAllIds = [...new Set(allIds)];
@@ -334,25 +324,30 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             console.log('⚠️ [OCTOBER DEBUG] DUPLICATED TRANSACTIONS DETECTED!');
             console.log('🔍 [OCTOBER DEBUG] Total IDs:', allIds.length);
             console.log('🔍 [OCTOBER DEBUG] Unique IDs:', uniqueAllIds.length);
-            
+
             // Encontrar duplicatas
             const duplicateIds = allIds.filter((id, index) => allIds.indexOf(id) !== index);
             console.log('🔍 [OCTOBER DEBUG] Duplicate IDs:', [...new Set(duplicateIds)]);
-            
+
             // Mostrar transações duplicadas
             duplicateIds.forEach(duplicateId => {
               const duplicatedTransactions = combinedTransactions.filter(tx => tx.id === duplicateId);
               console.log(`🔍 [OCTOBER DEBUG] Duplicated transaction ${duplicateId}:`, duplicatedTransactions);
             });
           }
-          
+
           // Separar por mês para verificar se há transações de outubro sendo contadas
           const transactionsByMonth = {};
           combinedTransactions.forEach(tx => {
             const txDate = new Date(tx.date);
             const monthKey = `${txDate.getFullYear()}-${txDate.getMonth() + 1}`;
             if (!transactionsByMonth[monthKey]) {
-              transactionsByMonth[monthKey] = { count: 0, incomes: 0, expenses: 0, transactions: [] };
+              transactionsByMonth[monthKey] = {
+                count: 0,
+                incomes: 0,
+                expenses: 0,
+                transactions: []
+              };
             }
             transactionsByMonth[monthKey].count++;
             transactionsByMonth[monthKey].transactions.push({
@@ -367,22 +362,20 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
               transactionsByMonth[monthKey].expenses += tx.amount;
             }
           });
-          
           console.log('🔍 [OCTOBER DEBUG] Transactions by month:', transactionsByMonth);
-          
+
           // Verificar se há transações de outubro (mês 10) sendo contadas incorretamente
           if (transactionsByMonth['2025-10']) {
             console.log('⚠️ [OCTOBER DEBUG] OCTOBER TRANSACTIONS FOUND IN PREVIOUS MONTHS CALCULATION!');
             console.log('🔍 [OCTOBER DEBUG] October transactions:', transactionsByMonth['2025-10']);
           }
-          
           const incomes = combinedTransactions.filter(tx => tx.amount > 0);
           const expenses = combinedTransactions.filter(tx => tx.amount < 0);
           console.log('🔍 [OCTOBER DEBUG] Incomes count:', incomes.length);
           console.log('🔍 [OCTOBER DEBUG] Expenses count:', expenses.length);
           console.log('🔍 [OCTOBER DEBUG] Incomes total:', incomes.reduce((sum, tx) => sum + tx.amount, 0));
           console.log('🔍 [OCTOBER DEBUG] Expenses total:', expenses.reduce((sum, tx) => sum + tx.amount, 0));
-          
+
           // Verificar receitas detalhadamente
           console.log('🔍 [OCTOBER DEBUG] DETAILED INCOMES:', incomes.map(tx => ({
             id: tx.id,
@@ -392,15 +385,12 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             month: new Date(tx.date).getMonth() + 1
           })));
         }
-        
         setPreviousMonthsBalance(balance);
-
       } catch (error) {
         console.error('Erro ao calcular saldo dos meses anteriores:', error);
         setPreviousMonthsBalance(0);
       }
     };
-
     calculatePreviousMonthsBalance();
   }, [currentMonth]);
 
@@ -408,13 +398,16 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   const monthlyBalanceReal = totalIncomesReal - totalExpensesReal;
   const currentBalanceReal = previousMonthsBalance + monthlyBalanceReal;
 
-// Saldo combinado (com simulações) para exibição de comparação
+  // Saldo combinado (com simulações) para exibição de comparação
   const monthlyBalanceCombined = totalIncomesCombined - totalExpensesCombined;
   const currentBalanceCombined = previousMonthsBalance + monthlyBalanceCombined;
 
   // Notificar o componente pai com os saldos calculados (fonte única de verdade)
   React.useEffect(() => {
-    onBalancesUpdate?.({ previousMonthsBalance, monthlyBalanceCombined });
+    onBalancesUpdate?.({
+      previousMonthsBalance,
+      monthlyBalanceCombined
+    });
   }, [previousMonthsBalance, monthlyBalanceCombined, onBalancesUpdate]);
   const itemVariants = {
     hidden: {
@@ -452,18 +445,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="text-xl font-semibold">{t('transactions.recent')}</h3>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">
-                    {t('common.income')}: <span className="text-green-600 font-medium" id="income-total">{hideValues ? '******' : formatCurrency(totalIncomesCombined, currency)}</span>
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {t('common.expense')}: <span className="text-red-600 font-medium" id="expense-total">{hideValues ? '******' : formatCurrency(totalExpensesCombined, currency)}</span>
-                  </p>
-                     <p className="text-sm text-muted-foreground">
-                       Saldo Atual Mês {format(currentMonth, 'MMM/yyyy', { locale: ptBR })}: <span className={`font-medium ${monthlyBalanceCombined >= 0 ? 'text-green-600' : 'text-red-600'}`} id="monthly-balance">{hideValues ? '******' : formatCurrency(monthlyBalanceCombined, currency)}</span>
-                     </p>
-                  
-                </div>
+                
               </div>
               <Button variant="outline" asChild>
                 <Link to="/transactions">{t('common.viewAll')}</Link>

@@ -85,25 +85,33 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           });
           return !hasRealTransaction;
         });
-        const sims: Transaction[] = filteredData.map((item: any) => {
-          const baseDate = item.date ? new Date(item.date) : new Date(y, m, 1);
-          const day = baseDate.getDate() || 1;
-          const simDate = new Date(y, m, Math.min(day, 28));
-          const desc = item.description ? String(item.description) : '';
-          return {
-            id: `mensal-sim-${item.id}-${y}-${m + 1}`,
-            type: item.type,
-            amount: Number(item.amount) || 0,
-            category: item.category?.name || 'Outros',
-            categoryIcon: item.category?.icon || 'circle',
-            categoryColor: item.category?.color || '#607D8B',
-            description: desc ? `${desc} (Simulação)` : 'Simulação',
-            date: simDate.toISOString(),
-            goalId: item.goal_id || undefined,
-            conta: item.conta || undefined,
-            creatorName: item.name || undefined
-          } as Transaction;
-        });
+        const sims: Transaction[] = filteredData
+          .map((item: any) => {
+            const baseDate = item.date ? new Date(item.date) : new Date(y, m, 1);
+            const day = baseDate.getDate() || 1;
+            const simDate = new Date(y, m, Math.min(day, 28));
+            
+            // Simular apenas se a data simulada for posterior ou igual à data original
+            if (simDate < baseDate) {
+              return null;
+            }
+            
+            const desc = item.description ? String(item.description) : '';
+            return {
+              id: `mensal-sim-${item.id}-${y}-${m + 1}`,
+              type: item.type,
+              amount: Number(item.amount) || 0,
+              category: item.category?.name || 'Outros',
+              categoryIcon: item.category?.icon || 'circle',
+              categoryColor: item.category?.color || '#607D8B',
+              description: desc ? `${desc} (Simulação)` : 'Simulação',
+              date: simDate.toISOString(),
+              goalId: item.goal_id || undefined,
+              conta: item.conta || undefined,
+              creatorName: item.name || undefined
+            } as Transaction;
+          })
+          .filter(Boolean);
         setMonthlySimulations(sims);
       } catch (e) {
         console.error('DashboardContent: erro ao buscar Mensal:', e);
@@ -260,31 +268,33 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           mensalTransactions.forEach((transaction: any) => {
             const originalDate = new Date(transaction.date);
             
-            // Simular apenas para meses após a data original até o mês anterior ao atual
-            let simDate = new Date(originalDate);
-            simDate.setMonth(simDate.getMonth() + 1); // Começar do mês seguinte
+            // Simular apenas para meses a partir da data original até o mês anterior ao atual
+            let simDate = new Date(originalDate.getFullYear(), originalDate.getMonth(), originalDate.getDate());
             
             while (simDate <= endOfPreviousMonth) {
-              // Verificar se já existe transação real similar neste mês
-              const hasRealTransaction = realTransactionsUntilPreviousMonth.some((realTx: any) => {
-                const realDesc = realTx.description ? String(realTx.description).toLowerCase() : '';
-                const transactionDesc = transaction.description ? String(transaction.description).toLowerCase() : '';
-                const realDate = new Date(realTx.date);
-                const sameMonth = realDate.getFullYear() === simDate.getFullYear() && 
-                                 realDate.getMonth() === simDate.getMonth();
-                const similarDesc = realDesc && transactionDesc && 
-                                   (realDesc.includes(transactionDesc) || transactionDesc.includes(realDesc));
-                return sameMonth && similarDesc;
-              });
-
-              if (!hasRealTransaction) {
-                simulatedTransactions.push({
-                  id: `mensal-sim-${transaction.id}-${simDate.getFullYear()}-${simDate.getMonth() + 1}`,
-                  type: transaction.type,
-                  amount: Number(transaction.amount) || 0,
-                  date: simDate.toISOString(),
-                  description: transaction.description
+              // Só simular se a data simulada for igual ou posterior à data original
+              if (simDate >= originalDate) {
+                // Verificar se já existe transação real similar neste mês
+                const hasRealTransaction = realTransactionsUntilPreviousMonth.some((realTx: any) => {
+                  const realDesc = realTx.description ? String(realTx.description).toLowerCase() : '';
+                  const transactionDesc = transaction.description ? String(transaction.description).toLowerCase() : '';
+                  const realDate = new Date(realTx.date);
+                  const sameMonth = realDate.getFullYear() === simDate.getFullYear() && 
+                                   realDate.getMonth() === simDate.getMonth();
+                  const similarDesc = realDesc && transactionDesc && 
+                                     (realDesc.includes(transactionDesc) || transactionDesc.includes(realDesc));
+                  return sameMonth && similarDesc;
                 });
+
+                if (!hasRealTransaction) {
+                  simulatedTransactions.push({
+                    id: `mensal-sim-${transaction.id}-${simDate.getFullYear()}-${simDate.getMonth() + 1}`,
+                    type: transaction.type,
+                    amount: Number(transaction.amount) || 0,
+                    date: simDate.toISOString(),
+                    description: transaction.description
+                  });
+                }
               }
               
               // Próximo mês

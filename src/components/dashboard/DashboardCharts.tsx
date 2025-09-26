@@ -78,12 +78,12 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
   hideValues = false,
   monthTransactions 
 }) => {
-  const { filteredTransactions } = useAppContext();
+  const { transactions } = useAppContext(); // Use all transactions, not filtered ones
   const { currency, t } = usePreferences();
   
   // Always use all transactions to show complete data across all months
-  const transactionsToUse = filteredTransactions;
-  const expenseSummaries = calculateCategorySummaries(filteredTransactions, 'expense');
+  const transactionsToUse = transactions;
+  const expenseSummaries = calculateCategorySummaries(transactionsToUse, 'expense');
   
   console.log("Rendering charts with all transactions:", transactionsToUse.length);
   

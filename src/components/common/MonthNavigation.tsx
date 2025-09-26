@@ -28,6 +28,12 @@ const MonthNavigation: React.FC<MonthNavigationProps> = ({
     onMonthChange(addMonths(currentMonth, 1));
   };
   
+  const handleCurrentMonth = () => {
+    onMonthChange(new Date());
+  };
+  
+  const isCurrentMonth = format(currentMonth, 'yyyy-MM') === format(new Date(), 'yyyy-MM');
+  
   return (
     <div className="flex items-center justify-center gap-4 py-2">
       <Button 
@@ -39,7 +45,11 @@ const MonthNavigation: React.FC<MonthNavigationProps> = ({
         <ChevronLeft className="h-6 w-6" />
       </Button>
       
-      <div className="text-xl font-medium capitalize">
+      <div 
+        className={`text-xl font-medium capitalize ${!isCurrentMonth ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+        onClick={!isCurrentMonth ? handleCurrentMonth : undefined}
+        title={!isCurrentMonth ? 'Clique para voltar ao mês atual' : undefined}
+      >
         {format(currentMonth, 'MMMM yyyy', { locale: formatLocale })}
       </div>
       

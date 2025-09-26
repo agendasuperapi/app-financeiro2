@@ -435,7 +435,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
       {/* Seção de gráficos */}
       <motion.div variants={itemVariants}>
-        <DashboardCharts currentMonth={currentMonth} hideValues={hideValues} monthTransactions={filteredTransactions} />
+        <DashboardCharts currentMonth={currentMonth} hideValues={hideValues} monthTransactions={transactionsWithSimulations} />
       </motion.div>
 
       {/* Transações recentes */}

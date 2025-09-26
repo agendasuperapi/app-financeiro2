@@ -46,13 +46,13 @@ const BulkEditDialog: React.FC<BulkEditDialogProps> = ({
             onClick={() => onConfirm(false)}
             className="w-full sm:w-auto"
           >
-            Editar Apenas Esta Transação
+            Apenas essa
           </AlertDialogCancel>
           <AlertDialogAction 
             onClick={() => onConfirm(true)}
             className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
           >
-            Editar Todas as Transações Futuras ({futureTransactionsCount + 1})
+            Todas as futuras também ({futureTransactionsCount + 1})
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

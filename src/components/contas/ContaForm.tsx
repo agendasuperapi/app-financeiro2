@@ -175,6 +175,21 @@ const ContaForm: React.FC<ContaFormProps> = ({
     }
   }, [initialData?.id, mode]);
 
+  // On open (edit mode), check for related future transactions with same codigo-trans
+  useEffect(() => {
+    const runRelatedCheck = async () => {
+      if (mode !== 'edit' || !initialData?.id) return;
+      const codigoTrans = (initialData as any)?.['codigo-trans'] ?? String(initialData?.reference_code ?? '').replace(/^[A-Za-z]+/, '');
+      if (!codigoTrans) return;
+      const related = await checkForRelatedTransactions(codigoTrans, initialData.id);
+      if (Array.isArray(related) && related.length > 0) {
+        setFutureTransactions(related);
+        setBulkEditDialogOpen(true);
+      }
+    };
+    runRelatedCheck();
+  }, [mode, initialData?.id]);
+
   // Form submission handler
   const onSubmit = async (values: ContaFormValues) => {
     console.log('🚀 Conta form submitted with values:', values);

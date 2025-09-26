@@ -46,7 +46,7 @@ const Index = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 11, 1)); // Dezembro 2025
+  const [currentMonth, setCurrentMonth] = useState(new Date()); // Mês atual
   const [currentGoalIndex, setCurrentGoalIndex] = useState(0);
   const [transactionsWithSimulations, setTransactionsWithSimulations] = useState<any[]>([]);
   // Saldos calculados no DashboardContent (incluindo simulações)

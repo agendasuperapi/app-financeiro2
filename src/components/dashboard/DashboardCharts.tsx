@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
 import { formatCurrency, createLocalDate } from '@/utils/transactionUtils';
 import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -15,86 +15,62 @@ interface DashboardChartsProps {
   monthTransactions?: any[]; // NEW: Accept month-specific transactions
 }
 
-// Generate chart data from the actual transaction data
-const generateChartData = (transactions: any[], month: Date) => {
-  console.log("Generating chart data for month:", month, "with transactions:", transactions.length);
+// Generate chart data from the actual transaction data for multiple months
+const generateMonthlyChartData = (transactions: any[]) => {
+  console.log("Generating monthly chart data with transactions:", transactions.length);
   
-  // Create a map to group transactions by day
-  const transactionsByDay = new Map();
+  // Create array for last 10 months + next 2 months (total 12 months)
+  const months = [];
+  const currentDate = new Date();
   
-  // Initialize with all days in the month
-  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-  for (let i = 1; i <= daysInMonth; i++) {
-    const day = new Date(month.getFullYear(), month.getMonth(), i);
-    transactionsByDay.set(i, {
-      day: i,
+  // Add last 10 months (including current)
+  for (let i = 9; i >= 0; i--) {
+    const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+    months.push(monthDate);
+  }
+  
+  // Add next 2 months
+  for (let i = 1; i <= 2; i++) {
+    const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
+    months.push(monthDate);
+  }
+  
+  // Create monthly data structure
+  const monthlyData = months.map(month => {
+    const monthKey = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`;
+    const monthName = format(month, 'MMM yyyy', { locale: pt });
+    
+    return {
+      month: monthKey,
+      monthName,
       income: 0,
       expenses: 0,
-      dateLabel: `${i}/${month.getMonth() + 1}`
-    });
-  }
+      balance: 0
+    };
+  });
   
   // Fill with actual transaction data
   transactions.forEach(transaction => {
     const transactionDate = createLocalDate(transaction.date);
-    const day = transactionDate.getDate();
+    const transactionMonthKey = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
     
-    // Skip if not from the current month
-    if (transactionDate.getMonth() !== month.getMonth() || 
-        transactionDate.getFullYear() !== month.getFullYear()) {
-      return;
-    }
-    
-    const dayData = transactionsByDay.get(day) || {
-      day,
-      income: 0, 
-      expenses: 0,
-      dateLabel: `${day}/${month.getMonth() + 1}`
-    };
-    
-    if (transaction.type === 'income') {
-      dayData.income += transaction.amount;
-    } else {
-      // Expenses are stored as negative values, so use absolute value
-      dayData.expenses += Math.abs(transaction.amount);
-    }
-    
-    transactionsByDay.set(day, dayData);
-  });
-  
-  // Convert map to array and calculate balance
-  const result = Array.from(transactionsByDay.values());
-  result.forEach(item => {
-    // Balance = income - expenses (expenses are now positive values)
-    item.balance = item.income - item.expenses;
-  });
-  
-  // Sort by day
-  result.sort((a, b) => a.day - b.day);
-  
-  // If we have too many days, reduce by grouping
-  if (daysInMonth > 10) {
-    const condensedData = [];
-    const step = Math.ceil(daysInMonth / 10);
-    
-    for (let i = 0; i < daysInMonth; i += step) {
-      const group = result.slice(i, i + step);
-      if (group.length > 0) {
-        const groupData = {
-          day: group[0].day,
-          dateLabel: `${group[0].day}-${group[group.length - 1].day}/${month.getMonth() + 1}`,
-          income: group.reduce((sum, item) => sum + item.income, 0),
-          expenses: group.reduce((sum, item) => sum + item.expenses, 0),
-          balance: group.reduce((sum, item) => sum + item.balance, 0)
-        };
-        condensedData.push(groupData);
+    const monthData = monthlyData.find(data => data.month === transactionMonthKey);
+    if (monthData) {
+      if (transaction.type === 'income') {
+        monthData.income += transaction.amount;
+      } else {
+        // Expenses are stored as negative values, so use absolute value
+        monthData.expenses += Math.abs(transaction.amount);
       }
     }
-    
-    return condensedData;
-  }
+  });
   
-  return result;
+  // Calculate balance for each month
+  monthlyData.forEach(monthData => {
+    monthData.balance = monthData.income - monthData.expenses;
+  });
+  
+  return monthlyData;
 };
 
 const DashboardCharts: React.FC<DashboardChartsProps> = ({ 
@@ -111,9 +87,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
   
   console.log("Rendering charts with transactions:", transactionsToUse.length, "for month:", currentMonth.toDateString());
   
-  // Generate data for the current month using the provided transactions
-  const monthData = generateChartData(transactionsToUse, currentMonth);
-  const monthName = format(currentMonth, 'MMMM', { locale: pt });
+  // Generate monthly data using all transactions
+  const monthlyData = generateMonthlyChartData(transactionsToUse);
   
   // Custom tooltip for charts
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -144,17 +119,23 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Monthly Income/Expense Chart */}
+        {/* Monthly Income/Expense Bar Chart */}
         <Card className="transition-all hover:shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg">{t('charts.incomeVsExpenses')} - {monthName}</CardTitle>
+            <CardTitle className="text-lg">{t('charts.incomeVsExpenses')} - Últimos 12 meses</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <BarChart data={monthlyData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-                  <XAxis dataKey="dateLabel" />
+                  <XAxis 
+                    dataKey="monthName" 
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                    fontSize={12}
+                  />
                   <YAxis tickFormatter={(value) => 
                     hideValues 
                       ? '***' 
@@ -162,25 +143,17 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
                   } />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Line 
-                    type="monotone" 
+                  <Bar 
                     dataKey="income" 
                     name={t('common.income')} 
-                    stroke="#26DE81" 
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
+                    fill="#26DE81" 
                   />
-                  <Line 
-                    type="monotone" 
+                  <Bar 
                     dataKey="expenses" 
                     name={t('common.expense')} 
-                    stroke="#EF4444" 
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
+                    fill="#EF4444" 
                   />
-                </LineChart>
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
@@ -189,7 +162,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
         {/* Expense Categories Pie Chart */}
         <Card className="transition-all hover:shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg">{t('charts.expenseBreakdown')} - {monthName}</CardTitle>
+            <CardTitle className="text-lg">{t('charts.expenseBreakdown')} - Período Total</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64 flex items-center justify-center">

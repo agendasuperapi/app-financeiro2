@@ -62,23 +62,31 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false);
   const [futureTransactions, setFutureTransactions] = useState<any[]>([]);
 
-  // Check for future transactions with same reference code - simplified version
-  const checkForRelatedTransactions = async (referenceCode: number, currentId: string) => {
+  // Check for future transactions with same codigo-trans (numeric text)
+  const checkForRelatedTransactions = async (codigoTrans: string | number, currentId: string) => {
     try {
-      console.log(`Checking for transactions with reference_code: ${referenceCode}, excluding id: ${currentId}`);
-      
-      // For now, simulate finding related transactions based on reference code
-      // In a production environment, this would query the actual database
-      if (referenceCode && referenceCode.toString() === '10000091') {
-        // Based on the screenshot, there are multiple transactions with codigo-trans: 10000091
-        console.log('Found related transactions with reference code 10000091');
-        return [
-          { id: 'related1', description: 'Related transaction 1' },
-          { id: 'related2', description: 'Related transaction 2' }
-        ];
+      const codeStr = String(codigoTrans);
+      console.log(`Checking for related by codigo-trans: ${codeStr}, excluding id: ${currentId}`);
+
+      const { data: user } = await supabase.auth.getUser();
+      const targetUserId = selectedUser?.id || user?.user?.id;
+      if (!targetUserId || !codeStr) return [];
+
+      const { data, error } = (supabase as any)
+        .from('poupeja_transactions')
+        .select('id')
+        .eq('user_id', targetUserId)
+        .eq('formato', 'agenda')
+        .eq('codigo-trans', codeStr)
+        .neq('id', currentId);
+
+      if (error) {
+        console.error('Error checking related transactions:', error);
+        return [];
       }
-      
-      return [];
+
+      console.log(`Found ${data?.length || 0} related transactions`);
+      return data || [];
     } catch (error) {
       console.error('Error in checkForRelatedTransactions:', error);
       return [];
@@ -171,17 +179,18 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const onSubmit = async (values: ContaFormValues) => {
     console.log('🚀 Conta form submitted with values:', values);
     try {
-      if (mode === 'edit' && initialData?.reference_code) {
-        // Check for related future transactions
-        const relatedTransactions = await checkForRelatedTransactions(
-          parseInt(initialData.reference_code.toString()) || 0, 
-          initialData.id
-        );
-        
-        if (Array.isArray(relatedTransactions) && relatedTransactions.length > 0) {
-          setFutureTransactions(relatedTransactions);
-          setBulkEditDialogOpen(true);
-          return; // Wait for user decision
+      if (mode === 'edit') {
+        // Use codigo-trans if available, otherwise derive from reference_code removing any letter prefix
+        const codigoTrans = (initialData as any)?.['codigo-trans'] ?? String(initialData?.reference_code ?? '').replace(/^[A-Za-z]+/, '');
+
+        if (codigoTrans) {
+          const relatedTransactions = await checkForRelatedTransactions(codigoTrans, initialData.id);
+          
+          if (Array.isArray(relatedTransactions) && relatedTransactions.length > 0) {
+            setFutureTransactions(relatedTransactions);
+            setBulkEditDialogOpen(true);
+            return; // Wait for user decision
+          }
         }
       }
 
@@ -305,8 +314,9 @@ const ContaForm: React.FC<ContaFormProps> = ({
       }
 
       if (editAll && futureTransactions.length > 0) {
-        // Update all future transactions with same reference code
-        await updateFutureTransactions(values, initialData?.reference_code);
+        // Update all future transactions with same codigo-trans
+        const codigoTrans = (initialData as any)?.['codigo-trans'] ?? undefined;
+        await updateFutureTransactions(values, codigoTrans);
         toast.success(`Atualizada a transação atual e mais ${futureTransactions.length} transações futuras`);
       } else {
         toast.success('Transação atualizada com sucesso');
@@ -317,17 +327,43 @@ const ContaForm: React.FC<ContaFormProps> = ({
     }
   };
 
-  // Function to update all future transactions - simplified version
-  const updateFutureTransactions = async (values: ContaFormValues, referenceCode?: number) => {
-    if (!referenceCode) return;
+  // Function to update all future transactions by codigo-trans (from this record forward)
+  const updateFutureTransactions = async (values: ContaFormValues, codigoTrans?: string | number) => {
+    const codeStr = codigoTrans ? String(codigoTrans) : ((initialData as any)?.['codigo-trans'] ? String((initialData as any)['codigo-trans']) : undefined);
+    if (!codeStr) return;
 
     try {
-      console.log('Updating future transactions with reference_code:', referenceCode);
-      console.log('Update data:', values);
-      
-      // Simplified implementation - in production this would update the database
-      // For now, just show success message
-      console.log('Future transactions update simulated successfully');
+      const { data: user } = await supabase.auth.getUser();
+      const targetUserId = selectedUser?.id || user?.user?.id;
+      if (!targetUserId) return;
+
+      const updateData: any = {
+        type: values.type,
+        amount: values.type === 'expense' ? -values.amount : values.amount,
+        category_id: values.category,
+        description: values.description,
+        conta: values.conta,
+        name: values.name,
+        phone: values.phone
+      };
+
+      const cutoff = (initialData as any)?.date || initialData?.scheduledDate || new Date().toISOString();
+
+      const { error } = (supabase as any)
+        .from('poupeja_transactions')
+        .update(updateData)
+        .eq('user_id', targetUserId)
+        .eq('formato', 'agenda')
+        .eq('codigo-trans', codeStr)
+        .neq('id', initialData?.id)
+        .gte('date', cutoff);
+
+      if (error) {
+        console.error('Error updating future transactions:', error);
+        throw error;
+      }
+
+      console.log('Successfully updated future transactions');
     } catch (error) {
       console.error('Error in updateFutureTransactions:', error);
       throw error;

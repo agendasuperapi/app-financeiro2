@@ -62,33 +62,34 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false);
   const [futureTransactions, setFutureTransactions] = useState<any[]>([]);
 
-  // Check for future transactions with same codigo-trans (numeric text)
+  // Check for future transactions with same codigo-trans
   const checkForRelatedTransactions = async (codigoTrans: string | number, currentId: string) => {
     try {
       const codeStr = String(codigoTrans);
-      console.log(`Checking for related by codigo-trans: ${codeStr}, excluding id: ${currentId}`);
+      console.log(`🔍 Verificando transações relacionadas por codigo-trans: ${codeStr}, excluindo id: ${currentId}`);
 
       const { data: user } = await supabase.auth.getUser();
       const targetUserId = selectedUser?.id || user?.user?.id;
       if (!targetUserId || !codeStr) return [];
 
-      const { data, error } = (supabase as any)
+      const { data, error } = await (supabase as any)
         .from('poupeja_transactions')
-        .select('id')
+        .select('id, date, description')
         .eq('user_id', targetUserId)
         .eq('formato', 'agenda')
         .eq('codigo-trans', codeStr)
-        .neq('id', currentId);
+        .neq('id', currentId)
+        .order('date', { ascending: true });
 
       if (error) {
-        console.error('Error checking related transactions:', error);
+        console.error('❌ Erro ao verificar transações relacionadas:', error);
         return [];
       }
 
-      console.log(`Found ${data?.length || 0} related transactions`);
+      console.log(`✅ Encontradas ${data?.length || 0} transações relacionadas`);
       return data || [];
     } catch (error) {
-      console.error('Error in checkForRelatedTransactions:', error);
+      console.error('❌ Erro em checkForRelatedTransactions:', error);
       return [];
     }
   };
@@ -175,43 +176,36 @@ const ContaForm: React.FC<ContaFormProps> = ({
     }
   }, [initialData?.id, mode]);
 
-  // On open (edit mode), check for related future transactions with same codigo-trans
-  useEffect(() => {
-    const runRelatedCheck = async () => {
-      if (mode !== 'edit' || !initialData?.id) return;
-      const codigoTrans = (initialData as any)?.['codigo-trans'] ?? String(initialData?.reference_code ?? '').replace(/^[A-Za-z]+/, '');
-      if (!codigoTrans) return;
-      const related = await checkForRelatedTransactions(codigoTrans, initialData.id);
-      if (Array.isArray(related) && related.length > 0) {
-        setFutureTransactions(related);
-        setBulkEditDialogOpen(true);
-      }
-    };
-    runRelatedCheck();
-  }, [mode, initialData?.id]);
-
   // Form submission handler
   const onSubmit = async (values: ContaFormValues) => {
     console.log('🚀 Conta form submitted with values:', values);
     try {
-      if (mode === 'edit') {
-        // Use codigo-trans if available, otherwise derive from reference_code removing any letter prefix
-        const codigoTrans = (initialData as any)?.['codigo-trans'] ?? String(initialData?.reference_code ?? '').replace(/^[A-Za-z]+/, '');
-
+      if (mode === 'edit' && initialData?.id) {
+        // Verificar se existe codigo-trans na transação atual
+        const codigoTrans = (initialData as any)?.['codigo-trans'];
+        
         if (codigoTrans) {
+          console.log(`🔍 Verificando duplicatas para codigo-trans: ${codigoTrans}`);
           const relatedTransactions = await checkForRelatedTransactions(codigoTrans, initialData.id);
           
           if (Array.isArray(relatedTransactions) && relatedTransactions.length > 0) {
+            console.log(`📋 Encontradas ${relatedTransactions.length} transações com o mesmo codigo-trans`);
             setFutureTransactions(relatedTransactions);
             setBulkEditDialogOpen(true);
-            return; // Wait for user decision
+            return; // Aguardar decisão do usuário
+          } else {
+            console.log('✅ Nenhuma duplicata encontrada, prosseguindo com edição normal');
           }
+        } else {
+          console.log('ℹ️ Transação não possui codigo-trans, prosseguindo normalmente');
         }
       }
 
+      // Se chegou aqui, não há duplicatas ou é criação - prosseguir normalmente
       await performUpdate(values, false);
     } catch (error) {
       console.error('❌ Error in onSubmit:', error);
+      toast.error('Erro ao processar transação');
     }
   };
 
@@ -329,12 +323,16 @@ const ContaForm: React.FC<ContaFormProps> = ({
       }
 
       if (editAll && futureTransactions.length > 0) {
-        // Update all future transactions with same codigo-trans
-        const codigoTrans = (initialData as any)?.['codigo-trans'] ?? undefined;
-        await updateFutureTransactions(values, codigoTrans);
-        toast.success(`Atualizada a transação atual e mais ${futureTransactions.length} transações futuras`);
+        // Atualizar todas as transações futuras com mesmo codigo-trans
+        const codigoTrans = (initialData as any)?.['codigo-trans'];
+        if (codigoTrans) {
+          await updateFutureTransactions(values, codigoTrans);
+          toast.success(`✅ Transação atual e mais ${futureTransactions.length} transações futuras atualizadas`);
+        } else {
+          toast.success('✅ Transação atualizada com sucesso');
+        }
       } else {
-        toast.success('Transação atualizada com sucesso');
+        toast.success('✅ Transação atualizada com sucesso');
       }
     } catch (error) {
       console.error('❌ Error in performUpdate:', error);
@@ -342,45 +340,56 @@ const ContaForm: React.FC<ContaFormProps> = ({
     }
   };
 
-  // Function to update all future transactions by codigo-trans (from this record forward)
-  const updateFutureTransactions = async (values: ContaFormValues, codigoTrans?: string | number) => {
-    const codeStr = codigoTrans ? String(codigoTrans) : ((initialData as any)?.['codigo-trans'] ? String((initialData as any)['codigo-trans']) : undefined);
-    if (!codeStr) return;
+  // Function to update all future transactions with same codigo-trans
+  const updateFutureTransactions = async (values: ContaFormValues, codigoTrans: string) => {
+    if (!codigoTrans) {
+      console.error('❌ codigo-trans não fornecido para updateFutureTransactions');
+      return;
+    }
 
     try {
       const { data: user } = await supabase.auth.getUser();
       const targetUserId = selectedUser?.id || user?.user?.id;
-      if (!targetUserId) return;
+      if (!targetUserId) {
+        console.error('❌ targetUserId não encontrado');
+        return;
+      }
 
-      const updateData: any = {
+      // Encontrar a categoria selecionada
+      const selectedCategory = categories.find(cat => cat.id === values.category);
+
+      const updateData = {
         type: values.type,
-        amount: values.type === 'expense' ? -values.amount : values.amount,
+        amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
         category_id: values.category,
+        category: selectedCategory?.name || 'Outros',
         description: values.description,
         conta: values.conta,
         name: values.name,
         phone: values.phone
       };
 
-      const cutoff = (initialData as any)?.date || initialData?.scheduledDate || new Date().toISOString();
+      console.log(`🔄 Atualizando transações futuras com codigo-trans: ${codigoTrans}`);
+      console.log('📋 Dados de atualização:', updateData);
 
-      const { error } = (supabase as any)
+      // Atualizar todas as transações com mesmo codigo-trans, exceto a atual
+      const { error } = await (supabase as any)
         .from('poupeja_transactions')
         .update(updateData)
         .eq('user_id', targetUserId)
         .eq('formato', 'agenda')
-        .eq('codigo-trans', codeStr)
-        .neq('id', initialData?.id)
-        .gte('date', cutoff);
+        .eq('codigo-trans', codigoTrans)
+        .neq('id', initialData?.id);
 
       if (error) {
-        console.error('Error updating future transactions:', error);
+        console.error('❌ Erro ao atualizar transações futuras:', error);
         throw error;
       }
 
-      console.log('Successfully updated future transactions');
+      console.log(`✅ Transações futuras atualizadas com sucesso`);
     } catch (error) {
-      console.error('Error in updateFutureTransactions:', error);
+      console.error('❌ Erro em updateFutureTransactions:', error);
+      toast.error('Erro ao atualizar transações futuras');
       throw error;
     }
   };
@@ -388,6 +397,13 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const handleBulkEditConfirm = (editAll: boolean) => {
     setBulkEditDialogOpen(false);
     const values = form.getValues();
+    
+    if (editAll) {
+      console.log(`📝 Aplicando edição a ${futureTransactions.length + 1} transações (atual + futuras)`);
+    } else {
+      console.log('📝 Aplicando edição apenas à transação atual');
+    }
+    
     performUpdate(values, editAll);
   };
 

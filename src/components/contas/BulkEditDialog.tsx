@@ -33,7 +33,7 @@ const BulkEditDialog: React.FC<BulkEditDialogProps> = ({
           <AlertDialogTitle>Transações Relacionadas Encontradas</AlertDialogTitle>
           <AlertDialogDescription className="space-y-3">
             <p>
-              Encontramos <strong>{futureTransactionsCount}</strong> transação(ões) futura(s) 
+              Encontramos <strong>{futureTransactionsCount}</strong> transação(ões) 
               com o mesmo código desta transação.
             </p>
             <p>

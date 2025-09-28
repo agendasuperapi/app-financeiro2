@@ -547,6 +547,38 @@ const ContaForm: React.FC<ContaFormProps> = ({
                 <FormMessage />
               </FormItem>} />
 
+          {/* Opções de edição */}
+          <div className="bg-muted/30 p-4 rounded-lg border">
+            <FormLabel className="text-sm font-medium mb-3 block">Opções de edição</FormLabel>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="radio" 
+                    id="apenas-essa" 
+                    name="editOption" 
+                    value="single" 
+                    defaultChecked 
+                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                  />
+                  <label htmlFor="apenas-essa" className="text-sm cursor-pointer">Apenas essa</label>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="radio" 
+                    id="todas-futuras" 
+                    name="editOption" 
+                    value="all" 
+                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                  />
+                  <label htmlFor="todas-futuras" className="text-sm cursor-pointer">Todas as futuras também</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-3 justify-between items-center pt-4">
             {mode === 'edit' && <Button type="button" variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)} disabled={!isOnline} className="w-full sm:w-auto">
                 {t('common.delete')}

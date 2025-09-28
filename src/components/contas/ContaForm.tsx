@@ -409,32 +409,37 @@ const ContaForm: React.FC<ContaFormProps> = ({
       console.log(`⏱️ Diferença de tempo: ${timeDifference}ms (${timeDifference / (1000 * 60 * 60 * 24)} dias)`);
 
       // Buscar todas as transações futuras com mesmo codigo-trans
-      const { data: futureTransactions, error: fetchError } = await (supabase as any)
+      const { data: fetchedFutureTransactions, error: fetchError } = await (supabase as any)
         .from('poupeja_transactions')
         .select('id, date')
         .eq('user_id', targetUserId)
         .eq('formato', 'agenda')
-        .eq('codigo-trans', codigoTrans)
+        .eq('codigo-trans', Number(codigoTrans))
         .neq('id', initialData?.id)
-        .gt('date', (initialData as any)?.date);
+        .gt('date', new Date((initialData as any)?.date).toISOString());
 
       if (fetchError) {
         console.error('❌ Erro ao buscar transações futuras:', fetchError);
         throw fetchError;
       }
 
-      if (!futureTransactions || futureTransactions.length === 0) {
+      // Usar lista buscada; se vazia, cair para a lista do estado
+      const listToUpdate = (fetchedFutureTransactions && fetchedFutureTransactions.length > 0)
+        ? fetchedFutureTransactions
+        : (futureTransactions || []);
+
+      if (!listToUpdate || listToUpdate.length === 0) {
         console.log('ℹ️ Nenhuma transação futura encontrada para atualizar');
         return;
       }
 
-      console.log(`🔍 Encontradas ${futureTransactions.length} transações futuras para deslocar`);
+      console.log(`🔍 Encontradas ${listToUpdate.length} transações futuras para deslocar`);
 
       // Encontrar a categoria selecionada
       const selectedCategory = categories.find(cat => cat.id === values.category);
 
       // Atualizar cada transação individualmente com a nova data deslocada
-      for (const transaction of futureTransactions) {
+      for (const transaction of listToUpdate) {
         const originalTxDate = new Date(transaction.date);
         const newTxDate = new Date(originalTxDate.getTime() + timeDifference);
         
@@ -461,7 +466,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
         }
       }
 
-      console.log(`✅ ${futureTransactions.length} transações futuras deslocadas com sucesso`);
+      console.log(`✅ ${listToUpdate.length} transações futuras deslocadas com sucesso`);
     } catch (error) {
       console.error('❌ Erro em updateFutureTransactions:', error);
       toast.error('Erro ao atualizar transações futuras');

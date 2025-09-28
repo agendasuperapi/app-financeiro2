@@ -407,7 +407,6 @@ const ContaForm: React.FC<ContaFormProps> = ({
         conta: values.conta,
         name: values.name,
         phone: values.phone,
-        date: new Date(values.scheduledDate).toISOString(),
       };
       console.log(`🔄 Atualizando transações futuras com codigo-trans: ${codigoTrans}`);
       console.log('📋 Dados de atualização:', updateData);

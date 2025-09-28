@@ -360,13 +360,15 @@ const ContaForm: React.FC<ContaFormProps> = ({
 
       // If user selected to edit all, update future ones BEFORE closing dialog
       if (editAll && futureTransactions.length > 0) {
-        const codigoTrans = (initialData as any)?.['codigo-trans'];
-        if (codigoTrans) {
-          await updateFutureTransactions(values, codigoTrans);
-          toast.success(`✅ Transação atual e mais ${futureTransactions.length} transações futuras atualizadas`);
+        // Tentar obter codigo-trans; se não existir, tentar extrair do reference_code (removendo a letra inicial)
+        const codigoTransRaw = (initialData as any)?.['codigo-trans'] || (initialData as any)?.reference_code?.toString()?.replace(/^[A-Za-z]/, '');
+        if (codigoTransRaw) {
+          await updateFutureTransactions(values, codigoTransRaw);
         } else {
-          toast.success('✅ Transação atualizada com sucesso');
+          // Sem codigo-trans: usar a lista de transações futuras já carregada
+          await updateFutureTransactionsByList(values, futureTransactions as any);
         }
+        toast.success(`✅ Transação atual e mais ${futureTransactions.length} transações futuras atualizadas`);
       } else {
         toast.success('✅ Transação atualizada com sucesso');
       }
@@ -462,6 +464,44 @@ const ContaForm: React.FC<ContaFormProps> = ({
       console.log(`✅ ${futureTransactions.length} transações futuras deslocadas com sucesso`);
     } catch (error) {
       console.error('❌ Erro em updateFutureTransactions:', error);
+      toast.error('Erro ao atualizar transações futuras');
+      throw error;
+    }
+  };
+
+  // Atualiza futuras a partir de uma lista já carregada (fallback quando não há codigo-trans)
+  const updateFutureTransactionsByList = async (values: ContaFormValues, list: Array<{ id: string; date: string }>) => {
+    try {
+      // Calcular a diferença entre a data original e a nova data
+      const originalDate = new Date((initialData as any)?.date);
+      const newDate = new Date(values.scheduledDate);
+      const timeDifference = newDate.getTime() - originalDate.getTime();
+
+      for (const tx of list) {
+        const originalTxDate = new Date(tx.date);
+        const newTxDate = new Date(originalTxDate.getTime() + timeDifference);
+
+        const updateData = {
+          type: values.type,
+          amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
+          category_id: values.category,
+          conta: values.conta,
+          name: values.name,
+          phone: values.phone,
+          date: newTxDate.toISOString(),
+        };
+
+        const { error: updateError } = await (supabase as any)
+          .from('poupeja_transactions')
+          .update(updateData)
+          .eq('id', tx.id);
+
+        if (updateError) throw updateError;
+      }
+
+      console.log(`✅ ${list.length} transações futuras deslocadas (fallback) com sucesso`);
+    } catch (error) {
+      console.error('❌ Erro em updateFutureTransactionsByList:', error);
       toast.error('Erro ao atualizar transações futuras');
       throw error;
     }

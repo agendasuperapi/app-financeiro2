@@ -16,7 +16,6 @@ import { getCategoriesByType } from '@/services/categoryService';
 import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
 import ContaAddedByGrid from '@/components/common/ContaAddedByGrid';
-import BulkEditDialog from '@/components/contas/BulkEditDialog';
 import { toast } from 'sonner';
 interface ContaFormProps {
   initialData?: ScheduledTransaction | null;
@@ -59,8 +58,8 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const [isOnline] = useState(navigator.onLine);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
-  const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false);
   const [futureTransactions, setFutureTransactions] = useState<any[]>([]);
+  const [editOption, setEditOption] = useState<'single' | 'all'>('single');
 
   // Check for future transactions with same codigo-trans
   const checkForRelatedTransactions = async (codigoTrans: string | number, currentId: string) => {
@@ -191,8 +190,10 @@ const ContaForm: React.FC<ContaFormProps> = ({
           if (Array.isArray(relatedTransactions) && relatedTransactions.length > 0) {
             console.log(`📋 Encontradas ${relatedTransactions.length} transações com o mesmo codigo-trans`);
             setFutureTransactions(relatedTransactions);
-            setBulkEditDialogOpen(true);
-            return; // Aguardar decisão do usuário
+            // Não abrir o dialog, usar a escolha inline
+            const shouldEditAll = editOption === 'all';
+            await performUpdate(values, shouldEditAll);
+            return;
           } else {
             console.log('✅ Nenhuma duplicata encontrada, prosseguindo com edição normal');
           }
@@ -394,19 +395,6 @@ const ContaForm: React.FC<ContaFormProps> = ({
     }
   };
 
-  const handleBulkEditConfirm = (editAll: boolean) => {
-    setBulkEditDialogOpen(false);
-    const values = form.getValues();
-    
-    if (editAll) {
-      console.log(`📝 Aplicando edição a ${futureTransactions.length + 1} transações (atual + futuras)`);
-    } else {
-      console.log('📝 Aplicando edição apenas à transação atual');
-    }
-    
-    performUpdate(values, editAll);
-  };
-
   // Delete handler
   const handleDelete = async () => {
     if (initialData) {
@@ -547,37 +535,52 @@ const ContaForm: React.FC<ContaFormProps> = ({
                 <FormMessage />
               </FormItem>} />
 
-          {/* Opções de edição */}
-          <div className="bg-muted/30 p-4 rounded-lg border">
-            <FormLabel className="text-sm font-medium mb-3 block">Opções de edição</FormLabel>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  <input 
-                    type="radio" 
-                    id="apenas-essa" 
-                    name="editOption" 
-                    value="single" 
-                    defaultChecked 
-                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-                  />
-                  <label htmlFor="apenas-essa" className="text-sm cursor-pointer">Apenas essa</label>
+          {/* Opções de edição - só aparece quando há duplicatas */}
+          {futureTransactions.length > 0 && (
+            <div className="bg-muted/30 p-4 rounded-lg border">
+              <FormLabel className="text-sm font-medium mb-3 block">
+                Transações Relacionadas Encontradas ({futureTransactions.length})
+              </FormLabel>
+              <p className="text-sm text-muted-foreground mb-3">
+                Encontramos {futureTransactions.length} transação(ões) com o mesmo código desta transação. 
+                Como você gostaria de proceder?
+              </p>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="radio" 
+                      id="apenas-essa" 
+                      name="editOption" 
+                      value="single" 
+                      checked={editOption === 'single'}
+                      onChange={(e) => setEditOption('single')}
+                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                    />
+                    <label htmlFor="apenas-essa" className="text-sm cursor-pointer font-medium">
+                      Aplicar edição apenas a esta transação
+                    </label>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  <input 
-                    type="radio" 
-                    id="todas-futuras" 
-                    name="editOption" 
-                    value="all" 
-                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-                  />
-                  <label htmlFor="todas-futuras" className="text-sm cursor-pointer">Todas as futuras também</label>
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="radio" 
+                      id="todas-futuras" 
+                      name="editOption" 
+                      value="all" 
+                      checked={editOption === 'all'}
+                      onChange={(e) => setEditOption('all')}
+                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                    />
+                    <label htmlFor="todas-futuras" className="text-sm cursor-pointer font-medium">
+                      Aplicar edição a todas as transações futuras ({futureTransactions.length + 1} total)
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="flex flex-col sm:flex-row gap-3 justify-between items-center pt-4">
             {mode === 'edit' && <Button type="button" variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)} disabled={!isOnline} className="w-full sm:w-auto">
@@ -597,14 +600,6 @@ const ContaForm: React.FC<ContaFormProps> = ({
             </p>}
         </form>
       </Form>
-      
-      {/* Bulk Edit Dialog */}
-      <BulkEditDialog
-        open={bulkEditDialogOpen}
-        onOpenChange={setBulkEditDialogOpen}
-        futureTransactionsCount={futureTransactions.length}
-        onConfirm={handleBulkEditConfirm}
-      />
       
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -62,7 +62,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const [editOption, setEditOption] = useState<'single' | 'all'>('single');
 
   // Check for future transactions with same codigo-trans
-  const checkForRelatedTransactions = async (codigoTrans: string | number, currentId: string) => {
+  const checkForRelatedTransactions = async (codigoTrans: string | number, currentId: string, currentDate?: string) => {
     try {
       const codeStr = String(codigoTrans);
       console.log(`🔍 Verificando transações relacionadas por codigo-trans: ${codeStr}, excluindo id: ${currentId}`);
@@ -71,22 +71,39 @@ const ContaForm: React.FC<ContaFormProps> = ({
       const targetUserId = selectedUser?.id || user?.user?.id;
       if (!targetUserId || !codeStr) return [];
 
-      const { data, error } = await (supabase as any)
+      // 1) Tentativa direta pelo campo codigo-trans
+      let { data, error } = await (supabase as any)
         .from('poupeja_transactions')
-        .select('id, date, description')
+        .select('id, date, description, reference_code')
         .eq('user_id', targetUserId)
         .eq('formato', 'agenda')
         .eq('codigo-trans', codeStr)
         .neq('id', currentId)
         .order('date', { ascending: true });
 
-      if (error) {
-        console.error('❌ Erro ao verificar transações relacionadas:', error);
-        return [];
+      let rows = data || [];
+
+      // 2) Fallback: usar sufixo numérico no reference_code (ex.: B1757096724 -> 1757096724)
+      if ((error || rows.length === 0) && codeStr) {
+        const { data: likeData } = await (supabase as any)
+          .from('poupeja_transactions')
+          .select('id, date, description, reference_code')
+          .eq('user_id', targetUserId)
+          .eq('formato', 'agenda')
+          .like('reference_code', `%${codeStr}`)
+          .neq('id', currentId)
+          .order('date', { ascending: true });
+        rows = likeData || [];
       }
 
-      console.log(`✅ Encontradas ${data?.length || 0} transações relacionadas`);
-      return data || [];
+      // Manter apenas as futuras em relação à data atual da transação
+      if (currentDate) {
+        const baseDate = new Date(currentDate);
+        rows = rows.filter((r: any) => r?.date && new Date(r.date) > baseDate);
+      }
+
+      console.log(`✅ Encontradas ${rows.length} transações relacionadas (futuras)`);
+      return rows;
     } catch (error) {
       console.error('❌ Erro em checkForRelatedTransactions:', error);
       return [];
@@ -176,15 +193,16 @@ const ContaForm: React.FC<ContaFormProps> = ({
       // Verificar duplicatas quando carregar dados para edição
       const checkDuplicatesOnLoad = async () => {
         const codigoTrans = (initialData as any)?.['codigo-trans'];
+        const currentDate = (initialData as any)?.date as string | undefined;
         if (codigoTrans) {
           console.log(`🔍 Verificando duplicatas ao carregar para codigo-trans: ${codigoTrans}`);
-          const relatedTransactions = await checkForRelatedTransactions(codigoTrans, initialData.id);
+          const relatedTransactions = await checkForRelatedTransactions(codigoTrans, initialData.id, currentDate);
           
           if (Array.isArray(relatedTransactions) && relatedTransactions.length > 0) {
             console.log(`📋 Encontradas ${relatedTransactions.length} transações relacionadas ao carregar`);
             setFutureTransactions(relatedTransactions);
           } else {
-            console.log('✅ Nenhuma duplicata encontrada ao carregar');
+            console.log('✅ Nenhuma duplicata futura encontrada ao carregar');
             setFutureTransactions([]);
           }
         } else {
@@ -207,7 +225,8 @@ const ContaForm: React.FC<ContaFormProps> = ({
         
         if (codigoTrans) {
           console.log(`🔍 Verificando duplicatas para codigo-trans: ${codigoTrans}`);
-          const relatedTransactions = await checkForRelatedTransactions(codigoTrans, initialData.id);
+          const currentDate = (initialData as any)?.date as string | undefined;
+          const relatedTransactions = await checkForRelatedTransactions(codigoTrans, initialData.id, currentDate);
           
           if (Array.isArray(relatedTransactions) && relatedTransactions.length > 0) {
             console.log(`📋 Encontradas ${relatedTransactions.length} transações com o mesmo codigo-trans`);
@@ -395,14 +414,21 @@ const ContaForm: React.FC<ContaFormProps> = ({
       console.log(`🔄 Atualizando transações futuras com codigo-trans: ${codigoTrans}`);
       console.log('📋 Dados de atualização:', updateData);
 
-      // Atualizar todas as transações com mesmo codigo-trans, exceto a atual
-      const { error } = await (supabase as any)
+      // Atualizar todas as transações com mesmo codigo-trans, exceto a atual e apenas FUTURAS
+      let query = (supabase as any)
         .from('poupeja_transactions')
         .update(updateData)
         .eq('user_id', targetUserId)
         .eq('formato', 'agenda')
         .eq('codigo-trans', codigoTrans)
         .neq('id', initialData?.id);
+
+      const currentTxDate = (initialData as any)?.date as string | undefined;
+      if (currentTxDate) {
+        query = query.gt('date', currentTxDate);
+      }
+
+      const { error } = await query;
 
       if (error) {
         console.error('❌ Erro ao atualizar transações futuras:', error);

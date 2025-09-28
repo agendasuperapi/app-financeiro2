@@ -404,13 +404,11 @@ const ContaForm: React.FC<ContaFormProps> = ({
         type: values.type,
         amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
         category_id: values.category,
-        category: selectedCategory?.name || 'Outros',
         description: values.description,
         conta: values.conta,
         name: values.name,
-        phone: values.phone
+        phone: values.phone,
       };
-
       console.log(`🔄 Atualizando transações futuras com codigo-trans: ${codigoTrans}`);
       console.log('📋 Dados de atualização:', updateData);
 

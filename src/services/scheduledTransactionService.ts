@@ -80,12 +80,13 @@ export const getScheduledTransactions = async (userId?: string): Promise<Schedul
     console.log("DEBUG Scheduled: Transações carregadas:", filteredData.length);
     console.log("DEBUG Scheduled: Primeira transação:", filteredData[0]);
 
-    return filteredData.map((item: any) => {
+return filteredData.map((item: any) => {
       const creatorName = item.name ? item.name : undefined;
       
       console.log(`DEBUG Scheduled: Transação ${item.id} - user_id: ${item.user_id}, name: ${item.name}, finalCreator: ${creatorName}`);
       
-      return {
+      // Build typed object first
+      const tx: ScheduledTransaction = {
         id: item.id,
         type: item.type as 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros',
         amount: item.amount,
@@ -105,7 +106,15 @@ export const getScheduledTransactions = async (userId?: string): Promise<Schedul
         creatorName: creatorName,
         conta: item.conta || undefined,
         phone: item.phone || undefined,
+        reference_code: item.reference_code,
       };
+
+      // Attach non-typed fields used elsewhere in the app
+      (tx as any)['codigo-trans'] = item['codigo-trans'] ?? item['codigo_trans'] ?? item.codigo_trans ?? null;
+      // Provide raw date for compatibility with code that expects `date`
+      (tx as any).date = item.date;
+
+      return tx;
     });
   } catch (error) {
     console.error("Error fetching scheduled transactions:", error);

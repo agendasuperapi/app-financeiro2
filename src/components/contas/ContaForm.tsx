@@ -404,7 +404,6 @@ const ContaForm: React.FC<ContaFormProps> = ({
         type: values.type,
         amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
         category_id: values.category,
-        description: values.description,
         conta: values.conta,
         name: values.name,
         phone: values.phone,

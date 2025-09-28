@@ -172,6 +172,28 @@ const ContaForm: React.FC<ContaFormProps> = ({
     if (mode === 'edit' && initialData) {
       const newValues = getDefaultValues();
       form.reset(newValues);
+      
+      // Verificar duplicatas quando carregar dados para edição
+      const checkDuplicatesOnLoad = async () => {
+        const codigoTrans = (initialData as any)?.['codigo-trans'];
+        if (codigoTrans) {
+          console.log(`🔍 Verificando duplicatas ao carregar para codigo-trans: ${codigoTrans}`);
+          const relatedTransactions = await checkForRelatedTransactions(codigoTrans, initialData.id);
+          
+          if (Array.isArray(relatedTransactions) && relatedTransactions.length > 0) {
+            console.log(`📋 Encontradas ${relatedTransactions.length} transações relacionadas ao carregar`);
+            setFutureTransactions(relatedTransactions);
+          } else {
+            console.log('✅ Nenhuma duplicata encontrada ao carregar');
+            setFutureTransactions([]);
+          }
+        } else {
+          console.log('ℹ️ Transação não possui codigo-trans');
+          setFutureTransactions([]);
+        }
+      };
+      
+      checkDuplicatesOnLoad();
     }
   }, [initialData?.id, mode]);
 

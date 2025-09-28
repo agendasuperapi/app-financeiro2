@@ -219,7 +219,7 @@ const LoginPage = () => {
                 <Button 
                   variant="outline" 
                   className="w-full" 
-                  onClick={() => navigate('/checkout/monthly')}
+                  onClick={() => window.open('https://appfinanceiro.com/', '_blank')}
                   disabled={isLoading}
                 >
                   Não tenho plano

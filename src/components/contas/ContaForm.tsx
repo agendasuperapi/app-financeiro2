@@ -358,14 +358,8 @@ const ContaForm: React.FC<ContaFormProps> = ({
       }
       console.log('🎉 Form completed successfully');
 
-      // Call onSuccess callback if provided
-      if (onSuccess) {
-        console.log('🔄 Calling onSuccess callback');
-        onSuccess();
-      }
-
+      // If user selected to edit all, update future ones BEFORE closing dialog
       if (editAll && futureTransactions.length > 0) {
-        // Atualizar todas as transações futuras com mesmo codigo-trans
         const codigoTrans = (initialData as any)?.['codigo-trans'];
         if (codigoTrans) {
           await updateFutureTransactions(values, codigoTrans);
@@ -375,6 +369,12 @@ const ContaForm: React.FC<ContaFormProps> = ({
         }
       } else {
         toast.success('✅ Transação atualizada com sucesso');
+      }
+
+      // Call onSuccess only after all updates are done
+      if (onSuccess) {
+        console.log('🔄 Calling onSuccess callback');
+        onSuccess();
       }
     } catch (error) {
       console.error('❌ Error in performUpdate:', error);

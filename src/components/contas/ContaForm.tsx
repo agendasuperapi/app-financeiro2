@@ -397,42 +397,69 @@ const ContaForm: React.FC<ContaFormProps> = ({
         return;
       }
 
-      // Encontrar a categoria selecionada
-      const selectedCategory = categories.find(cat => cat.id === values.category);
+      // Calcular a diferença entre a data original e a nova data
+      const originalDate = new Date((initialData as any)?.date);
+      const newDate = new Date(values.scheduledDate);
+      const timeDifference = newDate.getTime() - originalDate.getTime();
+      
+      console.log(`📅 Data original: ${originalDate.toISOString()}`);
+      console.log(`📅 Nova data: ${newDate.toISOString()}`);
+      console.log(`⏱️ Diferença de tempo: ${timeDifference}ms (${timeDifference / (1000 * 60 * 60 * 24)} dias)`);
 
-      const updateData = {
-        type: values.type,
-        amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
-        category_id: values.category,
-        conta: values.conta,
-        name: values.name,
-        phone: values.phone,
-      };
-      console.log(`🔄 Atualizando transações futuras com codigo-trans: ${codigoTrans}`);
-      console.log('📋 Dados de atualização:', updateData);
-
-      // Atualizar todas as transações com mesmo codigo-trans, exceto a atual e apenas FUTURAS
-      let query = (supabase as any)
+      // Buscar todas as transações futuras com mesmo codigo-trans
+      const { data: futureTransactions, error: fetchError } = await (supabase as any)
         .from('poupeja_transactions')
-        .update(updateData)
+        .select('id, date')
         .eq('user_id', targetUserId)
         .eq('formato', 'agenda')
         .eq('codigo-trans', codigoTrans)
-        .neq('id', initialData?.id);
+        .neq('id', initialData?.id)
+        .gt('date', (initialData as any)?.date);
 
-      const currentTxDate = (initialData as any)?.date as string | undefined;
-      if (currentTxDate) {
-        query = query.gt('date', currentTxDate);
+      if (fetchError) {
+        console.error('❌ Erro ao buscar transações futuras:', fetchError);
+        throw fetchError;
       }
 
-      const { error } = await query;
-
-      if (error) {
-        console.error('❌ Erro ao atualizar transações futuras:', error);
-        throw error;
+      if (!futureTransactions || futureTransactions.length === 0) {
+        console.log('ℹ️ Nenhuma transação futura encontrada para atualizar');
+        return;
       }
 
-      console.log(`✅ Transações futuras atualizadas com sucesso`);
+      console.log(`🔍 Encontradas ${futureTransactions.length} transações futuras para deslocar`);
+
+      // Encontrar a categoria selecionada
+      const selectedCategory = categories.find(cat => cat.id === values.category);
+
+      // Atualizar cada transação individualmente com a nova data deslocada
+      for (const transaction of futureTransactions) {
+        const originalTxDate = new Date(transaction.date);
+        const newTxDate = new Date(originalTxDate.getTime() + timeDifference);
+        
+        console.log(`📆 Transação ${transaction.id}: ${originalTxDate.toISOString()} → ${newTxDate.toISOString()}`);
+
+        const updateData = {
+          type: values.type,
+          amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
+          category_id: values.category,
+          conta: values.conta,
+          name: values.name,
+          phone: values.phone,
+          date: newTxDate.toISOString(),
+        };
+
+        const { error: updateError } = await (supabase as any)
+          .from('poupeja_transactions')
+          .update(updateData)
+          .eq('id', transaction.id);
+
+        if (updateError) {
+          console.error(`❌ Erro ao atualizar transação ${transaction.id}:`, updateError);
+          throw updateError;
+        }
+      }
+
+      console.log(`✅ ${futureTransactions.length} transações futuras deslocadas com sucesso`);
     } catch (error) {
       console.error('❌ Erro em updateFutureTransactions:', error);
       toast.error('Erro ao atualizar transações futuras');

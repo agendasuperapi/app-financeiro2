@@ -27,8 +27,7 @@ const LimitsPage: React.FC = () => {
     const expense: Goal[] = [];
 
     allLimits.forEach(limit => {
-      const category = categories.find(cat => cat.id === limit.category_id);
-      if (category?.type === 'income') {
+      if (limit.type === 'income') {
         income.push(limit);
       } else {
         expense.push(limit);
@@ -36,7 +35,7 @@ const LimitsPage: React.FC = () => {
     });
 
     return { incomeLimits: income, expenseLimits: expense };
-  }, [goals, categories]);
+  }, [goals]);
 
   const handleAddLimit = () => {
     setIsAddModalOpen(true);

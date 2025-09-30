@@ -34,6 +34,7 @@ export interface Goal {
   endDate?: string; // Optional end date
   deadline?: string; // Optional deadline date
   color: string;
+  type?: 'income' | 'expense'; // Type of goal/limit
   transactions: Transaction[];
   // Database fields for compatibility
   target_amount?: number;
@@ -43,6 +44,7 @@ export interface Goal {
   user_id?: string;
   created_at?: string;
   updated_at?: string;
+  category_id?: string;
 }
 
 export interface ScheduledTransaction {

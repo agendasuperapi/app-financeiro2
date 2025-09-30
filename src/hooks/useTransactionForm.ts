@@ -46,6 +46,7 @@ export const useTransactionForm = ({
       type: initialData?.type || defaultType,
       amount: initialData?.amount || 0,
       conta: initialData?.conta || '',
+      sub_conta: (initialData as any)?.sub_conta || '',
       category: initialData?.category_id || '',
       description: initialData?.description || '',
       date: initialData?.date 
@@ -111,6 +112,7 @@ export const useTransactionForm = ({
             goalId: processedValues.goalId,
             user_id: targetUserId,
             conta: processedValues.conta,
+            sub_conta: (processedValues as any).sub_conta,
             name: processedValues.name || undefined,
             status: processedValues.type === 'expense' ? 'paid' : 'recebido', // Set status based on type
           });
@@ -132,6 +134,7 @@ export const useTransactionForm = ({
             goalId: processedValues.goalId,
             category: '',
             conta: processedValues.conta,
+            sub_conta: (processedValues as any).sub_conta,
             creatorName: processedValues.name || undefined,
             status: processedValues.type === 'expense' ? 'paid' : 'recebido', // Set status based on type
             // name will be saved in DB via AppContext addTransaction
@@ -161,6 +164,7 @@ export const useTransactionForm = ({
           date: new Date(processedValues.date).toISOString(),
           goalId: processedValues.goalId,
           conta: processedValues.conta,
+          sub_conta: (processedValues as any).sub_conta,
           creatorName: processedValues.name || undefined,
         });
         
@@ -199,6 +203,7 @@ export const useTransactionForm = ({
         type: initialData.type,
         amount: initialData.amount,
         conta: initialData.conta || '',
+        sub_conta: (initialData as any)?.sub_conta || '',
         category: initialData.category_id || '',
         description: initialData.description || '',
         date: new Date(initialData.date).toISOString().split('T')[0],
@@ -211,6 +216,7 @@ export const useTransactionForm = ({
         type: defaultType,
         amount: 0,
         conta: '',
+        sub_conta: '',
         category: '',
         description: '',
         date: new Date().toISOString().split('T')[0],

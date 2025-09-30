@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, User, Target } from 'lucide-react';
+import { Plus, User, Target, TrendingDown, TrendingUp } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import { LimiteCard } from '@/components/limits/LimiteCard';
 import { AddLimitModal } from '@/components/limits/AddLimitModal';
@@ -8,6 +8,7 @@ import { AddGoalModal } from '@/components/limits/AddGoalModal';
 import { EditLimitModal } from '@/components/limits/EditLimitModal';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { useApp } from '@/contexts/AppContext';
 import { Goal } from '@/types';
 
 const LimitsPage: React.FC = () => {
@@ -16,10 +17,26 @@ const LimitsPage: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingLimit, setEditingLimit] = useState<Goal | null>(null);
   const { goals, getGoals, deleteGoal, isClientView, selectedUser, refetchClientData } = useClientAwareData();
+  const { categories } = useApp();
   const { t } = usePreferences();
 
-  // Filtrar apenas os goals que são limites (poderemos adicionar um campo type futuramente)
-  const limits = goals || [];
+  // Separar limites/metas por tipo (receita vs despesa)
+  const { incomeLimits, expenseLimits } = useMemo(() => {
+    const allLimits = goals || [];
+    const income: Goal[] = [];
+    const expense: Goal[] = [];
+
+    allLimits.forEach(limit => {
+      const category = categories.find(cat => cat.id === limit.category_id);
+      if (category?.type === 'income') {
+        income.push(limit);
+      } else {
+        expense.push(limit);
+      }
+    });
+
+    return { incomeLimits: income, expenseLimits: expense };
+  }, [goals, categories]);
 
   const handleAddLimit = () => {
     setIsAddModalOpen(true);
@@ -48,7 +65,8 @@ const LimitsPage: React.FC = () => {
   };
 
   const handleEditLimit = (id: string) => {
-    const limit = limits.find(l => l.id === id);
+    const allLimits = [...incomeLimits, ...expenseLimits];
+    const limit = allLimits.find(l => l.id === id);
     if (limit) {
       setEditingLimit(limit);
       setIsEditModalOpen(true);
@@ -108,28 +126,63 @@ const LimitsPage: React.FC = () => {
           )}
         </div>
 
-        {/* Grid de Limites */}
-        {limits.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {limits.map((limit) => (
-              <LimiteCard
-                key={limit.id}
-                limit={limit}
-                onEdit={handleEditLimit}
-                onDelete={handleDeleteLimit}
-              />
-            ))}
+        {/* Seção de Metas (Receitas) */}
+        {incomeLimits.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-green-600" />
+              <h2 className="text-2xl font-semibold">Metas de Receita</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {incomeLimits.map((limit) => (
+                <LimiteCard
+                  key={limit.id}
+                  limit={limit}
+                  onEdit={handleEditLimit}
+                  onDelete={handleDeleteLimit}
+                />
+              ))}
+            </div>
           </div>
-        ) : (
+        )}
+
+        {/* Seção de Limites (Despesas) */}
+        {expenseLimits.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <TrendingDown className="h-5 w-5 text-red-600" />
+              <h2 className="text-2xl font-semibold">Limites de Despesa</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {expenseLimits.map((limit) => (
+                <LimiteCard
+                  key={limit.id}
+                  limit={limit}
+                  onEdit={handleEditLimit}
+                  onDelete={handleDeleteLimit}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {incomeLimits.length === 0 && expenseLimits.length === 0 && (
           <div className="text-center py-12">
             <div className="text-muted-foreground mb-4">
-              <p className="text-lg">Nenhum limite configurado ainda.</p>
-              <p>Comece adicionando seu primeiro limite de gastos.</p>
+              <p className="text-lg">Nenhum limite ou meta configurado ainda.</p>
+              <p>Comece adicionando seus limites de gastos ou metas de receita.</p>
             </div>
-            <Button onClick={handleAddLimit} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Adicionar Primeiro Limite
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={handleAddLimit} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Adicionar Limite
+              </Button>
+              <Button onClick={handleAddGoal} className="gap-2" variant="secondary">
+                <Target className="h-4 w-4" />
+                Adicionar Meta
+              </Button>
+            </div>
           </div>
         )}
       </div>

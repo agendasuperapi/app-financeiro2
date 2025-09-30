@@ -8,7 +8,7 @@ import { AddGoalModal } from '@/components/limits/AddGoalModal';
 import { EditLimitModal } from '@/components/limits/EditLimitModal';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { usePreferences } from '@/contexts/PreferencesContext';
-
+import { useApp } from '@/contexts/AppContext';
 import { Goal } from '@/types';
 
 const LimitsPage: React.FC = () => {
@@ -16,27 +16,19 @@ const LimitsPage: React.FC = () => {
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingLimit, setEditingLimit] = useState<Goal | null>(null);
-  const { goals, transactions, getGoals, deleteGoal, isClientView, selectedUser, refetchClientData } = useClientAwareData();
-  
+  const { goals, getGoals, deleteGoal, isClientView, selectedUser, refetchClientData } = useClientAwareData();
+  const { categories } = useApp();
   const { t } = usePreferences();
 
-  // Separar por tipo usando as transações vinculadas (poupeja_transactions.type)
+  // Separar limites/metas por tipo (receita vs despesa)
   const { incomeLimits, expenseLimits } = useMemo(() => {
     const allLimits = goals || [];
-    const allTx = (transactions as any[]) || [];
     const income: Goal[] = [];
     const expense: Goal[] = [];
 
     allLimits.forEach(limit => {
-      const hasIncome = allTx.some((tr: any) => (
-        (tr.goalId === limit.id || tr.goal_id === limit.id) &&
-        (
-          (typeof tr.type === 'string' && tr.type.toLowerCase() === 'income') ||
-          (typeof tr.Type === 'string' && tr.Type.toLowerCase() === 'income') ||
-          (typeof tr.sub_conta === 'string' && tr.sub_conta.toLowerCase() === 'income')
-        )
-      ));
-      if (hasIncome) {
+      const category = categories.find(cat => cat.id === limit.category_id);
+      if (category?.type === 'income') {
         income.push(limit);
       } else {
         expense.push(limit);
@@ -44,7 +36,7 @@ const LimitsPage: React.FC = () => {
     });
 
     return { incomeLimits: income, expenseLimits: expense };
-  }, [goals, transactions]);
+  }, [goals, categories]);
 
   const handleAddLimit = () => {
     setIsAddModalOpen(true);

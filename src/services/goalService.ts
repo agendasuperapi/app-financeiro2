@@ -50,6 +50,7 @@ export const getGoals = async (): Promise<Goal[]> => {
         endDate: goalData.end_date,
         deadline: goalData.deadline,
         color: goalData.color,
+        type: (goalData as any).type as 'income' | 'expense',
         transactions: transactions ? transactions.map((t) => ({
           id: t.id,
           type: t.type as 'income' | 'expense',
@@ -119,6 +120,7 @@ export const addGoal = async (goal: Omit<Goal, "id" | "transactions">, categoryI
       endDate: data.end_date,
       deadline: data.deadline,
       color: data.color,
+      type: (data as any).type as 'income' | 'expense',
       transactions: []
     };
   } catch (error) {
@@ -162,6 +164,7 @@ export const updateGoal = async (goal: Omit<Goal, "transactions">): Promise<Goal
       endDate: data.end_date,
       deadline: data.deadline,
       color: data.color,
+      type: (data as any).type as 'income' | 'expense',
       transactions: transactions ? transactions.map((t) => ({
         id: t.id,
         type: t.type as 'income' | 'expense',

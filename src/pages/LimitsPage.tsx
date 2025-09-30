@@ -16,18 +16,26 @@ const LimitsPage: React.FC = () => {
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingLimit, setEditingLimit] = useState<Goal | null>(null);
-  const { goals, getGoals, deleteGoal, isClientView, selectedUser, refetchClientData } = useClientAwareData();
+  const { goals, transactions, getGoals, deleteGoal, isClientView, selectedUser, refetchClientData } = useClientAwareData();
   
   const { t } = usePreferences();
 
   // Separar por tipo usando as transações vinculadas (poupeja_transactions.type)
   const { incomeLimits, expenseLimits } = useMemo(() => {
     const allLimits = goals || [];
+    const allTx = (transactions as any[]) || [];
     const income: Goal[] = [];
     const expense: Goal[] = [];
 
     allLimits.forEach(limit => {
-      const hasIncome = (limit.transactions || []).some(tr => tr.type === 'income');
+      const hasIncome = allTx.some((tr: any) => (
+        (tr.goalId === limit.id || tr.goal_id === limit.id) &&
+        (
+          (typeof tr.type === 'string' && tr.type.toLowerCase() === 'income') ||
+          (typeof tr.Type === 'string' && tr.Type.toLowerCase() === 'income') ||
+          (typeof tr.sub_conta === 'string' && tr.sub_conta.toLowerCase() === 'income')
+        )
+      ));
       if (hasIncome) {
         income.push(limit);
       } else {
@@ -36,7 +44,7 @@ const LimitsPage: React.FC = () => {
     });
 
     return { incomeLimits: income, expenseLimits: expense };
-  }, [goals]);
+  }, [goals, transactions]);
 
   const handleAddLimit = () => {
     setIsAddModalOpen(true);

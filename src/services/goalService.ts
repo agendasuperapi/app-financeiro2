@@ -51,17 +51,21 @@ export const getGoals = async (): Promise<Goal[]> => {
         deadline: goalData.deadline,
         color: goalData.color,
         type: (goalData as any).category?.type || 'expense',
-        transactions: transactions ? transactions.map((t) => ({
-          id: t.id,
-          type: t.type as 'income' | 'expense',
-          amount: t.amount,
-          category: t.category ? t.category.name : "Outros",
-          categoryColor: t.category ? t.category.color : "#9E9E9E",
-          categoryIcon: t.category ? t.category.icon : "grid",
-          description: t.description || "",
-          date: t.date,
-          goalId: t.goal_id
-        })) : []
+        transactions: transactions ? transactions.map((t) => {
+          const rawType = (t as any).type ?? (t as any).Type ?? (t as any).sub_conta;
+          const normalizedType = typeof rawType === 'string' && rawType.toLowerCase() === 'income' ? 'income' : 'expense';
+          return {
+            id: t.id,
+            type: normalizedType as 'income' | 'expense',
+            amount: t.amount,
+            category: t.category ? t.category.name : "Outros",
+            categoryColor: t.category ? t.category.color : "#9E9E9E",
+            categoryIcon: t.category ? t.category.icon : "grid",
+            description: t.description || "",
+            date: t.date,
+            goalId: t.goal_id
+          };
+        }) : []
       });
     }
 
@@ -160,17 +164,21 @@ export const updateGoal = async (goal: Omit<Goal, "transactions">): Promise<Goal
       endDate: data.end_date,
       deadline: data.deadline,
       color: data.color,
-      transactions: transactions ? transactions.map((t) => ({
-        id: t.id,
-        type: t.type as 'income' | 'expense',
-        amount: t.amount,
-        category: t.category ? t.category.name : "Outros",
-        categoryColor: t.category ? t.category.color : "#9E9E9E",
-        categoryIcon: t.category ? t.category.icon : "grid",
-        description: t.description || "",
-        date: t.date,
-        goalId: t.goal_id
-      })) : []
+        transactions: transactions ? transactions.map((t) => {
+          const rawType = (t as any).type ?? (t as any).Type ?? (t as any).sub_conta;
+          const normalizedType = typeof rawType === 'string' && rawType.toLowerCase() === 'income' ? 'income' : 'expense';
+          return {
+            id: t.id,
+            type: normalizedType as 'income' | 'expense',
+            amount: t.amount,
+            category: t.category ? t.category.name : "Outros",
+            categoryColor: t.category ? t.category.color : "#9E9E9E",
+            categoryIcon: t.category ? t.category.icon : "grid",
+            description: t.description || "",
+            date: t.date,
+            goalId: t.goal_id
+          };
+        }) : []
     };
   } catch (error) {
     console.error("Error updating goal:", error);

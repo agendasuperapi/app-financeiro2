@@ -226,12 +226,6 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
               {getCurrencySymbol()}{spentAmount.toFixed(2)}
             </span>
           </div>
-          {subConta && (
-            <div className="flex justify-between text-sm">
-              <span className="font-medium">Conta:</span>
-              <span className="text-muted-foreground">{subConta}</span>
-            </div>
-          )}
         </div>
 
         {/* Barra de Progresso */}

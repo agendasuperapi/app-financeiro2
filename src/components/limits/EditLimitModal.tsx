@@ -85,31 +85,37 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
     type: string;
   }>>([]);
 
-  // Fetch categories from database
+  // Fetch categories from database based on limit type
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        const categoryType = limit?.type || 'expense';
+        console.log('Fetching categories for type:', categoryType);
+        
         const { data, error } = await supabase
           .from('poupeja_categories')
           .select('id, name, color, type')
-          .eq('type', 'expense')
+          .eq('type', categoryType)
           .order('name');
 
         if (error) {
           console.error('Error fetching categories:', error);
+          toast.error('Erro ao carregar categorias');
           return;
         }
 
+        console.log('Fetched categories:', data);
         setCategories(data || []);
       } catch (error) {
         console.error('Error fetching categories:', error);
+        toast.error('Erro ao carregar categorias');
       }
     };
 
-    if (open) {
+    if (open && limit) {
       fetchCategories();
     }
-  }, [open]);
+  }, [open, limit]);
 
   // Get currency symbol with space
   const getCurrencySymbol = () => {
@@ -127,6 +133,8 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
   // Update form when limit changes
   useEffect(() => {
     if (limit && categories.length > 0) {
+      console.log('Populating form with limit:', limit);
+      
       const startStr = (limit.startDate || limit.start_date || '').split('T')[0];
       const endStrRaw = (limit.endDate || limit.end_date || '');
       const endStr = endStrRaw ? endStrRaw.split('T')[0] : '';
@@ -135,8 +143,9 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
       const startDate = startStr ? parse(startStr, 'yyyy-MM-dd', new Date()) : null;
       const endDate = endStr ? parse(endStr, 'yyyy-MM-dd', new Date()) : null;
       
-      // Find category by name
-      const category = categories.find(cat => cat.name === limit.name.split(' - ')[0]);
+      // Get category_id from limit object
+      const categoryId = (limit as any).category_id || '';
+      console.log('Using category_id:', categoryId);
       
       // Determine period type (same month/year and starts on day 1)
       const isMonthly = !!(startDate && endDate &&
@@ -144,14 +153,17 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
         endDate.getMonth() === startDate.getMonth() &&
         endDate.getFullYear() === startDate.getFullYear());
 
-      form.reset({
-        categoryId: category?.id || '',
-        periodType: isMonthly ? 'monthly' : 'specific',
-        monthYear: isMonthly ? format(startDate, 'yyyy-MM') : undefined,
-        startDate: !isMonthly ? startDate : undefined,
+      const formData = {
+        categoryId: categoryId,
+        periodType: (isMonthly ? 'monthly' : 'specific') as 'monthly' | 'specific',
+        monthYear: isMonthly && startDate ? format(startDate, 'yyyy-MM') : undefined,
+        startDate: !isMonthly && startDate ? startDate : undefined,
         endDate: !isMonthly && endDate ? endDate : undefined,
         limitAmount: limit.targetAmount || limit.target_amount || 0,
-      });
+      };
+      
+      console.log('Form data to populate:', formData);
+      form.reset(formData);
     }
   }, [limit, categories, form]);
 

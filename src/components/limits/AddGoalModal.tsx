@@ -88,27 +88,39 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          console.error('No authenticated user');
+          toast.error('Usuário não autenticado');
+          return;
+        }
+
         const { data, error } = await supabase
           .from('poupeja_categories')
           .select('id, name, color, type')
           .eq('type', 'income')
+          .eq('user_id', selectedUser?.id || user.id)
           .order('name');
 
         if (error) {
           console.error('Error fetching categories:', error);
+          toast.error('Erro ao carregar categorias');
           return;
         }
 
+        console.log('Fetched income categories:', data);
         setCategories(data || []);
       } catch (error) {
         console.error('Error fetching categories:', error);
+        toast.error('Erro ao carregar categorias');
       }
     };
 
     if (open) {
       fetchCategories();
     }
-  }, [open]);
+  }, [open, selectedUser]);
 
   // Get currency symbol with space
   const getCurrencySymbol = () => {

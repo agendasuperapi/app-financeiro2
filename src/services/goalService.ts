@@ -17,7 +17,7 @@ export const getGoals = async (): Promise<Goal[]> => {
 
     const { data, error } = await supabase
       .from("poupeja_goals")
-      .select("*")
+      .select("*, category:poupeja_categories(type)")
       .eq("user_id", userId);
 
     if (error) {
@@ -50,6 +50,7 @@ export const getGoals = async (): Promise<Goal[]> => {
         endDate: goalData.end_date,
         deadline: goalData.deadline,
         color: goalData.color,
+        type: (goalData as any).category?.type || 'expense',
         transactions: transactions ? transactions.map((t) => ({
           id: t.id,
           type: t.type as 'income' | 'expense',

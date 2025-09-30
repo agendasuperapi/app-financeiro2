@@ -121,6 +121,11 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
 
   const progress = Math.min(Math.round((Math.abs(actualAmount) / currentGoal.targetAmount) * 100), 100);
   
+  // Check if limit is exceeded (for expenses) or goal not met (for income)
+  const isExceeded = currentGoal.type === 'expense' 
+    ? Math.abs(actualAmount) > currentGoal.targetAmount
+    : false; // For income goals, we don't mark as "exceeded"
+  
   const handlePreviousGoal = () => {
     onGoalChange(currentGoalIndex > 0 ? currentGoalIndex - 1 : goals.length - 1);
   };
@@ -131,7 +136,7 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
   
   return (
     <motion.div 
-      className="p-4 bg-card border rounded-lg shadow-sm"
+      className={`p-4 border rounded-lg shadow-sm ${isExceeded ? 'bg-red-50 border-red-300 dark:bg-red-950/20 dark:border-red-800' : 'bg-card'}`}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}

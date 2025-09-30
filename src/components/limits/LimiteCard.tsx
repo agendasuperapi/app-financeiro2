@@ -20,6 +20,7 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
   const { currency } = usePreferences();
   const { transactions } = useApp();
   const [spentAmount, setSpentAmount] = useState(0);
+  const [subConta, setSubConta] = useState<string>('');
 
   // Get currency symbol with space
   const getCurrencySymbol = () => {
@@ -107,6 +108,18 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
         console.log('💰 Total expenses:', totalExpenses);
         console.log('💰 Net balance:', netBalance);
         setSpentAmount(netBalance);
+
+        // Get sub_conta from the most recent transaction (for income type)
+        const incomeTransactions = transactions?.filter(t => t.type === 'income') || [];
+        if (incomeTransactions.length > 0) {
+          // Sort by date descending to get most recent
+          const sortedTransactions = [...incomeTransactions].sort((a, b) => 
+            new Date(b.date).getTime() - new Date(a.date).getTime()
+          );
+          const mostRecentSubConta = (sortedTransactions[0] as any).sub_conta;
+          setSubConta(mostRecentSubConta || '');
+          console.log('📋 Sub_conta from most recent transaction:', mostRecentSubConta);
+        }
 
       } catch (error) {
         console.error('Error calculating spent amount:', error);
@@ -207,7 +220,7 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="font-medium">Saldo Líquido:</span>
+            <span className="font-medium">{subConta || 'Saldo Líquido'}:</span>
             <span className={`${spentAmount < 0 ? 'text-red-600' : 'text-green-600'} font-semibold`}>
               {getCurrencySymbol()}{spentAmount.toFixed(2)}
             </span>

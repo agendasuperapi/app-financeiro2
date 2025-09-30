@@ -8,7 +8,7 @@ import { AddGoalModal } from '@/components/limits/AddGoalModal';
 import { EditLimitModal } from '@/components/limits/EditLimitModal';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { usePreferences } from '@/contexts/PreferencesContext';
-import { useApp } from '@/contexts/AppContext';
+
 import { Goal } from '@/types';
 
 const LimitsPage: React.FC = () => {
@@ -17,17 +17,18 @@ const LimitsPage: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingLimit, setEditingLimit] = useState<Goal | null>(null);
   const { goals, getGoals, deleteGoal, isClientView, selectedUser, refetchClientData } = useClientAwareData();
-  const { categories } = useApp();
+  
   const { t } = usePreferences();
 
-  // Separar limites/metas por tipo (receita vs despesa)
+  // Separar por tipo usando as transações vinculadas (poupeja_transactions.type)
   const { incomeLimits, expenseLimits } = useMemo(() => {
     const allLimits = goals || [];
     const income: Goal[] = [];
     const expense: Goal[] = [];
 
     allLimits.forEach(limit => {
-      if (limit.type === 'income') {
+      const hasIncome = (limit.transactions || []).some(tr => tr.type === 'income');
+      if (hasIncome) {
         income.push(limit);
       } else {
         expense.push(limit);

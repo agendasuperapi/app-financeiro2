@@ -99,6 +99,7 @@ export const addTransaction = async (transaction: Omit<Transaction, "id">): Prom
       goalId: transaction.goalId,
       user_id: userId,
       conta: (transaction as any).conta || '',
+      sub_conta: (transaction as any).sub_conta,
       name: (transaction as any).name,
       phone: (transaction as any).phone,
       status: (transaction as any).status, // Pass status field
@@ -118,6 +119,7 @@ export const createTransactionForUser = async (transactionData: {
   goalId?: string;
   user_id: string;
   conta: string;
+  sub_conta?: string;
   name?: string;
   phone?: string;
   status?: string;
@@ -190,6 +192,7 @@ export const createTransactionForUser = async (transactionData: {
         user_id: transactionData.user_id,
         reference_code: referenceCode,
         conta: transactionData.conta,
+        sub_conta: transactionData.sub_conta,
         name: transactionData.name,
         phone: phoneValue,
         status: transactionData.status, // Add status field
@@ -291,6 +294,7 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
         date: transaction.date,
         goal_id: transaction.goalId,
         conta: transaction.conta,
+        sub_conta: transaction.sub_conta,
         name: (transaction as any).creatorName,
         phone: (transaction as any).phone,
         reference_code: await getNextReferenceCode(), // Generate new reference code for updates

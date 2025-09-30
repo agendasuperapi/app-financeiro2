@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, User } from 'lucide-react';
+import { Plus, User, Target } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import { LimiteCard } from '@/components/limits/LimiteCard';
 import { AddLimitModal } from '@/components/limits/AddLimitModal';
+import { AddGoalModal } from '@/components/limits/AddGoalModal';
 import { EditLimitModal } from '@/components/limits/EditLimitModal';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -11,6 +12,7 @@ import { Goal } from '@/types';
 
 const LimitsPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingLimit, setEditingLimit] = useState<Goal | null>(null);
   const { goals, getGoals, deleteGoal, isClientView, selectedUser, refetchClientData } = useClientAwareData();
@@ -23,6 +25,10 @@ const LimitsPage: React.FC = () => {
     setIsAddModalOpen(true);
   };
 
+  const handleAddGoal = () => {
+    setIsAddGoalModalOpen(true);
+  };
+
   const handleLimitAdded = async () => {
     if (isClientView) {
       await refetchClientData();
@@ -30,6 +36,15 @@ const LimitsPage: React.FC = () => {
       await getGoals();
     }
     setIsAddModalOpen(false);
+  };
+
+  const handleGoalAdded = async () => {
+    if (isClientView) {
+      await refetchClientData();
+    } else {
+      await getGoals();
+    }
+    setIsAddGoalModalOpen(false);
   };
 
   const handleEditLimit = (id: string) => {
@@ -80,10 +95,16 @@ const LimitsPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">Limites</h1>
           {!isClientView && (
-            <Button onClick={handleAddLimit} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Adicionar Limite
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleAddLimit} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Adicionar Limite
+              </Button>
+              <Button onClick={handleAddGoal} className="gap-2" variant="secondary">
+                <Target className="h-4 w-4" />
+                Adicionar Metas
+              </Button>
+            </div>
           )}
         </div>
 
@@ -113,11 +134,18 @@ const LimitsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Modal de Adição */}
+      {/* Modal de Adição de Limite */}
       <AddLimitModal
         open={isAddModalOpen}
         onOpenChange={setIsAddModalOpen}
         onSuccess={handleLimitAdded}
+      />
+
+      {/* Modal de Adição de Meta */}
+      <AddGoalModal
+        open={isAddGoalModalOpen}
+        onOpenChange={setIsAddGoalModalOpen}
+        onSuccess={handleGoalAdded}
       />
 
       {/* Modal de Edição */}

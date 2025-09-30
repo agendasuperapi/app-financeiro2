@@ -209,52 +209,107 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
           <span className="font-medium">Período:</span> {formatPeriod()}
         </div>
 
-        {/* Valores */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="font-medium">Limite:</span>
-            <span className="font-semibold">
-              {getCurrencySymbol()}{limitAmount.toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="font-medium">{subConta || 'Saldo Líquido'}:</span>
-            <span className={`${spentAmount < 0 ? 'text-red-600' : 'text-green-600'} font-semibold`}>
-              {getCurrencySymbol()}{spentAmount.toFixed(2)}
-            </span>
-          </div>
-        </div>
+        {/* Renderização para Receita (Income) */}
+        {limit.type === 'income' && (
+          <>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="font-medium">Meta:</span>
+                <span className="font-semibold">
+                  {getCurrencySymbol()}{limitAmount.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="font-medium">{subConta || 'Total Recebido'}:</span>
+                <span className="text-green-600 font-semibold">
+                  {getCurrencySymbol()}{Math.abs(spentAmount).toFixed(2)}
+                </span>
+              </div>
+            </div>
 
-        {/* Barra de Progresso */}
-        <div className="space-y-2">
-          <Progress 
-            value={Math.min(progressPercentage, 100)} 
-            className="h-2"
-          />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{progressPercentage.toFixed(1)}% usado</span>
-            <span>
-              {remainingAmount > 0 ? 'Restante: ' : 'Excedido: '}
-              {getCurrencySymbol()}{Math.abs(remainingAmount).toFixed(2)}
-            </span>
-          </div>
-        </div>
+            <div className="space-y-2">
+              <Progress 
+                value={Math.min(progressPercentage, 100)} 
+                className="h-2"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{progressPercentage.toFixed(1)}% atingido</span>
+                <span>
+                  {remainingAmount > 0 ? 'Falta: ' : 'Excedeu: '}
+                  {getCurrencySymbol()}{Math.abs(remainingAmount).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Renderização para Despesa (Expense) */}
+        {limit.type === 'expense' && (
+          <>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="font-medium">Limite:</span>
+                <span className="font-semibold">
+                  {getCurrencySymbol()}{limitAmount.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="font-medium">Gasto:</span>
+                <span className={`${Math.abs(spentAmount) >= limitAmount ? 'text-red-600' : 'text-orange-600'} font-semibold`}>
+                  {getCurrencySymbol()}{Math.abs(spentAmount).toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Progress 
+                value={Math.min(progressPercentage, 100)} 
+                className="h-2"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{progressPercentage.toFixed(1)}% usado</span>
+                <span>
+                  {remainingAmount > 0 ? 'Restante: ' : 'Excedido: '}
+                  {getCurrencySymbol()}{Math.abs(remainingAmount).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </>
+        )}
       </CardContent>
 
       <CardFooter className="pt-0">
         <div className="w-full text-center">
-          {progressPercentage >= 100 ? (
-            <p className="text-sm font-medium text-red-600">
-              ⚠️ Limite ultrapassado!
-            </p>
-          ) : progressPercentage >= 90 ? (
-            <p className="text-sm font-medium text-yellow-600">
-              ⚠️ Próximo do limite
-            </p>
+          {limit.type === 'income' ? (
+            // Mensagens para Receita
+            progressPercentage >= 100 ? (
+              <p className="text-sm font-medium text-green-600">
+                ✓ Meta atingida!
+              </p>
+            ) : progressPercentage >= 75 ? (
+              <p className="text-sm font-medium text-blue-600">
+                📈 Quase lá!
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Continue assim
+              </p>
+            )
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Dentro do limite
-            </p>
+            // Mensagens para Despesa
+            progressPercentage >= 100 ? (
+              <p className="text-sm font-medium text-red-600">
+                ⚠️ Limite ultrapassado!
+              </p>
+            ) : progressPercentage >= 90 ? (
+              <p className="text-sm font-medium text-yellow-600">
+                ⚠️ Próximo do limite
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Dentro do limite
+              </p>
+            )
           )}
         </div>
       </CardFooter>

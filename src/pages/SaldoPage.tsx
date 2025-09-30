@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import MainLayout from '@/components/layout/MainLayout';
-import { Wallet, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, DollarSign, ArrowLeftRight } from 'lucide-react';
 import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { formatCurrency } from '@/utils/transactionUtils';
 import { getSaldoByAccount } from '@/services/saldoService';
 import { toast } from 'sonner';
+import { TransferModal } from '@/components/saldo/TransferModal';
 
 interface AccountBalance {
   conta: string;
@@ -18,6 +20,7 @@ const SaldoPage: React.FC = () => {
   const { currency } = usePreferences();
   const [accountBalances, setAccountBalances] = useState<AccountBalance[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -67,12 +70,22 @@ const SaldoPage: React.FC = () => {
     );
   }
 
+  const accountNames = accountBalances.map(acc => acc.conta);
+
   return (
     <MainLayout>
       <div className="p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <Wallet className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Saldo por Conta</h1>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Wallet className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold">Saldo por Conta</h1>
+          </div>
+          {accountBalances.length > 1 && (
+            <Button onClick={() => setIsTransferModalOpen(true)} className="gap-2">
+              <ArrowLeftRight className="h-4 w-4" />
+              Transferir Saldo
+            </Button>
+          )}
         </div>
 
         {/* Resumo Geral */}
@@ -153,6 +166,14 @@ const SaldoPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Modal de Transferência */}
+      <TransferModal
+        open={isTransferModalOpen}
+        onOpenChange={setIsTransferModalOpen}
+        onSuccess={loadAccountBalances}
+        accounts={accountNames}
+      />
     </MainLayout>
   );
 };

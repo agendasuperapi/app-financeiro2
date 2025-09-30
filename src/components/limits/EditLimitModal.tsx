@@ -211,6 +211,7 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
         startDate,
         endDate,
         color: selectedCategory?.color || '#3B82F6',
+        category_id: data.categoryId,
         transactions: limit.transactions || [],
       };
 

@@ -178,7 +178,7 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
         <Progress value={progress} className="h-2" />
         
         <div className="flex justify-between mt-2 text-sm">
-          <span className={`${actualAmount < 0 ? 'text-red-600' : 'text-green-600'} font-semibold`}>
+          <span className={`font-semibold ${isExceeded ? 'text-red-600 dark:text-red-400' : (actualAmount < 0 ? 'text-red-600' : 'text-green-600')}`}>
             {getCurrencySymbol()}{actualAmount.toFixed(2)}
           </span>
           <span className="text-muted-foreground">

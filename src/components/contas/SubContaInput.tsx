@@ -10,6 +10,12 @@ interface SubContaInputProps {
 
 const SubContaInput: React.FC<SubContaInputProps> = ({ form }) => {
   const { t } = usePreferences();
+  const transactionType = form.watch('type');
+
+  // Só mostra o campo se o tipo for "income" (receita)
+  if (transactionType !== 'income') {
+    return null;
+  }
 
   return (
     <FormField

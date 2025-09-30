@@ -191,6 +191,8 @@ export const AddLimitModal: React.FC<AddLimitModalProps> = ({
             start_date: newLimit.startDate,
             end_date: newLimit.endDate,
             color: newLimit.color,
+            category_id: data.categoryId,
+            type: 'expense',
             user_id: selectedUser.id,
           })
           .select()
@@ -199,7 +201,7 @@ export const AddLimitModal: React.FC<AddLimitModalProps> = ({
         if (error) throw error;
       } else {
         // Fluxo normal: cria para o usuário logado
-        await addGoal(newLimit);
+        await addGoal(newLimit, data.categoryId, 'expense');
       }
       
       toast.success('Limite adicionado com sucesso!');

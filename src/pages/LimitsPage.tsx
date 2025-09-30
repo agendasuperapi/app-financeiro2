@@ -67,8 +67,13 @@ const LimitsPage: React.FC = () => {
     const allLimits = [...incomeLimits, ...expenseLimits];
     const limit = allLimits.find(l => l.id === id);
     if (limit) {
-      setEditingLimit(limit);
-      setIsEditModalOpen(true);
+      // Se for meta de receita (type === 'income'), abrir modal de adicionar meta
+      if (limit.type === 'income') {
+        setIsAddGoalModalOpen(true);
+      } else {
+        setEditingLimit(limit);
+        setIsEditModalOpen(true);
+      }
     }
   };
 

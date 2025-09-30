@@ -6,6 +6,7 @@ export const createTransactionSchema = (translationFn: (key: string) => string) 
     type: z.enum(['income', 'expense', 'reminder', 'lembrete', 'outros']),
     amount: z.coerce.number(),
     conta: z.string().min(1, translationFn('validation.required')),
+    sub_conta: z.string().optional(),
     category: z.string().min(1, translationFn('validation.required')),
     description: z.string().optional(),
     date: z.string().min(1, translationFn('validation.required')),

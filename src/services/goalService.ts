@@ -72,7 +72,7 @@ export const getGoals = async (): Promise<Goal[]> => {
   }
 };
 
-export const addGoal = async (goal: Omit<Goal, "id" | "transactions">): Promise<Goal | null> => {
+export const addGoal = async (goal: Omit<Goal, "id" | "transactions">, categoryId?: string): Promise<Goal | null> => {
   try {
     console.log("Adding goal:", goal);
     const newId = uuidv4();
@@ -96,6 +96,8 @@ export const addGoal = async (goal: Omit<Goal, "id" | "transactions">): Promise<
         end_date: goal.endDate,
         deadline: goal.deadline,
         color: goal.color || "#06465f",
+        category_id: categoryId,
+        type: 'income',
         user_id: session.user.id
       })
       .select()

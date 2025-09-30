@@ -191,6 +191,8 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
             start_date: newGoal.startDate,
             end_date: newGoal.endDate,
             color: newGoal.color,
+            category_id: data.categoryId,
+            type: 'income',
             user_id: selectedUser.id,
           })
           .select()
@@ -199,7 +201,7 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
         if (error) throw error;
       } else {
         // Fluxo normal: cria para o usuário logado
-        await addGoal(newGoal);
+        await addGoal(newGoal, data.categoryId);
       }
       
       toast.success('Meta de receita adicionada com sucesso!');

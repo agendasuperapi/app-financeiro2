@@ -91,7 +91,7 @@ interface AppContextType {
   updateCategory: (id: string, category: Partial<Category>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   // Goal actions
-  addGoal: (goal: Omit<Goal, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  addGoal: (goal: Omit<Goal, 'id' | 'created_at' | 'updated_at'>, categoryId?: string) => Promise<void>;
   updateGoal: (id: string, goal: Partial<Goal>) => Promise<void>;
   deleteGoal: (id: string) => Promise<void>;
   // Scheduled Transaction actions
@@ -982,7 +982,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   // Goal actions
-  const addGoal = async (goal: Omit<Goal, 'id' | 'created_at' | 'updated_at'>) => {
+  const addGoal = async (goal: Omit<Goal, 'id' | 'created_at' | 'updated_at'>, categoryId?: string) => {
     try {
       const user = await getCurrentUser();
       const { data, error } = await supabase
@@ -995,6 +995,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           end_date: goal.endDate || goal.end_date,
           deadline: goal.deadline,
           color: goal.color,
+          category_id: categoryId,
+          type: 'income',
           user_id: user.id,
         })
         .select()

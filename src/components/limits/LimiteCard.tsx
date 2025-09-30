@@ -101,15 +101,12 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
           return;
         }
 
-        // Calculate net balance (income - expenses)
-        const totalIncome = transactions?.filter(t => t.type === 'income').reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
-        const totalExpenses = transactions?.filter(t => t.type === 'expense').reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
-        const netBalance = totalIncome - totalExpenses;
+        // Calculate sum (values already come with correct sign from database)
+        const totalAmount = transactions?.reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
         
-        console.log('💰 Total income:', totalIncome);
-        console.log('💰 Total expenses:', totalExpenses);
-        console.log('💰 Net balance:', netBalance);
-        setSpentAmount(netBalance);
+        console.log('💰 Transactions:', transactions);
+        console.log('💰 Total amount:', totalAmount);
+        setSpentAmount(totalAmount);
 
         // Get sub_conta from the most recent transaction (any type)
         const allTransactions = transactions || [];
@@ -132,7 +129,7 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
 
   // Calcular valores
   const limitAmount = limit.targetAmount || limit.target_amount || 0;
-  const remainingAmount = limitAmount - Math.abs(spentAmount); // Use absolute value for remaining calculation
+  const remainingAmount = limitAmount - Math.abs(spentAmount);
   const progressPercentage = limitAmount > 0 ? (Math.abs(spentAmount) / limitAmount) * 100 : 0;
 
   // Formatação de período

@@ -71,6 +71,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
         // Mostrar nome de quem adicionou quando houver nome na transação
         creatorName: creatorName,
         conta: item.conta || undefined,
+        sub_conta: item.sub_conta || undefined,
         formato: item.formato || undefined,
       };
     });
@@ -238,6 +239,7 @@ export const createTransactionForUser = async (transactionData: {
       date: data.date,
       goalId: data.goal_id || undefined,
       conta: (data as any).conta || undefined,
+      sub_conta: (data as any).sub_conta || undefined,
       creatorName: (data as any).name || undefined,
       formato: (data as any).formato || undefined,
     };
@@ -339,6 +341,7 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
       date: data.date,
       goalId: data.goal_id || undefined,
       conta: (data as any).conta || undefined,
+      sub_conta: (data as any).sub_conta || undefined,
       creatorName: (data as any).name || undefined,
       formato: (data as any).formato || undefined,
     } as Transaction;

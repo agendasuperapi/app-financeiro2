@@ -16,36 +16,7 @@ const GoalSelector: React.FC<GoalSelectorProps> = ({ form }) => {
   const { goals } = useAppContext();
   const { t } = usePreferences();
 
-  return (
-    <FormField
-      control={form.control}
-      name="goalId"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{t('goals.title')} ({t('common.optional')})</FormLabel>
-          <Select
-            onValueChange={(value) => field.onChange(value === "none" ? undefined : value)}
-            value={field.value || "none"}
-          >
-            <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder={t('goals.title')} />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              <SelectItem value="none">{t('common.none')}</SelectItem>
-              {goals.map((goal: Goal) => (
-                <SelectItem key={goal.id} value={goal.id}>
-                  {goal.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  );
+  return null;
 };
 
 export default GoalSelector;

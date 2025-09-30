@@ -229,7 +229,7 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
 
       await updateGoal(limit.id, updatedLimit);
       
-      toast.success('Limite atualizado com sucesso!');
+      toast.success(limit.type === 'income' ? 'Meta de receita atualizada com sucesso!' : 'Limite atualizado com sucesso!');
       onSuccess();
     } catch (error) {
       console.error('Error updating limit:', error);
@@ -245,9 +245,13 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar Limite</DialogTitle>
+          <DialogTitle>
+            {limit?.type === 'income' ? 'Editar Meta de Receita' : 'Editar Limite'}
+          </DialogTitle>
           <DialogDescription>
-            Altere as configurações do seu limite de gastos.
+            {limit?.type === 'income' 
+              ? 'Altere as configurações da sua meta de receitas.'
+              : 'Altere as configurações do seu limite de gastos.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -259,7 +263,9 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
               name="categoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Categoria</FormLabel>
+                  <FormLabel>
+                    {limit?.type === 'income' ? 'Categoria de Receita' : 'Categoria'}
+                  </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -428,7 +434,9 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
               name="limitAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Valor do Limite</FormLabel>
+                  <FormLabel>
+                    {limit?.type === 'income' ? 'Valor da Meta' : 'Valor do Limite'}
+                  </FormLabel>
                   <FormControl>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -460,7 +468,7 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
                 Cancelar
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Salvando...' : 'Atualizar Limite'}
+                {isLoading ? 'Salvando...' : (limit?.type === 'income' ? 'Atualizar Meta' : 'Atualizar Limite')}
               </Button>
             </DialogFooter>
           </form>

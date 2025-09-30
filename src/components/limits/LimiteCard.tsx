@@ -80,7 +80,7 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
         // Build query for transactions (both income and expense)
         let query = supabase
           .from('poupeja_transactions')
-          .select('amount, date, description, type')
+          .select('amount, date, description, type, sub_conta')
           .eq('category_id', category.id)
           .gte('date', startStr);
 
@@ -89,7 +89,9 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
           query = query.lt('date', getNextDayStr(endStr));
         }
 
-        const { data: transactions, error } = await query;
+        const { data: txData, error } = await query;
+
+        const transactions = (txData as any[]) || [];
 
         console.log('💰 Transactions found:', transactions);
         console.log('💰 Transactions error:', error);
@@ -109,11 +111,10 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
         console.log('💰 Net balance:', netBalance);
         setSpentAmount(netBalance);
 
-        // Get sub_conta from the most recent transaction (for income type)
-        const incomeTransactions = transactions?.filter(t => t.type === 'income') || [];
-        if (incomeTransactions.length > 0) {
-          // Sort by date descending to get most recent
-          const sortedTransactions = [...incomeTransactions].sort((a, b) => 
+        // Get sub_conta from the most recent transaction (any type)
+        const allTransactions = transactions || [];
+        if (allTransactions.length > 0) {
+          const sortedTransactions = [...allTransactions].sort((a, b) =>
             new Date(b.date).getTime() - new Date(a.date).getTime()
           );
           const mostRecentSubConta = (sortedTransactions[0] as any).sub_conta;

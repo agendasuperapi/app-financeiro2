@@ -248,38 +248,39 @@ export const TransferModal: React.FC<TransferModalProps> = ({
             </div>
           )}
 
-          {/* Categoria de Origem */}
-          <div className="space-y-2">
-            <Label htmlFor="category">Categoria de Origem *</Label>
-            <Select value={categoryId} onValueChange={setCategoryId}>
-              <SelectTrigger id="category">
-                <SelectValue placeholder="Selecione a categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Categoria e Conta de Origem */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="category">Categoria de Origem *</Label>
+              <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Conta de Origem */}
-          <div className="space-y-2">
-            <Label htmlFor="from-account">De (Conta de Origem) *</Label>
-            <Select value={fromAccount} onValueChange={setFromAccount}>
-              <SelectTrigger id="from-account">
-                <SelectValue placeholder="Selecione a conta" />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map((account) => (
-                  <SelectItem key={account.id} value={account.id}>
-                    {account.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Label htmlFor="from-account">De (Conta de Origem) *</Label>
+              <Select value={fromAccount} onValueChange={setFromAccount}>
+                <SelectTrigger id="from-account">
+                  <SelectValue placeholder="Selecione a conta" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Indicador Visual */}
@@ -287,38 +288,39 @@ export const TransferModal: React.FC<TransferModalProps> = ({
             <ArrowRight className="h-6 w-6 text-muted-foreground" />
           </div>
 
-          {/* Categoria de Destino */}
-          <div className="space-y-2">
-            <Label htmlFor="to-category">Categoria de Destino *</Label>
-            <Select value={toCategoryId} onValueChange={setToCategoryId}>
-              <SelectTrigger id="to-category">
-                <SelectValue placeholder="Selecione a categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Categoria e Conta de Destino */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="to-category">Categoria de Destino *</Label>
+              <Select value={toCategoryId} onValueChange={setToCategoryId}>
+                <SelectTrigger id="to-category">
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Conta de Destino */}
-          <div className="space-y-2">
-            <Label htmlFor="to-account">Para (Conta de Destino) *</Label>
-            <Select value={toAccount} onValueChange={setToAccount}>
-              <SelectTrigger id="to-account">
-                <SelectValue placeholder="Selecione a conta" />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map((account) => (
-                  <SelectItem key={account.id} value={account.id}>
-                    {account.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Label htmlFor="to-account">Para (Conta de Destino) *</Label>
+              <Select value={toAccount} onValueChange={setToAccount}>
+                <SelectTrigger id="to-account">
+                  <SelectValue placeholder="Selecione a conta" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 

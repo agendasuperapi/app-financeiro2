@@ -26,6 +26,20 @@ const getDaysAgoStart = (days: number) => {
 
 // Create a local date from string to avoid timezone issues
 export const createLocalDate = (dateString: string): Date => {
+  if (!dateString) return new Date(NaN);
+  // Treat YYYY-MM-DD as local date (no timezone shift)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [y, m, d] = dateString.split('-').map(Number);
+    return new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0);
+  }
+  // Treat midnight UTC as local midnight to avoid showing previous day
+  if (/T00:00:00(\.\d{3})?(Z|\+00:00)$/.test(dateString)) {
+    const y = Number(dateString.slice(0, 4));
+    const m = Number(dateString.slice(5, 7));
+    const d = Number(dateString.slice(8, 10));
+    return new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0);
+  }
+  // Fallback: native parsing (keeps local timezone conversion)
   return new Date(dateString);
 };
 
@@ -245,26 +259,37 @@ const parseDateSafe = (dateString: string): Date => {
 
 // Format date and time to readable string - dd/MM/yy HH:mm format
 export const formatDateTime = (dateString: string): string => {
-  const date = parseDateSafe(dateString);
+  const date = createLocalDate(dateString);
   if (isNaN(date.getTime())) return '';
   return format(date, 'dd/MM/yy HH:mm');
 };
 
 // Format date to readable string - fixed to pt-BR with timezone handling
 export const formatDate = (dateString: string): string => {
-  // Parse the date string manually to avoid timezone issues
+  if (!dateString) return '';
   // If the string is in YYYY-MM-DD format, treat it as local date
-  if (dateString.includes('-') && dateString.length === 10) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     const [year, month, day] = dateString.split('-').map(Number);
-    const date = new Date(year, month - 1, day); // month is 0-indexed
+    const date = new Date(year, month - 1, day);
     return date.toLocaleDateString('pt-BR', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
   }
-  
-  // For other date formats, use the original logic
+  // If it's midnight UTC, render as local midnight (avoid previous day)
+  if (/T00:00:00(\.\d{3})?(Z|\+00:00)$/.test(dateString)) {
+    const year = Number(dateString.slice(0, 4));
+    const month = Number(dateString.slice(5, 7));
+    const day = Number(dateString.slice(8, 10));
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString('pt-BR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+  // Fallback
   const date = new Date(dateString);
   return date.toLocaleDateString('pt-BR', {
     year: 'numeric',

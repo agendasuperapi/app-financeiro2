@@ -24,23 +24,47 @@ const getDaysAgoStart = (days: number) => {
   return daysAgo;
 };
 
-// Create a local date from string to avoid timezone issues
-export const createLocalDate = (dateString: string): Date => {
-  if (!dateString) return new Date(NaN);
-  // Treat YYYY-MM-DD as local date (no timezone shift)
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+// Get date parts in a specific IANA timezone without shifting month/day unexpectedly
+export const getDatePartsInTimeZone = (
+  dateString: string,
+  timeZone?: string
+): { year: number; month: number; day: number; hour: number; minute: number; second: number } => {
+  if (!dateString) return { year: NaN as any, month: NaN as any, day: NaN as any, hour: NaN as any, minute: NaN as any, second: NaN as any };
+
+  // If plain date (YYYY-MM-DD), interpret as that exact date in the chosen timezone
+  const plain = /^\d{4}-\d{2}-\d{2}$/.test(dateString);
+  if (plain) {
     const [y, m, d] = dateString.split('-').map(Number);
-    return new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0);
+    return { year: y, month: m, day: d, hour: 0, minute: 0, second: 0 };
   }
-  // Treat midnight UTC as local midnight to avoid showing previous day
-  if (/T00:00:00(\.\d{3})?(Z|\+00:00)$/.test(dateString)) {
-    const y = Number(dateString.slice(0, 4));
-    const m = Number(dateString.slice(5, 7));
-    const d = Number(dateString.slice(8, 10));
-    return new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0);
-  }
-  // Fallback: native parsing (keeps local timezone conversion)
-  return new Date(dateString);
+
+  const date = new Date(dateString);
+  const dtf = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  });
+  const parts = dtf.formatToParts(date);
+  const get = (type: string) => Number(parts.find(p => p.type === type)?.value || '0');
+  return {
+    year: get('year'),
+    month: get('month'),
+    day: get('day'),
+    hour: get('hour'),
+    minute: get('minute'),
+    second: get('second'),
+  };
+};
+
+// Build a local Date using extracted timezone parts (safe for comparisons)
+export const toZonedLocalDate = (dateString: string, timeZone?: string): Date => {
+  const { year, month, day, hour, minute, second } = getDatePartsInTimeZone(dateString, timeZone);
+  return new Date(year, (month || 1) - 1, day || 1, hour || 0, minute || 0, second || 0, 0);
+};
+
+// Backward compatible helper used across the app - now supports optional timezone
+export const createLocalDate = (dateString: string, timeZone?: string): Date => {
+  return toZonedLocalDate(dateString, timeZone);
 };
 
 // Filter transactions by time range

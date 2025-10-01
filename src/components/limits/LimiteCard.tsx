@@ -80,7 +80,7 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
         // Build query for transactions (both income and expense)
         let query = supabase
           .from('poupeja_transactions')
-          .select('amount, date, description, type, sub_conta')
+          .select('amount, date, description, type, conta_id, tbl_contas(name)')
           .eq('category_id', category.id)
           .gte('date', startStr);
 
@@ -108,15 +108,15 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
         console.log('💰 Total amount:', totalAmount);
         setSpentAmount(totalAmount);
 
-        // Get sub_conta from the most recent transaction (any type)
+        // Get conta name from the most recent transaction (any type)
         const allTransactions = transactions || [];
         if (allTransactions.length > 0) {
           const sortedTransactions = [...allTransactions].sort((a, b) =>
             new Date(b.date).getTime() - new Date(a.date).getTime()
           );
-          const mostRecentSubConta = (sortedTransactions[0] as any).sub_conta;
-          setSubConta(mostRecentSubConta || '');
-          console.log('📋 Sub_conta from most recent transaction:', mostRecentSubConta);
+          const mostRecentContaName = (sortedTransactions[0] as any).tbl_contas?.name;
+          setSubConta(mostRecentContaName || '');
+          console.log('📋 Conta name from most recent transaction:', mostRecentContaName);
         }
 
       } catch (error) {

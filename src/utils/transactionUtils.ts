@@ -232,9 +232,21 @@ export const formatCurrency = (amount: number, currency = 'BRL'): string => {
   }).format(amount);
 };
 
+// Safe parser that preserves local date when string lacks time (YYYY-MM-DD)
+const parseDateSafe = (dateString: string): Date => {
+  if (!dateString) return new Date(NaN);
+  const isPlainDate = /^\d{4}-\d{2}-\d{2}$/.test(dateString);
+  if (isPlainDate) {
+    const [y, m, d] = dateString.split('-').map(Number);
+    return new Date(y, (m || 1) - 1, d || 1);
+  }
+  return new Date(dateString);
+};
+
 // Format date and time to readable string - dd/MM/yy HH:mm format
 export const formatDateTime = (dateString: string): string => {
-  const date = new Date(dateString);
+  const date = parseDateSafe(dateString);
+  if (isNaN(date.getTime())) return '';
   return format(date, 'dd/MM/yy HH:mm');
 };
 

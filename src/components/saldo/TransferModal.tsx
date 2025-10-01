@@ -191,6 +191,37 @@ export const TransferModal: React.FC<TransferModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+          {/* Valor */}
+          <div className="space-y-2">
+            <Label htmlFor="amount">Valor *</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                {getCurrencySymbol()}
+              </span>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0,00"
+                className="pl-12"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Descrição (Opcional) */}
+          <div className="space-y-2">
+            <Label htmlFor="description">Descrição (Opcional)</Label>
+            <Input
+              id="description"
+              placeholder="Descrição da transferência"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+
           {/* Categoria de Origem */}
           <div className="space-y-2">
             <Label htmlFor="category">Categoria de Origem *</Label>
@@ -308,37 +339,6 @@ export const TransferModal: React.FC<TransferModalProps> = ({
               placeholder="Sub-conta"
               value={toSubAccount}
               onChange={(e) => setToSubAccount(e.target.value)}
-            />
-          </div>
-
-          {/* Valor */}
-          <div className="space-y-2">
-            <Label htmlFor="amount">Valor *</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                {getCurrencySymbol()}
-              </span>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0,00"
-                className="pl-12"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Descrição (Opcional) */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Descrição (Opcional)</Label>
-            <Input
-              id="description"
-              placeholder="Descrição da transferência"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
         </div>

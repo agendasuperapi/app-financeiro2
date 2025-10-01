@@ -172,7 +172,6 @@ const SaldoPage: React.FC = () => {
         open={isTransferModalOpen}
         onOpenChange={setIsTransferModalOpen}
         onSuccess={loadAccountBalances}
-        accounts={accountNames}
       />
     </MainLayout>
   );

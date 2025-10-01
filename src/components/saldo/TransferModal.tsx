@@ -22,22 +22,22 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { getCategoriesByType } from '@/services/categoryService';
+import { getContas, Conta } from '@/services/contasService';
 import { v4 as uuidv4 } from 'uuid';
 
 interface TransferModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  accounts: string[];
 }
 
 export const TransferModal: React.FC<TransferModalProps> = ({
   open,
   onOpenChange,
   onSuccess,
-  accounts,
 }) => {
   const { currency } = usePreferences();
+  const [accounts, setAccounts] = useState<Conta[]>([]);
   const [fromAccount, setFromAccount] = useState('');
   const [fromSubAccount, setFromSubAccount] = useState('');
   const [toAccount, setToAccount] = useState('');
@@ -58,7 +58,8 @@ export const TransferModal: React.FC<TransferModalProps> = ({
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const [categoriesData, peopleData] = await Promise.all([
+        const [contasData, categoriesData, peopleData] = await Promise.all([
+          getContas(),
           getCategoriesByType('income'),
           (supabase as any)
             .from('view_cadastros_unificados')
@@ -66,6 +67,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
             .eq('id', user.id)
         ]);
 
+        setAccounts(contasData);
         setCategories(categoriesData);
         setDependents(peopleData.data || []);
       } catch (error) {
@@ -116,7 +118,9 @@ export const TransferModal: React.FC<TransferModalProps> = ({
       }
 
       const today = new Date().toISOString().split('T')[0];
-      const transferDescription = description || `Transferência de ${fromAccount} para ${toAccount}`;
+      const fromConta = accounts.find(c => c.id === fromAccount);
+      const toConta = accounts.find(c => c.id === toAccount);
+      const transferDescription = description || `Transferência de ${fromConta?.name} para ${toConta?.name}`;
       const referenceCode = uuidv4();
 
       // Criar transação de saída (income com valor negativo)
@@ -133,7 +137,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
           date: today,
           reference_code: referenceCode,
           formato: 'transacao',
-          conta: fromAccount,
+          conta_id: fromAccount,
           sub_conta: fromSubAccount || null,
         });
 
@@ -153,7 +157,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
           date: today,
           reference_code: referenceCode,
           formato: 'transacao',
-          conta: toAccount,
+          conta_id: toAccount,
           sub_conta: toSubAccount || null,
         });
 
@@ -276,8 +280,8 @@ export const TransferModal: React.FC<TransferModalProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {accounts.map((account) => (
-                  <SelectItem key={account} value={account}>
-                    {account}
+                  <SelectItem key={account.id} value={account.id}>
+                    {account.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -326,8 +330,8 @@ export const TransferModal: React.FC<TransferModalProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {accounts.map((account) => (
-                  <SelectItem key={account} value={account}>
-                    {account}
+                  <SelectItem key={account.id} value={account.id}>
+                    {account.name}
                   </SelectItem>
                 ))}
               </SelectContent>

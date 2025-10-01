@@ -169,48 +169,52 @@ const ContasTab: React.FC = () => {
         </div>
         
         <ul className="space-y-2">
-          {contas.map((conta) => (
-            <li 
-              key={conta.id} 
-              className="bg-card p-3 rounded-lg flex items-center justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <CategoryIcon 
-                  icon={conta.icon} 
-                  color={conta.color} 
-                />
-                <span>{conta.name}</span>
-              </div>
-              <div>
-                {conta.isDefault ? (
-                  <Button variant="ghost" size="sm" onClick={() => handleEditConta(conta)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                ) : (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEditConta(conta)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        {t('common.edit')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="text-destructive"
-                        onClick={() => handleDeleteConta(conta)}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        {t('common.delete')}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </div>
-            </li>
-          ))}
+          {contas.map((conta) => {
+            const isDefaultConta = !conta.user_id || conta.isDefault;
+            
+            return (
+              <li 
+                key={conta.id} 
+                className="bg-card p-3 rounded-lg flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <CategoryIcon 
+                    icon={conta.icon} 
+                    color={conta.color} 
+                  />
+                  <span>{conta.name}</span>
+                </div>
+                <div>
+                  {isDefaultConta ? (
+                    <Button variant="ghost" size="sm" onClick={() => handleEditConta(conta)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditConta(conta)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          {t('common.edit')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onClick={() => handleDeleteConta(conta)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          {t('common.delete')}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       </div>
 

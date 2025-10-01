@@ -24,6 +24,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { useDateFormat } from '@/hooks/useDateFormat';
+import { createLocalDate } from '@/utils/transactionUtils';
 
 const TransactionsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
@@ -122,7 +123,8 @@ const TransactionsPage = () => {
       yesterday.setDate(yesterday.getDate() - 1);
 
       filtered = filtered.filter((transaction) => {
-        const transactionDate = new Date(transaction.date);
+        const sourceDateStr = (transaction.created_at || transaction.date) as string;
+        const transactionDate = createLocalDate(sourceDateStr);
         const transactionDateOnly = new Date(transactionDate.getFullYear(), transactionDate.getMonth(), transactionDate.getDate());
 
         switch (dateFilter) {

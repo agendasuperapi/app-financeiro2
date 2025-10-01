@@ -214,7 +214,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
 
           {/* Descrição (Opcional) */}
           <div className="space-y-2">
-            <Label htmlFor="description">Descrição (Opcional)</Label>
+            <Label htmlFor="description">Descrição</Label>
             <Input
               id="description"
               placeholder="Descrição da transferência"

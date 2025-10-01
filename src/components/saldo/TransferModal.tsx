@@ -22,7 +22,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { getCategoriesByType } from '@/services/categoryService';
-import { DependentsService, Dependent } from '@/services/dependentsService';
 import { v4 as uuidv4 } from 'uuid';
 
 interface TransferModalProps {
@@ -59,12 +58,16 @@ export const TransferModal: React.FC<TransferModalProps> = ({
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const [categoriesData, dependentsData] = await Promise.all([
+        const [categoriesData, peopleData] = await Promise.all([
           getCategoriesByType('income'),
-          DependentsService.getDependents(user.id)
+          (supabase as any)
+            .from('view_cadastros_unificados')
+            .select('id, primeiro_name, phone')
+            .eq('id', user.id)
         ]);
+
         setCategories(categoriesData);
-        setDependents(dependentsData);
+        setDependents(peopleData.data || []);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
       }
@@ -76,9 +79,9 @@ export const TransferModal: React.FC<TransferModalProps> = ({
   }, [open]);
 
   useEffect(() => {
-    const selectedDependent = dependents.find(d => d.dep_name === name);
-    if (selectedDependent) {
-      setPhone(selectedDependent.dep_phone || '');
+    const selectedPerson = dependents.find(d => d.primeiro_name === name);
+    if (selectedPerson) {
+      setPhone(selectedPerson.phone || '');
     }
   }, [name, dependents]);
 
@@ -247,9 +250,9 @@ export const TransferModal: React.FC<TransferModalProps> = ({
                 <SelectValue placeholder="Selecione a pessoa" />
               </SelectTrigger>
               <SelectContent>
-                {dependents.map((dependent) => (
-                  <SelectItem key={`${dependent.id}-${dependent.dep_name}`} value={dependent.dep_name}>
-                    {dependent.dep_name}
+                {dependents.map((person) => (
+                  <SelectItem key={`${person.id}-${person.primeiro_name}`} value={person.primeiro_name}>
+                    {person.primeiro_name}
                   </SelectItem>
                 ))}
               </SelectContent>

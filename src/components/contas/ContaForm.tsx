@@ -247,7 +247,8 @@ const ContaForm: React.FC<ContaFormProps> = ({
       await performUpdate(values, false);
     } catch (error) {
       console.error('❌ Error in onSubmit:', error);
-      toast.error('Erro ao processar transação');
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao processar transação';
+      toast.error(`Erro: ${errorMessage}`);
     }
   };
 
@@ -266,19 +267,34 @@ const ContaForm: React.FC<ContaFormProps> = ({
             user
           }
         } = await supabase.auth.getUser();
-        const {
-          data: userData
-        } = await supabase.from('poupeja_users').select('phone').eq('id', selectedUser?.id || user?.id).single();
-
-        // Add Brazilian country code 55 if not already present
+        
         let userPhone = '';
-        if (userData?.phone) {
-          const rawPhone = userData.phone;
-          userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+        try {
+          const {
+            data: userData,
+            error: phoneError
+          } = await supabase.from('poupeja_users').select('phone').eq('id', selectedUser?.id || user?.id).maybeSingle();
+          
+          if (phoneError) {
+            console.warn('⚠️ Erro ao buscar telefone do usuário:', phoneError);
+          }
+          
+          // Add Brazilian country code 55 if not already present
+          if (userData?.phone) {
+            const rawPhone = userData.phone;
+            userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+          }
+        } catch (phoneErr) {
+          console.warn('⚠️ Exceção ao buscar telefone:', phoneErr);
         }
 
         // Determine target user id (admin visualizando um cliente)
-        const targetUserId = selectedUser?.id || user?.id || undefined;
+        const targetUserId = selectedUser?.id || user?.id;
+        
+        if (!targetUserId) {
+          throw new Error('Usuário não identificado. Faça login novamente.');
+        }
+        
         const transactionData = {
           type: values.type,
           description: values.description,
@@ -301,7 +317,11 @@ const ContaForm: React.FC<ContaFormProps> = ({
         };
         console.log('📋 Creating transaction with data:', transactionData);
         const result = await addScheduledTransaction(transactionData);
-        console.log('✅ Create request sent', result);
+        console.log('✅ Create result:', result);
+        
+        if (!result) {
+          throw new Error('Falha ao criar transação - nenhum resultado retornado');
+        }
       } else if (initialData) {
         console.log('✏️ Updating scheduled transaction...', initialData.id);
         // Find the selected category to get both name and id
@@ -314,15 +334,25 @@ const ContaForm: React.FC<ContaFormProps> = ({
             user
           }
         } = await supabase.auth.getUser();
-        const {
-          data: userData
-        } = await supabase.from('poupeja_users').select('phone').eq('id', selectedUser?.id || user?.id).single();
-
-        // Add Brazilian country code 55 if not already present
+        
         let userPhone = '';
-        if (userData?.phone) {
-          const rawPhone = userData.phone;
-          userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+        try {
+          const {
+            data: userData,
+            error: phoneError
+          } = await supabase.from('poupeja_users').select('phone').eq('id', selectedUser?.id || user?.id).maybeSingle();
+          
+          if (phoneError) {
+            console.warn('⚠️ Erro ao buscar telefone do usuário:', phoneError);
+          }
+          
+          // Add Brazilian country code 55 if not already present
+          if (userData?.phone) {
+            const rawPhone = userData.phone;
+            userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+          }
+        } catch (phoneErr) {
+          console.warn('⚠️ Exceção ao buscar telefone:', phoneErr);
         }
 
         // Determine target user id (admin visualizando um cliente)
@@ -358,6 +388,11 @@ const ContaForm: React.FC<ContaFormProps> = ({
       }
       console.log('🎉 Form completed successfully');
 
+      // Show appropriate success message
+      if (mode === 'create') {
+        toast.success('✅ Conta criada com sucesso');
+      }
+
       // If user selected to edit all, update future ones BEFORE closing dialog
       if (editAll && futureTransactions.length > 0) {
         // Tentar obter codigo-trans; se não existir, tentar extrair do reference_code (removendo a letra inicial)
@@ -380,7 +415,10 @@ const ContaForm: React.FC<ContaFormProps> = ({
       }
     } catch (error) {
       console.error('❌ Error in performUpdate:', error);
-      toast.error('Erro ao atualizar transação');
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      console.error('❌ Error details:', errorMessage);
+      toast.error(`Erro ao atualizar transação: ${errorMessage}`);
+      throw error; // Re-throw para ser capturado no onSubmit
     }
   };
 

@@ -38,6 +38,15 @@ export const getDatePartsInTimeZone = (
     return { year: y, month: m, day: d, hour: 0, minute: 0, second: 0 };
   }
 
+  // If date ends with midnight UTC (00:00:00Z or 00:00:00+00:00), treat as local date
+  const isMidnightUTC = /T00:00:00(\.\d{3})?(Z|\+00:00)$/.test(dateString);
+  if (isMidnightUTC) {
+    const year = Number(dateString.slice(0, 4));
+    const month = Number(dateString.slice(5, 7));
+    const day = Number(dateString.slice(8, 10));
+    return { year, month, day, hour: 0, minute: 0, second: 0 };
+  }
+
   const date = new Date(dateString);
   const dtf = new Intl.DateTimeFormat('en-CA', {
     timeZone: timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone,

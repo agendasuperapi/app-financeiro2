@@ -18,8 +18,7 @@ export const getSaldoByAccount = async (): Promise<AccountBalance[]> => {
       .from('poupeja_transactions')
       .select('conta_id, amount, tbl_contas(name)')
       .eq('user_id', user.id)
-      .not('conta_id', 'is', null)
-      .not('conta_id', 'eq', '');
+      .not('conta_id', 'is', null);
 
     if (error) {
       console.error('Erro ao buscar saldos por conta:', error);

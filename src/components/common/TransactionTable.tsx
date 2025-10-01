@@ -74,8 +74,8 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     if (!sortDirection) return transactions;
     
     return [...transactions].sort((a, b) => {
-      const dateA = new Date(a.date || a.created_at || '');
-      const dateB = new Date(b.date || b.created_at || '');
+      const dateA = new Date(a.created_at || a.date || '');
+      const dateB = new Date(b.created_at || b.date || '');
       
       if (sortDirection === 'asc') {
         return dateA.getTime() - dateB.getTime();

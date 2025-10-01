@@ -91,21 +91,6 @@ const TransactionsPage = () => {
     applyFilters();
   }, [baseFilteredTransactions, searchQuery, statusFilter, dateFilter, selectedDate, startDate, endDate]);
 
-  // Debug específico para checar uma transação no fuso correto
-  React.useEffect(() => {
-    const testId = 'de8496c4-6296-40db-8d46-511272e27deb';
-    const tx = transactions.find(t => t.id === testId);
-    if (tx) {
-      const parsed = createLocalDate(tx.date as string, effectiveTimezone);
-      console.log('[DEBUG TZ] TX', testId, {
-        rawDate: tx.date,
-        created_at: tx.created_at,
-        tz: effectiveTimezone,
-        parsedISO: isNaN(parsed.getTime()) ? 'Invalid' : parsed.toISOString(),
-      });
-    }
-  }, [transactions, effectiveTimezone]);
-
   const applyFilters = () => {
     let filtered = [...baseFilteredTransactions];
 

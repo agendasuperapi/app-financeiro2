@@ -77,13 +77,8 @@ export const getScheduledTransactions = async (userId?: string): Promise<Schedul
       item.amount !== 0
     );
 
-    console.log("DEBUG Scheduled: Transações carregadas:", filteredData.length);
-    console.log("DEBUG Scheduled: Primeira transação:", filteredData[0]);
-
-return filteredData.map((item: any) => {
+    return filteredData.map((item: any) => {
       const creatorName = item.name ? item.name : undefined;
-      
-      console.log(`DEBUG Scheduled: Transação ${item.id} - user_id: ${item.user_id}, name: ${item.name}, finalCreator: ${creatorName}`);
       
       // Build typed object first
       const tx: ScheduledTransaction = {

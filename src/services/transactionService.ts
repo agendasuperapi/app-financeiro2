@@ -17,46 +17,32 @@ export const getTransactions = async (): Promise<Transaction[]> => {
     if (error) throw error;
 
     const txs = (data as any[]) || [];
-    console.log("DEBUG: Transações carregadas:", txs.length);
-    console.log("DEBUG: Primeira transação:", txs[0]);
 
     // Buscar o status "dependente" dos donos das transações (poupeja_users)
     const userIds = Array.from(new Set(txs.map((t: any) => t.user_id).filter(Boolean)));
     let depMap = new Map<string, boolean>();
 
-    console.log("DEBUG: UserIDs únicos encontrados:", userIds);
-
     if (userIds.length > 0) {
       try {
-        console.log("DEBUG: Tentando buscar dados de poupeja_users para userIds:", userIds);
         const { data: usersRows, error: usersError } = await (supabase as any)
           .from('poupeja_users')
           .select('id, dependente')
           .in('id', userIds);
 
         if (usersError) {
-          console.error("DEBUG: ERRO ao buscar poupeja_users:", usersError);
-          console.error("DEBUG: Isso pode ser um problema de RLS (Row Level Security)");
-        } else {
-          console.log("DEBUG: Dados dos usuários (poupeja_users) - SUCCESS:", usersRows);
+          console.error("Error fetching poupeja_users:", usersError);
         }
 
         (usersRows || []).forEach((u: any) => {
           depMap.set(String(u.id), u.dependente === true);
-          console.log(`DEBUG: User ${u.id} dependente: ${u.dependente}`);
         });
       } catch (e) {
-        console.error('DEBUG: EXCEPTION ao carregar dependente de poupeja_users:', e);
-        console.error('DEBUG: Provavelmente falta permissão RLS para poupeja_users');
+        console.error('Exception loading dependente from poupeja_users:', e);
       }
     }
 
-    console.log("DEBUG: Mapa de dependentes:", Object.fromEntries(depMap));
-
     return txs.map((item: any) => {
       const creatorName = item.name ? item.name : undefined;
-      
-      console.log(`DEBUG: Transação ${item.id} - user_id: ${item.user_id}, name: ${item.name}, finalCreator: ${creatorName}`);
       
       return {
         id: item.id,

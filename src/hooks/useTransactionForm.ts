@@ -45,7 +45,7 @@ export const useTransactionForm = ({
     defaultValues: {
       type: initialData?.type || defaultType,
       amount: initialData?.amount || 0,
-      conta: initialData?.conta || '',
+      conta_id: initialData?.conta_id || '',
       sub_conta: (initialData as any)?.sub_conta || '',
       category: initialData?.category_id || '',
       description: initialData?.description || '',
@@ -111,7 +111,7 @@ export const useTransactionForm = ({
             date: new Date(processedValues.date).toISOString(),
             goalId: processedValues.goalId,
             user_id: targetUserId,
-            conta: processedValues.conta,
+            conta_id: processedValues.conta_id,
             sub_conta: (processedValues as any).sub_conta,
             name: processedValues.name || undefined,
             status: processedValues.type === 'expense' ? 'paid' : 'recebido', // Set status based on type
@@ -133,7 +133,7 @@ export const useTransactionForm = ({
             date: new Date(processedValues.date).toISOString(),
             goalId: processedValues.goalId,
             category: '',
-            conta: processedValues.conta,
+            conta_id: processedValues.conta_id,
             sub_conta: (processedValues as any).sub_conta,
             creatorName: processedValues.name || undefined,
             status: processedValues.type === 'expense' ? 'paid' : 'recebido', // Set status based on type
@@ -163,7 +163,7 @@ export const useTransactionForm = ({
           description: processedValues.description || '',
           date: new Date(processedValues.date).toISOString(),
           goalId: processedValues.goalId,
-          conta: processedValues.conta,
+          conta_id: processedValues.conta_id,
           sub_conta: (processedValues as any).sub_conta,
           creatorName: processedValues.name || undefined,
         });
@@ -202,7 +202,7 @@ export const useTransactionForm = ({
       form.reset({
         type: initialData.type,
         amount: initialData.amount,
-        conta: initialData.conta || '',
+        conta_id: initialData.conta_id || '',
         sub_conta: (initialData as any)?.sub_conta || '',
         category: initialData.category_id || '',
         description: initialData.description || '',
@@ -215,7 +215,7 @@ export const useTransactionForm = ({
       form.reset({
         type: defaultType,
         amount: 0,
-        conta: '',
+        conta_id: '',
         sub_conta: '',
         category: '',
         description: '',

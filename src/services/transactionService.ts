@@ -70,7 +70,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
         goalId: item.goal_id || undefined,
         // Mostrar nome de quem adicionou quando houver nome na transação
         creatorName: creatorName,
-        conta: item.conta || undefined,
+        conta_id: item.conta_id || undefined,
         sub_conta: item.sub_conta || undefined,
         formato: item.formato || undefined,
       };
@@ -99,7 +99,7 @@ export const addTransaction = async (transaction: Omit<Transaction, "id">): Prom
       date: transaction.date,
       goalId: transaction.goalId,
       user_id: userId,
-      conta: (transaction as any).conta || '',
+      conta_id: transaction.conta_id || '',
       sub_conta: (transaction as any).sub_conta,
       name: (transaction as any).name,
       phone: (transaction as any).phone,
@@ -119,7 +119,7 @@ export const createTransactionForUser = async (transactionData: {
   date: string;
   goalId?: string;
   user_id: string;
-  conta: string;
+  conta_id: string;
   sub_conta?: string;
   name?: string;
   phone?: string;
@@ -192,7 +192,7 @@ export const createTransactionForUser = async (transactionData: {
         goal_id: transactionData.goalId,
         user_id: transactionData.user_id,
         reference_code: referenceCode,
-        conta: transactionData.conta,
+        conta_id: transactionData.conta_id,
         sub_conta: transactionData.sub_conta,
         name: transactionData.name,
         phone: phoneValue,
@@ -238,7 +238,7 @@ export const createTransactionForUser = async (transactionData: {
       description: data.description || "",
       date: data.date,
       goalId: data.goal_id || undefined,
-      conta: (data as any).conta || undefined,
+      conta_id: (data as any).conta_id || undefined,
       sub_conta: (data as any).sub_conta || undefined,
       creatorName: (data as any).name || undefined,
       formato: (data as any).formato || undefined,
@@ -295,7 +295,7 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
         description: transaction.description,
         date: transaction.date,
         goal_id: transaction.goalId,
-        conta: transaction.conta,
+        conta_id: transaction.conta_id,
         sub_conta: transaction.sub_conta,
         name: (transaction as any).creatorName,
         phone: (transaction as any).phone,
@@ -340,7 +340,7 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
       description: data.description || "",
       date: data.date,
       goalId: data.goal_id || undefined,
-      conta: (data as any).conta || undefined,
+      conta_id: (data as any).conta_id || undefined,
       sub_conta: (data as any).sub_conta || undefined,
       creatorName: (data as any).name || undefined,
       formato: (data as any).formato || undefined,

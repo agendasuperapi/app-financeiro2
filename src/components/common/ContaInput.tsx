@@ -8,7 +8,7 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TransactionFormValues } from '@/schemas/transactionSchema';
 import { usePreferences } from '@/contexts/PreferencesContext';
-import { getSaldoByAccount } from '@/services/saldoService';
+import { getContas, Conta } from '@/services/contasService';
 
 interface ContaInputProps {
   form: UseFormReturn<TransactionFormValues>;
@@ -16,14 +16,14 @@ interface ContaInputProps {
 
 const ContaInput: React.FC<ContaInputProps> = ({ form }) => {
   const { t } = usePreferences();
-  const [contas, setContas] = useState<string[]>([]);
+  const [contas, setContas] = useState<Conta[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const loadContas = async () => {
       try {
-        const saldos = await getSaldoByAccount();
-        setContas(saldos.map(s => s.conta));
+        const contasList = await getContas();
+        setContas(contasList);
       } catch (error) {
         console.error('Erro ao carregar contas:', error);
       }
@@ -35,7 +35,7 @@ const ContaInput: React.FC<ContaInputProps> = ({ form }) => {
   return (
     <FormField
       control={form.control}
-      name="conta"
+      name="conta_id"
       render={({ field }) => (
         <FormItem className="flex flex-col">
           <FormLabel>{t('transactions.account')}</FormLabel>
@@ -48,7 +48,7 @@ const ContaInput: React.FC<ContaInputProps> = ({ form }) => {
                   aria-expanded={open}
                   className="justify-between"
                 >
-                  {field.value || t('transactions.accountPlaceholder')}
+                  {field.value ? contas.find(c => c.id === field.value)?.name : t('transactions.accountPlaceholder')}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </FormControl>
@@ -57,30 +57,26 @@ const ContaInput: React.FC<ContaInputProps> = ({ form }) => {
               <Command>
                 <CommandInput 
                   placeholder={t('transactions.accountPlaceholder')}
-                  value={field.value}
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                  }}
                 />
                 <CommandList>
                   <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
                   <CommandGroup>
                     {contas.map((conta) => (
                       <CommandItem
-                        key={conta}
-                        value={conta}
-                        onSelect={(currentValue) => {
-                          field.onChange(currentValue);
+                        key={conta.id}
+                        value={conta.name}
+                        onSelect={() => {
+                          field.onChange(conta.id);
                           setOpen(false);
                         }}
                       >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            field.value === conta ? "opacity-100" : "opacity-0"
+                            field.value === conta.id ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        {conta}
+                        {conta.name}
                       </CommandItem>
                     ))}
                   </CommandGroup>

@@ -13,7 +13,8 @@ export interface Transaction {
   description?: string;
   date: string; // ISO date string
   goalId?: string; // Optional reference to a goal
-  conta?: string; // Account name
+  conta?: string; // Account name (deprecated, use conta_id)
+  conta_id?: string; // Account ID reference to tbl_contas
   sub_conta?: string; // Sub-account or secondary account classification
   creatorName?: string; // Name of who created the transaction (for dependents)
   formato?: string; // Origem/forma de criação (agenda, manual, etc.)

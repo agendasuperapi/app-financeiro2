@@ -39,9 +39,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
   const { currency } = usePreferences();
   const [accounts, setAccounts] = useState<Conta[]>([]);
   const [fromAccount, setFromAccount] = useState('');
-  const [fromSubAccount, setFromSubAccount] = useState('');
   const [toAccount, setToAccount] = useState('');
-  const [toSubAccount, setToSubAccount] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -138,7 +136,6 @@ export const TransferModal: React.FC<TransferModalProps> = ({
           reference_code: referenceCode,
           formato: 'transacao',
           conta_id: fromAccount,
-          sub_conta: fromSubAccount || null,
         });
 
       if (outgoingError) throw outgoingError;
@@ -158,7 +155,6 @@ export const TransferModal: React.FC<TransferModalProps> = ({
           reference_code: referenceCode,
           formato: 'transacao',
           conta_id: toAccount,
-          sub_conta: toSubAccount || null,
         });
 
       if (incomingError) throw incomingError;
@@ -167,9 +163,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
       
       // Reset form
       setFromAccount('');
-      setFromSubAccount('');
       setToAccount('');
-      setToSubAccount('');
       setAmount('');
       setDescription('');
       setCategoryId('');
@@ -288,17 +282,6 @@ export const TransferModal: React.FC<TransferModalProps> = ({
             </Select>
           </div>
 
-          {/* Sub-conta de Origem */}
-          <div className="space-y-2">
-            <Label htmlFor="from-sub-account">Sub-conta de Origem (Opcional)</Label>
-            <Input
-              id="from-sub-account"
-              placeholder="Sub-conta"
-              value={fromSubAccount}
-              onChange={(e) => setFromSubAccount(e.target.value)}
-            />
-          </div>
-
           {/* Indicador Visual */}
           <div className="flex justify-center py-2">
             <ArrowRight className="h-6 w-6 text-muted-foreground" />
@@ -336,17 +319,6 @@ export const TransferModal: React.FC<TransferModalProps> = ({
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          {/* Sub-conta de Destino */}
-          <div className="space-y-2">
-            <Label htmlFor="to-sub-account">Sub-conta de Destino (Opcional)</Label>
-            <Input
-              id="to-sub-account"
-              placeholder="Sub-conta"
-              value={toSubAccount}
-              onChange={(e) => setToSubAccount(e.target.value)}
-            />
           </div>
         </div>
 

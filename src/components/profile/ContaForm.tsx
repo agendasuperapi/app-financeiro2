@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import ColorPicker from '@/components/categories/ColorPicker';
-import IconSelector from '@/components/categories/IconSelector';
+import BankIconSelector from '@/components/categories/BankIconSelector';
 import { Conta } from '@/services/contasService';
 
 interface ContaFormProps {
@@ -91,7 +91,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
 
           <div className="space-y-2">
             <Label>Ícone</Label>
-            <IconSelector
+            <BankIconSelector
               selectedIcon={icon}
               onSelectIcon={handleIconSelect}
             />

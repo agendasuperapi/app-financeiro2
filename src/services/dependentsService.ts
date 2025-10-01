@@ -2,18 +2,18 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface Dependent {
   id: string;
-  primeiro_name: string;
-  phone: string;
+  dep_name: string;
+  dep_phone: string;
 }
 
 export class DependentsService {
   static async getDependents(userId: string): Promise<Dependent[]> {
     try {
       const { data, error } = await (supabase as any)
-        .from('view_cadastros_unificados')
-        .select('id, primeiro_name, phone')
+        .from('tbl_depentes')
+        .select('*')
         .eq('id', userId)
-        .eq('tipo', 'dependente');
+        .order('id', { ascending: true });
 
       if (error) throw error;
       return (data || []) as Dependent[];
@@ -27,8 +27,8 @@ export class DependentsService {
     try {
       const newDependent = {
         id: userId,
-        primeiro_name: depName,
-        phone: phone.replace(/\D/g, '') // Remove non-digits
+        dep_name: depName,
+        dep_phone: phone.replace(/\D/g, '') // Remove non-digits
       };
 
       // Insert the dependent
@@ -60,13 +60,13 @@ export class DependentsService {
       const { error } = await (supabase as any)
         .from('tbl_depentes')
         .update({
-          primeiro_name: depName,
-          phone: phone.replace(/\D/g, '') // Remove non-digits
+          dep_name: depName,
+          dep_phone: phone.replace(/\D/g, '') // Remove non-digits
         })
         .match({
           id: original.id,
-          primeiro_name: original.primeiro_name,
-          phone: original.phone,
+          dep_name: original.dep_name,
+          dep_phone: original.dep_phone,
         });
 
       if (error) throw error;
@@ -83,8 +83,8 @@ export class DependentsService {
         .delete()
         .match({
           id: original.id,
-          primeiro_name: original.primeiro_name,
-          phone: original.phone,
+          dep_name: original.dep_name,
+          dep_phone: original.dep_phone,
         });
 
       if (error) throw error;

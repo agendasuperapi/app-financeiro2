@@ -59,18 +59,12 @@ export const TransferModal: React.FC<TransferModalProps> = ({
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const categoriesData = await getCategoriesByType('income');
-        
-        const { data: cadastrosData, error } = await supabase
-          .from('view_cadastros_unificados' as any)
-          .select('primeiro_name, phone')
-          .eq('id', user.id)
-          .eq('tipo', 'dependente');
-
-        if (error) throw error;
-
+        const [categoriesData, dependentsData] = await Promise.all([
+          getCategoriesByType('income'),
+          DependentsService.getDependents(user.id)
+        ]);
         setCategories(categoriesData);
-        setDependents(cadastrosData || []);
+        setDependents(dependentsData);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
       }
@@ -82,9 +76,9 @@ export const TransferModal: React.FC<TransferModalProps> = ({
   }, [open]);
 
   useEffect(() => {
-    const selectedPerson = dependents.find(d => d.primeiro_name === name);
-    if (selectedPerson) {
-      setPhone(selectedPerson.phone || '');
+    const selectedDependent = dependents.find(d => d.dep_name === name);
+    if (selectedDependent) {
+      setPhone(selectedDependent.dep_phone || '');
     }
   }, [name, dependents]);
 
@@ -253,9 +247,9 @@ export const TransferModal: React.FC<TransferModalProps> = ({
                 <SelectValue placeholder="Selecione a pessoa" />
               </SelectTrigger>
               <SelectContent>
-                {dependents.map((person, index) => (
-                  <SelectItem key={`${person.primeiro_name}-${index}`} value={person.primeiro_name}>
-                    {person.primeiro_name}
+                {dependents.map((dependent) => (
+                  <SelectItem key={`${dependent.id}-${dependent.dep_name}`} value={dependent.dep_name}>
+                    {dependent.dep_name}
                   </SelectItem>
                 ))}
               </SelectContent>

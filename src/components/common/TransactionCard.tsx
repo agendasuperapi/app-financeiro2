@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { useAppContext } from '@/contexts/AppContext';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -33,6 +34,9 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
 }) => {
   const { goals } = useAppContext();
   const { t, currency } = usePreferences();
+  const { userTimezone } = useClientAwareData();
+  const appCtx = useAppContext();
+  const effectiveTimezone = userTimezone || appCtx.userTimezone;
 
   // Helper to get goal name
   const getGoalName = (goalId?: string) => {
@@ -81,7 +85,7 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
               {hideValues ? renderHiddenValue() : formatCurrency(Math.abs(transaction.amount), currency)}
             </span>
             <p className="text-sm text-muted-foreground">
-              {formatDateTime(transaction.date)}
+              {formatDateTime(transaction.date as string, effectiveTimezone)}
             </p>
           </div>
         </div>

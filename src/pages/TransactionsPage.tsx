@@ -91,6 +91,21 @@ const TransactionsPage = () => {
     applyFilters();
   }, [baseFilteredTransactions, searchQuery, statusFilter, dateFilter, selectedDate, startDate, endDate]);
 
+  // Debug específico para checar uma transação no fuso correto
+  React.useEffect(() => {
+    const testId = 'de8496c4-6296-40db-8d46-511272e27deb';
+    const tx = transactions.find(t => t.id === testId);
+    if (tx) {
+      const parsed = createLocalDate(tx.date as string, effectiveTimezone);
+      console.log('[DEBUG TZ] TX', testId, {
+        rawDate: tx.date,
+        created_at: tx.created_at,
+        tz: effectiveTimezone,
+        parsedISO: isNaN(parsed.getTime()) ? 'Invalid' : parsed.toISOString(),
+      });
+    }
+  }, [transactions, effectiveTimezone]);
+
   const applyFilters = () => {
     let filtered = [...baseFilteredTransactions];
 
@@ -160,10 +175,10 @@ const TransactionsPage = () => {
       });
     }
 
-    // Ordenar por data de criação (mais recente primeiro)
+    // Ordenar por data (coluna date) respeitando fuso horário
     filtered.sort((a, b) => {
-      const dateA = new Date(a.created_at || a.date).getTime();
-      const dateB = new Date(b.created_at || b.date).getTime();
+      const dateA = createLocalDate(a.date as string, effectiveTimezone).getTime();
+      const dateB = createLocalDate(b.date as string, effectiveTimezone).getTime();
       return dateB - dateA;
     });
 

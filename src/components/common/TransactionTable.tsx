@@ -20,11 +20,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Transaction } from '@/types';
-import { formatCurrency, formatDateTime } from '@/utils/transactionUtils';
+import { formatCurrency, formatDateTime, createLocalDate } from '@/utils/transactionUtils';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import CategoryIcon from '../categories/CategoryIcon';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { useClientAwareData } from '@/hooks/useClientAwareData';
+import { useAppContext } from '@/contexts/AppContext';
 import { ArrowUp, ArrowDown, Edit, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 
 interface TransactionTableProps {
@@ -46,6 +48,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // Default to newest first
+
+  // Timezone handling (client view or own account)
+  const { userTimezone } = useClientAwareData();
+  const appCtx = useAppContext();
+  const effectiveTimezone = userTimezone || appCtx.userTimezone;
 
   const renderHiddenValue = () => '******';
 
@@ -74,8 +81,8 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     if (!sortDirection) return transactions;
     
     return [...transactions].sort((a, b) => {
-      const dateA = new Date(a.created_at || a.date || '');
-      const dateB = new Date(b.created_at || b.date || '');
+      const dateA = createLocalDate((a.date as string) || '', effectiveTimezone);
+      const dateB = createLocalDate((b.date as string) || '', effectiveTimezone);
       
       if (sortDirection === 'asc') {
         return dateA.getTime() - dateB.getTime();
@@ -83,7 +90,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         return dateB.getTime() - dateA.getTime();
       }
     });
-  }, [transactions, sortDirection]);
+  }, [transactions, sortDirection, effectiveTimezone]);
 
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm">
@@ -150,7 +157,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   </TableCell>
                   <TableCell className="font-medium text-[10px] md:text-xs">
                      <div className="space-y-1">
-                       <div className="font-medium">{formatDateTime(transaction.date || transaction.created_at)}</div>
+                       <div className="font-medium">{formatDateTime(transaction.date as string, effectiveTimezone)}</div>
                        <div className="lg:hidden text-[10px] text-muted-foreground break-words">
                          {transaction.description}
                        </div>

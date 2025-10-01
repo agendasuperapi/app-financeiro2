@@ -282,9 +282,9 @@ const parseDateSafe = (dateString: string): Date => {
 };
 
 // Format date and time to readable string - dd/MM/yy HH:mm format
-export const formatDateTime = (dateString: string): string => {
+export const formatDateTime = (dateString: string, timeZone?: string): string => {
   if (!dateString) return '';
-  const date = createLocalDate(dateString);
+  const date = createLocalDate(dateString, timeZone);
   if (isNaN(date.getTime())) return '';
   
   // Manual formatting to ensure correct date display

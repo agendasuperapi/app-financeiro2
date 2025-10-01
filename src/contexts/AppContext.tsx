@@ -25,6 +25,7 @@ interface AppState {
   isLoading: boolean;
   error: string | null;
   user: any;
+  userTimezone: string | undefined;
   hideValues: boolean;
   timeRange: string;
   customStartDate: Date | null;
@@ -52,6 +53,7 @@ type AppAction =
   | { type: 'UPDATE_SCHEDULED_TRANSACTION'; payload: ScheduledTransaction }
   | { type: 'DELETE_SCHEDULED_TRANSACTION'; payload: string }
   | { type: 'SET_USER'; payload: any }
+  | { type: 'SET_USER_TIMEZONE'; payload: string | undefined }
   | { type: 'TOGGLE_HIDE_VALUES' }
   | { type: 'SET_TIME_RANGE'; payload: string }
   | { type: 'SET_CUSTOM_DATE_RANGE'; payload: { start: Date | null; end: Date | null } }
@@ -61,6 +63,7 @@ interface AppContextType {
   state: AppState;
   dispatch: React.Dispatch<AppAction>;
   user: any;
+  userTimezone: string | undefined;
   hideValues: boolean;
   toggleHideValues: () => void;
   logout: () => Promise<void>;
@@ -110,6 +113,7 @@ const initialState: AppState = {
   isLoading: true, // Start with loading true
   error: null,
   user: null,
+  userTimezone: undefined,
   hideValues: false,
   timeRange: '30days',
   customStartDate: null,
@@ -133,6 +137,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, scheduledTransactions: action.payload };
     case 'SET_USER':
       return { ...state, user: action.payload };
+    case 'SET_USER_TIMEZONE':
+      return { ...state, userTimezone: action.payload };
     case 'TOGGLE_HIDE_VALUES':
       return { ...state, hideValues: !state.hideValues };
     case 'SET_TIME_RANGE':
@@ -590,7 +596,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           console.log("DEBUG AppContext: Tentando buscar poupeja_users para userIds:", userIds);
           const { data: usersRows, error: usersError } = await (supabase as any)
             .from('poupeja_users')
-            .select('id, dependente')
+            .select('id, dependente, fuso')
             .in('id', userIds);
           
           if (usersError) {
@@ -601,6 +607,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }
           
           (usersRows || []).forEach((u: any) => depMap.set(String(u.id), u.dependente === true));
+          
+          // Store timezone for current user
+          const currentUserData = (usersRows || []).find((u: any) => u.id === user.id);
+          if (currentUserData?.fuso) {
+            dispatch({ type: 'SET_USER_TIMEZONE', payload: currentUserData.fuso });
+          }
         } catch (error) {
           console.error("DEBUG AppContext: EXCEPTION ao acessar poupeja_users:", error);
         }
@@ -1139,6 +1151,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     state,
     dispatch,
     user: state.user,
+    userTimezone: state.userTimezone,
     hideValues: state.hideValues,
     toggleHideValues,
     logout,
@@ -1176,6 +1189,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }), [
     state.user?.id,
     state.isLoading,
+    state.userTimezone,
     state.transactions,
     state.categories,
     state.goals,

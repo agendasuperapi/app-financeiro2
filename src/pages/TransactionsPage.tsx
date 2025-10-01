@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, User, RotateCcw, Filter, Search, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
+import { useAppContext } from '@/contexts/AppContext';
 import { Transaction } from '@/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -37,7 +38,11 @@ const TransactionsPage = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
-  const { transactions, deleteTransaction, isClientView, selectedUser, targetUserId, refetchClientData } = useClientAwareData();
+  const { transactions, deleteTransaction, isClientView, selectedUser, targetUserId, userTimezone, refetchClientData } = useClientAwareData();
+  const appContext = useAppContext();
+  
+  // Get timezone: prefer client view timezone, fallback to app context timezone
+  const effectiveTimezone = userTimezone || appContext.userTimezone;
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const { formatDate } = useDateFormat();
@@ -123,8 +128,8 @@ const TransactionsPage = () => {
       yesterday.setDate(yesterday.getDate() - 1);
 
       filtered = filtered.filter((transaction) => {
-        const sourceDateStr = (transaction.created_at || transaction.date) as string;
-        const transactionDate = createLocalDate(sourceDateStr);
+        const sourceDateStr = transaction.date as string;
+        const transactionDate = createLocalDate(sourceDateStr, effectiveTimezone);
         const transactionDateOnly = new Date(transactionDate.getFullYear(), transactionDate.getMonth(), transactionDate.getDate());
 
         switch (dateFilter) {

@@ -17,6 +17,7 @@ export const useClientAwareData = () => {
   const [clientTransactions, setClientTransactions] = useState<any[]>([]);
   const [clientGoals, setClientGoals] = useState<any[]>([]);
   const [clientNotes, setClientNotes] = useState<any[]>([]);
+  const [userTimezone, setUserTimezone] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
 
   // Determinar qual usuário usar
@@ -39,13 +40,18 @@ export const useClientAwareData = () => {
 
       if (error) throw error;
       
-      // Fetch dependent flag for this user
+      // Fetch dependent flag and timezone for this user
       const { data: userRow } = await (supabase as any)
         .from('poupeja_users')
-        .select('id, dependente')
+        .select('id, dependente, fuso')
         .eq('id', targetUserId)
         .single();
       const isDep = userRow?.dependente === true;
+      
+      // Store timezone for use in date parsing
+      if (userRow?.fuso) {
+        setUserTimezone(userRow.fuso);
+      }
       
       return data.map((transaction: any) => ({
         ...transaction,
@@ -193,6 +199,7 @@ export const useClientAwareData = () => {
     isClientView,
     selectedUser,
     targetUserId,
+    userTimezone,
     loading: isClientView ? loading : false,
     
     // Funções de atualização (delegam para o contexto normal se não for client view)

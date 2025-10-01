@@ -13,13 +13,13 @@ export const getSaldoByAccount = async (): Promise<AccountBalance[]> => {
       throw new Error('Usuário não autenticado');
     }
 
-    // Query to get account balances grouped by 'conta'
+    // Query to get account balances grouped by 'conta_id' with join to tbl_contas
     const { data, error } = await supabase
       .from('poupeja_transactions')
-      .select('conta, amount')
+      .select('conta_id, amount, tbl_contas(name)')
       .eq('user_id', user.id)
-      .not('conta', 'is', null)
-      .not('conta', 'eq', '');
+      .not('conta_id', 'is', null)
+      .not('conta_id', 'eq', '');
 
     if (error) {
       console.error('Erro ao buscar saldos por conta:', error);
@@ -30,11 +30,11 @@ export const getSaldoByAccount = async (): Promise<AccountBalance[]> => {
     const accountBalances: { [key: string]: number } = {};
     
     data?.forEach((transaction: any) => {
-      const conta = transaction.conta;
+      const contaName = transaction.tbl_contas?.name;
       const amount = transaction.amount || 0;
       
-      if (conta) {
-        accountBalances[conta] = (accountBalances[conta] || 0) + amount;
+      if (contaName) {
+        accountBalances[contaName] = (accountBalances[contaName] || 0) + amount;
       }
     });
 

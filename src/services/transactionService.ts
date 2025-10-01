@@ -68,12 +68,15 @@ export const getTransactions = async (): Promise<Transaction[]> => {
         description: item.description || "",
         date: item.date,
         goalId: item.goal_id || undefined,
+        // Campos adicionais necessários para edição correta
+        category_id: item.category_id || undefined,
+        created_at: item.created_at || undefined,
         // Mostrar nome de quem adicionou quando houver nome na transação
         creatorName: creatorName,
         conta_id: item.conta_id || undefined,
         sub_conta: item.sub_conta || undefined,
         formato: item.formato || undefined,
-      };
+      } as Transaction;
     });
   } catch (error) {
     console.error("Error fetching transactions:", error);

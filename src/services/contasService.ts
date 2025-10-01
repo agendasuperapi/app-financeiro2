@@ -17,7 +17,7 @@ export const getContas = async (): Promise<Conta[]> => {
     const { data, error } = await (supabase as any)
       .from('tbl_contas')
       .select('*')
-      .eq('user_id', user.id)
+      .or(`user_id.eq.${user.id},user_id.is.null`)
       .order('name');
 
     if (error) throw error;

@@ -259,9 +259,18 @@ const parseDateSafe = (dateString: string): Date => {
 
 // Format date and time to readable string - dd/MM/yy HH:mm format
 export const formatDateTime = (dateString: string): string => {
+  if (!dateString) return '';
   const date = createLocalDate(dateString);
   if (isNaN(date.getTime())) return '';
-  return format(date, 'dd/MM/yy HH:mm');
+  
+  // Manual formatting to ensure correct date display
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear()).slice(-2);
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
 };
 
 // Format date to readable string - fixed to pt-BR with timezone handling

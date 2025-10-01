@@ -240,14 +240,6 @@ export const TransferModal: React.FC<TransferModalProps> = ({
             </Select>
           </div>
 
-          {/* Telefone (automático) */}
-          {phone && (
-            <div className="space-y-2">
-              <Label>Telefone</Label>
-              <Input value={phone} disabled className="bg-muted" />
-            </div>
-          )}
-
           {/* Categoria e Conta de Origem */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

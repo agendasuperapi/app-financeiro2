@@ -46,6 +46,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [toCategoryId, setToCategoryId] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -86,7 +87,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
   };
 
   const handleTransfer = async () => {
-    if (!fromAccount || !toAccount || !amount || !categoryId) {
+    if (!fromAccount || !toAccount || !amount || !categoryId || !toCategoryId) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
@@ -142,7 +143,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
           user_id: user.id,
           amount: amountValue,
           type: 'income',
-          category_id: categoryId,
+          category_id: toCategoryId,
           name: name || null,
           phone: phone || null,
           description: `${transferDescription} (Entrada)`,
@@ -165,6 +166,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
       setAmount('');
       setDescription('');
       setCategoryId('');
+      setToCategoryId('');
       setName('');
       setPhone('');
       
@@ -189,9 +191,9 @@ export const TransferModal: React.FC<TransferModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-          {/* Categoria */}
+          {/* Categoria de Origem */}
           <div className="space-y-2">
-            <Label htmlFor="category">Categoria *</Label>
+            <Label htmlFor="category">Categoria de Origem *</Label>
             <Select value={categoryId} onValueChange={setCategoryId}>
               <SelectTrigger id="category">
                 <SelectValue placeholder="Selecione a categoria" />
@@ -262,6 +264,23 @@ export const TransferModal: React.FC<TransferModalProps> = ({
           {/* Indicador Visual */}
           <div className="flex justify-center py-2">
             <ArrowRight className="h-6 w-6 text-muted-foreground" />
+          </div>
+
+          {/* Categoria de Destino */}
+          <div className="space-y-2">
+            <Label htmlFor="to-category">Categoria de Destino *</Label>
+            <Select value={toCategoryId} onValueChange={setToCategoryId}>
+              <SelectTrigger id="to-category">
+                <SelectValue placeholder="Selecione a categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Conta de Destino */}

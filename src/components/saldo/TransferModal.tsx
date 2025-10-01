@@ -225,7 +225,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
 
           {/* Name/Pessoa */}
           <div className="space-y-2">
-            <Label htmlFor="name">Pessoa (Opcional)</Label>
+            <Label htmlFor="name">Pessoa</Label>
             <Select value={name} onValueChange={setName}>
               <SelectTrigger id="name">
                 <SelectValue placeholder="Selecione a pessoa" />

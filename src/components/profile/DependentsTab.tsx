@@ -94,8 +94,8 @@ const DependentsTab = () => {
 
   const handleEditDependent = (dependent: Dependent) => {
     setEditingDependent(dependent);
-    setDepName(dependent.dep_name || '');
-    setPhone(dependent.dep_phone || '');
+    setDepName(dependent.primeiro_name || '');
+    setPhone(dependent.phone || '');
     setIsEditDialogOpen(true);
   };
 
@@ -321,16 +321,16 @@ const DependentsTab = () => {
           <div className="space-y-4">
             {dependents.map((dependent) => (
               <div
-                key={`${dependent.id}-${dependent.dep_name}-${dependent.dep_phone}`}
+                key={`${dependent.id}-${dependent.primeiro_name}-${dependent.phone}`}
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
                 <div className="flex items-center gap-3">
                   <div className="flex items-center justify-center w-10 h-10 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                    {dependent.dep_name?.[0]?.toUpperCase() || 'D'}
+                    {dependent.primeiro_name?.[0]?.toUpperCase() || 'D'}
                   </div>
                   <div>
-                    <h4 className="font-medium">{dependent.dep_name}</h4>
-                    <p className="text-sm text-muted-foreground">{dependent.dep_phone}</p>
+                    <h4 className="font-medium">{dependent.primeiro_name}</h4>
+                    <p className="text-sm text-muted-foreground">{dependent.phone}</p>
                   </div>
                 </div>
                 

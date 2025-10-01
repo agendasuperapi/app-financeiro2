@@ -223,23 +223,6 @@ export const TransferModal: React.FC<TransferModalProps> = ({
             />
           </div>
 
-          {/* Categoria de Origem */}
-          <div className="space-y-2">
-            <Label htmlFor="category">Categoria de Origem *</Label>
-            <Select value={categoryId} onValueChange={setCategoryId}>
-              <SelectTrigger id="category">
-                <SelectValue placeholder="Selecione a categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Name/Pessoa */}
           <div className="space-y-2">
             <Label htmlFor="name">Pessoa (Opcional)</Label>
@@ -264,6 +247,23 @@ export const TransferModal: React.FC<TransferModalProps> = ({
               <Input value={phone} disabled className="bg-muted" />
             </div>
           )}
+
+          {/* Categoria de Origem */}
+          <div className="space-y-2">
+            <Label htmlFor="category">Categoria de Origem *</Label>
+            <Select value={categoryId} onValueChange={setCategoryId}>
+              <SelectTrigger id="category">
+                <SelectValue placeholder="Selecione a categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Conta de Origem */}
           <div className="space-y-2">

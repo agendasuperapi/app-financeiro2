@@ -15,6 +15,7 @@ import { Phone, Camera, Mail, Key, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DependentsTab from '@/components/profile/DependentsTab';
 import CategoriesTab from '@/components/profile/CategoriesTab';
+import ContasTab from '@/components/profile/ContasTab';
 import PreferencesTab from '@/components/settings/PreferencesTab';
 import PlansTab from '@/components/profile/PlansTab';
 
@@ -359,7 +360,7 @@ const ProfilePage = () => {
         <div className="grid gap-6">
           <Tabs defaultValue="info" className="w-full">
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-6">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 gap-1 p-1 h-auto bg-muted/50">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 gap-1 p-1 h-auto bg-muted/50">
                 <TabsTrigger 
                   value="info" 
                   className="text-xs md:text-sm px-2 py-3 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
@@ -377,6 +378,12 @@ const ProfilePage = () => {
                   className="text-xs md:text-sm px-2 py-3 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
                 >
                   Categorias
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="contas" 
+                  className="text-xs md:text-sm px-2 py-3 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
+                >
+                  Contas
                 </TabsTrigger>
                 <TabsTrigger 
                   value="dependents" 
@@ -516,6 +523,10 @@ const ProfilePage = () => {
               
               <TabsContent value="categories" className="mt-0">
                 <CategoriesTab />
+              </TabsContent>
+              
+              <TabsContent value="contas" className="mt-0">
+                <ContasTab />
               </TabsContent>
               
               <TabsContent value="dependents" className="mt-0">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -21,6 +21,9 @@ import { ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { getCategoriesByType } from '@/services/categoryService';
+import { DependentsService, Dependent } from '@/services/dependentsService';
+import { v4 as uuidv4 } from 'uuid';
 
 interface TransferModalProps {
   open: boolean;
@@ -37,17 +40,53 @@ export const TransferModal: React.FC<TransferModalProps> = ({
 }) => {
   const { currency } = usePreferences();
   const [fromAccount, setFromAccount] = useState('');
+  const [fromSubAccount, setFromSubAccount] = useState('');
   const [toAccount, setToAccount] = useState('');
+  const [toSubAccount, setToSubAccount] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [dependents, setDependents] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const [categoriesData, dependentsData] = await Promise.all([
+          getCategoriesByType('income'),
+          DependentsService.getDependents(user.id)
+        ]);
+        setCategories(categoriesData);
+        setDependents(dependentsData);
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      }
+    };
+
+    if (open) {
+      loadData();
+    }
+  }, [open]);
+
+  useEffect(() => {
+    const selectedDependent = dependents.find(d => d.dep_name === name);
+    if (selectedDependent) {
+      setPhone(selectedDependent.dep_phone || '');
+    }
+  }, [name, dependents]);
 
   const getCurrencySymbol = () => {
     return currency === 'USD' ? '$ ' : 'R$ ';
   };
 
   const handleTransfer = async () => {
-    if (!fromAccount || !toAccount || !amount) {
+    if (!fromAccount || !toAccount || !amount || !categoryId) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
@@ -74,53 +113,60 @@ export const TransferModal: React.FC<TransferModalProps> = ({
 
       const today = new Date().toISOString().split('T')[0];
       const transferDescription = description || `Transferência de ${fromAccount} para ${toAccount}`;
+      const referenceCode = uuidv4();
 
-      // Buscar categoria padrão de "Outros" para transferências
-      const { data: categories } = await supabase
-        .from('poupeja_categories')
-        .select('id')
-        .eq('name', 'Outros')
-        .limit(1);
-
-      const categoryId = categories?.[0]?.id;
-
-      // Criar transação de saída (expense)
-      const { error: expenseError } = await supabase
+      // Criar transação de saída (income com valor negativo)
+      const { error: outgoingError } = await supabase
         .from('poupeja_transactions')
         .insert({
           user_id: user.id,
           amount: -amountValue,
-          type: 'expense',
+          type: 'income',
           category_id: categoryId,
+          name: name || null,
+          phone: phone || null,
           description: `${transferDescription} (Saída)`,
           date: today,
+          reference_code: referenceCode,
+          formato: 'transacao',
           conta: fromAccount,
+          sub_conta: fromSubAccount || null,
         });
 
-      if (expenseError) throw expenseError;
+      if (outgoingError) throw outgoingError;
 
-      // Criar transação de entrada (income)
-      const { error: incomeError } = await supabase
+      // Criar transação de entrada (income com valor positivo)
+      const { error: incomingError } = await supabase
         .from('poupeja_transactions')
         .insert({
           user_id: user.id,
           amount: amountValue,
           type: 'income',
           category_id: categoryId,
+          name: name || null,
+          phone: phone || null,
           description: `${transferDescription} (Entrada)`,
           date: today,
+          reference_code: referenceCode,
+          formato: 'transacao',
           conta: toAccount,
+          sub_conta: toSubAccount || null,
         });
 
-      if (incomeError) throw incomeError;
+      if (incomingError) throw incomingError;
 
       toast.success('Transferência realizada com sucesso!');
       
       // Reset form
       setFromAccount('');
+      setFromSubAccount('');
       setToAccount('');
+      setToSubAccount('');
       setAmount('');
       setDescription('');
+      setCategoryId('');
+      setName('');
+      setPhone('');
       
       onSuccess();
       onOpenChange(false);
@@ -142,10 +188,52 @@ export const TransferModal: React.FC<TransferModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+          {/* Categoria */}
+          <div className="space-y-2">
+            <Label htmlFor="category">Categoria *</Label>
+            <Select value={categoryId} onValueChange={setCategoryId}>
+              <SelectTrigger id="category">
+                <SelectValue placeholder="Selecione a categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Name/Pessoa */}
+          <div className="space-y-2">
+            <Label htmlFor="name">Pessoa (Opcional)</Label>
+            <Select value={name} onValueChange={setName}>
+              <SelectTrigger id="name">
+                <SelectValue placeholder="Selecione a pessoa" />
+              </SelectTrigger>
+              <SelectContent>
+                {dependents.map((dependent) => (
+                  <SelectItem key={`${dependent.id}-${dependent.dep_name}`} value={dependent.dep_name}>
+                    {dependent.dep_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Telefone (automático) */}
+          {phone && (
+            <div className="space-y-2">
+              <Label>Telefone</Label>
+              <Input value={phone} disabled className="bg-muted" />
+            </div>
+          )}
+
           {/* Conta de Origem */}
           <div className="space-y-2">
-            <Label htmlFor="from-account">De (Conta de Origem)</Label>
+            <Label htmlFor="from-account">De (Conta de Origem) *</Label>
             <Select value={fromAccount} onValueChange={setFromAccount}>
               <SelectTrigger id="from-account">
                 <SelectValue placeholder="Selecione a conta" />
@@ -160,6 +248,17 @@ export const TransferModal: React.FC<TransferModalProps> = ({
             </Select>
           </div>
 
+          {/* Sub-conta de Origem */}
+          <div className="space-y-2">
+            <Label htmlFor="from-sub-account">Sub-conta de Origem (Opcional)</Label>
+            <Input
+              id="from-sub-account"
+              placeholder="Sub-conta"
+              value={fromSubAccount}
+              onChange={(e) => setFromSubAccount(e.target.value)}
+            />
+          </div>
+
           {/* Indicador Visual */}
           <div className="flex justify-center py-2">
             <ArrowRight className="h-6 w-6 text-muted-foreground" />
@@ -167,7 +266,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
 
           {/* Conta de Destino */}
           <div className="space-y-2">
-            <Label htmlFor="to-account">Para (Conta de Destino)</Label>
+            <Label htmlFor="to-account">Para (Conta de Destino) *</Label>
             <Select value={toAccount} onValueChange={setToAccount}>
               <SelectTrigger id="to-account">
                 <SelectValue placeholder="Selecione a conta" />
@@ -182,9 +281,20 @@ export const TransferModal: React.FC<TransferModalProps> = ({
             </Select>
           </div>
 
+          {/* Sub-conta de Destino */}
+          <div className="space-y-2">
+            <Label htmlFor="to-sub-account">Sub-conta de Destino (Opcional)</Label>
+            <Input
+              id="to-sub-account"
+              placeholder="Sub-conta"
+              value={toSubAccount}
+              onChange={(e) => setToSubAccount(e.target.value)}
+            />
+          </div>
+
           {/* Valor */}
           <div className="space-y-2">
-            <Label htmlFor="amount">Valor</Label>
+            <Label htmlFor="amount">Valor *</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 {getCurrencySymbol()}

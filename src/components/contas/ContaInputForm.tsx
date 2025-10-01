@@ -8,6 +8,7 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { getContas, Conta } from '@/services/contasService';
+import CategoryIcon from '@/components/categories/CategoryIcon';
 
 interface ContaInputFormProps {
   form: UseFormReturn<any>; // Aceita qualquer tipo de form
@@ -47,7 +48,17 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
                   aria-expanded={open}
                   className="justify-between"
                 >
-                  {field.value ? contas.find(c => c.id === field.value)?.name : "Escolha a Conta"}
+                  {field.value ? (
+                    <div className="flex items-center gap-2">
+                      <CategoryIcon 
+                        icon={contas.find(c => c.id === field.value)?.icon || 'wallet'} 
+                        color={contas.find(c => c.id === field.value)?.color || '#808080'} 
+                      />
+                      <span>{contas.find(c => c.id === field.value)?.name}</span>
+                    </div>
+                  ) : (
+                    "Escolha a Conta"
+                  )}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </FormControl>
@@ -75,7 +86,8 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
                             field.value === conta.id ? "opacity-100" : "opacity-0"
                           )}
                         />
-                        {conta.name}
+                        <CategoryIcon icon={conta.icon} color={conta.color} />
+                        <span className="ml-2">{conta.name}</span>
                       </CommandItem>
                     ))}
                   </CommandGroup>

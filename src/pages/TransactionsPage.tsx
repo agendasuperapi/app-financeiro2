@@ -153,6 +153,13 @@ const TransactionsPage = () => {
       });
     }
 
+    // Ordenar por data de criação (mais recente primeiro)
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at || a.date).getTime();
+      const dateB = new Date(b.created_at || b.date).getTime();
+      return dateB - dateA;
+    });
+
     setFilteredTransactions(filtered);
   };
 

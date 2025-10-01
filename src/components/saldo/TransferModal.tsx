@@ -64,7 +64,8 @@ export const TransferModal: React.FC<TransferModalProps> = ({
         const { data: cadastrosData, error } = await supabase
           .from('view_cadastros_unificados' as any)
           .select('primeiro_name, phone')
-          .eq('user_id', user.id);
+          .eq('id', user.id)
+          .eq('tipo', 'dependente');
 
         if (error) throw error;
 

@@ -12,7 +12,8 @@ export class DependentsService {
       const { data, error } = await (supabase as any)
         .from('view_cadastros_unificados')
         .select('id, primeiro_name, phone')
-        .eq('user_id', userId);
+        .eq('id', userId)
+        .eq('tipo', 'dependente');
 
       if (error) throw error;
       return (data || []) as Dependent[];

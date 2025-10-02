@@ -46,7 +46,6 @@ export const useTransactionForm = ({
       type: initialData?.type || defaultType,
       amount: initialData?.amount || 0,
       conta_id: initialData?.conta_id || '',
-      conta: (initialData as any)?.conta || '',
       sub_conta: (initialData as any)?.sub_conta || '',
       category: initialData?.category_id || '',
       description: initialData?.description || '',
@@ -212,7 +211,6 @@ export const useTransactionForm = ({
         type: initialData.type,
         amount: Math.abs(initialData.amount), // Garantir valor positivo na edição
         conta_id: initialData.conta_id || '',
-        conta: (initialData as any)?.conta || '',
         sub_conta: (initialData as any)?.sub_conta || '',
         category: initialData.category_id || '',
         description: initialData.description || '',
@@ -226,7 +224,6 @@ export const useTransactionForm = ({
         type: defaultType,
         amount: 0,
         conta_id: '',
-        conta: '',
         sub_conta: '',
         category: '',
         description: '',

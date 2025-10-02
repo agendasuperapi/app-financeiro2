@@ -7,7 +7,6 @@ export const createTransactionSchema = (translationFn: (key: string) => string) 
     amount: z.coerce.number(),
     conta_id: z.string().min(1, translationFn('validation.required')),
     sub_conta: z.string().optional(),
-    conta: z.string().optional(),
     category: z.string().min(1, translationFn('validation.required')),
     description: z.string().optional(),
     date: z.string().min(1, translationFn('validation.required')),

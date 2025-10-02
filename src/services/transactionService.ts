@@ -49,6 +49,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
       console.log('[transactionService] Mapping transaction:', {
         id: item.id,
         conta_id: item.conta_id,
+        conta: item.conta,
         category_id: item.category_id,
         description: item.description
       });
@@ -69,6 +70,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
         // Mostrar nome de quem adicionou quando houver nome na transação
         creatorName: creatorName,
         conta_id: item.conta_id || undefined,
+        conta: item.conta || undefined, // Campo legado para mapeamento
         sub_conta: item.sub_conta || undefined,
         formato: item.formato || undefined,
       } as Transaction;

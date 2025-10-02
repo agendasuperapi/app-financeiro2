@@ -26,29 +26,34 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
         setContas(contasList);
 
         // Quando editar, mapear conta_id do form se necessário
-        const currentId = form.getValues('conta_id');
+        let currentId = form.getValues('conta_id');
         console.log('[ContaInputForm] Loaded contas, current conta_id:', currentId);
         
-        if (currentId) {
-          const found = contasList.find(c => c.id === currentId);
-          if (found) {
-            console.log('[ContaInputForm] Conta found:', found.name);
-            // Garantir que o form tem tanto o ID quanto o nome
-            form.setValue('conta', found.name, { shouldValidate: false, shouldDirty: false });
+        // Se conta_id está vazio, tentar mapear pela coluna 'conta' (dados legados)
+        if (!currentId) {
+          const legacyContaName = (form.getValues() as any).conta;
+          console.log('[ContaInputForm] No conta_id, checking legacy conta field:', legacyContaName);
+          
+          if (legacyContaName && typeof legacyContaName === 'string') {
+            const foundByName = contasList.find(c => 
+              c.name?.toLowerCase() === legacyContaName.toLowerCase()
+            );
+            
+            if (foundByName) {
+              console.log('[ContaInputForm] Mapped legacy conta to conta_id:', legacyContaName, '->', foundByName.id);
+              form.setValue('conta_id', foundByName.id, { shouldValidate: true });
+              currentId = foundByName.id;
+            } else {
+              console.warn('[ContaInputForm] Could not find conta by legacy name:', legacyContaName);
+            }
           }
         } else {
-          // Tentar mapear pelo nome da conta em dados legados
-          const currentName = form.getValues('conta');
-          console.log('[ContaInputForm] No conta_id; trying by name:', currentName);
-          if (currentName) {
-            const foundByName = contasList.find(c => c.name?.toLowerCase() === String(currentName).toLowerCase());
-            if (foundByName) {
-              form.setValue('conta_id', foundByName.id, { shouldValidate: true });
-              form.setValue('conta', foundByName.name, { shouldValidate: false, shouldDirty: false });
-              console.log('[ContaInputForm] Mapped conta name to ID:', foundByName.name, foundByName.id);
-            } else {
-              console.warn('[ContaInputForm] Conta not found by name:', currentName);
-            }
+          // Se já tem conta_id, verificar se existe
+          const found = contasList.find(c => c.id === currentId);
+          if (found) {
+            console.log('[ContaInputForm] Conta found by ID:', found.name);
+          } else {
+            console.warn('[ContaInputForm] conta_id not found in contas list:', currentId);
           }
         }
       } catch (error) {

@@ -24,6 +24,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const { register, handleSubmit, setValue, watch, reset } = useForm({
     defaultValues: {
       name: '',
+      descricao: '',
       color: '#3b82f6',
       icon: 'Wallet',
     },
@@ -35,11 +36,13 @@ const ContaForm: React.FC<ContaFormProps> = ({
   useEffect(() => {
     if (initialData) {
       setValue('name', initialData.name);
+      setValue('descricao', initialData.descricao || '');
       setValue('color', initialData.color);
       setValue('icon', initialData.icon);
     } else {
       reset({
         name: '',
+        descricao: '',
         color: '#3b82f6',
         icon: 'Wallet',
       });
@@ -78,6 +81,15 @@ const ContaForm: React.FC<ContaFormProps> = ({
               id="name"
               {...register('name', { required: true })}
               placeholder="Nome da conta"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="descricao">Descrição</Label>
+            <Input
+              id="descricao"
+              {...register('descricao')}
+              placeholder="Descrição da conta (opcional)"
             />
           </div>
 

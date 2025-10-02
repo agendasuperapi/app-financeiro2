@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface Conta {
   id: string;
   name: string;
+  descricao?: string;
   color: string;
   icon: string;
   user_id: string;
@@ -53,6 +54,7 @@ export const updateConta = async (conta: Conta): Promise<Conta | null> => {
       .from('tbl_contas')
       .update({
         name: conta.name,
+        descricao: conta.descricao,
         color: conta.color,
         icon: conta.icon
       })

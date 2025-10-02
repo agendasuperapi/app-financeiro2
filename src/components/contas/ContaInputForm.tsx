@@ -26,30 +26,22 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
         setContas(contasList);
 
         const currentContaId = form.getValues('conta_id');
-        
+
         if (currentContaId) {
           const foundConta = contasList.find(c => c.id === currentContaId);
           if (foundConta) {
             form.setValue('conta', foundConta.name, { shouldValidate: true });
           } else {
-            const contaGeral = contasList.find(c => c.name.toLowerCase() === 'geral');
-            if (contaGeral) {
-              form.setValue('conta_id', contaGeral.id, { shouldValidate: true });
-              form.setValue('conta', contaGeral.name, { shouldValidate: true });
-            }
-          }
-        } else {
-          const contaGeral = contasList.find(c => c.name.toLowerCase() === 'geral');
-          if (contaGeral) {
-            form.setValue('conta_id', contaGeral.id, { shouldValidate: true });
-            form.setValue('conta', contaGeral.name, { shouldValidate: true });
+            // ID inválido: não definir conta padrão e limpar seleção
+            form.setValue('conta', '', { shouldValidate: true });
+            form.setValue('conta_id', '', { shouldValidate: true });
           }
         }
       } catch (error) {
-        console.error('Erro ao carregar contas:', error);
+        // ignorar silenciosamente para evitar logs no cliente
       }
     };
-    
+
     loadContas();
   }, [form]);
 

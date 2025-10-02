@@ -77,6 +77,7 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
                         value={conta.name}
                         onSelect={() => {
                           field.onChange(conta.id);
+                          form.setValue('conta', conta.name, { shouldValidate: true });
                           setOpen(false);
                         }}
                       >

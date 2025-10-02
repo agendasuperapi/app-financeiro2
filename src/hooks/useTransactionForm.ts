@@ -8,6 +8,7 @@ import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { getCategoriesByType } from '@/services/categoryService';
 import { createTransactionForUser, checkRelatedTransactions } from '@/services/transactionService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UseTransactionFormProps {
   initialData?: Transaction;
@@ -210,6 +211,24 @@ export const useTransactionForm = ({
         goalId: initialData.goalId,
         name: initialData.creatorName || '',
       });
+
+      // Garantir que o conta_id mais recente seja carregado do banco quando ausente
+      if (!initialData.conta_id && initialData.id) {
+        (async () => {
+          try {
+            const { data } = await (supabase as any)
+              .from('poupeja_transactions')
+              .select('conta_id')
+              .eq('id', initialData.id)
+              .maybeSingle();
+            if (data?.conta_id) {
+              form.setValue('conta_id', data.conta_id, { shouldValidate: true });
+            }
+          } catch (e) {
+            // silencioso
+          }
+        })();
+      }
     } else {
       setSelectedType(defaultType);
       form.reset({

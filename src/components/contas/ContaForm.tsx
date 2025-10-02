@@ -134,7 +134,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
     return {
       type: defaultType,
       description: '',
-      amount: 100,
+      amount: '' as any,
       installments: undefined,
       category: '',
       scheduledDate: now.toISOString().slice(0, 16),
@@ -634,7 +634,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
         }) => <FormItem>
                 <FormLabel>{t('common.amount')}</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" min="0.01" {...field} onChange={e => field.onChange(Math.abs(parseFloat(e.target.value) || 0))} placeholder="0,00" />
+                  <Input type="number" step="0.01" {...field} onChange={e => field.onChange(e.target.value ? Math.abs(parseFloat(e.target.value)) : '')} placeholder="0,00" />
                 </FormControl>
                 <FormMessage />
               </FormItem>} />

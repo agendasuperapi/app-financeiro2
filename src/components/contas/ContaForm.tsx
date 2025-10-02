@@ -36,8 +36,7 @@ const contaFormSchema = z.object({
   recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly', 'installments']),
   goalId: z.string().optional().nullable(),
   // Campos obrigatórios do ContaInput e AddedByField
-  conta: z.string().min(1, 'Conta é obrigatória'),
-  conta_id: z.string().optional(), // ID da conta selecionada
+  conta_id: z.string().min(1, 'Conta é obrigatória'),
   name: z.string().min(1, 'Usuario é obrigatório'),
   phone: z.string().optional()
 });
@@ -126,9 +125,8 @@ const ContaForm: React.FC<ContaFormProps> = ({
         scheduledDate: initialData.scheduledDate ? new Date(initialData.scheduledDate).toISOString().slice(0, 16) : now.toISOString().slice(0, 16),
         recurrence: hasInstallments ? 'installments' : initialData.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' || 'once',
         goalId: initialData.goalId || null,
-        // Novos campos obrigatórios - usando campos disponíveis da interface
-        conta: initialData.conta || '',
-        conta_id: (initialData as any).conta_id || '',
+        // Campos obrigatórios
+        conta_id: initialData.conta_id || '',
         name: initialData.creatorName || '',
         phone: initialData.phone || ''
       };
@@ -142,8 +140,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
       scheduledDate: now.toISOString().slice(0, 16),
       recurrence: 'once',
       goalId: null,
-      // Novos campos obrigatórios
-      conta: '',
+      // Campos obrigatórios
       conta_id: '',
       name: '',
       phone: ''
@@ -332,8 +329,8 @@ const ContaForm: React.FC<ContaFormProps> = ({
           parcela: values.recurrence === 'installments' ? (values.installments || 1).toString() : '1',
           user_id: targetUserId,
           formato: 'agenda',
-          // Campos obrigatórios do ContaInput e AddedByField
-          conta: values.conta,
+          // Campos obrigatórios
+          conta_id: values.conta_id,
           creatorName: values.name
         };
         console.log('📋 Creating transaction with data:', transactionData);
@@ -395,8 +392,8 @@ const ContaForm: React.FC<ContaFormProps> = ({
           status: 'pending' as const,
           user_id: targetUserId,
           formato: 'agenda',
-          // Campos obrigatórios do ContaInput e AddedByField
-          conta: values.conta,
+          // Campos obrigatórios
+          conta_id: values.conta_id,
           creatorName: values.name
         };
         console.log('📋 Updating transaction with ID:', initialData.id);
@@ -508,7 +505,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           type: values.type,
           amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
           category_id: values.category,
-          conta: values.conta,
+          conta_id: values.conta_id,
           name: values.name,
           phone: values.phone,
           date: newTxDate.toISOString(),
@@ -549,7 +546,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           type: values.type,
           amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
           category_id: values.category,
-          conta: values.conta,
+          conta_id: values.conta_id,
           name: values.name,
           phone: values.phone,
           date: newTxDate.toISOString(),

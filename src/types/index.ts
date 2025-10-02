@@ -13,9 +13,7 @@ export interface Transaction {
   description?: string;
   date: string; // ISO date string
   goalId?: string; // Optional reference to a goal
-  conta?: string; // Account name (deprecated, use conta_id)
   conta_id?: string; // Account ID reference to tbl_contas
-  sub_conta?: string; // Sub-account or secondary account classification
   creatorName?: string; // Name of who created the transaction (for dependents)
   formato?: string; // Origem/forma de criação (agenda, manual, etc.)
   status?: string; // Status da transação (paid, recebido, etc.)
@@ -69,9 +67,7 @@ export interface ScheduledTransaction {
   situacao?: string; // Status or situation
   parcela?: string; // Installment information
   creatorName?: string; // Name of who created the scheduled transaction (for dependents)
-  conta?: string; // Account field
   conta_id?: string; // Account ID reference
-  sub_conta?: string; // Sub-account or secondary account classification
   __isSimulation?: boolean; // Flag to mark simulated transactions
   // Database fields for compatibility
   category_id?: string;

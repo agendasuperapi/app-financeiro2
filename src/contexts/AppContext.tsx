@@ -243,8 +243,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       user_id: dbTransaction.user_id,
       created_at: dbTransaction.created_at,
       creatorName: dbTransaction.name || undefined,
-      conta: dbTransaction.conta || undefined,
-      sub_conta: dbTransaction.sub_conta || undefined,
+      conta_id: dbTransaction.conta_id || undefined,
       formato: dbTransaction.formato || undefined,
     };
   };
@@ -476,7 +475,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                   date: item.date,
                   goalId: item.goal_id || undefined,
                   creatorName: item.name || undefined,
-                  conta: item.conta || undefined,
+                  conta_id: item.conta_id || undefined,
                   formato: item.formato || undefined,
                 }));
                 
@@ -819,8 +818,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           goal_id: transaction.goalId,
           user_id: user.id,
           reference_code: referenceCode,
-          conta: (transaction as any).conta,
-          sub_conta: (transaction as any).sub_conta,
+          conta_id: (transaction as any).conta_id,
           name: nameValue,
           phone: phoneValue,
           status: (transaction as any).status, // Adicionar campo status
@@ -887,8 +885,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           description: transaction.description,
           date: transaction.date,
           goal_id: transaction.goalId,
-          conta: transaction.conta,
-          sub_conta: (transaction as any)?.sub_conta,
+          conta_id: transaction.conta_id,
           name: nameValue,
           phone: phoneValue,
         })

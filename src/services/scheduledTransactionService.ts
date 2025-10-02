@@ -99,7 +99,6 @@ export const getScheduledTransactions = async (userId?: string): Promise<Schedul
         lastExecutionDate: undefined,
         nextExecutionDate: undefined,
         creatorName: creatorName,
-        conta: item.conta || '',
         conta_id: item.conta_id || '',
         phone: item.phone || undefined,
         reference_code: item.reference_code,
@@ -233,7 +232,7 @@ export const addScheduledTransaction = async (
           situacao: transaction.situacao || 'ativo',
           phone: transaction.phone,
           name: transaction.creatorName,
-          conta: transaction.conta,
+          conta_id: transaction.conta_id,
           recurrence: convertRecurrenceToPortuguese('once'), // Convert to Portuguese
           formato: 'agenda' // Transações criadas via agendamento
         };
@@ -322,7 +321,7 @@ export const addScheduledTransaction = async (
       if (transaction.situacao) insertData.situacao = transaction.situacao;
       if (transaction.phone) insertData.phone = transaction.phone;
       if (transaction.creatorName) insertData.name = transaction.creatorName;
-      if (transaction.conta) insertData.conta = transaction.conta;
+      if (transaction.conta_id) insertData.conta_id = transaction.conta_id;
       // Always convert recurrence to Portuguese, with default value
       insertData.recurrence = convertRecurrenceToPortuguese(transaction.recurrence);
 
@@ -427,7 +426,7 @@ export const updateScheduledTransaction = async (
     if (transaction.situacao) updateData.situacao = transaction.situacao;
     if (transaction.phone) updateData.phone = transaction.phone;
     if (transaction.creatorName) updateData.name = transaction.creatorName;
-    if (transaction.conta) updateData.conta = transaction.conta;
+    if (transaction.conta_id) updateData.conta_id = transaction.conta_id;
     // Always convert recurrence to Portuguese
     updateData.recurrence = convertRecurrenceToPortuguese(transaction.recurrence);
     if (transaction.status) updateData.status = transaction.status;
@@ -625,7 +624,7 @@ const handleRecurrenceAfterStatusChange = async (
       user_id: originalTransaction.user_id,
       formato: 'agenda', // Transações criadas via agendamento
       name: (originalTransaction as any).name, // Copiar campo "name"
-      conta: (originalTransaction as any).conta // Copiar campo "conta"
+      conta_id: (originalTransaction as any).conta_id // Copiar campo "conta_id"
     };
 
     console.log('📝 Creating new transaction:', newTransactionData);

@@ -60,8 +60,6 @@ export const getTransactions = async (): Promise<Transaction[]> => {
         // Mostrar nome de quem adicionou quando houver nome na transação
         creatorName: creatorName,
         conta_id: item.conta_id || '', // Manter string vazia em vez de undefined
-        conta: item.conta || '', // Campo legado para mapeamento
-        sub_conta: item.sub_conta || '',
         formato: item.formato || undefined,
       } as Transaction;
     });
@@ -229,7 +227,6 @@ export const createTransactionForUser = async (transactionData: {
       date: data.date,
       goalId: data.goal_id || undefined,
       conta_id: (data as any).conta_id || undefined,
-      sub_conta: (data as any).sub_conta || undefined,
       creatorName: (data as any).name || undefined,
       formato: (data as any).formato || undefined,
     };
@@ -286,7 +283,6 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
         date: transaction.date,
         goal_id: transaction.goalId,
         conta_id: transaction.conta_id,
-        sub_conta: transaction.sub_conta,
         name: (transaction as any).creatorName,
         phone: (transaction as any).phone,
         reference_code: await getNextReferenceCode(), // Generate new reference code for updates

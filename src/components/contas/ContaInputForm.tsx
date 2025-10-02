@@ -25,16 +25,43 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
         const contasList = await getContas();
         setContas(contasList);
 
-        // Busca por ID: Primeiro tenta encontrar a conta pelo ID armazenado
-        let currentId = form.getValues('conta_id');
-        console.log('[ContaInputForm] Loaded contas, current conta_id:', currentId);
-        
-        if (!currentId) {
+        // Busca por ID prioritária com múltiplas fontes possíveis
+        const rawValue = form.getValues('conta_id') as unknown;
+        let candidateId: string | undefined =
+          typeof rawValue === 'string' && rawValue.trim() ? rawValue : undefined;
+
+        if (!candidateId) {
+          const allValues: any = form.getValues() as any;
+          const possibles = [
+            allValues?.full_data?.conta_id,
+            allValues?.initialData?.conta_id,
+            typeof allValues?.conta_id === 'object' ? allValues?.conta_id?.value : undefined,
+            allValues?.conta?.id,
+          ];
+          candidateId = possibles.find((v: any) => typeof v === 'string' && v.trim());
+        }
+
+        console.log('[ContaInputForm] Loaded contas, candidate conta_id:', candidateId ?? '(empty)');
+
+        if (candidateId) {
+          const foundById = contasList.find(c => c.id === candidateId);
+          if (foundById) {
+            console.log('[ContaInputForm] Conta found by ID:', foundById.name);
+            form.setValue('conta_id', foundById.id, { shouldValidate: true });
+            form.setValue('conta', foundById.name, { shouldValidate: true });
+          } else {
+            console.warn('[ContaInputForm] Invalid conta_id, setting default "Geral":', candidateId);
+            const contaGeral = contasList.find(c => c.name?.toLowerCase() === 'geral');
+            if (contaGeral) {
+              form.setValue('conta_id', contaGeral.id, { shouldValidate: true });
+              form.setValue('conta', contaGeral.name, { shouldValidate: true });
+            } else {
+              console.warn('[ContaInputForm] Could not find default conta "Geral"');
+            }
+          }
+        } else {
           // Conta padrão: Se não tiver conta_id, define a conta "Geral" como padrão
-          const contaGeral = contasList.find(c => 
-            c.name?.toLowerCase() === 'geral'
-          );
-          
+          const contaGeral = contasList.find(c => c.name?.toLowerCase() === 'geral');
           if (contaGeral) {
             console.log('[ContaInputForm] No conta_id found, setting default "Geral":', contaGeral.id);
             form.setValue('conta_id', contaGeral.id, { shouldValidate: true });
@@ -42,29 +69,12 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
           } else {
             console.warn('[ContaInputForm] Could not find default conta "Geral"');
           }
-        } else {
-          // Verifica se o conta_id existe
-          const found = contasList.find(c => c.id === currentId);
-          if (found) {
-            console.log('[ContaInputForm] Conta found by ID:', found.name);
-          } else {
-            // Se conta_id for inválida, define a conta "Geral" como padrão
-            console.warn('[ContaInputForm] Invalid conta_id, setting default "Geral":', currentId);
-            const contaGeral = contasList.find(c => 
-              c.name?.toLowerCase() === 'geral'
-            );
-            
-            if (contaGeral) {
-              form.setValue('conta_id', contaGeral.id, { shouldValidate: true });
-              form.setValue('conta', contaGeral.name, { shouldValidate: true });
-            }
-          }
         }
       } catch (error) {
         console.error('Erro ao carregar contas:', error);
       }
     };
-    
+
     loadContas();
   }, [form]);
 

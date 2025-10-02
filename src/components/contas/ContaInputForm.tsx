@@ -25,27 +25,19 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
         const contasList = await getContas();
         setContas(contasList);
 
-        const formValues = form.getValues();
-        const currentContaId = formValues.conta_id;
-        
-        console.log('[DEBUG ContaInputForm] Full form values:', formValues);
-        console.log('[DEBUG ContaInputForm] conta_id from form:', currentContaId);
-        console.log('[DEBUG ContaInputForm] Available contas:', contasList.map(c => ({ id: c.id, name: c.name })));
+        const currentContaId = form.getValues('conta_id');
 
         if (currentContaId) {
           const foundConta = contasList.find(c => c.id === currentContaId);
-          console.log('[DEBUG ContaInputForm] Found conta:', foundConta);
           if (foundConta) {
             form.setValue('conta', foundConta.name, { shouldValidate: true });
           } else {
             form.setValue('conta', '', { shouldValidate: true });
             form.setValue('conta_id', '', { shouldValidate: true });
           }
-        } else {
-          console.log('[DEBUG ContaInputForm] No conta_id in form');
         }
       } catch (error) {
-        console.error('[DEBUG ContaInputForm] Error:', error);
+        // ignorar silenciosamente
       }
     };
 

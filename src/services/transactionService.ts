@@ -19,8 +19,6 @@ export const getTransactions = async (): Promise<Transaction[]> => {
     const txs = (data as any[]) || [];
     
     console.log('[transactionService] Raw transaction from DB (first item):', txs[0]);
-
-    // Buscar o status "dependente" dos donos das transações (poupeja_users)
     const userIds = Array.from(new Set(txs.map((t: any) => t.user_id).filter(Boolean)));
     let depMap = new Map<string, boolean>();
 
@@ -46,14 +44,6 @@ export const getTransactions = async (): Promise<Transaction[]> => {
     return txs.map((item: any) => {
       const creatorName = item.name ? item.name : undefined;
       
-      console.log('[transactionService] Mapping transaction:', {
-        id: item.id,
-        conta_id: item.conta_id,
-        conta: item.conta,
-        category_id: item.category_id,
-        description: item.description
-      });
-      
       return {
         id: item.id,
         type: item.type as 'income' | 'expense',
@@ -69,9 +59,9 @@ export const getTransactions = async (): Promise<Transaction[]> => {
         created_at: item.created_at || undefined,
         // Mostrar nome de quem adicionou quando houver nome na transação
         creatorName: creatorName,
-        conta_id: item.conta_id || undefined,
-        conta: item.conta || undefined, // Campo legado para mapeamento
-        sub_conta: item.sub_conta || undefined,
+        conta_id: item.conta_id || '', // Manter string vazia em vez de undefined
+        conta: item.conta || '', // Campo legado para mapeamento
+        sub_conta: item.sub_conta || '',
         formato: item.formato || undefined,
       } as Transaction;
     });

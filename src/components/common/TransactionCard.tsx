@@ -108,10 +108,7 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {onEdit && (
-                <DropdownMenuItem onClick={() => {
-                  console.log('[TransactionCard] Editing transaction, conta_id:', transaction.conta_id);
-                  onEdit(transaction);
-                }}>
+                <DropdownMenuItem onClick={() => onEdit(transaction)}>
                   {t('common.edit')}
                 </DropdownMenuItem>
               )}

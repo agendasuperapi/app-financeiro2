@@ -198,14 +198,6 @@ export const useTransactionForm = ({
   // Sync form when initialData or defaultType changes
   useEffect(() => {
     if (initialData) {
-      console.log('[useTransactionForm] Resetting form with initialData:', {
-        conta_id: initialData.conta_id,
-        category_id: initialData.category_id,
-        amount: initialData.amount,
-        description: initialData.description,
-        full_data: initialData
-      });
-      
       setSelectedType(initialData.type);
       form.reset({
         type: initialData.type,

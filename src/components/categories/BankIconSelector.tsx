@@ -47,6 +47,17 @@ const icons: IconOption[] = [
   { name: 'santander', text: 'Sant', color: '#FFFFFF', bgColor: '#EC0000' },
   { name: 'nubank', text: 'Nu', color: '#FFFFFF', bgColor: '#820AD1' },
   { name: 'inter', text: 'Inter', color: '#FFFFFF', bgColor: '#FF7A00' },
+  { name: 'c6bank', text: 'C6', color: '#FFFFFF', bgColor: '#000000' },
+  { name: 'mercado-pago', text: 'MP', color: '#FFFFFF', bgColor: '#009EE3' },
+  { name: 'sicoob', text: 'Sicoob', color: '#FFFFFF', bgColor: '#00984A' },
+  { name: 'banrisul', text: 'Banri', color: '#FFFFFF', bgColor: '#0057A3' },
+  { name: 'pagbank', text: 'PagB', color: '#FFFFFF', bgColor: '#00A859' },
+  { name: 'picpay', text: 'PicP', color: '#FFFFFF', bgColor: '#11C76F' },
+  { name: 'original', text: 'Orig', color: '#FFFFFF', bgColor: '#00C48C' },
+  { name: 'safra', text: 'Safra', color: '#FFFFFF', bgColor: '#003366' },
+  { name: 'btg', text: 'BTG', color: '#FFFFFF', bgColor: '#000000' },
+  { name: 'neon', text: 'Neon', color: '#FFFFFF', bgColor: '#00D9D9' },
+  { name: 'will', text: 'Will', color: '#FFFFFF', bgColor: '#FF6B00' },
   { name: 'pix', text: 'PIX', color: '#FFFFFF', bgColor: '#32BCAD' },
 ];
 

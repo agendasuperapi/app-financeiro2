@@ -318,6 +318,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       {/* Logo/Header */}
       <div className="p-6 border-b flex-shrink-0">
         <BrandLogo size="md" showCompanyName={true} />
+        <p className="text-xs text-muted-foreground mt-2 text-center">Versão 2.0.0</p>
       </div>
 
       {/* Navigation - Scrollable content */}

@@ -305,8 +305,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
 
   const bottomMenuItems = [
     {
-      icon: User,
-      label: t('nav.profile'),
+      icon: Settings,
+      label: 'Configurações',
       href: '/profile'
     },
   ];

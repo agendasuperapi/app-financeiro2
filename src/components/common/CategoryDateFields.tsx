@@ -32,14 +32,23 @@ const CategoryDateFields: React.FC<CategoryDateFieldsProps> = ({ form, transacti
         const filteredCategories = await getCategoriesByType(transactionType);
         setCategories(filteredCategories);
         
-        // Set default category if none selected
-        if (filteredCategories.length > 0) {
-          const currentCategory = form.getValues('category');
-          const categoryExists = filteredCategories.some(c => c.id === currentCategory || c.name === currentCategory);
-          
-          if (!categoryExists) {
-            form.setValue('category', filteredCategories[0].id);
+        // Mapear valor atual (id ou nome) para ID válido
+        const currentCategory = form.getValues('category');
+        if (currentCategory) {
+          const byId = filteredCategories.find(c => c.id === currentCategory);
+          if (!byId) {
+            const byName = filteredCategories.find(c => c.name === currentCategory);
+            if (byName) {
+              form.setValue('category', byName.id, { shouldValidate: true, shouldDirty: false });
+            }
           }
+        }
+        
+        // Set default category if none selected or inválida
+        const currentAfterMap = form.getValues('category');
+        const exists = filteredCategories.some(c => c.id === currentAfterMap);
+        if (!exists && filteredCategories.length > 0) {
+          form.setValue('category', filteredCategories[0].id);
         }
         
         // Force re-render after categories are loaded

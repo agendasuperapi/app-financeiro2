@@ -24,13 +24,23 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
       try {
         const contasList = await getContas();
         setContas(contasList);
+
+        // Mapear nome -> id quando vindo do banco com apenas 'conta'
+        const currentId = form.getValues('conta_id');
+        const currentName = form.getValues('conta');
+        if (!currentId && currentName) {
+          const match = contasList.find(c => c.name === currentName);
+          if (match) {
+            form.setValue('conta_id', match.id, { shouldValidate: true, shouldDirty: false });
+          }
+        }
       } catch (error) {
         console.error('Erro ao carregar contas:', error);
       }
     };
     
     loadContas();
-  }, []);
+  }, [form]);
 
   return (
     <FormField

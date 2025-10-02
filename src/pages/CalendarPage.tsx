@@ -63,7 +63,7 @@ const CalendarPage: React.FC = () => {
       type: 'expense',
       description: '',
       amount: 0,
-      conta: '',
+      conta_id: '',
       addedBy: '',
       category: '',
       date: '',
@@ -98,10 +98,10 @@ const CalendarPage: React.FC = () => {
         type: transaction.type as 'income' | 'expense',
         description: transaction.description || '',
         amount: transaction.amount,
-        conta: (transaction as any).conta || '',
+        conta_id: (transaction as any).conta_id || '',
         addedBy: (transaction as any).addedBy || '',
-        category: transaction.category,
-        date: transaction.date,
+        category: (transaction as any).category_id || '',
+        date: new Date(transaction.date).toISOString().split('T')[0],
         goalId: (transaction as any).goalId || ''
       });
       setEditTransactionFormDialogOpen(true);

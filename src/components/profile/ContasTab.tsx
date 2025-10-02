@@ -168,6 +168,12 @@ const ContasTab: React.FC = () => {
           </Button>
         </div>
         
+        <div className="p-3 bg-muted rounded-lg">
+          <p className="text-sm text-muted-foreground">
+            <strong>Observação:</strong> Não é possível editar ou apagar a conta "Geral"
+          </p>
+        </div>
+        
         <ul className="space-y-2">
           {contas.map((conta) => {
             const isDefaultConta = !conta.user_id || conta.isDefault;

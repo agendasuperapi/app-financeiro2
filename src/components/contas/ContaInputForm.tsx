@@ -25,35 +25,39 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
         const contasList = await getContas();
         setContas(contasList);
 
-        // Quando editar, mapear conta_id do form se necessário
+        // Busca por ID: Primeiro tenta encontrar a conta pelo ID armazenado
         let currentId = form.getValues('conta_id');
         console.log('[ContaInputForm] Loaded contas, current conta_id:', currentId);
         
-        // Se conta_id está vazio, tentar mapear pela coluna 'conta' (dados legados)
         if (!currentId) {
-          const legacyContaName = (form.getValues() as any).conta;
-          console.log('[ContaInputForm] No conta_id, checking legacy conta field:', legacyContaName);
+          // Conta padrão: Se não tiver conta_id, define a conta "Geral" como padrão
+          const contaGeral = contasList.find(c => 
+            c.name?.toLowerCase() === 'geral'
+          );
           
-          if (legacyContaName && typeof legacyContaName === 'string') {
-            const foundByName = contasList.find(c => 
-              c.name?.toLowerCase() === legacyContaName.toLowerCase()
-            );
-            
-            if (foundByName) {
-              console.log('[ContaInputForm] Mapped legacy conta to conta_id:', legacyContaName, '->', foundByName.id);
-              form.setValue('conta_id', foundByName.id, { shouldValidate: true });
-              currentId = foundByName.id;
-            } else {
-              console.warn('[ContaInputForm] Could not find conta by legacy name:', legacyContaName);
-            }
+          if (contaGeral) {
+            console.log('[ContaInputForm] No conta_id found, setting default "Geral":', contaGeral.id);
+            form.setValue('conta_id', contaGeral.id, { shouldValidate: true });
+            form.setValue('conta', contaGeral.name, { shouldValidate: true });
+          } else {
+            console.warn('[ContaInputForm] Could not find default conta "Geral"');
           }
         } else {
-          // Se já tem conta_id, verificar se existe
+          // Verifica se o conta_id existe
           const found = contasList.find(c => c.id === currentId);
           if (found) {
             console.log('[ContaInputForm] Conta found by ID:', found.name);
           } else {
-            console.warn('[ContaInputForm] conta_id not found in contas list:', currentId);
+            // Se conta_id for inválida, define a conta "Geral" como padrão
+            console.warn('[ContaInputForm] Invalid conta_id, setting default "Geral":', currentId);
+            const contaGeral = contasList.find(c => 
+              c.name?.toLowerCase() === 'geral'
+            );
+            
+            if (contaGeral) {
+              form.setValue('conta_id', contaGeral.id, { shouldValidate: true });
+              form.setValue('conta', contaGeral.name, { shouldValidate: true });
+            }
           }
         }
       } catch (error) {

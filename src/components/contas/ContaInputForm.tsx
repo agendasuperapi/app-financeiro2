@@ -25,7 +25,10 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
         const contasList = await getContas();
         setContas(contasList);
 
-        const currentContaId = form.getValues('conta_id');
+        const formValues = form.getValues();
+        const currentContaId = formValues.conta_id;
+        
+        console.log('[DEBUG ContaInputForm] Full form values:', formValues);
         console.log('[DEBUG ContaInputForm] conta_id from form:', currentContaId);
         console.log('[DEBUG ContaInputForm] Available contas:', contasList.map(c => ({ id: c.id, name: c.name })));
 

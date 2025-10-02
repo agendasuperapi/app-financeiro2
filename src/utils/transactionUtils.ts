@@ -293,17 +293,30 @@ const parseDateSafe = (dateString: string): Date => {
 // Format date and time to readable string - dd/MM/yy HH:mm format
 export const formatDateTime = (dateString: string, timeZone?: string): string => {
   if (!dateString) return '';
-  const date = createLocalDate(dateString, timeZone);
-  if (isNaN(date.getTime())) return '';
   
-  // Manual formatting to ensure correct date display
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = String(date.getFullYear()).slice(-2);
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
+  // Check if date is midnight UTC - treat as date-only (no time display)
+  const isMidnightUTC = /T00:00:00(\.\d{3})?(Z|\+00:00)$/.test(dateString);
   
-  return `${day}/${month}/${year} ${hours}:${minutes}`;
+  // Get date parts respecting timezone
+  const { year, month, day, hour, minute } = getDatePartsInTimeZone(dateString, timeZone);
+  
+  if (isNaN(year) || isNaN(month) || isNaN(day)) return '';
+  
+  // Format date parts
+  const dayStr = String(day).padStart(2, '0');
+  const monthStr = String(month).padStart(2, '0');
+  const yearStr = String(year).slice(-2);
+  
+  // If midnight UTC, show only date without time (or show 00:00)
+  if (isMidnightUTC) {
+    return `${dayStr}/${monthStr}/${yearStr}`;
+  }
+  
+  // Otherwise, show date with time
+  const hours = String(hour).padStart(2, '0');
+  const minutes = String(minute).padStart(2, '0');
+  
+  return `${dayStr}/${monthStr}/${yearStr} ${hours}:${minutes}`;
 };
 
 // Format date to readable string - fixed to pt-BR with timezone handling

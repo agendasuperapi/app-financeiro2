@@ -70,6 +70,7 @@ export interface ScheduledTransaction {
   parcela?: string; // Installment information
   creatorName?: string; // Name of who created the scheduled transaction (for dependents)
   conta?: string; // Account field
+  conta_id?: string; // Account ID reference
   sub_conta?: string; // Sub-account or secondary account classification
   __isSimulation?: boolean; // Flag to mark simulated transactions
   // Database fields for compatibility

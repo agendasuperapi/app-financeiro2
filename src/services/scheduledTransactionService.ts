@@ -99,7 +99,8 @@ export const getScheduledTransactions = async (userId?: string): Promise<Schedul
         lastExecutionDate: undefined,
         nextExecutionDate: undefined,
         creatorName: creatorName,
-        conta: item.conta || undefined,
+        conta: item.conta || '',
+        conta_id: item.conta_id || '',
         phone: item.phone || undefined,
         reference_code: item.reference_code,
       };

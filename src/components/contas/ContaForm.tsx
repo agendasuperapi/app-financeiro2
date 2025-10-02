@@ -37,6 +37,7 @@ const contaFormSchema = z.object({
   goalId: z.string().optional().nullable(),
   // Campos obrigatórios do ContaInput e AddedByField
   conta: z.string().min(1, 'Conta é obrigatória'),
+  conta_id: z.string().optional(), // ID da conta selecionada
   name: z.string().min(1, 'Usuario é obrigatório'),
   phone: z.string().optional()
 });
@@ -127,6 +128,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
         goalId: initialData.goalId || null,
         // Novos campos obrigatórios - usando campos disponíveis da interface
         conta: initialData.conta || '',
+        conta_id: (initialData as any).conta_id || '',
         name: initialData.creatorName || '',
         phone: initialData.phone || ''
       };
@@ -142,6 +144,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
       goalId: null,
       // Novos campos obrigatórios
       conta: '',
+      conta_id: '',
       name: '',
       phone: ''
     };
@@ -189,6 +192,24 @@ const ContaForm: React.FC<ContaFormProps> = ({
     if (mode === 'edit' && initialData) {
       const newValues = getDefaultValues();
       form.reset(newValues);
+      
+      // Garantir que o conta_id do banco seja carregado quando ausente
+      if (!(initialData as any).conta_id && initialData.id) {
+        (async () => {
+          try {
+            const { data } = await (supabase as any)
+              .from('poupeja_transactions')
+              .select('conta_id')
+              .eq('id', initialData.id)
+              .maybeSingle();
+            if (data?.conta_id) {
+              form.setValue('conta_id', data.conta_id, { shouldValidate: true });
+            }
+          } catch (e) {
+            // silencioso
+          }
+        })();
+      }
       
       // Verificar duplicatas quando carregar dados para edição
       const checkDuplicatesOnLoad = async () => {

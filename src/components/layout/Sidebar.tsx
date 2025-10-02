@@ -25,12 +25,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Redirecionar para login se não estiver logado (mas só após carregar)
+  // Redirecionar para login se não estiver logado (após carregar) e apenas em rotas protegidas
   React.useEffect(() => {
-    if (!isLoading && !user) {
+    const publicPaths = ['/', '/landing', '/login', '/register', '/forgot-password', '/reset-password'];
+    if (!isLoading && !user && !publicPaths.includes(location.pathname)) {
       navigate('/login');
     }
-  }, [user, navigate, isLoading]);
+  }, [user, navigate, isLoading, location.pathname]);
   
   // Verificar se estamos na página de administração
   const isAdminPage = location.pathname === '/admin';

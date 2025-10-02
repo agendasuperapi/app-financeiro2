@@ -23,16 +23,16 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { isAdmin } = useUserRole();
-  const { user } = useAppContext();
+  const { user, isLoading } = useAppContext();
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
   const [activeAdminSection, setActiveAdminSection] = useState<string>('gestao');
   
-  // Redirecionar para login se não estiver logado
+  // Redirecionar para login se não estiver logado (mas só após carregar)
   React.useEffect(() => {
-    if (!user) {
+    if (!isLoading && !user) {
       navigate('/login');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isLoading]);
   
   // Verificar se estamos na página de administração
   const isAdminPage = location.pathname === '/admin';

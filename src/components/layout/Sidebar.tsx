@@ -19,18 +19,18 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGestaoClick, onClientClick }) => {
-  const { user, logout } = useAppContext();
+  const { user, logout, isLoading } = useAppContext();
   const { t } = usePreferences();
   const { isAdmin } = useUserRole();
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Redirecionar para login se não estiver logado
+  // Redirecionar para login se não estiver logado (mas só após carregar)
   React.useEffect(() => {
-    if (!user) {
+    if (!isLoading && !user) {
       navigate('/login');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isLoading]);
   
   // Verificar se estamos na página de administração
   const isAdminPage = location.pathname === '/admin';

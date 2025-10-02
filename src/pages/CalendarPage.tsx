@@ -266,30 +266,43 @@ const CalendarPage: React.FC = () => {
                   ...props
                 }) => {
                   const dayItems = getAllItemsForDate(date);
-                  const incomeCount = dayItems.filter(t => t.type === 'income').length;
-                  const expenseCount = dayItems.filter(t => t.type === 'expense').length;
-                  const reminderCount = dayItems.filter(t => t.sourceType === 'reminder').length;
+                  
+                  // Contar por formato
+                  const formatCounts = {
+                    transacao: 0,
+                    agenda: 0,
+                    lembrete: 0
+                  };
+                  
+                  dayItems.forEach(item => {
+                    const formato = (item as any).formato || 
+                                   (item.sourceType === 'reminder' || item.status === 'pending' ? 'lembrete' : 'transacao');
+                    if (formato === 'transacao') formatCounts.transacao++;
+                    else if (formato === 'agenda') formatCounts.agenda++;
+                    else if (formato === 'lembrete') formatCounts.lembrete++;
+                  });
+                  
                   return <button {...props} className={cn("relative w-full h-full flex flex-col items-center justify-center rounded-md transition-colors", "hover:bg-accent hover:text-accent-foreground", selectedDate && isSameDay(date, selectedDate) && "bg-primary text-primary-foreground", isSameDay(date, new Date()) && !selectedDate && "bg-accent text-accent-foreground")} onClick={() => setSelectedDate(date)}>
                           <span>{format(date, 'd')}</span>
                           {dayItems.length > 0 && <div className="absolute bottom-1 flex gap-1">
-                              {incomeCount > 0 && <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />}
-                              {expenseCount > 0 && <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                              {reminderCount > 0 && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />}
+                              {formatCounts.transacao > 0 && <div className="w-1.5 h-1.5 bg-gray-900 dark:bg-gray-100 rounded-full" title="Transações" />}
+                              {formatCounts.agenda > 0 && <div className="w-1.5 h-1.5 bg-purple-500 rounded-full" title="Agendamentos" />}
+                              {formatCounts.lembrete > 0 && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" title="Lembretes" />}
                             </div>}
                         </button>;
                 }
               }} />
               </div>
               
-              {/* Legenda */}
-              <div className="flex items-center justify-center gap-6 mt-4 text-sm">
+              {/* Legenda - Formatos */}
+              <div className="flex items-center justify-center gap-6 mt-4 text-sm flex-wrap">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span>Receitas</span>
+                  <div className="w-3 h-3 bg-gray-900 dark:bg-gray-100 rounded-full"></div>
+                  <span>Transações</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span>Despesas</span>
+                  <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                  <span>Agendamentos</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-blue-500 rounded-full"></div>

@@ -322,7 +322,7 @@ const CalendarPage: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {selectedDate ? <div className="space-y-3">
+              {selectedDate ? <div className="space-y-2">
                   {selectedDateItems.length > 0 ? <>
                       {/* Todas as transações e lembretes do dia */}
                       {selectedDateItems.map(item => {
@@ -333,21 +333,21 @@ const CalendarPage: React.FC = () => {
 
                   // Definir cor da bolinha e estilo baseado no formato
                   let bolinhaColor = 'bg-gray-900'; // Preta para "transacao"
-                  let cardClassName = 'flex items-center justify-between p-3 border rounded-lg';
+                  let cardClassName = 'flex items-center justify-between p-2 border rounded-lg';
                   
                   if (formato === 'agenda') {
                     bolinhaColor = 'bg-purple-500'; // Roxa para "agenda"
                   } else if (formato === 'lembrete' || isReminder) {
                     bolinhaColor = 'bg-blue-500'; // Azul para "lembrete"
-                    cardClassName = 'flex items-center justify-between p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20';
+                    cardClassName = 'flex items-center justify-between p-2 border rounded-lg bg-blue-50 dark:bg-blue-950/20';
                   }
                   
                   return <div key={item.id} className={cardClassName}>
-                            <div className="flex items-center gap-3">
-                              <div className={`w-3 h-3 rounded-full ${bolinhaColor}`} />
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${bolinhaColor}`} />
                               <div>
-                                <p className="font-medium">{item.description || item.category}</p>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <p className="text-sm font-medium">{item.description || item.category}</p>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                   {(formato === 'agenda' || formato === 'lembrete') && <span>{hora}</span>}
                                   {(formato === 'agenda' || formato === 'transacao') && item.amount && <span>
                                       {item.type === 'income' ? '+' : '-'}
@@ -356,23 +356,23 @@ const CalendarPage: React.FC = () => {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              {isReminder && <Badge variant="outline" className="border-blue-500 text-blue-600">
+                            <div className="flex items-center gap-1">
+                              {isReminder && <Badge variant="outline" className="border-blue-500 text-blue-600 text-xs px-1.5 py-0">
                                 Lembrete
                               </Badge>}
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <MoreVertical className="h-4 w-4" />
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                                    <MoreVertical className="h-3 w-3" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent>
+                                <DropdownMenuContent className="text-xs">
                                   <DropdownMenuItem onClick={() => isReminder ? handleEditReminder(item) : handleEditTransaction(item)}>
-                                    <Edit className="h-4 w-4 mr-2" />
+                                    <Edit className="h-3 w-3 mr-1.5" />
                                     Editar
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => isReminder ? handleDeleteReminder(item) : handleDeleteTransaction(item)} className="text-destructive">
-                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    <Trash2 className="h-3 w-3 mr-1.5" />
                                     Excluir
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>

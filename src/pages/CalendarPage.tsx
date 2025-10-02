@@ -187,42 +187,51 @@ const CalendarPage: React.FC = () => {
     }
   };
 
-  // Agrupa todas as transações e lembretes do dia (evitando duplicatas)
+  // Helpers de data ignorando fuso para manter o "dia do ISO" original
+  const getISODateKey = (iso?: string) => (iso ? iso.slice(0, 10) : ''); // yyyy-MM-dd do próprio ISO
+  const getLocalDateKey = (d: Date) => format(d, 'yyyy-MM-dd'); // yyyy-MM-dd da célula do calendário
+
+  // Agrupa todas as transações e lembretes do dia (evitando duplicatas) usando chaves de data
   const getAllItemsForDate = (date: Date) => {
-    const items = new Map();
-    
-    // Adicionar transações normais
-    transactions
-      .filter(transaction => isSameDay(parseISO(transaction.date), date))
-      .forEach(transaction => {
-        items.set(transaction.id, { ...transaction, sourceType: 'transaction' });
-      });
-    
-    // Adicionar lembretes/agendamentos (somente se não existir já como transação)
-    reminders
-      .filter(reminder => isSameDay(parseISO(reminder.scheduledDate), date))
-      .forEach(reminder => {
-        if (!items.has(reminder.id)) {
-          items.set(reminder.id, { ...reminder, date: reminder.scheduledDate, sourceType: 'reminder' });
-        }
-      });
-    
+    const targetKey = getLocalDateKey(date);
+    const items = new Map<string, any>();
+
+    // Transações normais
+    for (const t of transactions) {
+      if (getISODateKey(t.date) === targetKey) {
+        items.set(t.id, { ...t, sourceType: 'transaction' });
+      }
+    }
+
+    // Lembretes/agendados
+    for (const r of reminders) {
+      if (getISODateKey(r.scheduledDate) === targetKey && !items.has(r.id)) {
+        items.set(r.id, { ...r, date: r.scheduledDate, sourceType: 'reminder' });
+      }
+    }
+
     return Array.from(items.values());
   };
 
-  // Obtém todas as datas que têm transações no mês atual
+  // Obtém todas as datas que têm transações/lembretes no mês atual (baseado na parte da data do ISO)
   const getDatesWithTransactions = () => {
     const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
-    const transactionDates = transactions.filter(transaction => {
-      const transactionDate = parseISO(transaction.date);
-      return transactionDate >= startOfMonth && transactionDate <= endOfMonth;
-    }).map(transaction => parseISO(transaction.date));
-    const reminderDates = reminders.filter(reminder => {
-      const reminderDate = parseISO(reminder.scheduledDate);
-      return reminderDate >= startOfMonth && reminderDate <= endOfMonth;
-    }).map(reminder => parseISO(reminder.scheduledDate));
-    return [...transactionDates, ...reminderDates];
+
+    const keys = new Set<string>();
+    transactions.forEach(t => keys.add(getISODateKey(t.date)));
+    reminders.forEach(r => keys.add(getISODateKey(r.scheduledDate)));
+
+    // Converter cada key (yyyy-MM-dd) para Date local correspondente e filtrar pelo mês atual
+    const dates = Array.from(keys)
+      .filter(k => !!k)
+      .map(k => {
+        const [y, m, d] = k.split('-').map(Number);
+        return new Date(y, (m || 1) - 1, d || 1);
+      })
+      .filter(d => d >= startOfMonth && d <= endOfMonth);
+
+    return dates;
   };
   const selectedDateItems = selectedDate ? getAllItemsForDate(selectedDate) : [];
   return <MainLayout>

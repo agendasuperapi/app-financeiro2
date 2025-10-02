@@ -202,7 +202,8 @@ export const useTransactionForm = ({
         conta_id: initialData.conta_id,
         category_id: initialData.category_id,
         amount: initialData.amount,
-        description: initialData.description
+        description: initialData.description,
+        full_data: initialData
       });
       
       setSelectedType(initialData.type);

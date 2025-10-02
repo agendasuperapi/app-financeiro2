@@ -17,6 +17,8 @@ export const getTransactions = async (): Promise<Transaction[]> => {
     if (error) throw error;
 
     const txs = (data as any[]) || [];
+    
+    console.log('[transactionService] Raw transaction from DB (first item):', txs[0]);
 
     // Buscar o status "dependente" dos donos das transações (poupeja_users)
     const userIds = Array.from(new Set(txs.map((t: any) => t.user_id).filter(Boolean)));

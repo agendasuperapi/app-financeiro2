@@ -188,7 +188,12 @@ const ContasTab: React.FC = () => {
                     icon={conta.icon} 
                     color={conta.color} 
                   />
-                  <span>{conta.name}</span>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{conta.name}</span>
+                    {conta.descricao && (
+                      <span className="text-sm text-muted-foreground">{conta.descricao}</span>
+                    )}
+                  </div>
                 </div>
                 <div>
                   {isDefaultConta ? (

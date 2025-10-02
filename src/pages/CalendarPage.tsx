@@ -187,14 +187,27 @@ const CalendarPage: React.FC = () => {
     }
   };
 
-  // Agrupa transações por data
-  const getTransactionsForDate = (date: Date) => {
-    return transactions.filter(transaction => isSameDay(parseISO(transaction.date), date));
-  };
-
-  // Agrupa lembretes por data
-  const getRemindersForDate = (date: Date) => {
-    return reminders.filter(reminder => isSameDay(parseISO(reminder.scheduledDate), date));
+  // Agrupa todas as transações e lembretes do dia (evitando duplicatas)
+  const getAllItemsForDate = (date: Date) => {
+    const items = new Map();
+    
+    // Adicionar transações normais
+    transactions
+      .filter(transaction => isSameDay(parseISO(transaction.date), date))
+      .forEach(transaction => {
+        items.set(transaction.id, { ...transaction, sourceType: 'transaction' });
+      });
+    
+    // Adicionar lembretes/agendamentos (somente se não existir já como transação)
+    reminders
+      .filter(reminder => isSameDay(parseISO(reminder.scheduledDate), date))
+      .forEach(reminder => {
+        if (!items.has(reminder.id)) {
+          items.set(reminder.id, { ...reminder, date: reminder.scheduledDate, sourceType: 'reminder' });
+        }
+      });
+    
+    return Array.from(items.values());
   };
 
   // Obtém todas as datas que têm transações no mês atual
@@ -211,8 +224,7 @@ const CalendarPage: React.FC = () => {
     }).map(reminder => parseISO(reminder.scheduledDate));
     return [...transactionDates, ...reminderDates];
   };
-  const selectedDateTransactions = selectedDate ? getTransactionsForDate(selectedDate) : [];
-  const selectedDateReminders = selectedDate ? getRemindersForDate(selectedDate) : [];
+  const selectedDateItems = selectedDate ? getAllItemsForDate(selectedDate) : [];
   return <MainLayout>
       <div className="container mx-auto p-4 space-y-6">
         <div className="flex items-center justify-between">
@@ -244,14 +256,13 @@ const CalendarPage: React.FC = () => {
                   displayMonth,
                   ...props
                 }) => {
-                  const dayTransactions = getTransactionsForDate(date);
-                  const dayReminders = getRemindersForDate(date);
-                  const incomeCount = dayTransactions.filter(t => t.type === 'income').length;
-                  const expenseCount = dayTransactions.filter(t => t.type === 'expense').length;
-                  const reminderCount = dayReminders.length;
+                  const dayItems = getAllItemsForDate(date);
+                  const incomeCount = dayItems.filter(t => t.type === 'income').length;
+                  const expenseCount = dayItems.filter(t => t.type === 'expense').length;
+                  const reminderCount = dayItems.filter(t => t.sourceType === 'reminder').length;
                   return <button {...props} className={cn("relative w-full h-full flex flex-col items-center justify-center rounded-md transition-colors", "hover:bg-accent hover:text-accent-foreground", selectedDate && isSameDay(date, selectedDate) && "bg-primary text-primary-foreground", isSameDay(date, new Date()) && !selectedDate && "bg-accent text-accent-foreground")} onClick={() => setSelectedDate(date)}>
                           <span>{format(date, 'd')}</span>
-                          {(dayTransactions.length > 0 || dayReminders.length > 0) && <div className="absolute bottom-1 flex gap-1">
+                          {dayItems.length > 0 && <div className="absolute bottom-1 flex gap-1">
                               {incomeCount > 0 && <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />}
                               {expenseCount > 0 && <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />}
                               {reminderCount > 0 && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />}
@@ -290,35 +301,43 @@ const CalendarPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               {selectedDate ? <div className="space-y-3">
-                  {selectedDateTransactions.length > 0 || selectedDateReminders.length > 0 ? <>
-                      {/* Transações */}
-                      {selectedDateTransactions.map(transaction => {
-                  const formato = (transaction as any).formato || 'transacao';
-                  const transactionDate = parseISO(transaction.date);
-                  const hora = format(transactionDate, 'HH:mm');
+                  {selectedDateItems.length > 0 ? <>
+                      {/* Todas as transações e lembretes do dia */}
+                      {selectedDateItems.map(item => {
+                  const isReminder = item.sourceType === 'reminder' || item.status === 'pending';
+                  const formato = (item as any).formato || (isReminder ? 'lembrete' : 'transacao');
+                  const itemDate = parseISO(item.date);
+                  const hora = format(itemDate, 'HH:mm');
 
-                  // Definir cor da bolinha baseada no formato
+                  // Definir cor da bolinha e estilo baseado no formato
                   let bolinhaColor = 'bg-gray-900'; // Preta para "transacao"
+                  let cardClassName = 'flex items-center justify-between p-3 border rounded-lg';
+                  
                   if (formato === 'agenda') {
                     bolinhaColor = 'bg-purple-500'; // Roxa para "agenda"
-                  } else if (formato === 'lembrete') {
+                  } else if (formato === 'lembrete' || isReminder) {
                     bolinhaColor = 'bg-blue-500'; // Azul para "lembrete"
+                    cardClassName = 'flex items-center justify-between p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20';
                   }
-                  return <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  
+                  return <div key={item.id} className={cardClassName}>
                             <div className="flex items-center gap-3">
                               <div className={`w-3 h-3 rounded-full ${bolinhaColor}`} />
                               <div>
-                                <p className="font-medium">{transaction.description || transaction.category}</p>
+                                <p className="font-medium">{item.description || item.category}</p>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                   {(formato === 'agenda' || formato === 'lembrete') && <span>{hora}</span>}
-                                  {(formato === 'agenda' || formato === 'transacao') && <span>
-                                      {transaction.type === 'income' ? '+' : '-'}
-                                      R$ {transaction.amount.toFixed(2)}
+                                  {(formato === 'agenda' || formato === 'transacao') && item.amount && <span>
+                                      {item.type === 'income' ? '+' : '-'}
+                                      R$ {Math.abs(item.amount).toFixed(2)}
                                     </span>}
                                 </div>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
+                              {isReminder && <Badge variant="outline" className="border-blue-500 text-blue-600">
+                                Lembrete
+                              </Badge>}
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="sm">
@@ -326,11 +345,11 @@ const CalendarPage: React.FC = () => {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                  <DropdownMenuItem onClick={() => handleEditTransaction(transaction)}>
+                                  <DropdownMenuItem onClick={() => isReminder ? handleEditReminder(item) : handleEditTransaction(item)}>
                                     <Edit className="h-4 w-4 mr-2" />
                                     Editar
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleDeleteTransaction(transaction)} className="text-destructive">
+                                  <DropdownMenuItem onClick={() => isReminder ? handleDeleteReminder(item) : handleDeleteTransaction(item)} className="text-destructive">
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     Excluir
                                   </DropdownMenuItem>
@@ -339,41 +358,6 @@ const CalendarPage: React.FC = () => {
                             </div>
                           </div>;
                 })}
-                      
-                      {/* Lembretes */}
-                      {selectedDateReminders.map(reminder => <div key={reminder.id} className="flex items-center justify-between p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20">
-                          <div className="flex items-center gap-3">
-                            <div className="w-3 h-3 rounded-full bg-blue-500" />
-                            <div>
-                              <p className="font-medium">{reminder.category}</p>
-                              {reminder.description && <p className="text-sm text-muted-foreground">
-                                  {reminder.description}
-                                </p>}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="border-blue-500 text-blue-600">
-                              Lembrete
-                            </Badge>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent>
-                                <DropdownMenuItem onClick={() => handleEditReminder(reminder)}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Editar
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDeleteReminder(reminder)} className="text-destructive">
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Excluir
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>)}
                     </> : <p className="text-muted-foreground text-center">
                       Nenhuma transação ou lembrete nesta data
                     </p>}

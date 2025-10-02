@@ -32,14 +32,22 @@ const CategoryDateFields: React.FC<CategoryDateFieldsProps> = ({ form, transacti
         const filteredCategories = await getCategoriesByType(transactionType);
         setCategories(filteredCategories);
         
+        console.log('[CategoryDateFields] Loaded categories:', filteredCategories.length);
+        console.log('[CategoryDateFields] Current category value:', form.getValues('category'));
+        
         // Mapear valor atual (id ou nome) para ID válido
         const currentCategory = form.getValues('category');
         if (currentCategory) {
           const byId = filteredCategories.find(c => c.id === currentCategory);
-          if (!byId) {
+          if (byId) {
+            console.log('[CategoryDateFields] Category found by ID:', byId.name);
+          } else {
             const byName = filteredCategories.find(c => c.name === currentCategory);
             if (byName) {
+              console.log('[CategoryDateFields] Category found by name, mapping to ID:', byName.id);
               form.setValue('category', byName.id, { shouldValidate: true, shouldDirty: false });
+            } else {
+              console.warn('[CategoryDateFields] Category not found:', currentCategory);
             }
           }
         }
@@ -48,6 +56,7 @@ const CategoryDateFields: React.FC<CategoryDateFieldsProps> = ({ form, transacti
         const currentAfterMap = form.getValues('category');
         const exists = filteredCategories.some(c => c.id === currentAfterMap);
         if (!exists && filteredCategories.length > 0) {
+          console.log('[CategoryDateFields] Setting default category:', filteredCategories[0].id);
           form.setValue('category', filteredCategories[0].id);
         }
         

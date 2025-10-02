@@ -25,13 +25,16 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
         const contasList = await getContas();
         setContas(contasList);
 
-        // Mapear nome -> id quando vindo do banco com apenas 'conta'
+        // Quando editar, mapear conta_id do form se necessário
         const currentId = form.getValues('conta_id');
-        const currentName = form.getValues('conta');
-        if (!currentId && currentName) {
-          const match = contasList.find(c => c.name === currentName);
-          if (match) {
-            form.setValue('conta_id', match.id, { shouldValidate: true, shouldDirty: false });
+        console.log('[ContaInputForm] Loaded contas, current conta_id:', currentId);
+        
+        if (currentId) {
+          const found = contasList.find(c => c.id === currentId);
+          if (found) {
+            console.log('[ContaInputForm] Conta found:', found.name);
+            // Garantir que o form tem tanto o ID quanto o nome
+            form.setValue('conta', found.name, { shouldValidate: false, shouldDirty: false });
           }
         }
       } catch (error) {

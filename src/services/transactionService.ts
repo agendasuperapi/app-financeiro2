@@ -44,6 +44,13 @@ export const getTransactions = async (): Promise<Transaction[]> => {
     return txs.map((item: any) => {
       const creatorName = item.name ? item.name : undefined;
       
+      console.log('[transactionService] Mapping transaction:', {
+        id: item.id,
+        conta_id: item.conta_id,
+        category_id: item.category_id,
+        description: item.description
+      });
+      
       return {
         id: item.id,
         type: item.type as 'income' | 'expense',

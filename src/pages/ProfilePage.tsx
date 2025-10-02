@@ -32,6 +32,11 @@ const ProfilePage = () => {
   const [profileImage, setProfileImage] = useState(user?.profileImage || '');
   const [updatingProfile, setUpdatingProfile] = useState(false);
   
+  // Estado para controlar a aba ativa com persistência
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('profileActiveTab') || 'info';
+  });
+  
   // For password change
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -43,6 +48,12 @@ const ProfilePage = () => {
   
   // Verificar se é admin vindo da página admin
   const isAdminFromAdminPage = isAdmin && document.referrer.includes('/admin');
+  
+  // Salvar aba ativa no localStorage
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    localStorage.setItem('profileActiveTab', value);
+  };
 
   
   // Fetch the latest user data from Supabase
@@ -358,7 +369,7 @@ const ProfilePage = () => {
         <Separator />
         
         <div className="grid gap-6">
-          <Tabs defaultValue="info" className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-6">
               <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 gap-1 p-1 h-auto bg-muted/50">
                 <TabsTrigger 

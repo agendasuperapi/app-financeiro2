@@ -27,6 +27,15 @@ const ExpensesPage = () => {
   
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('expensesActiveTab') || 'summary';
+  });
+  
+  // Salvar aba ativa no localStorage
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    localStorage.setItem('expensesActiveTab', value);
+  };
 
   // Calculate expenses by category
   const categoryData = React.useMemo(() => {
@@ -96,7 +105,7 @@ const ExpensesPage = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="summary" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList>
             <TabsTrigger value="summary">
               <PieChart className="mr-2 h-4 w-4" />

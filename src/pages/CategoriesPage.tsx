@@ -35,13 +35,22 @@ const CategoriesPage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [categoryType, setCategoryType] = useState<'expense' | 'income'>('expense');
+  const [categoryType, setCategoryType] = useState<'expense' | 'income'>(() => {
+    return (localStorage.getItem('categoriesActiveTab') as 'expense' | 'income') || 'expense';
+  });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Client view indicator
   const { isClientView, selectedUser, targetUserId } = useClientAwareData();
+  
+  // Salvar aba ativa no localStorage
+  const handleTabChange = (value: string) => {
+    const tabValue = value as 'expense' | 'income';
+    setCategoryType(tabValue);
+    localStorage.setItem('categoriesActiveTab', tabValue);
+  };
 
   useEffect(() => {
     // Load categories from Supabase on mount and whenever they change
@@ -186,7 +195,7 @@ const CategoriesPage: React.FC = () => {
           <Tabs 
             defaultValue="expense" 
             value={categoryType}
-            onValueChange={(value) => setCategoryType(value as 'expense' | 'income')}
+            onValueChange={handleTabChange}
             className="w-full"
           >
             <TabsList className="grid grid-cols-2 mb-4">

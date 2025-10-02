@@ -36,6 +36,20 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
             // Garantir que o form tem tanto o ID quanto o nome
             form.setValue('conta', found.name, { shouldValidate: false, shouldDirty: false });
           }
+        } else {
+          // Tentar mapear pelo nome da conta em dados legados
+          const currentName = form.getValues('conta');
+          console.log('[ContaInputForm] No conta_id; trying by name:', currentName);
+          if (currentName) {
+            const foundByName = contasList.find(c => c.name?.toLowerCase() === String(currentName).toLowerCase());
+            if (foundByName) {
+              form.setValue('conta_id', foundByName.id, { shouldValidate: true });
+              form.setValue('conta', foundByName.name, { shouldValidate: false, shouldDirty: false });
+              console.log('[ContaInputForm] Mapped conta name to ID:', foundByName.name, foundByName.id);
+            } else {
+              console.warn('[ContaInputForm] Conta not found by name:', currentName);
+            }
+          }
         }
       } catch (error) {
         console.error('Erro ao carregar contas:', error);

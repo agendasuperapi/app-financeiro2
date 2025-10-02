@@ -13,9 +13,9 @@ const ContaAddedByGrid: React.FC<ContaAddedByGridProps> = ({ form }) => {
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ContaInputForm form={form} />
-        <SubContaInput form={form} />
+        <AddedByFieldForm form={form} />
       </div>
-      <AddedByFieldForm form={form} />
+      <SubContaInput form={form} />
     </div>
   );
 };

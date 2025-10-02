@@ -26,19 +26,23 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
         setContas(contasList);
 
         const currentContaId = form.getValues('conta_id');
+        console.log('[DEBUG ContaInputForm] conta_id from form:', currentContaId);
+        console.log('[DEBUG ContaInputForm] Available contas:', contasList.map(c => ({ id: c.id, name: c.name })));
 
         if (currentContaId) {
           const foundConta = contasList.find(c => c.id === currentContaId);
+          console.log('[DEBUG ContaInputForm] Found conta:', foundConta);
           if (foundConta) {
             form.setValue('conta', foundConta.name, { shouldValidate: true });
           } else {
-            // ID inválido: não definir conta padrão e limpar seleção
             form.setValue('conta', '', { shouldValidate: true });
             form.setValue('conta_id', '', { shouldValidate: true });
           }
+        } else {
+          console.log('[DEBUG ContaInputForm] No conta_id in form');
         }
       } catch (error) {
-        // ignorar silenciosamente para evitar logs no cliente
+        console.error('[DEBUG ContaInputForm] Error:', error);
       }
     };
 

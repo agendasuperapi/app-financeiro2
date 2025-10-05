@@ -273,9 +273,11 @@ const TransactionsPage = () => {
           </div>
           
           {/* Filtros */}
-          <div className="flex flex-col md:flex-row gap-2 mb-2 md:mb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-2 md:mb-4">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            
             {/* Campo de Pesquisa */}
-            <div className="relative flex-1 md:max-w-xs">
+            <div className="relative w-full sm:w-64">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Pesquisar transações..."
@@ -287,7 +289,7 @@ const TransactionsPage = () => {
             
             {/* Filtro de Status */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -299,7 +301,7 @@ const TransactionsPage = () => {
 
             {/* Filtro de Data */}
             <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Data" />
               </SelectTrigger>
               <SelectContent>

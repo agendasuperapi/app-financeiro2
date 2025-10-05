@@ -48,20 +48,12 @@ const ContaFormFields: React.FC<ContaFormFieldsProps> = ({
         const categoryData = await getCategoriesByType(transactionType);
         setCategories(categoryData);
 
-        // For income, always set to "Outros" category
-        if (transactionType === 'income') {
-          const outrosCategory = categoryData.find(c => c.name === 'Outros');
-          if (outrosCategory) {
-            form.setValue('category', outrosCategory.id);
-          }
-        } else {
-          // For expense, set default category if none selected and categories are available
-          if (categoryData.length > 0) {
-            const currentCategory = form.getValues('category');
-            const categoryExists = categoryData.some(c => c.id === currentCategory || c.name === currentCategory);
-            if (!categoryExists) {
-              form.setValue('category', categoryData[0].id);
-            }
+        // Set default category if none selected and categories are available
+        if (categoryData.length > 0) {
+          const currentCategory = form.getValues('category');
+          const categoryExists = categoryData.some(c => c.id === currentCategory || c.name === currentCategory);
+          if (!categoryExists) {
+            form.setValue('category', categoryData[0].id);
           }
         }
       } catch (error) {
@@ -182,40 +174,38 @@ const ContaFormFields: React.FC<ContaFormFieldsProps> = ({
           )}
         />
         
-        {/* Only show category field for expenses */}
-        {form.watch('type') === 'expense' && (
-          <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('common.category')}</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value}
-                  disabled={loadingCategories}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={loadingCategories ? t('common.loading') : "Qual Categoria"} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {categories.map(category => (
-                      <SelectItem key={category.id} value={category.id}>
-                        <div className="flex items-center gap-2">
-                          <CategoryIcon icon={category.icon} color={category.color} size={16} />
-                          <span>{category.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        {/* Category Field */}
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('common.category')}</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={loadingCategories}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={loadingCategories ? t('common.loading') : "Qual Categoria"} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {categories.map(category => (
+                    <SelectItem key={category.id} value={category.id}>
+                      <div className="flex items-center gap-2">
+                        <CategoryIcon icon={category.icon} color={category.color} size={16} />
+                        <span>{category.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
       {/* Conditional Installments Field */}

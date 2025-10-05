@@ -111,7 +111,7 @@ const LimitsPage: React.FC = () => {
         
         {/* Cabeçalho */}
         <div className="flex items-center justify-between">
-          <h1 className="text-xs font-bold tracking-tight">Meus controles</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Meus controles</h1>
           {!isClientView && (
             <div className="flex gap-2">
               <Button onClick={handleAddLimit} className="gap-2">

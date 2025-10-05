@@ -383,7 +383,23 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                   className="max-w-full max-h-[70vh] object-contain rounded-lg"
                 />
               ) : (
-                <p className="text-muted-foreground">Nenhum comprovante disponível</p>
+                <div className="flex flex-col items-center gap-4 py-8">
+                  <p className="text-muted-foreground">Nenhum comprovante anexado</p>
+                  <Button 
+                    variant="outline"
+                    disabled={uploadingComprovante}
+                    onClick={() => document.getElementById('comprovante-upload')?.click()}
+                  >
+                    {uploadingComprovante ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      'Adicionar Comprovante'
+                    )}
+                  </Button>
+                </div>
               )}
             </div>
             <DialogFooter>
@@ -393,20 +409,29 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               >
                 Fechar
               </Button>
-              <Button 
-                variant="outline"
-                disabled={uploadingComprovante}
-                onClick={() => document.getElementById('comprovante-upload')?.click()}
-              >
-                {uploadingComprovante ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Enviando...
-                  </>
-                ) : (
-                  'Adicionar'
-                )}
-              </Button>
+              {comprovanteUrl && (
+                <>
+                  <Button 
+                    variant="outline"
+                    disabled={uploadingComprovante}
+                    onClick={() => document.getElementById('comprovante-upload')?.click()}
+                  >
+                    {uploadingComprovante ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      'Substituir'
+                    )}
+                  </Button>
+                  <Button 
+                    onClick={() => window.open(comprovanteUrl, '_blank')}
+                  >
+                    Abrir em Nova Aba
+                  </Button>
+                </>
+              )}
               <input
                 id="comprovante-upload"
                 type="file"
@@ -414,13 +439,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                 className="hidden"
                 onChange={handleUploadComprovante}
               />
-              {comprovanteUrl && (
-                <Button 
-                  onClick={() => window.open(comprovanteUrl, '_blank')}
-                >
-                  Abrir em Nova Aba
-                </Button>
-              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>

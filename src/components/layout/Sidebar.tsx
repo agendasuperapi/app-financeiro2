@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,21 +9,32 @@ import { BrandLogo } from '@/components/common/BrandLogo';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { LayoutDashboard, Receipt, BarChart3, Target, User, Settings, FolderOpen, Calendar, Clock, Crown, LogOut, Shield, Users, FileText, CreditCard, AlertTriangle, ChevronDown, ChevronRight, Wallet, BookOpen } from 'lucide-react';
-
 interface SidebarProps {
   onProfileClick?: () => void;
   onConfigClick?: () => void;
   onGestaoClick?: () => void;
   onClientClick?: () => void;
 }
-
-const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGestaoClick, onClientClick }) => {
-  const { user, logout, isLoading } = useAppContext();
-  const { t } = usePreferences();
-  const { isAdmin } = useUserRole();
+const Sidebar: React.FC<SidebarProps> = ({
+  onProfileClick,
+  onConfigClick,
+  onGestaoClick,
+  onClientClick
+}) => {
+  const {
+    user,
+    logout,
+    isLoading
+  } = useAppContext();
+  const {
+    t
+  } = usePreferences();
+  const {
+    isAdmin
+  } = useUserRole();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Redirecionar para login se não estiver logado (após carregar) e apenas em rotas protegidas
   React.useEffect(() => {
     const publicPaths = ['/', '/landing', '/login', '/register', '/forgot-password', '/reset-password'];
@@ -32,19 +42,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
       navigate('/login');
     }
   }, [user, navigate, isLoading, location.pathname]);
-  
+
   // Verificar se estamos na página de administração
   const isAdminPage = location.pathname === '/admin';
-  
+
   // Estado para rastrear qual seção admin está ativa
   const [activeAdminSection, setActiveAdminSection] = React.useState<string>('gestao');
   const [clientSectionOpen, setClientSectionOpen] = React.useState<boolean>(false);
-
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
-
   const handleProfileClick = () => {
     if (isAdmin && isAdminPage && onProfileClick) {
       onProfileClick();
@@ -55,81 +63,65 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
 
   // Se for admin na página de admin, mostrar apenas menu administrativo
   if (isAdmin && isAdminPage) {
-    const adminMenuItems = [
-      {
-        id: 'gestao',
-        icon: Users,
-        label: 'Gestão',
-        action: () => {
-          setActiveAdminSection('gestao');
-          if (onGestaoClick) {
-            onGestaoClick();
-          }
-        }
-      },
-      {
-        id: 'config',
-        icon: Settings,
-        label: 'Configurações',
-        action: () => {
-          setActiveAdminSection('config');
-          if (onConfigClick) {
-            onConfigClick();
-          }
+    const adminMenuItems = [{
+      id: 'gestao',
+      icon: Users,
+      label: 'Gestão',
+      action: () => {
+        setActiveAdminSection('gestao');
+        if (onGestaoClick) {
+          onGestaoClick();
         }
       }
-    ];
-
-    const clientMenuItems = [
-      {
-        icon: LayoutDashboard,
-        label: t('nav.dashboard'),
-        href: '/dashboard'
-      },
-      {
-        icon: Receipt,
-        label: t('nav.transactions'),
-        href: '/transactions'
-      },
-      {
-        icon: Calendar,
-        label: 'Calendário',
-        href: '/calendar'
-      },
-      {
-        icon: AlertTriangle,
-        label: 'Metas/Limites',
-        href: '/limits'
-      },
-      {
-        icon: CreditCard,
-        label: 'Contas a Pagar',
-        href: '/contas'
-      },
-      {
-        icon: Wallet,
-        label: 'Contas&Cartões',
-        href: '/saldo'
-      },
-      {
-        icon: Clock,
-        label: 'Lembretes',
-        href: '/lembrar'
-      },
-      {
-        icon: BarChart3,
-        label: t('nav.reports'),
-        href: '/reports'
-      },
-      {
-        icon: FileText,
-        label: 'Anotações',
-        href: '/notes'
-      },
-    ];
-
-    return (
-      <div className="hidden md:flex h-screen w-64 lg:w-64 xl:w-72 flex-col bg-background border-r">
+    }, {
+      id: 'config',
+      icon: Settings,
+      label: 'Configurações',
+      action: () => {
+        setActiveAdminSection('config');
+        if (onConfigClick) {
+          onConfigClick();
+        }
+      }
+    }];
+    const clientMenuItems = [{
+      icon: LayoutDashboard,
+      label: t('nav.dashboard'),
+      href: '/dashboard'
+    }, {
+      icon: Receipt,
+      label: t('nav.transactions'),
+      href: '/transactions'
+    }, {
+      icon: Calendar,
+      label: 'Calendário',
+      href: '/calendar'
+    }, {
+      icon: AlertTriangle,
+      label: 'Metas/Limites',
+      href: '/limits'
+    }, {
+      icon: CreditCard,
+      label: 'Contas a Pagar',
+      href: '/contas'
+    }, {
+      icon: Wallet,
+      label: 'Contas&Cartões',
+      href: '/saldo'
+    }, {
+      icon: Clock,
+      label: 'Lembretes',
+      href: '/lembrar'
+    }, {
+      icon: BarChart3,
+      label: t('nav.reports'),
+      href: '/reports'
+    }, {
+      icon: FileText,
+      label: 'Anotações',
+      href: '/notes'
+    }];
+    return <div className="hidden md:flex h-screen w-64 lg:w-64 xl:w-72 flex-col bg-background border-r">
         {/* Logo/Header */}
         <div className="p-6 border-b">
           <h1 className="text-2xl font-bold text-primary">Admin Panel</h1>
@@ -137,89 +129,40 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {adminMenuItems.map((item) => (
-            <Button
-              key={item.id}
-              variant="ghost"
-              className={cn(
-                "w-full justify-start gap-3 px-4 py-3 font-medium transition-colors",
-                "hover:bg-accent hover:text-accent-foreground",
-                activeAdminSection === item.id
-                  ? "bg-green-600 text-white shadow-md"
-                  : "text-muted-foreground"
-              )}
-              onClick={item.action}
-            >
+          {adminMenuItems.map(item => <Button key={item.id} variant="ghost" className={cn("w-full justify-start gap-3 px-4 py-3 font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground", activeAdminSection === item.id ? "bg-green-600 text-white shadow-md" : "text-muted-foreground")} onClick={item.action}>
               <item.icon className="h-5 w-5" />
               {item.label}
-            </Button>
-          ))}
+            </Button>)}
           
           {/* Seção Cliente com sub-abas */}
           <Collapsible open={clientSectionOpen} onOpenChange={setClientSectionOpen}>
             <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start gap-3 px-4 py-3 font-medium transition-colors",
-                  "hover:bg-accent hover:text-accent-foreground",
-                  activeAdminSection === 'client'
-                    ? "bg-green-600 text-white shadow-md"
-                    : "text-muted-foreground"
-                )}
-                onClick={() => {
-                  setActiveAdminSection('client');
-                  if (onClientClick) {
-                    onClientClick();
-                  }
-                }}
-              >
+              <Button variant="ghost" className={cn("w-full justify-start gap-3 px-4 py-3 font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground", activeAdminSection === 'client' ? "bg-green-600 text-white shadow-md" : "text-muted-foreground")} onClick={() => {
+              setActiveAdminSection('client');
+              if (onClientClick) {
+                onClientClick();
+              }
+            }}>
                 <User className="h-5 w-5" />
                 Cliente
-                {clientSectionOpen ? (
-                  <ChevronDown className="h-4 w-4 ml-auto" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 ml-auto" />
-                )}
+                {clientSectionOpen ? <ChevronDown className="h-4 w-4 ml-auto" /> : <ChevronRight className="h-4 w-4 ml-auto" />}
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1 mt-1">
-              {clientMenuItems.map((item) => (
-                <NavLink
-                  key={item.href}
-                  to={item.href}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-3 px-8 py-2 rounded-lg text-sm font-medium transition-colors",
-                      "hover:bg-accent hover:text-accent-foreground",
-                      isActive 
-                        ? "bg-green-500 text-white shadow-sm" 
-                        : "text-muted-foreground"
-                    )
-                  }
-                >
+              {clientMenuItems.map(item => <NavLink key={item.href} to={item.href} className={({
+              isActive
+            }) => cn("flex items-center gap-3 px-8 py-2 rounded-lg text-sm font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground", isActive ? "bg-green-500 text-white shadow-sm" : "text-muted-foreground")}>
                   <item.icon className="h-4 w-4" />
                   {item.label}
-                </NavLink>
-              ))}
+                </NavLink>)}
             </CollapsibleContent>
           </Collapsible>
           
           {/* Botão Perfil que executa função ao invés de navegar */}
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start gap-3 px-4 py-3 font-medium transition-colors",
-              "hover:bg-accent hover:text-accent-foreground",
-              activeAdminSection === 'profile'
-                ? "bg-green-600 text-white shadow-md"
-                : "text-muted-foreground"
-            )}
-            onClick={() => {
-              setActiveAdminSection('profile');
-              handleProfileClick();
-            }}
-          >
+          <Button variant="ghost" className={cn("w-full justify-start gap-3 px-4 py-3 font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground", activeAdminSection === 'profile' ? "bg-green-600 text-white shadow-md" : "text-muted-foreground")} onClick={() => {
+          setActiveAdminSection('profile');
+          handleProfileClick();
+        }}>
             <User className="h-5 w-5" />
             Perfil
           </Button>
@@ -231,67 +174,52 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
             <span className="text-sm text-muted-foreground">Tema</span>
             <ThemeToggle variant="ghost" size="sm" />
           </div>
-          <Button
-            variant="ghost"
-            className="w-full justify-start gap-3 px-4 py-3 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            onClick={handleLogout}
-          >
+          <Button variant="ghost" className="w-full justify-start gap-3 px-4 py-3 text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={handleLogout}>
             <LogOut className="h-5 w-5" />
             Sair
           </Button>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Menu padrão para usuários normais
-  const defaultMenuItems = [
-    {
-      icon: LayoutDashboard,
-      label: t('nav.dashboard'),
-      href: '/dashboard'
-    },
-    {
-      icon: Receipt,
-      label: t('nav.transactions'),
-      href: '/transactions'
-    },
-    {
-      icon: Calendar,
-      label: 'Calendário',
-      href: '/calendar'
-    },
-    {
-      icon: AlertTriangle,
-      label: 'Metas/Limites',
-      href: '/limits'
-    },
-    {
-      icon: CreditCard,
-      label: 'Contas a Pagar',
-      href: '/contas'
-    },
-    {
-      icon: Wallet,
-      label: 'Contas&Cartões',
-      href: '/saldo'
-    },
-    {
-      icon: Clock,
-      label: 'Lembretes',
-      href: '/lembrar'
-    },
-    {
-      icon: BarChart3,
-      label: t('nav.reports'),
-      href: '/reports'
-    },
-    {
-      icon: FileText,
-      label: 'Anotações',
-      href: '/notes'
-    },
-  ];
+  const defaultMenuItems = [{
+    icon: LayoutDashboard,
+    label: t('nav.dashboard'),
+    href: '/dashboard'
+  }, {
+    icon: Receipt,
+    label: t('nav.transactions'),
+    href: '/transactions'
+  }, {
+    icon: Calendar,
+    label: 'Calendário',
+    href: '/calendar'
+  }, {
+    icon: AlertTriangle,
+    label: 'Metas/Limites',
+    href: '/limits'
+  }, {
+    icon: CreditCard,
+    label: 'Contas a Pagar',
+    href: '/contas'
+  }, {
+    icon: Wallet,
+    label: 'Contas&Cartões',
+    href: '/saldo'
+  }, {
+    icon: Clock,
+    label: 'Lembretes',
+    href: '/lembrar'
+  }, {
+    icon: BarChart3,
+    label: t('nav.reports'),
+    href: '/reports'
+  }, {
+    icon: FileText,
+    label: 'Anotações',
+    href: '/notes'
+  }];
 
   // Adicionar item admin apenas se o usuário for admin e não estiver na página admin
   let menuItems = [...defaultMenuItems];
@@ -303,68 +231,38 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
     };
     menuItems.push(adminMenuItem);
   }
-
-  const bottomMenuItems = [
-    {
-      icon: Settings,
-      label: 'Configurações',
-      href: '/profile'
-    },
-  ];
-
+  const bottomMenuItems = [{
+    icon: Settings,
+    label: 'Configurações',
+    href: '/profile'
+  }];
   if (!user) return null;
-
-  return (
-    <div className="hidden md:flex h-screen w-64 lg:w-64 xl:w-72 flex-col bg-background border-r overflow-hidden">
+  return <div className="hidden md:flex h-screen w-64 lg:w-64 xl:w-72 flex-col bg-background border-r overflow-hidden">
       {/* Logo/Header */}
       <div className="p-6 border-b flex-shrink-0">
         <BrandLogo size="md" showCompanyName={true} />
-        <p className="text-xs text-muted-foreground mt-2 text-center">Versão 2.0.2</p>
+        <p className="text-xs text-muted-foreground mt-2 text-center">Versão 2.0.3</p>
       </div>
 
       {/* Navigation - Scrollable content */}
       <div className="flex-1 flex flex-col min-h-0">
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {menuItems.map((item) => (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                  "hover:bg-accent hover:text-accent-foreground",
-                  isActive 
-                    ? "bg-green-600 text-white shadow-md" 
-                    : "text-muted-foreground"
-                )
-              }
-            >
+          {menuItems.map(item => <NavLink key={item.href} to={item.href} className={({
+          isActive
+        }) => cn("flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground", isActive ? "bg-green-600 text-white shadow-md" : "text-muted-foreground")}>
               <item.icon className="h-5 w-5" />
               {item.label}
-            </NavLink>
-          ))}
+            </NavLink>)}
         </nav>
 
         {/* Bottom Navigation - Always visible */}
         <div className="p-4 border-t space-y-2 flex-shrink-0 bg-background">
-          {bottomMenuItems.map((item) => (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                  "hover:bg-accent hover:text-accent-foreground",
-                   isActive 
-                     ? "bg-green-600 text-white shadow-md" 
-                     : "text-muted-foreground"
-                )
-              }
-            >
+          {bottomMenuItems.map(item => <NavLink key={item.href} to={item.href} className={({
+          isActive
+        }) => cn("flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground", isActive ? "bg-green-600 text-white shadow-md" : "text-muted-foreground")}>
               <item.icon className="h-5 w-5" />
               {item.label}
-            </NavLink>
-          ))}
+            </NavLink>)}
           
           {/* Theme Toggle */}
           <div className="flex items-center justify-between px-4 py-3">
@@ -373,18 +271,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onProfileClick, onConfigClick, onGest
           </div>
           
           {/* Logout Button */}
-          <Button
-            variant="ghost"
-            className="w-full justify-start gap-3 px-4 py-3 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            onClick={handleLogout}
-          >
+          <Button variant="ghost" className="w-full justify-start gap-3 px-4 py-3 text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={handleLogout}>
             <LogOut className="h-5 w-5" />
             {t('settings.logout')}
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Sidebar;

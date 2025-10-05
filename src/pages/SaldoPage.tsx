@@ -75,7 +75,7 @@ const SaldoPage: React.FC = () => {
   return (
     <MainLayout>
       <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
           <div className="flex items-center gap-3">
             <Wallet className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold">Saldo por Conta</h1>

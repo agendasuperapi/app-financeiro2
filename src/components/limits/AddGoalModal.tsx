@@ -42,7 +42,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useClientView } from '@/contexts/ClientViewContext';
 
 const goalFormSchema = z.object({
-  categoryId: z.string().min(1, 'Selecione uma categoria'),
+  goalName: z.string().min(1, 'Digite o nome da meta'),
   periodType: z.enum(['monthly', 'specific']),
   monthYear: z.string().optional(),
   startDate: z.date().optional(),
@@ -77,50 +77,6 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
   const { currency } = usePreferences();
   const { selectedUser } = useClientView();
   const [isLoading, setIsLoading] = useState(false);
-  const [categories, setCategories] = useState<Array<{
-    id: string;
-    name: string;
-    color: string;
-    type: string;
-  }>>([]);
-
-  // Fetch only income categories from database
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          console.error('No authenticated user');
-          toast.error('Usuário não autenticado');
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from('poupeja_categories')
-          .select('id, name, color, type')
-          .eq('type', 'income')
-          .eq('user_id', selectedUser?.id || user.id)
-          .order('name');
-
-        if (error) {
-          console.error('Error fetching categories:', error);
-          toast.error('Erro ao carregar categorias');
-          return;
-        }
-
-        console.log('Fetched income categories:', data);
-        setCategories(data || []);
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-        toast.error('Erro ao carregar categorias');
-      }
-    };
-
-    if (open) {
-      fetchCategories();
-    }
-  }, [open, selectedUser]);
 
   // Get currency symbol with space
   const getCurrencySymbol = () => {
@@ -156,44 +112,53 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
     try {
       setIsLoading(true);
 
-      // Encontrar categoria selecionada
-      const selectedCategory = categories.find(cat => cat.id === data.categoryId);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Buscar categoria "Outros" do usuário
+      const { data: outrosCategory, error: categoryError } = await supabase
+        .from('poupeja_categories')
+        .select('id, color')
+        .eq('name', 'Outros')
+        .eq('type', 'income')
+        .eq('user_id', selectedUser?.id || user.id)
+        .single();
+
+      if (categoryError) {
+        console.error('Error fetching Outros category:', categoryError);
+        toast.error('Categoria "Outros" não encontrada');
+        return;
+      }
       
       let startDate: string;
       let endDate: string | undefined;
-      let goalName: string;
 
       if (data.periodType === 'monthly' && data.monthYear) {
-        // Para período mensal (usar strings de data para evitar problemas de fuso)
         const [year, month] = data.monthYear.split('-');
-        const start = new Date(parseInt(year), parseInt(month) - 1, 1);
         const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
         
         startDate = `${year}-${month}-01`;
         endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
-        goalName = `${selectedCategory?.name || 'Meta'} - ${format(start, 'MMM/yyyy', { locale: ptBR })}`;
       } else if (data.startDate && data.endDate) {
-        // Para período específico
         startDate = format(data.startDate, 'yyyy-MM-dd');
         endDate = format(data.endDate, 'yyyy-MM-dd');
-        goalName = `${selectedCategory?.name || 'Meta'} - ${format(data.startDate, 'dd/MM')} a ${format(data.endDate, 'dd/MM/yyyy')}`;
       } else {
         throw new Error('Dados de período inválidos');
       }
 
-      // Criar a meta como um goal
       const newGoal = {
-        name: goalName,
+        name: data.goalName,
         targetAmount: data.goalAmount,
         currentAmount: 0,
         startDate,
         endDate,
-        color: selectedCategory?.color || '#4CAF50',
-        transactions: [], // Propriedade obrigatória do tipo Goal
+        color: outrosCategory.color || '#4CAF50',
+        transactions: [],
       };
 
       if (selectedUser?.id) {
-        // Inserir diretamente para o cliente visualizado
         const { error } = await supabase
           .from('poupeja_goals')
           .insert({
@@ -203,7 +168,7 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
             start_date: newGoal.startDate,
             end_date: newGoal.endDate,
             color: newGoal.color,
-            category_id: data.categoryId,
+            category_id: outrosCategory.id,
             type: 'income',
             user_id: selectedUser.id,
           })
@@ -212,8 +177,7 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
 
         if (error) throw error;
       } else {
-        // Fluxo normal: cria para o usuário logado
-        await addGoal(newGoal, data.categoryId);
+        await addGoal(newGoal, outrosCategory.id);
       }
       
       toast.success('Meta de receita adicionada com sucesso!');
@@ -239,33 +203,19 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Categoria */}
+            {/* Nome da Meta */}
             <FormField
               control={form.control}
-              name="categoryId"
+              name="goalName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Categoria de Receita</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma categoria" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: category.color }}
-                            />
-                            {category.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Nome da Meta</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Ex: Meta de vendas, Freelance, etc."
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

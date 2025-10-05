@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
-import { Check, ChevronsUpDown, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from '@/components/ui/select';
+
+
+import { Plus } from 'lucide-react';
+
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { getContas, Conta, addConta } from '@/services/contasService';
 import CategoryIcon from '@/components/categories/CategoryIcon';
 import ContaForm from '@/components/profile/ContaForm';
 import { useToast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
+
 
 interface ContaInputFormProps {
   form: UseFormReturn<any>; // Aceita qualquer tipo de form
@@ -87,72 +87,54 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
         render={({ field }) => (
           <FormItem className="flex flex-col">
             <FormLabel>{t('transactions.account')}</FormLabel>
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={open}
-                    className="justify-between"
-                  >
-                    {field.value ? (
-                      <div className="flex items-center gap-2">
-                        <CategoryIcon 
-                          icon={contas.find(c => c.id === field.value)?.icon || 'wallet'} 
-                          color={contas.find(c => c.id === field.value)?.color || '#808080'} 
-                        />
-                        <span>{contas.find(c => c.id === field.value)?.name}</span>
-                      </div>
-                    ) : (
-                      "Escolha a Conta"
-                    )}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </FormControl>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandList className="max-h-64 overflow-y-auto overscroll-contain">
-                    <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
-                    <CommandGroup>
-                      {contas.map((conta) => (
-                        <CommandItem
-                          key={conta.id}
-                          value={conta.name}
-                          onSelect={() => {
-                            field.onChange(conta.id);
-                            form.setValue('conta', conta.name, { shouldValidate: true });
-                            setOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              field.value === conta.id ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          <CategoryIcon icon={conta.icon} color={conta.color} />
-                          <span className="ml-2">{conta.name}</span>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                    <Separator className="my-1" />
-                    <div className="p-1">
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        className="w-full justify-start text-sm" 
-                        onClick={handleAddConta}
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Adicionar conta
-                      </Button>
+            <Select
+              open={open}
+              onOpenChange={setOpen}
+              value={field.value}
+              onValueChange={(value) => {
+                if (value === '__add__') {
+                  setOpen(false);
+                  handleAddConta();
+                  return;
+                }
+                field.onChange(value);
+                const selected = contas.find((c) => c.id === value);
+                form.setValue('conta', selected?.name ?? '', { shouldValidate: true });
+              }}
+            >
+              <FormControl>
+                <SelectTrigger className="justify-between">
+                  {field.value ? (
+                    <div className="flex items-center gap-2">
+                      <CategoryIcon
+                        icon={contas.find((c) => c.id === field.value)?.icon || 'wallet'}
+                        color={contas.find((c) => c.id === field.value)?.color || '#808080'}
+                      />
+                      <span>{contas.find((c) => c.id === field.value)?.name}</span>
                     </div>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+                  ) : (
+                    <SelectValue placeholder="Escolha a Conta" />
+                  )}
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent className="max-h-64">
+                {contas.map((conta) => (
+                  <SelectItem key={conta.id} value={conta.id}>
+                    <div className="flex items-center gap-2">
+                      <CategoryIcon icon={conta.icon} color={conta.color} />
+                      <span>{conta.name}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+                <SelectSeparator />
+                <SelectItem value="__add__">
+                  <div className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Adicionar conta
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}

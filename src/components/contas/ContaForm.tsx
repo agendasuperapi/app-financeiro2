@@ -165,13 +165,21 @@ const ContaForm: React.FC<ContaFormProps> = ({
         console.log(`Loaded ${categoryData.length} categories for ${transactionType}:`, categoryData);
         setCategories(categoryData);
 
-        // Set default category if none selected and categories are available
-        if (categoryData.length > 0) {
-          const currentCategory = form.getValues('category');
-          const categoryExists = categoryData.some(c => c.id === currentCategory || c.name === currentCategory);
-          if (!categoryExists) {
-            console.log("Setting default category to:", categoryData[0].id);
-            form.setValue('category', categoryData[0].id);
+        // Para "Receita", sempre usar categoria "Outros"
+        if (transactionType === 'income') {
+          const outrosCategory = categoryData.find(c => c.name.toLowerCase() === 'outros');
+          if (outrosCategory) {
+            form.setValue('category', outrosCategory.id);
+          }
+        } else {
+          // Set default category if none selected and categories are available
+          if (categoryData.length > 0) {
+            const currentCategory = form.getValues('category');
+            const categoryExists = categoryData.some(c => c.id === currentCategory || c.name === currentCategory);
+            if (!categoryExists) {
+              console.log("Setting default category to:", categoryData[0].id);
+              form.setValue('category', categoryData[0].id);
+            }
           }
         }
       } catch (error) {
@@ -664,27 +672,30 @@ const ContaForm: React.FC<ContaFormProps> = ({
                   <FormMessage />
                 </FormItem>} />
             
-            <FormField control={form.control} name="category" render={({
-            field
-          }) => <FormItem>
-                  <FormLabel>{t('common.category')}</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={loadingCategories}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={loadingCategories ? t('common.loading') : "Qual Categoria"} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories.map(category => <SelectItem key={category.id} value={category.id}>
-                          <div className="flex items-center gap-2">
-                            <CategoryIcon icon={category.icon} color={category.color} size={16} />
-                            <span>{category.name}</span>
-                          </div>
-                        </SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  
-                </FormItem>} />
+            {/* Não mostrar categoria para "Receita" */}
+            {form.watch('type') !== 'income' && (
+              <FormField control={form.control} name="category" render={({
+              field
+            }) => <FormItem>
+                    <FormLabel>{t('common.category')}</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={loadingCategories}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={loadingCategories ? t('common.loading') : "Qual Categoria"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories.map(category => <SelectItem key={category.id} value={category.id}>
+                            <div className="flex items-center gap-2">
+                              <CategoryIcon icon={category.icon} color={category.color} size={16} />
+                              <span>{category.name}</span>
+                            </div>
+                          </SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    
+                  </FormItem>} />
+            )}
           </div>
 
           {/* Conditional Installments Field - only show when recurrence is 'installments' */}

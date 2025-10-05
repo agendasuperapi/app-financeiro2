@@ -40,6 +40,7 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useClientView } from '@/contexts/ClientViewContext';
+import ContaInput from '@/components/common/ContaInput';
 
 const limitFormSchema = z.object({
   categoryId: z.string().min(1, 'Selecione uma categoria'),
@@ -48,6 +49,7 @@ const limitFormSchema = z.object({
   startDate: z.date().optional(),
   endDate: z.date().optional(),
   limitAmount: z.number().min(0.01, 'Digite um valor maior que zero'),
+  conta_id: z.string().min(1, 'Selecione uma conta'),
 }).refine((data) => {
   if (data.periodType === 'monthly' && !data.monthYear) {
     return false;
@@ -115,13 +117,14 @@ export const AddLimitModal: React.FC<AddLimitModalProps> = ({
     return currency === 'USD' ? '$ ' : 'R$ ';
   };
 
-  const form = useForm<LimitFormValues>({
-    resolver: zodResolver(limitFormSchema),
-    defaultValues: {
-      periodType: 'monthly',
-      limitAmount: 0,
-    },
-  });
+const form = useForm<LimitFormValues>({
+  resolver: zodResolver(limitFormSchema),
+  defaultValues: {
+    periodType: 'monthly',
+    limitAmount: 0,
+    conta_id: '',
+  },
+});
 
   const periodType = form.watch('periodType');
 
@@ -169,32 +172,34 @@ export const AddLimitModal: React.FC<AddLimitModalProps> = ({
         throw new Error('Dados de período inválidos');
       }
 
-      // Criar o limite como um goal
-      const newLimit = {
-        name: limitName,
-        targetAmount: data.limitAmount,
-        currentAmount: 0,
-        startDate,
-        endDate,
-        color: selectedCategory?.color || '#3B82F6',
-        transactions: [], // Propriedade obrigatória do tipo Goal
-      };
+// Criar o limite como um goal
+const newLimit = {
+  name: limitName,
+  targetAmount: data.limitAmount,
+  currentAmount: 0,
+  startDate,
+  endDate,
+  color: selectedCategory?.color || '#3B82F6',
+  conta_id: data.conta_id,
+  transactions: [], // Propriedade obrigatória do tipo Goal
+};
 
       if (selectedUser?.id) {
         // Inserir diretamente para o cliente visualizado
         const { error } = await supabase
-          .from('poupeja_goals')
-          .insert({
-            name: newLimit.name,
-            target_amount: newLimit.targetAmount,
-            current_amount: newLimit.currentAmount || 0,
-            start_date: newLimit.startDate,
-            end_date: newLimit.endDate,
-            color: newLimit.color,
-            category_id: data.categoryId,
-            type: 'expense',
-            user_id: selectedUser.id,
-          })
+  .from('poupeja_goals')
+  .insert({
+    name: newLimit.name,
+    target_amount: newLimit.targetAmount,
+    current_amount: newLimit.currentAmount || 0,
+    start_date: newLimit.startDate,
+    end_date: newLimit.endDate,
+    color: newLimit.color,
+    category_id: data.categoryId,
+    type: 'expense',
+    user_id: selectedUser.id,
+    conta_id: data.conta_id,
+  })
           .select()
           .single();
 
@@ -258,6 +263,9 @@ export const AddLimitModal: React.FC<AddLimitModalProps> = ({
                 </FormItem>
               )}
             />
+
+            {/* Conta */}
+            <ContaInput form={form} />
 
             {/* Tipo de Período */}
             <FormField

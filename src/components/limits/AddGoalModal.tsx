@@ -44,7 +44,7 @@ import ContaInput from '@/components/common/ContaInput';
 
 const goalFormSchema = z.object({
   goalName: z.string().min(1, 'Digite o nome da meta'),
-  periodType: z.enum(['monthly', 'specific']),
+  periodType: z.enum(['monthly', 'specific', 'livre']),
   monthYear: z.string().optional(),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
@@ -138,7 +138,11 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
       let startDate: string;
       let endDate: string | undefined;
 
-      if (data.periodType === 'monthly' && data.monthYear) {
+      if (data.periodType === 'livre') {
+        // For "livre", use current date as start and no end date
+        startDate = format(new Date(), 'yyyy-MM-dd');
+        endDate = undefined;
+      } else if (data.periodType === 'monthly' && data.monthYear) {
         const [year, month] = data.monthYear.split('-');
         const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
         
@@ -243,6 +247,10 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
                       className="flex flex-col space-y-2"
                     >
                       <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="livre" id="livre" />
+                        <Label htmlFor="livre">Livre</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
                         <RadioGroupItem value="monthly" id="monthly" />
                         <Label htmlFor="monthly">Mensal</Label>
                       </div>
@@ -258,7 +266,7 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
             />
 
             {/* Campos condicionais de data */}
-            {periodType === 'monthly' ? (
+            {periodType === 'livre' ? null : periodType === 'monthly' ? (
               <FormField
                 control={form.control}
                 name="monthYear"

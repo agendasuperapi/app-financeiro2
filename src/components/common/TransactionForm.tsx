@@ -135,8 +135,36 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       if (imageError) throw imageError;
 
       if ((imageData as any)?.image_url) {
-        setComprovanteUrl((imageData as any).image_url);
-        setComprovanteDialogOpen(true);
+        const rawUrl = String((imageData as any).image_url);
+        // If already absolute URL or data URL, use directly
+        if (/^(https?:)?\/\//.test(rawUrl) || rawUrl.startsWith('data:')) {
+          setComprovanteUrl(rawUrl);
+          setComprovanteDialogOpen(true);
+        } else {
+          // Expecting pattern: "<bucket>/<path/to/file>"
+          const [bucket, ...rest] = rawUrl.split('/');
+          const path = rest.join('/');
+          try {
+            // Prefer signed URL (works even if bucket is private)
+            const { data: signed, error: signedError } = await (supabase.storage.from(bucket) as any).createSignedUrl(path, 60 * 10);
+            if (!signedError && signed?.signedUrl) {
+              setComprovanteUrl(signed.signedUrl);
+              setComprovanteDialogOpen(true);
+            } else {
+              // Fallback to public URL if bucket is public
+              const { data: pub } = (supabase.storage.from(bucket) as any).getPublicUrl(path);
+              if (pub?.publicUrl) {
+                setComprovanteUrl(pub.publicUrl);
+                setComprovanteDialogOpen(true);
+              } else {
+                throw new Error('Não foi possível gerar URL do comprovante');
+              }
+            }
+          } catch (e) {
+            console.error('Erro ao gerar URL do comprovante:', e);
+            toast({ title: 'Erro', description: 'Falha ao abrir comprovante', variant: 'destructive' });
+          }
+        }
       } else {
         toast({
           title: 'Comprovante não encontrado',

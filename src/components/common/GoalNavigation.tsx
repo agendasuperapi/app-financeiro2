@@ -174,6 +174,9 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
   // Check if limit is exceeded (only for expenses)
   const isExceeded = isExpense ? absValue > currentGoal.targetAmount : false;
   
+  // Check if goal is achieved (only for income)
+  const isGoalAchieved = !isExpense ? effectiveValue >= currentGoal.targetAmount : false;
+  
   const handlePreviousGoal = () => {
     onGoalChange(currentGoalIndex > 0 ? currentGoalIndex - 1 : goals.length - 1);
   };
@@ -230,6 +233,11 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
             {isExceeded && (
               <span className="text-red-600 dark:text-red-400 font-medium text-xs">
                 Limite Excedido
+              </span>
+            )}
+            {isGoalAchieved && (
+              <span className="text-green-600 dark:text-green-400 font-medium text-xs">
+                Meta Batida
               </span>
             )}
             <span className={`font-semibold ${isExceeded ? 'text-red-600 dark:text-red-400' : 'text-green-600'}`}>

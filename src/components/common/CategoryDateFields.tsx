@@ -128,6 +128,8 @@ const CategoryDateFields: React.FC<CategoryDateFieldsProps> = ({ form, transacti
             <FormItem key={`category-${key}-${transactionType}`}>
               <FormLabel>{t('transactions.category')}</FormLabel>
               <Select 
+                open={selectOpen}
+                onOpenChange={setSelectOpen}
                 onValueChange={(value) => {
                   field.onChange(value);
                 }}

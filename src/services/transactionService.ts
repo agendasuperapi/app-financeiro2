@@ -61,6 +61,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
         creatorName: creatorName,
         conta_id: item.conta_id || '', // Manter string vazia em vez de undefined
         formato: item.formato || undefined,
+        reference_code: item.reference_code || undefined,
       } as Transaction;
     });
   } catch (error) {

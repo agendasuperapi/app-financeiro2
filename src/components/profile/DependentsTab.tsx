@@ -345,7 +345,7 @@ const DependentsTab = () => {
                             {countries.map((country) => (
                               <CommandItem
                                 key={country.code}
-                                value={`${country.name} ${country.code}`}
+                                value={country.name}
                                 onSelect={() => {
                                   setCountryCode(country.code);
                                   setCountryOpen(false);
@@ -451,7 +451,7 @@ const DependentsTab = () => {
                             {countries.map((country) => (
                               <CommandItem
                                 key={country.code}
-                                value={`${country.name} ${country.code}`}
+                                value={country.name}
                                 onSelect={() => {
                                   setCountryCode(country.code);
                                   setCountryOpen(false);

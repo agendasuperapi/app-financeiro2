@@ -332,7 +332,7 @@ const DependentsTab = () => {
                         aria-expanded={countryOpen}
                         className="w-48 justify-between"
                       >
-                        {countries.find(c => c.code === countryCode)?.flag} {countries.find(c => c.code === countryCode)?.name}
+                        {countries.find(c => c.code === countryCode)?.name} (+{countryCode})
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -357,7 +357,7 @@ const DependentsTab = () => {
                                     countryCode === country.code ? "opacity-100" : "opacity-0"
                                   )}
                                 />
-                                {country.flag} {country.name}
+                                {country.name} (+{country.code})
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -438,7 +438,7 @@ const DependentsTab = () => {
                         aria-expanded={countryOpen}
                         className="w-48 justify-between"
                       >
-                        {countries.find(c => c.code === countryCode)?.flag} {countries.find(c => c.code === countryCode)?.name}
+                        {countries.find(c => c.code === countryCode)?.name} (+{countryCode})
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -463,7 +463,7 @@ const DependentsTab = () => {
                                     countryCode === country.code ? "opacity-100" : "opacity-0"
                                   )}
                                 />
-                                {country.flag} {country.name}
+                                {country.name} (+{country.code})
                               </CommandItem>
                             ))}
                           </CommandGroup>

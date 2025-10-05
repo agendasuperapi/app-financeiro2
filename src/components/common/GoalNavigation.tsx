@@ -103,12 +103,14 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
           return;
         }
 
-        // Calculate net balance (income - expenses)
+        // Calculate based on goal type
         const totalIncome = transactions?.filter(t => t.type === 'income').reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
         const totalExpenses = transactions?.filter(t => t.type === 'expense').reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
-        const netBalance = totalIncome - totalExpenses;
         
-        setActualAmount(netBalance);
+        // For income goals, show total income. For expense goals, show total expenses
+        const calculatedAmount = currentGoal.type === 'income' ? totalIncome : totalExpenses;
+        
+        setActualAmount(calculatedAmount);
 
       } catch (error) {
         console.error('Error calculating actual amount:', error);
@@ -119,11 +121,11 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
     fetchActualAmount();
   }, [currentGoal]);
 
-  const progress = Math.min(Math.round((Math.abs(actualAmount) / currentGoal.targetAmount) * 100), 100);
+  const progress = Math.min(Math.round((actualAmount / currentGoal.targetAmount) * 100), 100);
   
   // Check if limit is exceeded (for expenses) or goal not met (for income)
   const isExceeded = currentGoal.type === 'expense' 
-    ? Math.abs(actualAmount) > currentGoal.targetAmount
+    ? actualAmount > currentGoal.targetAmount
     : false; // For income goals, we don't mark as "exceeded"
   
   const handlePreviousGoal = () => {
@@ -178,7 +180,7 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
         <Progress value={progress} className="h-2" />
         
         <div className="flex justify-between mt-2 text-sm">
-          <span className={`font-semibold ${isExceeded ? 'text-red-600 dark:text-red-400' : (actualAmount < 0 ? 'text-red-600' : 'text-green-600')}`}>
+          <span className={`font-semibold ${isExceeded ? 'text-red-600 dark:text-red-400' : 'text-green-600'}`}>
             {formatCurrency(actualAmount, currency)}
           </span>
           <span className="text-muted-foreground">

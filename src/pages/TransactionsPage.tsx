@@ -233,19 +233,22 @@ const TransactionsPage = () => {
             </h1>
             
             <div className="flex items-center gap-2">
-              {/* Mobile - Icon buttons only */}
+              {/* Mobile - Compact buttons with text */}
               {isMobile ? (
                 <>
                   <Button 
                     variant="outline" 
-                    size="icon"
+                    size="sm"
                     onClick={handleRefresh}
                     disabled={refreshing}
+                    className="gap-1"
                   >
-                    <RotateCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                    <RotateCcw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
+                    <span className="text-xs">Atualizar</span>
                   </Button>
-                  <Button onClick={handleAddTransaction} size="icon">
-                    <Plus className="h-4 w-4" />
+                  <Button onClick={handleAddTransaction} size="sm" className="gap-1">
+                    <Plus className="h-3 w-3" />
+                    <span className="text-xs">Adicionar</span>
                   </Button>
                 </>
               ) : (

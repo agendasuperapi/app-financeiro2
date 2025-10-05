@@ -225,9 +225,16 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
         <Progress value={progress} className="h-2" />
         
         <div className="flex justify-between mt-2 text-sm">
-          <span className={`font-semibold ${isExceeded ? 'text-red-600 dark:text-red-400' : 'text-green-600'}`}>
-            {formatCurrency(currentGoal.conta_id ? contaBalance : actualAmount, currency)}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={`font-semibold ${isExceeded ? 'text-red-600 dark:text-red-400' : 'text-green-600'}`}>
+              {formatCurrency(currentGoal.conta_id ? contaBalance : actualAmount, currency)}
+            </span>
+            {isExceeded && (
+              <span className="text-red-600 dark:text-red-400 font-medium text-xs">
+                Limite Excedido
+              </span>
+            )}
+          </div>
           <span className="text-muted-foreground">
             {t('goals.of')} {formatCurrency(currentGoal.targetAmount, currency)}
           </span>

@@ -244,7 +244,7 @@ const CalendarPage: React.FC = () => {
           {/* Calendário */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+              <CardTitle className="flex flex-col gap-2 items-start">
                 <span>Calendário de Transações</span>
                 <MonthNavigation currentMonth={currentMonth} onMonthChange={setCurrentMonth} />
               </CardTitle>

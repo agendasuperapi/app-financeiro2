@@ -379,7 +379,6 @@ const LembrarPage = () => {
           
           {/* Filtros */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-2 md:mb-4">
-            <Filter className="h-4 w-4 text-muted-foreground" />
             
             {/* Campo de Pesquisa */}
             <div className="relative w-full sm:w-64">

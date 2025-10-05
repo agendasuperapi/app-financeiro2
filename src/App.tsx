@@ -59,7 +59,7 @@ function App() {
                     <ClientViewProvider>
                       <BrowserRouter>
                         <Routes>
-                          <Route path="/" element={<LandingPage />} />
+                          <Route path="/" element={<LoginPage />} />
                           <Route path="/dashboard" element={<Index />} />
                           <Route path="/landing" element={<LandingPage />} />
                           <Route path="/login" element={<LoginPage />} />

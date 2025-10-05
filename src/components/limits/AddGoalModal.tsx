@@ -134,12 +134,12 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
         return;
       }
       
-      let startDate: string;
+      let startDate: string | undefined;
       let endDate: string | undefined;
 
       if (data.periodType === 'livre') {
-        // For "livre", use current date as start and no end date
-        startDate = format(new Date(), 'yyyy-MM-dd');
+        // For "livre", no start or end date
+        startDate = undefined;
         endDate = undefined;
       } else if (data.periodType === 'monthly' && data.monthYear) {
         const [year, month] = data.monthYear.split('-');

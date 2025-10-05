@@ -48,14 +48,68 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const [comprovanteUrl, setComprovanteUrl] = useState<string | null>(null);
   const [loadingComprovante, setLoadingComprovante] = useState(false);
   const [uploadingComprovante, setUploadingComprovante] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
   // Initialize form
   const { form, selectedType, handleTypeChange, onSubmit } = useTransactionForm({
     initialData: initialData || undefined,
     mode,
     targetUserId: selectedUser?.id || targetUserId,
-    onComplete: async () => {
-      console.log("TransactionForm: Transaction completed successfully");
+    onComplete: async (transaction) => {
+      console.log("TransactionForm: Transaction completed successfully", transaction);
+      
+      // Upload comprovante if file was selected in create mode
+      if (mode === 'create' && selectedFile && transaction?.id) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) throw new Error('Usuário não autenticado');
+
+          // Get reference_code from the created transaction
+          const { data: transactionData, error: transactionError } = await supabase
+            .from('poupeja_transactions')
+            .select('reference_code')
+            .eq('id', transaction.id)
+            .maybeSingle();
+
+          if (transactionError) throw transactionError;
+          const referenceCode = (transactionData as any)?.reference_code;
+          if (!referenceCode) throw new Error('Código de referência não encontrado');
+
+          // Upload to storage
+          const fileExt = selectedFile.name.split('.').pop();
+          const fileName = `${Date.now()}.${fileExt}`;
+          const filePath = `${user.id}/${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('imagens_transacoes')
+            .upload(filePath, selectedFile);
+
+          if (uploadError) throw uploadError;
+
+          // Insert into tbl_imagens
+          const { error: insertError } = await supabase
+            .from('tbl_imagens' as any)
+            .insert({
+              user_id: user.id,
+              image_url: `imagens_transacoes/${filePath}`,
+              reference_code: referenceCode
+            });
+
+          if (insertError) throw insertError;
+
+          toast({
+            title: 'Sucesso',
+            description: 'Comprovante anexado com sucesso',
+          });
+        } catch (error) {
+          console.error('Error uploading comprovante:', error);
+          toast({
+            title: 'Aviso',
+            description: 'Transação salva, mas erro ao anexar comprovante',
+            variant: 'destructive'
+          });
+        }
+      }
       
       // Show success message
       toast({
@@ -308,27 +362,26 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                     type="button"
                     variant="outline"
                     onClick={() => document.getElementById('new-comprovante-upload')?.click()}
-                    disabled={uploadingComprovante}
                     className="w-full"
                   >
-                    {uploadingComprovante ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Enviando...
-                      </>
-                    ) : (
-                      <>
-                        <FileText className="mr-2 h-4 w-4" />
-                        Adicionar Comprovante
-                      </>
-                    )}
+                    <FileText className="mr-2 h-4 w-4" />
+                    {selectedFile ? selectedFile.name : 'Adicionar Comprovante'}
                   </Button>
                   <input
                     id="new-comprovante-upload"
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={handleUploadComprovante}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setSelectedFile(file);
+                        toast({
+                          title: 'Arquivo selecionado',
+                          description: 'O comprovante será anexado após salvar a transação',
+                        });
+                      }
+                    }}
                   />
                 </div>
               )}

@@ -86,7 +86,7 @@ interface AppContextType {
   recalculateGoalAmounts: () => Promise<boolean>;
   updateUserProfile: (data: any) => Promise<void>;
   // Transaction actions
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'created_at'>) => Promise<void>;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'created_at'>) => Promise<Transaction>;
   updateTransaction: (id: string, transaction: Partial<Transaction>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   // Category actions
@@ -846,6 +846,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         console.log('AppContext: Recalculating goal amounts...');
         await recalculateGoalAmounts();
       }
+      
+      return transformedTransaction;
     } catch (error) {
       console.error('Error adding transaction:', error);
       throw error;

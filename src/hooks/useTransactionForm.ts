@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface UseTransactionFormProps {
   initialData?: Transaction;
   mode: 'create' | 'edit';
-  onComplete: () => void;
+  onComplete: (transaction?: Transaction) => void;
   defaultType?: 'income' | 'expense' | 'reminder' | 'lembrete' | 'outros';
   targetUserId?: string; // Para suportar criação de transações para outros usuários (cliente view)
 }
@@ -97,13 +97,15 @@ export const useTransactionForm = ({
     };
     
     try {
+      let createdTransaction: Transaction | null = null;
+      
       if (mode === 'create') {
         console.log("Creating transaction...");
         
         // Se temos um targetUserId, precisamos criar a transação diretamente no banco
         if (targetUserId) {
           console.log("Creating transaction for client:", targetUserId);
-          await createTransactionForUser({
+          createdTransaction = await createTransactionForUser({
             type: processedValues.type as 'income' | 'expense',
             amount: processedValues.amount,
             category_id: processedValues.category,
@@ -124,7 +126,7 @@ export const useTransactionForm = ({
           }
         } else {
           // Usar método normal do contexto para o usuário logado
-          await addTransaction({
+          createdTransaction = await addTransaction({
             type: processedValues.type,
             amount: processedValues.amount,
             category_id: processedValues.category,
@@ -171,7 +173,7 @@ export const useTransactionForm = ({
       // AppContext automatically updates state after add/update operations
       // No need to manually reload data here
       console.log("Transaction operation completed successfully");
-      onComplete();
+      onComplete(createdTransaction || undefined);
     } catch (error) {
       console.error("Error saving transaction:", error);
       throw error;

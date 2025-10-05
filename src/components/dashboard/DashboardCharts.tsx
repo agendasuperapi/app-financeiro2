@@ -16,22 +16,24 @@ interface DashboardChartsProps {
 }
 
 // Generate chart data from the actual transaction data for multiple months
-const generateMonthlyChartData = (transactions: any[]) => {
+const generateMonthlyChartData = (transactions: any[], selectedMonth: Date) => {
   console.log("Generating monthly chart data with transactions:", transactions.length);
   
-  // Create array for last 5 months + next 2 months (7 months total)
+  // Create array for 3 months before, selected month, and 3 months after (7 months total)
   const months = [];
-  const currentDate = new Date();
   
-  // Add last 5 months (including current)
-  for (let i = 4; i >= 0; i--) {
-    const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+  // Add 3 months before
+  for (let i = 3; i >= 1; i--) {
+    const monthDate = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - i, 1);
     months.push(monthDate);
   }
   
-  // Add next 2 months
-  for (let i = 1; i <= 2; i++) {
-    const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
+  // Add selected month
+  months.push(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1));
+  
+  // Add 3 months after
+  for (let i = 1; i <= 3; i++) {
+    const monthDate = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + i, 1);
     months.push(monthDate);
   }
   
@@ -87,8 +89,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
   
   console.log("Rendering charts with all transactions:", transactionsToUse.length);
   
-  // Generate monthly data using all transactions
-  const monthlyData = generateMonthlyChartData(transactionsToUse);
+  // Generate monthly data using all transactions and selected month
+  const monthlyData = generateMonthlyChartData(transactionsToUse, currentMonth);
   
   // Custom tooltip for charts
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -122,7 +124,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
         {/* Monthly Income/Expense Bar Chart */}
         <Card className="transition-all hover:shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg">{t('charts.incomeVsExpenses')} - Últimos 5 meses + 2 próximos</CardTitle>
+            <CardTitle className="text-lg">{t('charts.incomeVsExpenses')} - 3 meses antes e depois</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">

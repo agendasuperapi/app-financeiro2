@@ -22,6 +22,7 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
 }) => {
   const { t, currency } = usePreferences();
   const [actualAmount, setActualAmount] = useState(0);
+  const [contaBalance, setContaBalance] = useState(0);
   
   if (goals.length === 0) {
     return (
@@ -121,11 +122,55 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
     fetchActualAmount();
   }, [currentGoal]);
 
-  const progress = Math.min(Math.round((actualAmount / currentGoal.targetAmount) * 100), 100);
+  // Fetch conta balance if goal has conta_id
+  useEffect(() => {
+    const fetchContaBalance = async () => {
+      try {
+        const contaId = currentGoal.conta_id;
+        
+        if (!contaId) {
+          setContaBalance(0);
+          return;
+        }
+
+        // Get transactions for this conta and calculate balance
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setContaBalance(0);
+          return;
+        }
+
+        const { data: transactions, error } = await (supabase as any)
+          .from('poupeja_transactions')
+          .select('amount')
+          .eq('user_id', user.id)
+          .eq('conta_id', contaId);
+
+        if (error) {
+          console.error('Error fetching conta transactions:', error);
+          setContaBalance(0);
+          return;
+        }
+
+        // Calculate balance by summing all transactions
+        const balance = transactions?.reduce((sum: number, t: any) => sum + (t.amount || 0), 0) || 0;
+        setContaBalance(balance);
+
+      } catch (error) {
+        console.error('Error calculating conta balance:', error);
+        setContaBalance(0);
+      }
+    };
+
+    fetchContaBalance();
+  }, [currentGoal]);
+
+  const displayValue = currentGoal.conta_id ? contaBalance : actualAmount;
+  const progress = Math.min(Math.round((displayValue / currentGoal.targetAmount) * 100), 100);
   
   // Check if limit is exceeded (for expenses) or goal not met (for income)
   const isExceeded = currentGoal.type === 'expense' 
-    ? actualAmount > currentGoal.targetAmount
+    ? displayValue > currentGoal.targetAmount
     : false; // For income goals, we don't mark as "exceeded"
   
   const handlePreviousGoal = () => {
@@ -181,7 +226,7 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
         
         <div className="flex justify-between mt-2 text-sm">
           <span className={`font-semibold ${isExceeded ? 'text-red-600 dark:text-red-400' : 'text-green-600'}`}>
-            {formatCurrency(actualAmount, currency)}
+            {formatCurrency(currentGoal.conta_id ? contaBalance : actualAmount, currency)}
           </span>
           <span className="text-muted-foreground">
             {t('goals.of')} {formatCurrency(currentGoal.targetAmount, currency)}

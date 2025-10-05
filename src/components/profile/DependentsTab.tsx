@@ -18,6 +18,7 @@ const DependentsTab = () => {
   
   // Form fields
   const [depName, setDepName] = useState('');
+  const [countryCode, setCountryCode] = useState('55');
   const [phone, setPhone] = useState('');
   
   const { toast } = useToast();
@@ -49,8 +50,22 @@ const DependentsTab = () => {
 
   const resetForm = () => {
     setDepName('');
+    setCountryCode('55');
     setPhone('');
   };
+
+  const countries = [
+    { code: '55', name: 'Brasil', flag: '🇧🇷' },
+    { code: '1', name: 'Estados Unidos', flag: '🇺🇸' },
+    { code: '351', name: 'Portugal', flag: '🇵🇹' },
+    { code: '34', name: 'Espanha', flag: '🇪🇸' },
+    { code: '44', name: 'Reino Unido', flag: '🇬🇧' },
+    { code: '49', name: 'Alemanha', flag: '🇩🇪' },
+    { code: '33', name: 'França', flag: '🇫🇷' },
+    { code: '39', name: 'Itália', flag: '🇮🇹' },
+    { code: '81', name: 'Japão', flag: '🇯🇵' },
+    { code: '86', name: 'China', flag: '🇨🇳' },
+  ];
 
   const handleAddDependent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +84,8 @@ const DependentsTab = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user?.id) {
-        await DependentsService.addDependent(session.user.id, depName, phone);
+        const fullPhone = `${countryCode}${phone}`;
+        await DependentsService.addDependent(session.user.id, depName, fullPhone);
         
         toast({
           title: 'Sucesso',
@@ -95,7 +111,30 @@ const DependentsTab = () => {
   const handleEditDependent = (dependent: Dependent) => {
     setEditingDependent(dependent);
     setDepName(dependent.dep_name || '');
-    setPhone(dependent.dep_phone || '');
+    
+    // Extrair código do país do telefone
+    const phoneStr = dependent.dep_phone || '';
+    const brazilMatch = phoneStr.match(/^55(\d+)$/);
+    const usMatch = phoneStr.match(/^1(\d+)$/);
+    
+    if (brazilMatch) {
+      setCountryCode('55');
+      setPhone(brazilMatch[1]);
+    } else if (usMatch) {
+      setCountryCode('1');
+      setPhone(usMatch[1]);
+    } else {
+      // Tentar outros códigos
+      const match = phoneStr.match(/^(\d{1,3})(\d+)$/);
+      if (match) {
+        setCountryCode(match[1]);
+        setPhone(match[2]);
+      } else {
+        setCountryCode('55');
+        setPhone(phoneStr);
+      }
+    }
+    
     setIsEditDialogOpen(true);
   };
 
@@ -113,7 +152,8 @@ const DependentsTab = () => {
 
     try {
       setSubmitting(true);
-      await DependentsService.updateDependent(editingDependent, depName, phone);
+      const fullPhone = `${countryCode}${phone}`;
+      await DependentsService.updateDependent(editingDependent, depName, fullPhone);
       
       toast({
         title: 'Sucesso',
@@ -216,20 +256,33 @@ const DependentsTab = () => {
               
               <div className="grid gap-2">
                 <label htmlFor="dep-phone" className="font-medium">Telefone</label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    id="dep-phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="5511999999999"
-                    className="pl-10"
-                    type="tel"
-                    required
-                  />
+                <div className="flex gap-2">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="w-32 h-10 px-3 rounded-md border border-input bg-background text-sm"
+                  >
+                    {countries.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {country.flag} +{country.code}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="relative flex-1">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="dep-phone"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                      placeholder="11999999999"
+                      className="pl-10"
+                      type="tel"
+                      required
+                    />
+                  </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Formato: código do país + DDD + número (ex: 5511999999999)
+                  Digite apenas o DDD + número (ex: 11999999999)
                 </p>
               </div>
               
@@ -279,20 +332,33 @@ const DependentsTab = () => {
               
               <div className="grid gap-2">
                 <label htmlFor="edit-dep-phone" className="font-medium">Telefone</label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    id="edit-dep-phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="5511999999999"
-                    className="pl-10"
-                    type="tel"
-                    required
-                  />
+                <div className="flex gap-2">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="w-32 h-10 px-3 rounded-md border border-input bg-background text-sm"
+                  >
+                    {countries.map((country) => (
+                      <option key={country.code} value={country.code}>
+                        {country.flag} +{country.code}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="relative flex-1">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      id="edit-dep-phone"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                      placeholder="11999999999"
+                      className="pl-10"
+                      type="tel"
+                      required
+                    />
+                  </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Formato: código do país + DDD + número (ex: 5511999999999)
+                  Digite apenas o DDD + número (ex: 11999999999)
                 </p>
               </div>
               

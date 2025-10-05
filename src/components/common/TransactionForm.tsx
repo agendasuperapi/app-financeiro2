@@ -17,6 +17,8 @@ import GoalSelector from './GoalSelector';
 import ContaAddedByGrid from './ContaAddedByGrid';
 import { useToast } from '@/hooks/use-toast';
 import { useClientView } from '@/contexts/ClientViewContext';
+import { supabase } from '@/integrations/supabase/client';
+import { FileText, Loader2 } from 'lucide-react';
 
 interface TransactionFormProps {
   open: boolean;
@@ -42,6 +44,9 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false);
   const [relatedTransactionInfo, setRelatedTransactionInfo] = useState<{ count: number, codigoTrans?: string } | null>(null);
   const [pendingFormValues, setPendingFormValues] = useState<any>(null);
+  const [comprovanteDialogOpen, setComprovanteDialogOpen] = useState(false);
+  const [comprovanteUrl, setComprovanteUrl] = useState<string | null>(null);
+  const [loadingComprovante, setLoadingComprovante] = useState(false);
   
   // Initialize form
   const { form, selectedType, handleTypeChange, onSubmit } = useTransactionForm({
@@ -87,6 +92,48 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     }
   }, [open, form.formState.errors, form.formState.isValid]);
 
+  // Function to fetch comprovante
+  const fetchComprovante = async () => {
+    if (!initialData?.reference_code) {
+      toast({
+        title: 'Erro',
+        description: 'Transação sem código de referência',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setLoadingComprovante(true);
+    try {
+      const { data, error } = await supabase
+        .from('tbl_imagens' as any)
+        .select('image_url')
+        .eq('reference_code', initialData.reference_code)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if ((data as any)?.image_url) {
+        setComprovanteUrl((data as any).image_url);
+        setComprovanteDialogOpen(true);
+      } else {
+        toast({
+          title: 'Comprovante não encontrado',
+          description: 'Nenhum comprovante foi anexado a esta transação',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching comprovante:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao buscar comprovante',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoadingComprovante(false);
+    }
+  };
+
   // Only render the form content when dialog is open to prevent unnecessary calculations
   if (!open) {
     return null;
@@ -119,6 +166,28 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               
               {selectedType === 'income' && (
                 <GoalSelector form={form} />
+              )}
+
+              {mode === 'edit' && initialData?.reference_code && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={fetchComprovante}
+                  disabled={loadingComprovante}
+                  className="w-full"
+                >
+                  {loadingComprovante ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Carregando...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="mr-2 h-4 w-4" />
+                      Comprovante
+                    </>
+                  )}
+                </Button>
               )}
 
               <DialogFooter className="pt-4">
@@ -187,6 +256,40 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <Dialog open={comprovanteDialogOpen} onOpenChange={setComprovanteDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Comprovante</DialogTitle>
+            </DialogHeader>
+            <div className="flex items-center justify-center p-4">
+              {comprovanteUrl ? (
+                <img 
+                  src={comprovanteUrl} 
+                  alt="Comprovante da transação" 
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                />
+              ) : (
+                <p className="text-muted-foreground">Nenhum comprovante disponível</p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setComprovanteDialogOpen(false)}
+              >
+                Fechar
+              </Button>
+              {comprovanteUrl && (
+                <Button 
+                  onClick={() => window.open(comprovanteUrl, '_blank')}
+                >
+                  Abrir em Nova Aba
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );

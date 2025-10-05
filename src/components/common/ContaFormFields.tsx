@@ -182,41 +182,56 @@ const ContaFormFields: React.FC<ContaFormFieldsProps> = ({
           )}
         />
         
-        {/* Não mostrar categoria para "Receita" */}
-        {form.watch('type') !== 'income' && (
-          <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('common.category')}</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value}
-                  disabled={loadingCategories}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={loadingCategories ? t('common.loading') : "Qual Categoria"} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {categories.map(category => (
-                      <SelectItem key={category.id} value={category.id}>
-                        <div className="flex items-center gap-2">
-                          <CategoryIcon icon={category.icon} color={category.color} size={16} />
-                          <span>{category.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        {/* Scheduled Date Field */}
+        <FormField
+          control={form.control}
+          name="scheduledDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('schedule.scheduledFor')}</FormLabel>
+              <FormControl>
+                <Input type="datetime-local" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
+
+      {/* Category Field - only show for expense */}
+      {form.watch('type') !== 'income' && (
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('common.category')}</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={loadingCategories}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={loadingCategories ? t('common.loading') : "Qual Categoria"} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {categories.map(category => (
+                    <SelectItem key={category.id} value={category.id}>
+                      <div className="flex items-center gap-2">
+                        <CategoryIcon icon={category.icon} color={category.color} size={16} />
+                        <span>{category.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       {/* Conditional Installments Field */}
       {showInstallments && form.watch('recurrence') === 'installments' && (
@@ -241,21 +256,6 @@ const ContaFormFields: React.FC<ContaFormFieldsProps> = ({
           )}
         />
       )}
-      
-      {/* Scheduled Date Field */}
-      <FormField
-        control={form.control}
-        name="scheduledDate"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t('schedule.scheduledFor')}</FormLabel>
-            <FormControl>
-              <Input type="datetime-local" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 justify-between items-center pt-4">

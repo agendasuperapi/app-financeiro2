@@ -40,7 +40,6 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useClientView } from '@/contexts/ClientViewContext';
-import ContaInput from '@/components/common/ContaInput';
 
 const limitFormSchema = z.object({
   categoryId: z.string().min(1, 'Selecione uma categoria'),
@@ -49,7 +48,6 @@ const limitFormSchema = z.object({
   startDate: z.date().optional(),
   endDate: z.date().optional(),
   limitAmount: z.number().min(0.01, 'Digite um valor maior que zero'),
-  conta_id: z.string().min(1, 'Selecione uma conta'),
 }).refine((data) => {
   if (data.periodType === 'monthly' && !data.monthYear) {
     return false;
@@ -122,7 +120,6 @@ const form = useForm<LimitFormValues>({
   defaultValues: {
     periodType: 'monthly',
     limitAmount: 0,
-    conta_id: '',
   },
 });
 
@@ -180,7 +177,6 @@ const newLimit = {
   startDate,
   endDate,
   color: selectedCategory?.color || '#3B82F6',
-  conta_id: data.conta_id,
   transactions: [], // Propriedade obrigatória do tipo Goal
 };
 
@@ -198,7 +194,6 @@ const newLimit = {
     category_id: data.categoryId,
     type: 'expense',
     user_id: selectedUser.id,
-    conta_id: data.conta_id,
   })
           .select()
           .single();
@@ -263,9 +258,6 @@ const newLimit = {
                 </FormItem>
               )}
             />
-
-            {/* Conta */}
-            <ContaInput form={form} />
 
             {/* Tipo de Período */}
             <FormField

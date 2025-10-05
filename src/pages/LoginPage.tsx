@@ -214,6 +214,18 @@ const LoginPage = () => {
                 </Button>
               </form>
               
+              {/* Botão não tenho plano */}
+              <div className="mt-4 text-center">
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={() => window.open('https://appfinanceiro.com/', '_blank')}
+                  disabled={isLoading}
+                >
+                  Não tenho plano
+                </Button>
+              </div>
+              
               <div className="mt-6 text-center text-sm text-muted-foreground">
                 <p>
                   {t('auth.termsAgreement')}{' '}

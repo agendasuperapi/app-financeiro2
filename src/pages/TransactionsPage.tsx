@@ -227,30 +227,46 @@ const TransactionsPage = () => {
           )}
           
           {/* Header and Add Button */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+          <div className="flex items-center justify-between mb-6 gap-2">
             <h1 className="text-xl md:text-2xl font-semibold">
               {isMobile ? 'Transações' : 'Transações Recentes'}
             </h1>
             
-            {/* Buttons - visible on tablet and desktop */}
-            {!isMobile && (
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="flex items-center gap-2"
-                >
-                  <RotateCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                  Atualizar
-                </Button>
-                <Button onClick={handleAddTransaction} size="lg" className="shrink-0">
-                  <Plus className="mr-2 h-4 w-4" />
-                  {isClientView ? 'Adicionar para Cliente' : 'Adicionar Transação'}
-                </Button>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {/* Mobile - Icon buttons only */}
+              {isMobile ? (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                  >
+                    <RotateCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                  </Button>
+                  <Button onClick={handleAddTransaction} size="icon">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="flex items-center gap-2"
+                  >
+                    <RotateCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                    Atualizar
+                  </Button>
+                  <Button onClick={handleAddTransaction} size="lg" className="shrink-0">
+                    <Plus className="mr-2 h-4 w-4" />
+                    {isClientView ? 'Adicionar para Cliente' : 'Adicionar Transação'}
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
           
           {/* Filtros */}

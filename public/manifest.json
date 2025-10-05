@@ -1,7 +1,7 @@
 {
-  "name": "APP Financeiro",
-  "short_name": "APP Financei",
-  "description": "Gerencia suas conta com o app financeiro.",
+  "name": "App Financeiro",
+  "short_name": "App Financeiro",
+  "description": "Gerencia suas contas com o App Financeiro.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FFFFFF",
@@ -10,13 +10,13 @@
   "scope": "/",
   "icons": [
     {
-      "src": "https://gpttodmpflpzhbgzagcc.supabase.co/storage/v1/object/public/uploads/logos/1755281624894-t3x8jtqig18.png",
+      "src": "/pwa-icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://gpttodmpflpzhbgzagcc.supabase.co/storage/v1/object/public/uploads/logos/1755281624894-t3x8jtqig18.png",
+      "src": "/pwa-icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

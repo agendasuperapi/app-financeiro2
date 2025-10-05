@@ -60,6 +60,9 @@ const DependentsTab = () => {
   };
 
   const countries = [
+    // América do Sul
+    { code: '54', name: 'Argentina', flag: '🇦🇷', placeholder: '11 1234-5678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '591', name: 'Bolívia', flag: '🇧🇴', placeholder: '71234567', format: (v: string) => v.replace(/\D/g, '') },
     { code: '55', name: 'Brasil', flag: '🇧🇷', placeholder: '(11) 99999-9999', format: (v: string) => {
       const num = v.replace(/\D/g, '');
       if (num.length <= 2) return num;
@@ -67,61 +70,98 @@ const DependentsTab = () => {
       if (num.length === 10) return `(${num.slice(0, 2)}) ${num.slice(2, 6)}-${num.slice(6, 10)}`;
       return `(${num.slice(0, 2)}) ${num.slice(2, 7)}-${num.slice(7, 11)}`;
     }},
+    { code: '56', name: 'Chile', flag: '🇨🇱', placeholder: '9 1234 5678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '57', name: 'Colômbia', flag: '🇨🇴', placeholder: '321 1234567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '593', name: 'Equador', flag: '🇪🇨', placeholder: '99 123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '595', name: 'Paraguai', flag: '🇵🇾', placeholder: '961 123456', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '51', name: 'Peru', flag: '🇵🇪', placeholder: '912 345 678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '598', name: 'Uruguai', flag: '🇺🇾', placeholder: '94 123 456', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '58', name: 'Venezuela', flag: '🇻🇪', placeholder: '412 1234567', format: (v: string) => v.replace(/\D/g, '') },
+    
+    // América Central e Caribe
+    { code: '52', name: 'México', flag: '🇲🇽', placeholder: '222 123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '507', name: 'Panamá', flag: '🇵🇦', placeholder: '6123-4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '506', name: 'Costa Rica', flag: '🇨🇷', placeholder: '8312 3456', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '503', name: 'El Salvador', flag: '🇸🇻', placeholder: '7012 3456', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '502', name: 'Guatemala', flag: '🇬🇹', placeholder: '5123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '504', name: 'Honduras', flag: '🇭🇳', placeholder: '9123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '505', name: 'Nicarágua', flag: '🇳🇮', placeholder: '8123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '53', name: 'Cuba', flag: '🇨🇺', placeholder: '5 1234567', format: (v: string) => v.replace(/\D/g, '') },
     { code: '1', name: 'Estados Unidos', flag: '🇺🇸', placeholder: '(555) 555-5555', format: (v: string) => {
       const num = v.replace(/\D/g, '');
       if (num.length <= 3) return num;
       if (num.length <= 6) return `(${num.slice(0, 3)}) ${num.slice(3)}`;
       return `(${num.slice(0, 3)}) ${num.slice(3, 6)}-${num.slice(6, 10)}`;
     }},
+    { code: '1', name: 'Canadá', flag: '🇨🇦', placeholder: '(555) 555-5555', format: (v: string) => {
+      const num = v.replace(/\D/g, '');
+      if (num.length <= 3) return num;
+      if (num.length <= 6) return `(${num.slice(0, 3)}) ${num.slice(3)}`;
+      return `(${num.slice(0, 3)}) ${num.slice(3, 6)}-${num.slice(6, 10)}`;
+    }},
+    
+    // Europa
     { code: '351', name: 'Portugal', flag: '🇵🇹', placeholder: '912 345 678', format: (v: string) => {
       const num = v.replace(/\D/g, '');
       if (num.length <= 3) return num;
       if (num.length <= 6) return `${num.slice(0, 3)} ${num.slice(3)}`;
       return `${num.slice(0, 3)} ${num.slice(3, 6)} ${num.slice(6, 9)}`;
     }},
-    { code: '34', name: 'Espanha', flag: '🇪🇸', placeholder: '612 34 56 78', format: (v: string) => {
-      const num = v.replace(/\D/g, '');
-      if (num.length <= 3) return num;
-      if (num.length <= 5) return `${num.slice(0, 3)} ${num.slice(3)}`;
-      if (num.length <= 7) return `${num.slice(0, 3)} ${num.slice(3, 5)} ${num.slice(5)}`;
-      return `${num.slice(0, 3)} ${num.slice(3, 5)} ${num.slice(5, 7)} ${num.slice(7, 9)}`;
-    }},
-    { code: '44', name: 'Reino Unido', flag: '🇬🇧', placeholder: '7400 123456', format: (v: string) => {
-      const num = v.replace(/\D/g, '');
-      if (num.length <= 4) return num;
-      return `${num.slice(0, 4)} ${num.slice(4, 10)}`;
-    }},
-    { code: '49', name: 'Alemanha', flag: '🇩🇪', placeholder: '151 12345678', format: (v: string) => {
-      const num = v.replace(/\D/g, '');
-      if (num.length <= 3) return num;
-      return `${num.slice(0, 3)} ${num.slice(3, 11)}`;
-    }},
-    { code: '33', name: 'França', flag: '🇫🇷', placeholder: '6 12 34 56 78', format: (v: string) => {
-      const num = v.replace(/\D/g, '');
-      if (num.length <= 1) return num;
-      if (num.length <= 3) return `${num.slice(0, 1)} ${num.slice(1)}`;
-      if (num.length <= 5) return `${num.slice(0, 1)} ${num.slice(1, 3)} ${num.slice(3)}`;
-      if (num.length <= 7) return `${num.slice(0, 1)} ${num.slice(1, 3)} ${num.slice(3, 5)} ${num.slice(5)}`;
-      return `${num.slice(0, 1)} ${num.slice(1, 3)} ${num.slice(3, 5)} ${num.slice(5, 7)} ${num.slice(7, 9)}`;
-    }},
-    { code: '39', name: 'Itália', flag: '🇮🇹', placeholder: '312 345 6789', format: (v: string) => {
-      const num = v.replace(/\D/g, '');
-      if (num.length <= 3) return num;
-      if (num.length <= 6) return `${num.slice(0, 3)} ${num.slice(3)}`;
-      return `${num.slice(0, 3)} ${num.slice(3, 6)} ${num.slice(6, 10)}`;
-    }},
-    { code: '81', name: 'Japão', flag: '🇯🇵', placeholder: '90-1234-5678', format: (v: string) => {
-      const num = v.replace(/\D/g, '');
-      if (num.length <= 2) return num;
-      if (num.length <= 6) return `${num.slice(0, 2)}-${num.slice(2)}`;
-      return `${num.slice(0, 2)}-${num.slice(2, 6)}-${num.slice(6, 10)}`;
-    }},
-    { code: '86', name: 'China', flag: '🇨🇳', placeholder: '138 0013 8000', format: (v: string) => {
-      const num = v.replace(/\D/g, '');
-      if (num.length <= 3) return num;
-      if (num.length <= 7) return `${num.slice(0, 3)} ${num.slice(3)}`;
-      return `${num.slice(0, 3)} ${num.slice(3, 7)} ${num.slice(7, 11)}`;
-    }},
+    { code: '34', name: 'Espanha', flag: '🇪🇸', placeholder: '612 34 56 78', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '33', name: 'França', flag: '🇫🇷', placeholder: '6 12 34 56 78', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '39', name: 'Itália', flag: '🇮🇹', placeholder: '312 345 6789', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '49', name: 'Alemanha', flag: '🇩🇪', placeholder: '151 12345678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '44', name: 'Reino Unido', flag: '🇬🇧', placeholder: '7400 123456', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '41', name: 'Suíça', flag: '🇨🇭', placeholder: '78 123 45 67', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '43', name: 'Áustria', flag: '🇦🇹', placeholder: '664 123456', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '32', name: 'Bélgica', flag: '🇧🇪', placeholder: '470 12 34 56', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '31', name: 'Holanda', flag: '🇳🇱', placeholder: '6 12345678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '45', name: 'Dinamarca', flag: '🇩🇰', placeholder: '32 12 34 56', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '46', name: 'Suécia', flag: '🇸🇪', placeholder: '70 123 45 67', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '47', name: 'Noruega', flag: '🇳🇴', placeholder: '406 12 345', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '358', name: 'Finlândia', flag: '🇫🇮', placeholder: '41 2345678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '48', name: 'Polônia', flag: '🇵🇱', placeholder: '512 345 678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '420', name: 'República Tcheca', flag: '🇨🇿', placeholder: '601 123 456', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '353', name: 'Irlanda', flag: '🇮🇪', placeholder: '85 123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '30', name: 'Grécia', flag: '🇬🇷', placeholder: '691 234 5678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '7', name: 'Rússia', flag: '🇷🇺', placeholder: '912 345-67-89', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '380', name: 'Ucrânia', flag: '🇺🇦', placeholder: '50 123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '90', name: 'Turquia', flag: '🇹🇷', placeholder: '501 234 56 78', format: (v: string) => v.replace(/\D/g, '') },
+    
+    // Ásia
+    { code: '86', name: 'China', flag: '🇨🇳', placeholder: '138 0013 8000', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '81', name: 'Japão', flag: '🇯🇵', placeholder: '90-1234-5678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '82', name: 'Coreia do Sul', flag: '🇰🇷', placeholder: '10-1234-5678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '91', name: 'Índia', flag: '🇮🇳', placeholder: '81234 56789', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '62', name: 'Indonésia', flag: '🇮🇩', placeholder: '812-345-678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '60', name: 'Malásia', flag: '🇲🇾', placeholder: '12-345 6789', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '63', name: 'Filipinas', flag: '🇵🇭', placeholder: '905 123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '65', name: 'Singapura', flag: '🇸🇬', placeholder: '8123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '66', name: 'Tailândia', flag: '🇹🇭', placeholder: '81 234 5678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '84', name: 'Vietnã', flag: '🇻🇳', placeholder: '91 234 56 78', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '92', name: 'Paquistão', flag: '🇵🇰', placeholder: '301 2345678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '880', name: 'Bangladesh', flag: '🇧🇩', placeholder: '1812-345678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '94', name: 'Sri Lanka', flag: '🇱🇰', placeholder: '71 234 5678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '98', name: 'Irã', flag: '🇮🇷', placeholder: '912 345 6789', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '972', name: 'Israel', flag: '🇮🇱', placeholder: '50-123-4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '966', name: 'Arábia Saudita', flag: '🇸🇦', placeholder: '50 123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '971', name: 'Emirados Árabes', flag: '🇦🇪', placeholder: '50 123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    
+    // África
+    { code: '27', name: 'África do Sul', flag: '🇿🇦', placeholder: '71 123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '234', name: 'Nigéria', flag: '🇳🇬', placeholder: '802 123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '254', name: 'Quênia', flag: '🇰🇪', placeholder: '712 345678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '20', name: 'Egito', flag: '🇪🇬', placeholder: '100 123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '212', name: 'Marrocos', flag: '🇲🇦', placeholder: '650-123456', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '213', name: 'Argélia', flag: '🇩🇿', placeholder: '551 23 45 67', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '216', name: 'Tunísia', flag: '🇹🇳', placeholder: '20 123 456', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '233', name: 'Gana', flag: '🇬🇭', placeholder: '23 123 4567', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '255', name: 'Tanzânia', flag: '🇹🇿', placeholder: '621 123 456', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '256', name: 'Uganda', flag: '🇺🇬', placeholder: '712 345678', format: (v: string) => v.replace(/\D/g, '') },
+    
+    // Oceania
+    { code: '61', name: 'Austrália', flag: '🇦🇺', placeholder: '412 345 678', format: (v: string) => v.replace(/\D/g, '') },
+    { code: '64', name: 'Nova Zelândia', flag: '🇳🇿', placeholder: '21 123 4567', format: (v: string) => v.replace(/\D/g, '') },
   ];
 
   const formatPhone = (value: string) => {

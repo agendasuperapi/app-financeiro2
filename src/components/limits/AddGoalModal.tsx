@@ -40,6 +40,7 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useClientView } from '@/contexts/ClientViewContext';
+import ContaInput from '@/components/common/ContaInput';
 
 const goalFormSchema = z.object({
   goalName: z.string().min(1, 'Digite o nome da meta'),
@@ -48,6 +49,7 @@ const goalFormSchema = z.object({
   startDate: z.date().optional(),
   endDate: z.date().optional(),
   goalAmount: z.number().min(0.01, 'Digite um valor maior que zero'),
+  conta_id: z.string().min(1, 'Selecione uma conta'),
 }).refine((data) => {
   if (data.periodType === 'monthly' && !data.monthYear) {
     return false;
@@ -88,6 +90,7 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
     defaultValues: {
       periodType: 'monthly',
       goalAmount: 0,
+      conta_id: '',
     },
   });
 
@@ -156,6 +159,7 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
         endDate,
         color: outrosCategory.color || '#4CAF50',
         transactions: [],
+        conta_id: data.conta_id,
       };
 
       if (selectedUser?.id) {
@@ -171,6 +175,7 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
             category_id: outrosCategory.id,
             type: 'income',
             user_id: selectedUser.id,
+            conta_id: data.conta_id,
           })
           .select()
           .single();
@@ -220,6 +225,9 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
                 </FormItem>
               )}
             />
+
+            {/* Conta */}
+            <ContaInput form={form} />
 
             {/* Tipo de Período */}
             <FormField

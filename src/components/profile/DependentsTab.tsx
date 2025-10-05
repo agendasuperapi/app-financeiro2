@@ -7,6 +7,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Trash2, Users, Plus, Phone, User, Loader2, Edit } from 'lucide-react';
 import { DependentsService, type Dependent } from '@/services/dependentsService';
 import { supabase } from '@/integrations/supabase/client';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const DependentsTab = () => {
   const [dependents, setDependents] = useState<Dependent[]>([]);
@@ -15,6 +19,7 @@ const DependentsTab = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingDependent, setEditingDependent] = useState<Dependent | null>(null);
+  const [countryOpen, setCountryOpen] = useState(false);
   
   // Form fields
   const [depName, setDepName] = useState('');
@@ -319,17 +324,47 @@ const DependentsTab = () => {
               <div className="grid gap-2">
                 <label htmlFor="dep-phone" className="font-medium">Telefone</label>
                 <div className="flex gap-2">
-                  <select
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    className="w-32 h-10 px-3 rounded-md border border-input bg-background text-sm"
-                  >
-                    {countries.map((country) => (
-                      <option key={country.code} value={country.code}>
-                        {country.flag} +{country.code}
-                      </option>
-                    ))}
-                  </select>
+                  <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={countryOpen}
+                        className="w-48 justify-between"
+                      >
+                        {countries.find(c => c.code === countryCode)?.flag} {countries.find(c => c.code === countryCode)?.name}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-0 z-50 border bg-popover text-popover-foreground shadow-md">
+                      <Command>
+                        <CommandInput placeholder="Buscar país..." />
+                        <CommandList className="max-h-64 overflow-y-auto">
+                          <CommandEmpty>Nenhum país encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            {countries.map((country) => (
+                              <CommandItem
+                                key={country.code}
+                                value={`${country.name} ${country.code}`}
+                                onSelect={() => {
+                                  setCountryCode(country.code);
+                                  setCountryOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    countryCode === country.code ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {country.flag} {country.name} (+{country.code})
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <div className="relative flex-1">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
@@ -395,17 +430,47 @@ const DependentsTab = () => {
               <div className="grid gap-2">
                 <label htmlFor="edit-dep-phone" className="font-medium">Telefone</label>
                 <div className="flex gap-2">
-                  <select
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    className="w-32 h-10 px-3 rounded-md border border-input bg-background text-sm"
-                  >
-                    {countries.map((country) => (
-                      <option key={country.code} value={country.code}>
-                        {country.flag} +{country.code}
-                      </option>
-                    ))}
-                  </select>
+                  <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={countryOpen}
+                        className="w-48 justify-between"
+                      >
+                        {countries.find(c => c.code === countryCode)?.flag} {countries.find(c => c.code === countryCode)?.name}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-0 z-50 border bg-popover text-popover-foreground shadow-md">
+                      <Command>
+                        <CommandInput placeholder="Buscar país..." />
+                        <CommandList className="max-h-64 overflow-y-auto">
+                          <CommandEmpty>Nenhum país encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            {countries.map((country) => (
+                              <CommandItem
+                                key={country.code}
+                                value={`${country.name} ${country.code}`}
+                                onSelect={() => {
+                                  setCountryCode(country.code);
+                                  setCountryOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    countryCode === country.code ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {country.flag} {country.name} (+{country.code})
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <div className="relative flex-1">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input

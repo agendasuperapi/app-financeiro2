@@ -378,9 +378,9 @@ const LembrarPage = () => {
           </div>
           
           {/* Filtros */}
-          <div className="flex flex-col gap-2 mb-2 md:mb-4">
+          <div className="flex flex-col lg:flex-row gap-2 mb-2 md:mb-4">
             {/* Campo de Pesquisa */}
-            <div className="relative w-full">
+            <div className="relative w-full lg:flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Pesquisar lembretes..."
@@ -391,10 +391,10 @@ const LembrarPage = () => {
             </div>
             
             {/* Status e Período na mesma linha */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 lg:gap-2">
               {/* Filtro de Status */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="flex-1">
+                <SelectTrigger className="flex-1 lg:w-[180px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -409,7 +409,7 @@ const LembrarPage = () => {
 
               {/* Filtro de Data */}
               <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="flex-1">
+                <SelectTrigger className="flex-1 lg:w-[180px]">
                   <SelectValue placeholder="Data" />
                 </SelectTrigger>
                 <SelectContent>

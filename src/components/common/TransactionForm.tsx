@@ -94,10 +94,10 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
   // Function to fetch comprovante
   const fetchComprovante = async () => {
-    if (!initialData?.reference_code) {
+    if (!initialData?.id) {
       toast({
         title: 'Erro',
-        description: 'Transação sem código de referência',
+        description: 'Transação inválida',
         variant: 'destructive'
       });
       return;
@@ -105,16 +105,37 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
     setLoadingComprovante(true);
     try {
-      const { data, error } = await supabase
-        .from('tbl_imagens' as any)
-        .select('image_url')
-        .eq('reference_code', initialData.reference_code)
+      // First, get the reference_code from poupeja_transactions
+      const { data: transactionData, error: transactionError } = await supabase
+        .from('poupeja_transactions')
+        .select('reference_code')
+        .eq('id', initialData.id)
         .maybeSingle();
 
-      if (error) throw error;
+      if (transactionError) throw transactionError;
 
-      if ((data as any)?.image_url) {
-        setComprovanteUrl((data as any).image_url);
+      const referenceCode = (transactionData as any)?.reference_code;
+
+      if (!referenceCode) {
+        toast({
+          title: 'Comprovante não encontrado',
+          description: 'Esta transação não possui código de referência',
+        });
+        setLoadingComprovante(false);
+        return;
+      }
+
+      // Now fetch the image from tbl_imagens using the reference_code
+      const { data: imageData, error: imageError } = await supabase
+        .from('tbl_imagens' as any)
+        .select('image_url')
+        .eq('reference_code', referenceCode)
+        .maybeSingle();
+
+      if (imageError) throw imageError;
+
+      if ((imageData as any)?.image_url) {
+        setComprovanteUrl((imageData as any).image_url);
         setComprovanteDialogOpen(true);
       } else {
         toast({

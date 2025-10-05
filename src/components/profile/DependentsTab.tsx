@@ -55,17 +55,78 @@ const DependentsTab = () => {
   };
 
   const countries = [
-    { code: '55', name: 'Brasil', flag: '🇧🇷' },
-    { code: '1', name: 'Estados Unidos', flag: '🇺🇸' },
-    { code: '351', name: 'Portugal', flag: '🇵🇹' },
-    { code: '34', name: 'Espanha', flag: '🇪🇸' },
-    { code: '44', name: 'Reino Unido', flag: '🇬🇧' },
-    { code: '49', name: 'Alemanha', flag: '🇩🇪' },
-    { code: '33', name: 'França', flag: '🇫🇷' },
-    { code: '39', name: 'Itália', flag: '🇮🇹' },
-    { code: '81', name: 'Japão', flag: '🇯🇵' },
-    { code: '86', name: 'China', flag: '🇨🇳' },
+    { code: '55', name: 'Brasil', flag: '🇧🇷', placeholder: '(11) 99999-9999', format: (v: string) => {
+      const num = v.replace(/\D/g, '');
+      if (num.length <= 2) return num;
+      if (num.length <= 7) return `(${num.slice(0, 2)}) ${num.slice(2)}`;
+      return `(${num.slice(0, 2)}) ${num.slice(2, 7)}-${num.slice(7, 11)}`;
+    }},
+    { code: '1', name: 'Estados Unidos', flag: '🇺🇸', placeholder: '(555) 555-5555', format: (v: string) => {
+      const num = v.replace(/\D/g, '');
+      if (num.length <= 3) return num;
+      if (num.length <= 6) return `(${num.slice(0, 3)}) ${num.slice(3)}`;
+      return `(${num.slice(0, 3)}) ${num.slice(3, 6)}-${num.slice(6, 10)}`;
+    }},
+    { code: '351', name: 'Portugal', flag: '🇵🇹', placeholder: '912 345 678', format: (v: string) => {
+      const num = v.replace(/\D/g, '');
+      if (num.length <= 3) return num;
+      if (num.length <= 6) return `${num.slice(0, 3)} ${num.slice(3)}`;
+      return `${num.slice(0, 3)} ${num.slice(3, 6)} ${num.slice(6, 9)}`;
+    }},
+    { code: '34', name: 'Espanha', flag: '🇪🇸', placeholder: '612 34 56 78', format: (v: string) => {
+      const num = v.replace(/\D/g, '');
+      if (num.length <= 3) return num;
+      if (num.length <= 5) return `${num.slice(0, 3)} ${num.slice(3)}`;
+      if (num.length <= 7) return `${num.slice(0, 3)} ${num.slice(3, 5)} ${num.slice(5)}`;
+      return `${num.slice(0, 3)} ${num.slice(3, 5)} ${num.slice(5, 7)} ${num.slice(7, 9)}`;
+    }},
+    { code: '44', name: 'Reino Unido', flag: '🇬🇧', placeholder: '7400 123456', format: (v: string) => {
+      const num = v.replace(/\D/g, '');
+      if (num.length <= 4) return num;
+      return `${num.slice(0, 4)} ${num.slice(4, 10)}`;
+    }},
+    { code: '49', name: 'Alemanha', flag: '🇩🇪', placeholder: '151 12345678', format: (v: string) => {
+      const num = v.replace(/\D/g, '');
+      if (num.length <= 3) return num;
+      return `${num.slice(0, 3)} ${num.slice(3, 11)}`;
+    }},
+    { code: '33', name: 'França', flag: '🇫🇷', placeholder: '6 12 34 56 78', format: (v: string) => {
+      const num = v.replace(/\D/g, '');
+      if (num.length <= 1) return num;
+      if (num.length <= 3) return `${num.slice(0, 1)} ${num.slice(1)}`;
+      if (num.length <= 5) return `${num.slice(0, 1)} ${num.slice(1, 3)} ${num.slice(3)}`;
+      if (num.length <= 7) return `${num.slice(0, 1)} ${num.slice(1, 3)} ${num.slice(3, 5)} ${num.slice(5)}`;
+      return `${num.slice(0, 1)} ${num.slice(1, 3)} ${num.slice(3, 5)} ${num.slice(5, 7)} ${num.slice(7, 9)}`;
+    }},
+    { code: '39', name: 'Itália', flag: '🇮🇹', placeholder: '312 345 6789', format: (v: string) => {
+      const num = v.replace(/\D/g, '');
+      if (num.length <= 3) return num;
+      if (num.length <= 6) return `${num.slice(0, 3)} ${num.slice(3)}`;
+      return `${num.slice(0, 3)} ${num.slice(3, 6)} ${num.slice(6, 10)}`;
+    }},
+    { code: '81', name: 'Japão', flag: '🇯🇵', placeholder: '90-1234-5678', format: (v: string) => {
+      const num = v.replace(/\D/g, '');
+      if (num.length <= 2) return num;
+      if (num.length <= 6) return `${num.slice(0, 2)}-${num.slice(2)}`;
+      return `${num.slice(0, 2)}-${num.slice(2, 6)}-${num.slice(6, 10)}`;
+    }},
+    { code: '86', name: 'China', flag: '🇨🇳', placeholder: '138 0013 8000', format: (v: string) => {
+      const num = v.replace(/\D/g, '');
+      if (num.length <= 3) return num;
+      if (num.length <= 7) return `${num.slice(0, 3)} ${num.slice(3)}`;
+      return `${num.slice(0, 3)} ${num.slice(3, 7)} ${num.slice(7, 11)}`;
+    }},
   ];
+
+  const formatPhone = (value: string) => {
+    const country = countries.find(c => c.code === countryCode);
+    return country ? country.format(value) : value.replace(/\D/g, '');
+  };
+
+  const getPlaceholder = () => {
+    const country = countries.find(c => c.code === countryCode);
+    return country?.placeholder || 'Número de telefone';
+  };
 
   const handleAddDependent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,9 +333,9 @@ const DependentsTab = () => {
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
                       id="dep-phone"
-                      value={phone}
+                      value={formatPhone(phone)}
                       onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                      placeholder="11999999999"
+                      placeholder={getPlaceholder()}
                       className="pl-10"
                       type="tel"
                       required
@@ -282,7 +343,7 @@ const DependentsTab = () => {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Digite apenas o DDD + número (ex: 11999999999)
+                  Digite o número com DDD (será formatado automaticamente)
                 </p>
               </div>
               
@@ -348,9 +409,9 @@ const DependentsTab = () => {
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
                       id="edit-dep-phone"
-                      value={phone}
+                      value={formatPhone(phone)}
                       onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                      placeholder="11999999999"
+                      placeholder={getPlaceholder()}
                       className="pl-10"
                       type="tel"
                       required
@@ -358,7 +419,7 @@ const DependentsTab = () => {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Digite apenas o DDD + número (ex: 11999999999)
+                  Digite o número com DDD (será formatado automaticamente)
                 </p>
               </div>
               

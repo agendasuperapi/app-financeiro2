@@ -1,12 +1,13 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import Sidebar from './Sidebar';
 import MobileNavBar from './MobileNavBar';
 import MobileHeader from './MobileHeader';
 import { useIsMobile } from '@/hooks/use-mobile';
 import WhatsAppActivationButton from '@/components/common/WhatsAppActivationButton';
-
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Capacitor } from '@capacitor/core';
 import { useAppContext } from '@/contexts/AppContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -25,6 +26,21 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const { hideValues, toggleHideValues } = useAppContext();
+  const { theme } = useTheme();
+  
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      const setStatusBar = async () => {
+        await StatusBar.setStyle({ 
+          style: theme === 'dark' ? Style.Dark : Style.Light 
+        });
+        await StatusBar.setBackgroundColor({ 
+          color: theme === 'dark' ? '#0a0a0a' : '#ffffff' 
+        });
+      };
+      setStatusBar();
+    }
+  }, [theme]);
   
   const handleAddTransaction = (type: 'income' | 'expense') => {
     if (onAddTransaction) {
@@ -37,7 +53,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   return <div className="bg-background w-full">
       {isMobile ? <div className="flex flex-col min-h-screen w-full">
           <MobileHeader hideValues={hideValues} toggleHideValues={toggleHideValues} />
-          <main className="flex-1 overflow-y-auto p-2 pb-20 pt-20 w-full">
+          <main className="flex-1 overflow-y-auto p-2 pb-20 w-full" style={{ paddingTop: 'calc(5rem + env(safe-area-inset-top))' }}>
             {title && <div className="mb-6">
                 
               </div>}

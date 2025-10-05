@@ -251,13 +251,13 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
         {limit.type === 'income' && (
           <>
             <div className="space-y-2">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-xs">
                 <span className="font-medium">Meta:</span>
                 <span className="font-semibold">
                   {getCurrencySymbol()}{limitAmount.toFixed(2)}
                 </span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-xs">
                 <span className="font-medium">{subConta ? `Saldo ${subConta}` : 'Total Recebido'}:</span>
                 <span className="text-green-600 font-semibold">
                   {getCurrencySymbol()}{(limit.conta_id || (limit as any).conta_id ? contaSaldo : Math.abs(spentAmount)).toFixed(2)}

@@ -120,14 +120,13 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
         throw new Error('Usuário não autenticado');
       }
 
-      // Buscar categoria "Outros" do usuário
+      // Buscar categoria "Outros" (categoria geral compartilhada)
       const { data: outrosCategory, error: categoryError } = await supabase
         .from('poupeja_categories')
         .select('id, color')
         .eq('name', 'Outros')
         .eq('type', 'income')
-        .eq('user_id', selectedUser?.id || user.id)
-        .single();
+        .maybeSingle();
 
       if (categoryError) {
         console.error('Error fetching Outros category:', categoryError);

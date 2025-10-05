@@ -332,7 +332,7 @@ const DependentsTab = () => {
                         aria-expanded={countryOpen}
                         className="w-48 justify-between"
                       >
-                        {countries.find(c => c.code === countryCode)?.name} (+{countryCode})
+                        {(countries.find(c => c.code === countryCode)?.name || 'Brasil') + ` (+${countryCode})`}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -438,7 +438,7 @@ const DependentsTab = () => {
                         aria-expanded={countryOpen}
                         className="w-48 justify-between"
                       >
-                        {countries.find(c => c.code === countryCode)?.name} (+{countryCode})
+                        {(countries.find(c => c.code === countryCode)?.name || 'Brasil') + ` (+${countryCode})`}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>

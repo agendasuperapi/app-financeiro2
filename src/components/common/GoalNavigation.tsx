@@ -179,7 +179,7 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
         
         <div className="flex justify-between mt-2 text-sm">
           <span className={`font-semibold ${isExceeded ? 'text-red-600 dark:text-red-400' : (actualAmount < 0 ? 'text-red-600' : 'text-green-600')}`}>
-            {getCurrencySymbol()}{actualAmount.toFixed(2)}
+            {formatCurrency(actualAmount, currency)}
           </span>
           <span className="text-muted-foreground">
             {t('goals.of')} {formatCurrency(currentGoal.targetAmount, currency)}

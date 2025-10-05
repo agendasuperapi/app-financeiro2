@@ -21,6 +21,7 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
   const { transactions } = useApp();
   const [spentAmount, setSpentAmount] = useState(0);
   const [subConta, setSubConta] = useState<string>('');
+  const [contaSaldo, setContaSaldo] = useState(0);
 
   // Get currency symbol with space
   const getCurrencySymbol = () => {
@@ -32,6 +33,42 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
     if (!value) return undefined;
     return value.includes('T') ? value.split('T')[0] : value;
   };
+
+  // Fetch account balance if conta_id exists
+  useEffect(() => {
+    const fetchContaSaldo = async () => {
+      if (!limit.conta_id && !(limit as any).conta_id) return;
+      
+      const contaId = limit.conta_id || (limit as any).conta_id;
+      
+      try {
+        // Get account name
+        const { data: contaData } = await (supabase as any)
+          .from('tbl_contas')
+          .select('name')
+          .eq('id', contaId)
+          .maybeSingle();
+        
+        if (contaData) {
+          setSubConta(contaData.name);
+        }
+
+        // Get account balance from transactions
+        const { data: transactions } = await (supabase as any)
+          .from('poupeja_transactions')
+          .select('amount')
+          .eq('conta_id', contaId);
+
+        const balance = transactions?.reduce((sum: number, t: any) => sum + t.amount, 0) || 0;
+        setContaSaldo(balance);
+        console.log('💰 Saldo da conta:', balance);
+      } catch (error) {
+        console.error('Error fetching conta saldo:', error);
+      }
+    };
+
+    fetchContaSaldo();
+  }, [limit]);
 
   // Calculate spent amount from transactions
   useEffect(() => {
@@ -129,8 +166,9 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
 
   // Calcular valores
   const limitAmount = limit.targetAmount || limit.target_amount || 0;
-  const remainingAmount = limitAmount - Math.abs(spentAmount);
-  const progressPercentage = limitAmount > 0 ? (Math.abs(spentAmount) / limitAmount) * 100 : 0;
+  const currentValue = (limit.conta_id || (limit as any).conta_id) ? contaSaldo : Math.abs(spentAmount);
+  const remainingAmount = limitAmount - currentValue;
+  const progressPercentage = limitAmount > 0 ? (currentValue / limitAmount) * 100 : 0;
 
   // Formatação de período
   const startDate = limit.startDate || limit.start_date;
@@ -220,9 +258,9 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="font-medium">{subConta || 'Total Recebido'}:</span>
+                <span className="font-medium">{subConta ? `Saldo ${subConta}` : 'Total Recebido'}:</span>
                 <span className="text-green-600 font-semibold">
-                  {getCurrencySymbol()}{Math.abs(spentAmount).toFixed(2)}
+                  {getCurrencySymbol()}{(limit.conta_id || (limit as any).conta_id ? contaSaldo : Math.abs(spentAmount)).toFixed(2)}
                 </span>
               </div>
             </div>

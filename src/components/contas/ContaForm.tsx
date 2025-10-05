@@ -12,11 +12,13 @@ import { Input } from '@/components/ui/input';
 import { ScheduledTransaction } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { getCategoriesByType } from '@/services/categoryService';
+import { getCategoriesByType, addCategory } from '@/services/categoryService';
 import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
 import ContaAddedByGrid from '@/components/common/ContaAddedByGrid';
 import { toast } from 'sonner';
+import { Plus } from 'lucide-react';
+import CategoryForm from '@/components/categories/CategoryForm';
 interface ContaFormProps {
   initialData?: ScheduledTransaction | null;
   mode: 'create' | 'edit';
@@ -60,6 +62,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [futureTransactions, setFutureTransactions] = useState<any[]>([]);
   const [editOption, setEditOption] = useState<'single' | 'all'>('single');
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
 
   // Check for future transactions with same codigo-trans
   const checkForRelatedTransactions = async (codigoTrans: string | number, currentId: string, currentDate?: string) => {
@@ -192,6 +195,26 @@ const ContaForm: React.FC<ContaFormProps> = ({
     };
     loadCategories();
   }, [form.watch('type')]);
+
+  // Handle adding new category
+  const handleAddCategory = async (categoryData: Omit<Category, 'id'>) => {
+    try {
+      const newCategory = await addCategory(categoryData);
+      if (newCategory) {
+        toast.success('Categoria adicionada com sucesso!');
+        // Reload categories
+        const transactionType = form.watch('type');
+        const updatedCategories = await getCategoriesByType(transactionType);
+        setCategories(updatedCategories);
+        // Set the new category as selected
+        form.setValue('category', newCategory.id);
+        setCategoryDialogOpen(false);
+      }
+    } catch (error) {
+      console.error('Error adding category:', error);
+      toast.error('Erro ao adicionar categoria');
+    }
+  };
 
   // Reset form when initialData changes (only for edit mode)
   useEffect(() => {
@@ -689,7 +712,18 @@ const ContaForm: React.FC<ContaFormProps> = ({
             <FormField control={form.control} name="category" render={({
             field
           }) => <FormItem>
-                  <FormLabel>{t('common.category')}</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>{t('common.category')}</FormLabel>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => setCategoryDialogOpen(true)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <Select onValueChange={field.onChange} value={field.value} disabled={loadingCategories}>
                     <FormControl>
                       <SelectTrigger>
@@ -708,6 +742,15 @@ const ContaForm: React.FC<ContaFormProps> = ({
                   
                 </FormItem>} />
           )}
+
+          {/* Dialog for adding new category */}
+          <CategoryForm
+            open={categoryDialogOpen}
+            onOpenChange={setCategoryDialogOpen}
+            initialData={null}
+            onSave={handleAddCategory}
+            categoryType={form.watch('type')}
+          />
 
           {/* Conditional Installments Field - only show when recurrence is 'installments' */}
           {form.watch('recurrence') === 'installments' && <FormField control={form.control} name="installments" render={({

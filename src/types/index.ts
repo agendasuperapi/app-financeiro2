@@ -44,6 +44,7 @@ export interface Goal {
   created_at?: string;
   updated_at?: string;
   category_id?: string;
+  conta_id?: string;
 }
 
 export interface ScheduledTransaction {

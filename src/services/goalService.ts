@@ -51,6 +51,7 @@ export const getGoals = async (): Promise<Goal[]> => {
         deadline: goalData.deadline,
         color: goalData.color,
         type: (goalData as any).type as 'income' | 'expense',
+        conta_id: (goalData as any).conta_id,
         transactions: transactions ? transactions.map((t) => ({
           id: t.id,
           type: t.type as 'income' | 'expense',
@@ -99,7 +100,8 @@ export const addGoal = async (goal: Omit<Goal, "id" | "transactions">, categoryI
         color: goal.color || "#06465f",
         category_id: categoryId,
         type: type,
-        user_id: session.user.id
+        user_id: session.user.id,
+        conta_id: goal.conta_id
       })
       .select()
       .single();
@@ -141,7 +143,8 @@ export const updateGoal = async (goal: Omit<Goal, "transactions">): Promise<Goal
         end_date: goal.endDate,
         deadline: goal.deadline,
         color: goal.color,
-        category_id: goal.category_id
+        category_id: goal.category_id,
+        conta_id: goal.conta_id
       })
       .eq("id", goal.id)
       .select()

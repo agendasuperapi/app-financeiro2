@@ -181,10 +181,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       const referenceCode = (transactionData as any)?.reference_code;
 
       if (!referenceCode) {
-        toast({
-          title: 'Comprovante não encontrado',
-          description: 'Esta transação não possui código de referência',
-        });
+        setComprovanteUrl(null);
+        setComprovanteDialogOpen(true);
         setLoadingComprovante(false);
         return;
       }
@@ -226,14 +224,14 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             }
           } catch (e) {
             console.error('Erro ao gerar URL do comprovante:', e);
-            toast({ title: 'Erro', description: 'Falha ao abrir comprovante', variant: 'destructive' });
+            setComprovanteUrl(null);
+            setComprovanteDialogOpen(true);
           }
         }
       } else {
-        toast({
-          title: 'Comprovante não encontrado',
-          description: 'Nenhum comprovante foi anexado a esta transação',
-        });
+        // No image found, open dialog to allow upload
+        setComprovanteUrl(null);
+        setComprovanteDialogOpen(true);
       }
     } catch (error) {
       console.error('Error fetching comprovante:', error);

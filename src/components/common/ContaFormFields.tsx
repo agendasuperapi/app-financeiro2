@@ -4,14 +4,11 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getCategoriesByType, addCategory } from '@/services/categoryService';
+import { getCategoriesByType } from '@/services/categoryService';
 import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
 import ContaAddedByGrid from '@/components/common/ContaAddedByGrid';
 import { UseFormReturn } from 'react-hook-form';
-import { Plus } from 'lucide-react';
-import { toast } from 'sonner';
-import CategoryForm from '@/components/categories/CategoryForm';
 
 interface ContaFormFieldsProps {
   form: UseFormReturn<any>;
@@ -41,7 +38,6 @@ const ContaFormFields: React.FC<ContaFormFieldsProps> = ({
   const { t } = usePreferences();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
-  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
 
   // Load categories based on selected transaction type
   useEffect(() => {
@@ -77,26 +73,6 @@ const ContaFormFields: React.FC<ContaFormFieldsProps> = ({
     };
     loadCategories();
   }, [form.watch('type')]);
-
-  // Handle adding new category
-  const handleAddCategory = async (categoryData: Omit<Category, 'id'>) => {
-    try {
-      const newCategory = await addCategory(categoryData);
-      if (newCategory) {
-        toast.success('Categoria adicionada com sucesso!');
-        // Reload categories
-        const transactionType = form.watch('type');
-        const updatedCategories = await getCategoriesByType(transactionType);
-        setCategories(updatedCategories);
-        // Set the new category as selected
-        form.setValue('category', newCategory.id);
-        setCategoryDialogOpen(false);
-      }
-    } catch (error) {
-      console.error('Error adding category:', error);
-      toast.error('Erro ao adicionar categoria');
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -213,18 +189,7 @@ const ContaFormFields: React.FC<ContaFormFieldsProps> = ({
             name="category"
             render={({ field }) => (
               <FormItem>
-                <div className="flex items-center justify-between">
-                  <FormLabel>{t('common.category')}</FormLabel>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => setCategoryDialogOpen(true)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
+                <FormLabel>{t('common.category')}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value}
@@ -252,15 +217,6 @@ const ContaFormFields: React.FC<ContaFormFieldsProps> = ({
           />
         )}
       </div>
-
-      {/* Dialog for adding new category */}
-      <CategoryForm
-        open={categoryDialogOpen}
-        onOpenChange={setCategoryDialogOpen}
-        initialData={null}
-        onSave={handleAddCategory}
-        categoryType={form.watch('type')}
-      />
 
       {/* Conditional Installments Field */}
       {showInstallments && form.watch('recurrence') === 'installments' && (

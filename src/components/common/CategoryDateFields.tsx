@@ -95,10 +95,10 @@ const CategoryDateFields: React.FC<CategoryDateFieldsProps> = ({ form, transacti
               </FormControl>
               <SelectContent 
                 position="popper" 
-                className="w-full max-h-[300px] overflow-y-auto" 
+                className="w-full max-h-[200px] overflow-y-auto z-[9999]" 
                 sideOffset={5}
-                align="center"
-                avoidCollisions={false}
+                align="start"
+                avoidCollisions={true}
               >
                 {categories.map((category) => {
                   const categoryId = category.id;

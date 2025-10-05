@@ -273,9 +273,9 @@ const TransactionsPage = () => {
           </div>
           
           {/* Filtros */}
-          <div className="flex flex-col gap-2 mb-2 md:mb-4">
+          <div className="flex flex-col md:flex-row gap-2 mb-2 md:mb-4">
             {/* Campo de Pesquisa */}
-            <div className="relative w-full">
+            <div className="relative flex-1 md:max-w-xs">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Pesquisar transações..."
@@ -285,37 +285,34 @@ const TransactionsPage = () => {
               />
             </div>
             
-            {/* Status e Período na mesma linha */}
-            <div className="flex gap-2">
-              {/* Filtro de Status */}
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos Status</SelectItem>
-                  <SelectItem value="receita">Receita</SelectItem>
-                  <SelectItem value="despesa">Despesa</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* Filtro de Status */}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos Status</SelectItem>
+                <SelectItem value="receita">Receita</SelectItem>
+                <SelectItem value="despesa">Despesa</SelectItem>
+              </SelectContent>
+            </Select>
 
-              {/* Filtro de Data */}
-              <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Data" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todas as Datas</SelectItem>
-                  <SelectItem value="ontem">Ontem</SelectItem>
-                  <SelectItem value="hoje">Hoje</SelectItem>
-                  <SelectItem value="amanha">Amanhã</SelectItem>
-                  <SelectItem value="proximos7dias">Próximos 7 dias</SelectItem>
-                  <SelectItem value="mes">Mês</SelectItem>
-                  <SelectItem value="ano">Ano</SelectItem>
-                  <SelectItem value="periodo">Período</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Filtro de Data */}
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Data" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todas as Datas</SelectItem>
+                <SelectItem value="ontem">Ontem</SelectItem>
+                <SelectItem value="hoje">Hoje</SelectItem>
+                <SelectItem value="amanha">Amanhã</SelectItem>
+                <SelectItem value="proximos7dias">Próximos 7 dias</SelectItem>
+                <SelectItem value="mes">Mês</SelectItem>
+                <SelectItem value="ano">Ano</SelectItem>
+                <SelectItem value="periodo">Período</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           {/* Controles de Navegação de Data */}

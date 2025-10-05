@@ -357,7 +357,7 @@ const DependentsTab = () => {
                                     countryCode === country.code ? "opacity-100" : "opacity-0"
                                   )}
                                 />
-                                {country.flag} {country.name}
+                                {country.flag} {country.name} (+{country.code})
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -463,7 +463,7 @@ const DependentsTab = () => {
                                     countryCode === country.code ? "opacity-100" : "opacity-0"
                                   )}
                                 />
-                                {country.flag} {country.name}
+                                {country.flag} {country.name} (+{country.code})
                               </CommandItem>
                             ))}
                           </CommandGroup>

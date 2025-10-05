@@ -272,6 +272,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     user_id: dbGoal.user_id,
     created_at: dbGoal.created_at,
     updated_at: dbGoal.updated_at,
+    conta_id: dbGoal.conta_id,
   });
 
   const transformScheduledTransaction = (dbScheduledTransaction: any): ScheduledTransaction => {
@@ -1009,6 +1010,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           category_id: categoryId,
           type: type,
           user_id: user.id,
+          conta_id: (goal as any).conta_id,
         })
         .select()
         .single();
@@ -1034,6 +1036,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           end_date: goal.endDate || goal.end_date,
           deadline: goal.deadline,
           color: goal.color,
+          conta_id: (goal as any).conta_id,
         })
         .eq('id', id)
         .select()

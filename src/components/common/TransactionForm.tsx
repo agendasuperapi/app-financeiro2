@@ -47,6 +47,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const [comprovanteDialogOpen, setComprovanteDialogOpen] = useState(false);
   const [comprovanteUrl, setComprovanteUrl] = useState<string | null>(null);
   const [loadingComprovante, setLoadingComprovante] = useState(false);
+  const [uploadingComprovante, setUploadingComprovante] = useState(false);
   
   // Initialize form
   const { form, selectedType, handleTypeChange, onSubmit } = useTransactionForm({
@@ -91,6 +92,69 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       });
     }
   }, [open, form.formState.errors, form.formState.isValid]);
+
+  // Function to upload comprovante
+  const handleUploadComprovante = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !initialData?.id) return;
+
+    setUploadingComprovante(true);
+    try {
+      // Get user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      // Get reference_code
+      const { data: transactionData, error: transactionError } = await supabase
+        .from('poupeja_transactions')
+        .select('reference_code')
+        .eq('id', initialData.id)
+        .maybeSingle();
+
+      if (transactionError) throw transactionError;
+      const referenceCode = (transactionData as any)?.reference_code;
+      if (!referenceCode) throw new Error('Código de referência não encontrado');
+
+      // Upload to storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('imagens_transacoes')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Insert into tbl_imagens
+      const { error: insertError } = await supabase
+        .from('tbl_imagens' as any)
+        .insert({
+          user_id: user.id,
+          image_url: `imagens_transacoes/${filePath}`,
+          reference_code: referenceCode
+        });
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Comprovante anexado com sucesso',
+      });
+
+      // Refresh the comprovante
+      await fetchComprovante();
+    } catch (error) {
+      console.error('Error uploading comprovante:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao anexar comprovante',
+        variant: 'destructive'
+      });
+    } finally {
+      setUploadingComprovante(false);
+    }
+  };
 
   // Function to fetch comprovante
   const fetchComprovante = async () => {
@@ -329,6 +393,27 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               >
                 Fechar
               </Button>
+              <Button 
+                variant="outline"
+                disabled={uploadingComprovante}
+                onClick={() => document.getElementById('comprovante-upload')?.click()}
+              >
+                {uploadingComprovante ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  'Adicionar'
+                )}
+              </Button>
+              <input
+                id="comprovante-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleUploadComprovante}
+              />
               {comprovanteUrl && (
                 <Button 
                   onClick={() => window.open(comprovanteUrl, '_blank')}

@@ -440,30 +440,6 @@ const TransactionsPage = () => {
           </div>
         </div>
 
-        {/* Mobile Fixed Action Buttons in Transactions Row */}
-        {isMobile && (
-          <div className="fixed top-20 right-4 z-50 flex flex-col gap-3">
-            <Button 
-              variant="outline"
-              size="lg"
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="h-12 w-12 rounded-full shadow-lg hover:shadow-xl transition-shadow bg-background border-2"
-            >
-              <RotateCcw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
-              <span className="sr-only">Atualizar</span>
-            </Button>
-            <Button 
-              onClick={handleAddTransaction}
-              size="lg"
-              className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow bg-primary hover:bg-primary/90"
-            >
-              <Plus className="h-6 w-6" />
-              <span className="sr-only">{isClientView ? 'Adicionar para Cliente' : 'Adicionar Transação'}</span>
-            </Button>
-          </div>
-        )}
-
         <TransactionForm
           open={formOpen}
           onOpenChange={setFormOpen}

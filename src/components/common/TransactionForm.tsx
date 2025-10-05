@@ -168,7 +168,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                 <GoalSelector form={form} />
               )}
 
-              {mode === 'edit' && initialData?.reference_code && (
+              {mode === 'edit' && initialData?.formato === 'transacao' && (
                 <Button
                   type="button"
                   variant="outline"

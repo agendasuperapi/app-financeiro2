@@ -113,7 +113,7 @@ const ContaInputForm: React.FC<ContaInputFormProps> = ({ form }) => {
               </PopoverTrigger>
               <PopoverContent className="w-full p-0">
                 <Command>
-                  <CommandList>
+                  <CommandList className="max-h-64 overflow-y-auto overscroll-contain">
                     <CommandEmpty>Nenhuma conta encontrada.</CommandEmpty>
                     <CommandGroup>
                       {contas.map((conta) => (

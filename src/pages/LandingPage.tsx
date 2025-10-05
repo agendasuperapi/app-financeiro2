@@ -1,18 +1,9 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
+import { Navigate } from 'react-router-dom';
 
 const LandingPage = () => {
-  useEffect(() => {
-    window.location.href = 'https://appfinanceiro.com/';
-  }, []);
-
-  return (
-    <div className="min-h-screen w-full bg-background flex items-center justify-center">
-      <div className="animate-pulse">
-        <p className="text-muted-foreground">Redirecionando...</p>
-      </div>
-    </div>
-  );
+  return <Navigate to="/login" replace />;
 };
 
 export default LandingPage;

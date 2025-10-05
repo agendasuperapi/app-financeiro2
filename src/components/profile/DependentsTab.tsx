@@ -58,7 +58,8 @@ const DependentsTab = () => {
     { code: '55', name: 'Brasil', flag: '🇧🇷', placeholder: '(11) 99999-9999', format: (v: string) => {
       const num = v.replace(/\D/g, '');
       if (num.length <= 2) return num;
-      if (num.length <= 7) return `(${num.slice(0, 2)}) ${num.slice(2)}`;
+      if (num.length <= 6) return `(${num.slice(0, 2)}) ${num.slice(2)}`;
+      if (num.length === 10) return `(${num.slice(0, 2)}) ${num.slice(2, 6)}-${num.slice(6, 10)}`;
       return `(${num.slice(0, 2)}) ${num.slice(2, 7)}-${num.slice(7, 11)}`;
     }},
     { code: '1', name: 'Estados Unidos', flag: '🇺🇸', placeholder: '(555) 555-5555', format: (v: string) => {

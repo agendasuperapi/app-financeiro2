@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +25,9 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
 
   useEffect(() => {
     const loadNames = async () => {
@@ -70,111 +75,139 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
     loadNames();
   }, [form]);
 
+  const handleAddUser = async () => {
+    if (!newName.trim()) return;
+
+    try {
+      const { error } = await (supabase as any)
+        .from('poupeja_transactions')
+        .insert({
+          name: newName.trim(),
+          amount: 0,
+          description: 'Nome adicionado automaticamente',
+          category: 'Outros',
+          type: 'expense',
+          conta: 'Sistema'
+        });
+
+      if (error) throw error;
+
+      // Adicionar à lista local
+      const newUser = { name: newName.trim(), phone: newPhone.trim() };
+      setUsers([...users, newUser].sort((a, b) => a.name.localeCompare(b.name)));
+      
+      // Definir no formulário
+      form.setValue('name', newUser.name);
+      form.setValue('phone', newUser.phone);
+      
+      // Limpar e fechar
+      setNewName('');
+      setNewPhone('');
+      setDialogOpen(false);
+    } catch (error) {
+      console.error('Erro ao adicionar nome:', error);
+    }
+  };
+
   return (
-    <FormField
-      control={form.control}
-      name="name"
-      render={({ field }) => (
-        <FormItem className="flex flex-col">
-          <FormLabel>Usuario</FormLabel>
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
+    <>
+      <FormField
+        control={form.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem className="flex flex-col">
+            <FormLabel>Usuario</FormLabel>
+            <Select
+              open={open}
+              onOpenChange={setOpen}
+              value={field.value}
+              onValueChange={(value) => {
+                if (value === '__add__') {
+                  setOpen(false);
+                  setDialogOpen(true);
+                  return;
+                }
+                field.onChange(value);
+                const selectedUser = users.find((u) => u.name === value);
+                if (selectedUser) {
+                  form.setValue('phone', selectedUser.phone);
+                }
+              }}
+              disabled={loading}
+            >
               <FormControl>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={open}
-                  className="justify-between"
-                  disabled={loading}
-                >
+                <SelectTrigger className="justify-between">
                   {field.value || "Quem Adicionou"}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
+                </SelectTrigger>
               </FormControl>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0 z-50 border bg-popover text-popover-foreground shadow-md">
-              <Command>
-                <CommandInput
-                  placeholder="Buscar ou adicionar nome..."
-                  value={field.value || ''}
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                  }}
-                />
-                <CommandList>
-                  <CommandEmpty>
-                    {loading ? "Carregando nomes..." : (
-                      <div className="p-2">
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Nenhum nome encontrado.
-                        </p>
-                        {field.value && field.value.trim() && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                            onClick={async () => {
-                              try {
-                                // Adicionar novo nome na tabela poupeja_transactions
-                                const { error } = await (supabase as any)
-                                  .from('poupeja_transactions')
-                                  .insert({
-                                    name: field.value.trim(),
-                                    amount: 0,
-                                    description: 'Nome adicionado automaticamente',
-                                    category: 'Outros',
-                                    type: 'expense',
-                                    conta: 'Sistema'
-                                  });
+              <SelectContent className="max-h-64">
+                {users.map((user) => (
+                  <SelectItem key={user.name} value={user.name}>
+                    {user.name}
+                  </SelectItem>
+                ))}
+                <SelectSeparator />
+                <SelectItem value="__add__">
+                  <div className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Adicionar
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-                                if (error) throw error;
-
-                                // Recarregar a lista de nomes
-                                window.location.reload();
-                              } catch (error) {
-                                console.error('Erro ao adicionar nome:', error);
-                              }
-                            }}
-                          >
-                            Adicionar "{field.value.trim()}"
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </CommandEmpty>
-                  <CommandGroup>
-                    {users.map((user) => (
-                      <CommandItem
-                        key={user.name}
-                        value={user.name}
-                        onSelect={(currentValue) => {
-                          const selectedUser = users.find(u => u.name === currentValue);
-                          field.onChange(currentValue);
-                          if (selectedUser) {
-                            form.setValue('phone', selectedUser.phone);
-                          }
-                          setOpen(false);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            field.value === user.name ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {user.name}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar Novo Usuário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="name">Nome</Label>
+              <Input
+                id="name"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Digite o nome"
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone">Telefone (opcional)</Label>
+              <Input
+                id="phone"
+                value={newPhone}
+                onChange={(e) => setNewPhone(e.target.value)}
+                placeholder="Digite o telefone"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setDialogOpen(false);
+                  setNewName('');
+                  setNewPhone('');
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={handleAddUser}
+                disabled={!newName.trim()}
+              >
+                Adicionar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

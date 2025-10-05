@@ -43,7 +43,6 @@ import { useClientView } from '@/contexts/ClientViewContext';
 
 const goalFormSchema = z.object({
   goalName: z.string().min(1, 'Digite o nome da meta'),
-  conta_id: z.string().min(1, 'Selecione uma conta'),
   periodType: z.enum(['monthly', 'specific']),
   monthYear: z.string().optional(),
   startDate: z.date().optional(),
@@ -78,7 +77,6 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
   const { currency } = usePreferences();
   const { selectedUser } = useClientView();
   const [isLoading, setIsLoading] = useState(false);
-  const [contas, setContas] = useState<Array<{ id: string; name: string }>>([]);
 
   // Get currency symbol with space
   const getCurrencySymbol = () => {
@@ -94,38 +92,6 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
   });
 
   const periodType = form.watch('periodType');
-
-  // Buscar contas do usuário
-  useEffect(() => {
-    const fetchContas = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data, error } = await (supabase as any)
-          .from('poupeja_contas')
-          .select('id, nome')
-          .eq('user_id', selectedUser?.id || user.id)
-          .order('nome');
-
-        if (error) throw error;
-        
-        // Mapear 'nome' para 'name' para manter consistência
-        const mappedContas = (data || []).map((conta: any) => ({
-          id: conta.id,
-          name: conta.nome
-        }));
-        
-        setContas(mappedContas);
-      } catch (error) {
-        console.error('Error fetching contas:', error);
-      }
-    };
-
-    if (open) {
-      fetchContas();
-    }
-  }, [open, selectedUser]);
 
   // Gerar opções de mês/ano (próximos 12 meses)
   const generateMonthOptions = () => {
@@ -190,7 +156,6 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
         endDate,
         color: outrosCategory.color || '#4CAF50',
         transactions: [],
-        conta_id: data.conta_id,
       };
 
       if (selectedUser?.id) {
@@ -206,7 +171,6 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
             category_id: outrosCategory.id,
             type: 'income',
             user_id: selectedUser.id,
-            conta_id: data.conta_id,
           })
           .select()
           .single();
@@ -252,32 +216,6 @@ export const AddGoalModal: React.FC<AddGoalModalProps> = ({
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Conta */}
-            <FormField
-              control={form.control}
-              name="conta_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Conta</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma conta" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-background z-[9999]">
-                      {contas.map((conta) => (
-                        <SelectItem key={conta.id} value={conta.id}>
-                          {conta.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

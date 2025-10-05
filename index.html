@@ -73,7 +73,39 @@
         }
       })();
     </script>
-  </head>
+    <script>
+      (function(){
+        try {
+          // Garantir que a rota inicial abra o login
+          const ensureLogin = () => {
+            const path = window.location.pathname || '/';
+            if ((path === '/' || path === '') && !window.location.pathname.startsWith('/login')) {
+              history.replaceState(null, '', '/login');
+            }
+          };
+          ensureLogin();
+
+          // Bloquear redirecionamentos indesejados para appfinanceiro.com
+          const blockedHost = 'appfinanceiro.com';
+          const shouldBlock = (url) => {
+            try {
+              const u = new URL(url, window.location.href);
+              return u.hostname === blockedHost && u.hostname !== window.location.hostname;
+            } catch { return false; }
+          };
+
+          const _assign = window.location.assign.bind(window.location);
+          window.location.assign = (url) => { if (!shouldBlock(url)) _assign(url); };
+
+          const _replace = window.location.replace.bind(window.location);
+          window.location.replace = (url) => { if (!shouldBlock(url)) _replace(url); };
+
+          const _open = window.open.bind(window);
+          window.open = (url, target, features) => shouldBlock(url) ? null : _open(url, target, features);
+        } catch (e) { console.warn('Redirect guard error', e); }
+      })();
+    </script>
+   </head>
   <body>
     <div id="root"></div>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->

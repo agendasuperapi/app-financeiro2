@@ -12,11 +12,14 @@ import { Input } from '@/components/ui/input';
 import { ScheduledTransaction } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { getCategoriesByType } from '@/services/categoryService';
+import { getCategoriesByType, addCategory } from '@/services/categoryService';
 import { Category } from '@/types/categories';
 import CategoryIcon from '@/components/categories/CategoryIcon';
 import ContaAddedByGrid from '@/components/common/ContaAddedByGrid';
 import { toast } from 'sonner';
+import { Plus } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import CategoryForm from '@/components/categories/CategoryForm';
 interface ContaFormProps {
   initialData?: ScheduledTransaction | null;
   mode: 'create' | 'edit';
@@ -60,6 +63,8 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [futureTransactions, setFutureTransactions] = useState<any[]>([]);
   const [editOption, setEditOption] = useState<'single' | 'all'>('single');
+  const [categoryFormOpen, setCategoryFormOpen] = useState(false);
+  const [selectOpen, setSelectOpen] = useState(false);
 
   // Check for future transactions with same codigo-trans
   const checkForRelatedTransactions = async (codigoTrans: string | number, currentId: string, currentDate?: string) => {
@@ -240,6 +245,33 @@ const ContaForm: React.FC<ContaFormProps> = ({
       checkDuplicatesOnLoad();
     }
   }, [initialData?.id, mode]);
+
+  const handleAddCategory = async (categoryData: Omit<Category, 'id'>) => {
+    try {
+      const categoryType = form.watch('type') === 'income' ? 'income' : 'expense';
+      
+      const newCategory = await addCategory({
+        ...categoryData,
+        type: categoryType
+      } as Omit<Category, 'id'>);
+      
+      if (newCategory) {
+        toast.success(`Categoria ${categoryData.name} adicionada com sucesso`);
+        
+        // Reload categories
+        const reloadedCategories = await getCategoriesByType(form.watch('type'));
+        setCategories(reloadedCategories);
+        
+        // Select the new category
+        form.setValue('category', newCategory.id);
+        
+        setCategoryFormOpen(false);
+      }
+    } catch (error) {
+      console.error('Error saving category:', error);
+      toast.error('Erro ao adicionar categoria');
+    }
+  };
 
   // Form submission handler
   const onSubmit = async (values: ContaFormValues) => {
@@ -689,19 +721,47 @@ const ContaForm: React.FC<ContaFormProps> = ({
             field
           }) => <FormItem>
                   <FormLabel>{t('common.category')}</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={loadingCategories}>
+                  <Select 
+                    open={selectOpen}
+                    onOpenChange={setSelectOpen}
+                    onValueChange={field.onChange} 
+                    value={field.value} 
+                    disabled={loadingCategories}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder={loadingCategories ? t('common.loading') : "Qual Categoria"} />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent 
+                      position="popper" 
+                      className="w-full max-h-[200px] overflow-y-auto z-[9999]" 
+                      sideOffset={5}
+                      align="start"
+                      avoidCollisions={true}
+                    >
                       {categories.map(category => <SelectItem key={category.id} value={category.id}>
                           <div className="flex items-center gap-2">
                             <CategoryIcon icon={category.icon} color={category.color} size={16} />
                             <span>{category.name}</span>
                           </div>
                         </SelectItem>)}
+                      <Separator className="my-1" />
+                      <div className="p-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="w-full justify-start text-sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setSelectOpen(false);
+                            setCategoryFormOpen(true);
+                          }}
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Adicionar categoria
+                        </Button>
+                      </div>
                     </SelectContent>
                   </Select>
                   
@@ -802,6 +862,14 @@ const ContaForm: React.FC<ContaFormProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <CategoryForm
+        open={categoryFormOpen}
+        onOpenChange={setCategoryFormOpen}
+        initialData={null}
+        onSave={handleAddCategory}
+        categoryType={form.watch('type') === 'income' ? 'income' : 'expense'}
+      />
     </>;
 };
 export default ContaForm;

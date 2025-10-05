@@ -41,29 +41,37 @@ const CategoryDateFields: React.FC<CategoryDateFieldsProps> = ({ form, transacti
       console.log('[CategoryDateFields] Loaded categories:', filteredCategories.length);
       console.log('[CategoryDateFields] Current category value:', form.getValues('category'));
       
-      // Mapear valor atual (id ou nome) para ID válido
-      const currentCategory = form.getValues('category');
-      if (currentCategory) {
-        const byId = filteredCategories.find(c => c.id === currentCategory);
-        if (byId) {
-          console.log('[CategoryDateFields] Category found by ID:', byId.name);
-        } else {
-          const byName = filteredCategories.find(c => c.name === currentCategory);
-          if (byName) {
-            console.log('[CategoryDateFields] Category found by name, mapping to ID:', byName.id);
-            form.setValue('category', byName.id, { shouldValidate: true, shouldDirty: false });
+      // Para "Receita", sempre usar categoria "Outros"
+      if (transactionType === 'income') {
+        const outrosCategory = filteredCategories.find(c => c.name.toLowerCase() === 'outros');
+        if (outrosCategory) {
+          form.setValue('category', outrosCategory.id, { shouldValidate: true, shouldDirty: false });
+        }
+      } else {
+        // Mapear valor atual (id ou nome) para ID válido
+        const currentCategory = form.getValues('category');
+        if (currentCategory) {
+          const byId = filteredCategories.find(c => c.id === currentCategory);
+          if (byId) {
+            console.log('[CategoryDateFields] Category found by ID:', byId.name);
           } else {
-            console.warn('[CategoryDateFields] Category not found:', currentCategory);
+            const byName = filteredCategories.find(c => c.name === currentCategory);
+            if (byName) {
+              console.log('[CategoryDateFields] Category found by name, mapping to ID:', byName.id);
+              form.setValue('category', byName.id, { shouldValidate: true, shouldDirty: false });
+            } else {
+              console.warn('[CategoryDateFields] Category not found:', currentCategory);
+            }
           }
         }
-      }
-      
-      // Set default category if none selected or inválida
-      const currentAfterMap = form.getValues('category');
-      const exists = filteredCategories.some(c => c.id === currentAfterMap);
-      if (!exists && filteredCategories.length > 0) {
-        console.log('[CategoryDateFields] Setting default category:', filteredCategories[0].id);
-        form.setValue('category', filteredCategories[0].id);
+        
+        // Set default category if none selected or inválida
+        const currentAfterMap = form.getValues('category');
+        const exists = filteredCategories.some(c => c.id === currentAfterMap);
+        if (!exists && filteredCategories.length > 0) {
+          console.log('[CategoryDateFields] Setting default category:', filteredCategories[0].id);
+          form.setValue('category', filteredCategories[0].id);
+        }
       }
       
       // Force re-render after categories are loaded
@@ -121,70 +129,73 @@ const CategoryDateFields: React.FC<CategoryDateFieldsProps> = ({ form, transacti
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <FormItem key={`category-${key}-${transactionType}`}>
-              <FormLabel>{t('transactions.category')}</FormLabel>
-              <Select 
-                open={selectOpen}
-                onOpenChange={setSelectOpen}
-                onValueChange={(value) => {
-                  field.onChange(value);
-                }}
-                value={field.value}
-                defaultValue={field.value}
-                disabled={loading}
-              >
-                <FormControl>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={loading ? "Carregando..." : t('transactions.selectCategory')} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent 
-                  position="popper" 
-                  className="w-full max-h-[200px] overflow-y-auto z-[9999]" 
-                  sideOffset={5}
-                  align="start"
-                  avoidCollisions={true}
+        {/* Não mostrar categoria para "Receita" */}
+        {transactionType !== 'income' && (
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem key={`category-${key}-${transactionType}`}>
+                <FormLabel>{t('transactions.category')}</FormLabel>
+                <Select 
+                  open={selectOpen}
+                  onOpenChange={setSelectOpen}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                  }}
+                  value={field.value}
+                  defaultValue={field.value}
+                  disabled={loading}
                 >
-                  {categories.map((category) => {
-                    const categoryId = category.id;
-                    return (
-                      <SelectItem 
-                        key={categoryId} 
-                        value={categoryId} 
-                        className="flex items-center gap-2"
+                  <FormControl>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={loading ? "Carregando..." : t('transactions.selectCategory')} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent 
+                    position="popper" 
+                    className="w-full max-h-[200px] overflow-y-auto z-[9999]" 
+                    sideOffset={5}
+                    align="start"
+                    avoidCollisions={true}
+                  >
+                    {categories.map((category) => {
+                      const categoryId = category.id;
+                      return (
+                        <SelectItem 
+                          key={categoryId} 
+                          value={categoryId} 
+                          className="flex items-center gap-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <CategoryIcon icon={category.icon} color={category.color} size={16} />
+                            <span>{category.name}</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                    <Separator className="my-1" />
+                    <div className="p-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="w-full justify-start text-sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleAddCategory();
+                        }}
                       >
-                        <div className="flex items-center gap-2">
-                          <CategoryIcon icon={category.icon} color={category.color} size={16} />
-                          <span>{category.name}</span>
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                  <Separator className="my-1" />
-                  <div className="p-1">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="w-full justify-start text-sm"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleAddCategory();
-                      }}
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Adicionar categoria
-                    </Button>
-                  </div>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                        <Plus className="mr-2 h-4 w-4" />
+                        Adicionar categoria
+                      </Button>
+                    </div>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <FormField
           control={form.control}

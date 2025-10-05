@@ -165,13 +165,14 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
     fetchContaBalance();
   }, [currentGoal]);
 
-  const displayValue = currentGoal.conta_id ? contaBalance : actualAmount;
-  const progress = Math.min(Math.round((displayValue / currentGoal.targetAmount) * 100), 100);
+  const isExpense = currentGoal.type === 'expense';
+  const rawValue = currentGoal.conta_id ? contaBalance : actualAmount;
+  const absValue = Math.abs(rawValue);
+  const effectiveValue = isExpense ? absValue : rawValue;
+  const progress = Math.min(Math.round((effectiveValue / currentGoal.targetAmount) * 100), 100);
   
-  // Check if limit is exceeded (for expenses) or goal not met (for income)
-  const isExceeded = currentGoal.type === 'expense' 
-    ? displayValue > currentGoal.targetAmount
-    : false; // For income goals, we don't mark as "exceeded"
+  // Check if limit is exceeded (only for expenses)
+  const isExceeded = isExpense ? absValue > currentGoal.targetAmount : false;
   
   const handlePreviousGoal = () => {
     onGoalChange(currentGoalIndex > 0 ? currentGoalIndex - 1 : goals.length - 1);
@@ -226,14 +227,14 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
         
         <div className="flex justify-between mt-2 text-sm">
           <div className="flex items-center gap-2">
-            <span className={`font-semibold ${isExceeded ? 'text-red-600 dark:text-red-400' : 'text-green-600'}`}>
-              {formatCurrency(currentGoal.conta_id ? contaBalance : actualAmount, currency)}
-            </span>
             {isExceeded && (
               <span className="text-red-600 dark:text-red-400 font-medium text-xs">
                 Limite Excedido
               </span>
             )}
+            <span className={`font-semibold ${isExceeded ? 'text-red-600 dark:text-red-400' : 'text-green-600'}`}>
+              {formatCurrency(currentGoal.conta_id ? contaBalance : actualAmount, currency)}
+            </span>
           </div>
           <span className="text-muted-foreground">
             {t('goals.of')} {formatCurrency(currentGoal.targetAmount, currency)}

@@ -184,7 +184,7 @@ const CategoriesPage: React.FC = () => {
                 </div>
               </div>
             )}
-          <div className="flex justify-between items-center flex-wrap gap-4">
+          <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">{t('categories.title')}</h1>
             <Button onClick={handleAddCategory}>
               <Plus className="mr-2 h-4 w-4" />

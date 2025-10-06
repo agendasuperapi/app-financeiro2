@@ -168,7 +168,7 @@ const ExpensesPage = () => {
           </TabsContent>
           <TabsContent value="list">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
+              <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-lg">{t('expenses.all')}</CardTitle>
                   <CardDescription>{t('expenses.complete')}</CardDescription>

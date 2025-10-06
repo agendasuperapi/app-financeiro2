@@ -199,7 +199,7 @@ const SchedulePage = () => {
       <SubscriptionGuard feature="agendamentos de pagamentos">
         <div className="space-y-4 md:space-y-6 min-h-0">
           {/* Header Section */}
-          <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center md:gap-4 flex-wrap">
+          <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center md:gap-4">
             <div>
               <h2 className="text-xl md:text-2xl font-bold">{t('schedule.title')}</h2>
               <p className="text-sm md:text-base text-muted-foreground">{t('schedule.manageFixedExpenses')}</p>

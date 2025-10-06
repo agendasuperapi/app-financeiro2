@@ -236,7 +236,7 @@ const CalendarPage: React.FC = () => {
   const selectedDateItems = selectedDate ? getAllItemsForDate(selectedDate) : [];
   return <MainLayout>
       <div className="container mx-auto p-4 space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Calendário</h1>
         </div>
 

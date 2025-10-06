@@ -15,13 +15,11 @@ import { EnhancedGestaoComponent } from '@/components/admin/enhanced_gestao_comp
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { ClientView } from '@/components/admin/ClientView';
-import { LogViewer } from '@/components/admin/LogViewer';
 
 const AdminDashboard: React.FC = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [showGestao, setShowGestao] = useState(true); // Iniciar com Gestão ativa
   const [showClient, setShowClient] = useState(false);
-  const [showLog, setShowLog] = useState(false);
   const isMobile = useIsMobile();
   const { hideValues, toggleHideValues, logout } = useAppContext();
 
@@ -47,14 +45,6 @@ const AdminDashboard: React.FC = () => {
     setShowClient(true);
     setShowProfile(false);
     setShowGestao(false);
-    setShowLog(false);
-  };
-
-  const handleLogClick = () => {
-    setShowLog(true);
-    setShowProfile(false);
-    setShowGestao(false);
-    setShowClient(false);
   };
 
   const handleLogout = async () => {
@@ -229,7 +219,7 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          <Sidebar onProfileClick={handleProfileClick} onConfigClick={handleConfigClick} onGestaoClick={handleGestaoClick} onClientClick={handleClientClick} onLogClick={handleLogClick} />
+          <Sidebar onProfileClick={handleProfileClick} onConfigClick={handleConfigClick} onGestaoClick={handleGestaoClick} onClientClick={handleClientClick} />
           <main className="flex-1 overflow-auto w-full pt-16 md:pt-20">
             <div className="w-full p-6">
               {showProfile ? (
@@ -260,26 +250,7 @@ const AdminDashboard: React.FC = () => {
                       Navegue pelo sistema com a perspectiva do usuário final
                     </p>
                   </div>
-                   <ClientView />
-                </div>
-               ) : showLog ? (
-                <div className="w-full max-w-6xl mx-auto">
-                  <div className="mb-8">
-                     <div className="flex items-center gap-3 mb-2">
-                       <Shield className="h-8 w-8 text-blue-600" />
-                       <h1 className="text-3xl font-bold text-gray-900">
-                         Logs do Sistema
-                       </h1>
-                     </div>
-                    <p className="text-gray-600">
-                      Visualize as conversas entre clientes e agentes
-                    </p>
-                  </div>
-                  <Card>
-                    <CardContent className="p-6">
-                      <LogViewer />
-                    </CardContent>
-                  </Card>
+                  <ClientView />
                 </div>
                ) : showGestao ? (
                 <div className="w-full max-w-6xl mx-auto">

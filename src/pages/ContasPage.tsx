@@ -361,7 +361,7 @@ const ContasPage = () => {
                 </div>
               </div>
             )}
-          <div className="flex items-center justify-between flex-wrap gap-4 mb-4 md:mb-6">
+          <div className="flex items-center justify-between mb-4 md:mb-6">
             <h1 className="text-base md:text-xl font-bold">Contas a Pagar</h1>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>

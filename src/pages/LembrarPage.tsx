@@ -563,13 +563,12 @@ const LembrarPage = () => {
                                    <div className="flex items-center gap-1">
                                      <Calendar className="h-3 w-3" />
                                      <span>{(() => {
-                                       const date = new Date(conta.scheduledDate);
-                                       const day = date.getDate().toString().padStart(2, '0');
-                                       const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                                       const year = date.getFullYear();
-                                       const hours = date.getHours().toString().padStart(2, '0');
-                                       const minutes = date.getMinutes().toString().padStart(2, '0');
-                                       return `${day}/${month}/${year} ${hours}:${minutes}`;
+                                       const match = conta.scheduledDate.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+                                       if (match) {
+                                         const [, year, month, day, hours, minutes] = match;
+                                         return `${day}/${month}/${year} ${hours}:${minutes}`;
+                                       }
+                                       return conta.scheduledDate;
                                      })()}</span>
                                    </div>
                                   <div className="mt-1">
@@ -630,13 +629,12 @@ const LembrarPage = () => {
                                      <div className="flex items-center gap-1">
                                        <Calendar className="h-3 w-3" />
                                         <span>{(() => {
-                                          const date = new Date(conta.scheduledDate);
-                                          const day = date.getDate().toString().padStart(2, '0');
-                                          const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                                          const year = date.getFullYear();
-                                          const hours = date.getHours().toString().padStart(2, '0');
-                                          const minutes = date.getMinutes().toString().padStart(2, '0');
-                                          return `${day}/${month}/${year} ${hours}:${minutes}`;
+                                          const match = conta.scheduledDate.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+                                          if (match) {
+                                            const [, year, month, day, hours, minutes] = match;
+                                            return `${day}/${month}/${year} ${hours}:${minutes}`;
+                                          }
+                                          return conta.scheduledDate;
                                         })()}</span>
                                      </div>
                                      <div className="mt-1">
@@ -699,13 +697,12 @@ const LembrarPage = () => {
                                  <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                                    <Calendar className="h-3 w-3" />
                                    <span>{(() => {
-                                     const date = new Date(conta.scheduledDate);
-                                     const day = date.getDate().toString().padStart(2, '0');
-                                     const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                                     const year = date.getFullYear();
-                                     const hours = date.getHours().toString().padStart(2, '0');
-                                     const minutes = date.getMinutes().toString().padStart(2, '0');
-                                     return `${day}/${month}/${year} ${hours}:${minutes}`;
+                                     const match = conta.scheduledDate.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+                                     if (match) {
+                                       const [, year, month, day, hours, minutes] = match;
+                                       return `${day}/${month}/${year} ${hours}:${minutes}`;
+                                     }
+                                     return conta.scheduledDate;
                                    })()}</span>
                                  </div>
                                 <div className="text-xs text-muted-foreground mt-1">

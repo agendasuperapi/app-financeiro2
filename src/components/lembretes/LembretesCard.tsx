@@ -30,17 +30,16 @@ const LembretesCard: React.FC<LembretesCardProps> = ({
   const { formatShortDate } = useDateFormat();
   const isMobile = useIsMobile();
 
-  // Função para formatar data e hora
+  // Função para formatar data e hora sem conversão de timezone
   const formatDateTimeShort = (dateString: string) => {
     try {
-      // Parse the date string properly to avoid MM/dd confusion
-      const date = new Date(dateString);
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const year = date.getFullYear();
-      const hours = date.getHours().toString().padStart(2, '0');
-      const minutes = date.getMinutes().toString().padStart(2, '0');
-      return `${day}/${month}/${year} ${hours}:${minutes}`;
+      // Parse ISO string manually to avoid timezone conversion
+      const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
+      if (match) {
+        const [, year, month, day, hours, minutes] = match;
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+      }
+      return dateString;
     } catch (error) {
       return dateString;
     }

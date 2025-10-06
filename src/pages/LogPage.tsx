@@ -10,9 +10,10 @@ import { useAppContext } from '@/contexts/AppContext';
 interface LogEntry {
   id: string;
   created_at: string;
-  client_message: string;
-  agent_response: string;
+  msg_cliente: string;
+  msg_agente: string;
   user_id?: string;
+  reference_code?: string;
 }
 
 const LogPage = () => {
@@ -110,7 +111,7 @@ const LogPage = () => {
                         Cliente
                       </div>
                       <div className="text-sm whitespace-pre-wrap">
-                        {log.client_message}
+                        {log.msg_cliente}
                       </div>
                     </div>
 
@@ -120,7 +121,7 @@ const LogPage = () => {
                         Agente
                       </div>
                       <div className="text-sm whitespace-pre-wrap">
-                        {log.agent_response}
+                        {log.msg_agente}
                       </div>
                     </div>
                   </div>

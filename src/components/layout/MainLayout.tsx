@@ -31,12 +31,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       const setStatusBar = async () => {
-        await StatusBar.setStyle({ 
-          style: theme === 'dark' ? Style.Dark : Style.Light 
-        });
-        await StatusBar.setBackgroundColor({ 
-          color: theme === 'dark' ? '#0a0a0a' : '#ffffff' 
-        });
+        if (theme === 'dark') {
+          await StatusBar.setStyle({ style: Style.Dark });
+          await StatusBar.setBackgroundColor({ color: '#0a0a0a' });
+        } else {
+          await StatusBar.setStyle({ style: Style.Light });
+          await StatusBar.setBackgroundColor({ color: '#ffffff' });
+        }
+        await StatusBar.setOverlaysWebView({ overlay: false });
       };
       setStatusBar();
     }
@@ -53,7 +55,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   return <div className="bg-background w-full">
       {isMobile ? <div className="flex flex-col min-h-screen w-full">
           <MobileHeader hideValues={hideValues} toggleHideValues={toggleHideValues} />
-          <main className="flex-1 overflow-y-auto p-2 pb-20 w-full" style={{ paddingTop: 'calc(5rem + env(safe-area-inset-top))' }}>
+          <main className="flex-1 overflow-y-auto p-2 pb-20 w-full" style={{ paddingTop: 'calc(6rem + env(safe-area-inset-top))' }}>
             {title && <div className="mb-6">
                 
               </div>}

@@ -31,7 +31,7 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 pt-safe bg-background/95 backdrop-blur-sm border-b md:hidden" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 bg-background/95 backdrop-blur-sm border-b md:hidden" style={{ paddingTop: 'max(3rem, calc(env(safe-area-inset-top) + 1rem))' }}>
       {/* Logo à esquerda */}
       <div className="flex-shrink-0">
         <BrandLogo size="sm" showCompanyName={true} />

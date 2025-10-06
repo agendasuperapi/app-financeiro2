@@ -562,7 +562,15 @@ const LembrarPage = () => {
                                 <div className="text-sm text-muted-foreground">
                                    <div className="flex items-center gap-1">
                                      <Calendar className="h-3 w-3" />
-                                     <span>{formatDate(conta.scheduledDate, 'dd/MM/yyyy HH:mm')}</span>
+                                     <span>{(() => {
+                                       const date = new Date(conta.scheduledDate);
+                                       const day = date.getDate().toString().padStart(2, '0');
+                                       const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                                       const year = date.getFullYear();
+                                       const hours = date.getHours().toString().padStart(2, '0');
+                                       const minutes = date.getMinutes().toString().padStart(2, '0');
+                                       return `${day}/${month}/${year} ${hours}:${minutes}`;
+                                     })()}</span>
                                    </div>
                                   <div className="mt-1">
                                     {formatRecurrence(conta.recurrence)}
@@ -618,11 +626,19 @@ const LembrarPage = () => {
                                   <div className="font-semibold text-sm">
                                     {conta.description || 'Lembrete sem descrição'}
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    <div className="flex items-center gap-1">
-                                      <Calendar className="h-3 w-3" />
-                                       <span>{formatDate(conta.scheduledDate, 'dd/MM/yyyy HH:mm')}</span>
-                                    </div>
+                                   <div className="text-xs text-muted-foreground mt-1">
+                                     <div className="flex items-center gap-1">
+                                       <Calendar className="h-3 w-3" />
+                                        <span>{(() => {
+                                          const date = new Date(conta.scheduledDate);
+                                          const day = date.getDate().toString().padStart(2, '0');
+                                          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                                          const year = date.getFullYear();
+                                          const hours = date.getHours().toString().padStart(2, '0');
+                                          const minutes = date.getMinutes().toString().padStart(2, '0');
+                                          return `${day}/${month}/${year} ${hours}:${minutes}`;
+                                        })()}</span>
+                                     </div>
                                      <div className="mt-1">
                                        {conta.creatorName ? (
                                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-[9px] font-medium mr-2">
@@ -680,10 +696,18 @@ const LembrarPage = () => {
                                 <h3 className="font-semibold text-sm truncate">
                                   {conta.description || 'Lembrete sem descrição'}
                                 </h3>
-                                <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                                  <Calendar className="h-3 w-3" />
-                                  <span>{formatDate(conta.scheduledDate, 'dd/MM/yyyy HH:mm')}</span>
-                                </div>
+                                 <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                                   <Calendar className="h-3 w-3" />
+                                   <span>{(() => {
+                                     const date = new Date(conta.scheduledDate);
+                                     const day = date.getDate().toString().padStart(2, '0');
+                                     const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                                     const year = date.getFullYear();
+                                     const hours = date.getHours().toString().padStart(2, '0');
+                                     const minutes = date.getMinutes().toString().padStart(2, '0');
+                                     return `${day}/${month}/${year} ${hours}:${minutes}`;
+                                   })()}</span>
+                                 </div>
                                 <div className="text-xs text-muted-foreground mt-1">
                                   {formatRecurrence(conta.recurrence)}
                                 </div>

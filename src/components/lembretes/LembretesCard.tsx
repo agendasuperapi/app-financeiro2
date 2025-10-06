@@ -33,8 +33,14 @@ const LembretesCard: React.FC<LembretesCardProps> = ({
   // Função para formatar data e hora
   const formatDateTimeShort = (dateString: string) => {
     try {
-      const dateObject = new Date(dateString);
-      return format(dateObject, 'dd/MM/yyyy HH:mm', { locale: ptBR });
+      // Parse the date string properly to avoid MM/dd confusion
+      const date = new Date(dateString);
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
     } catch (error) {
       return dateString;
     }

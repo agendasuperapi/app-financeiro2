@@ -34,9 +34,12 @@ const LanguageCurrencySelector = () => {
         .from('poupeja_users')
         .select('fuso')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading timezone:', error);
+        return;
+      }
       
       if (data && (data as any).fuso) {
         setTimezone((data as any).fuso);
@@ -64,15 +67,51 @@ const LanguageCurrencySelector = () => {
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        toast.error('Usuário não autenticado');
+        return;
+      }
 
-      // Update timezone in database
-      const { error } = await supabase
+      console.log('Salvando preferências para usuário:', user.id);
+      console.log('Timezone:', timezone);
+
+      // Check if user exists in poupeja_users
+      const { data: existingUser, error: checkError } = await supabase
         .from('poupeja_users')
-        .update({ fuso: timezone } as any)
-        .eq('id', user.id);
+        .select('id, fuso')
+        .eq('id', user.id)
+        .maybeSingle();
 
-      if (error) throw error;
+      console.log('Usuário existente:', existingUser);
+      console.log('Erro ao verificar:', checkError);
+
+      if (checkError) {
+        console.error('Erro ao verificar usuário:', checkError);
+        throw checkError;
+      }
+
+      let updateError;
+      if (existingUser) {
+        // Update existing user
+        const { error } = await supabase
+          .from('poupeja_users')
+          .update({ fuso: timezone } as any)
+          .eq('id', user.id);
+        updateError = error;
+      } else {
+        // Insert new user
+        const { error } = await supabase
+          .from('poupeja_users')
+          .insert({ id: user.id, fuso: timezone } as any);
+        updateError = error;
+      }
+
+      if (updateError) {
+        console.error('Erro ao salvar timezone:', updateError);
+        throw updateError;
+      }
+
+      console.log('Timezone salvo com sucesso');
 
       // Update language and currency in context
       setCurrency(localCurrency);
@@ -82,7 +121,7 @@ const LanguageCurrencySelector = () => {
       setHasChanges(false);
     } catch (error) {
       console.error('Error saving preferences:', error);
-      toast.error('Erro ao salvar preferências');
+      toast.error(`Erro ao salvar preferências: ${error.message || 'Erro desconhecido'}`);
     } finally {
       setSaving(false);
     }

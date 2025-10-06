@@ -12,18 +12,35 @@ const LanguageCurrencySelector = () => {
   const [localCurrency, setLocalCurrency] = useState<Currency>(currency);
   const [localLanguage, setLocalLanguage] = useState<Language>(language);
   const [timezone, setTimezone] = useState<string>('America/Sao_Paulo');
+  const [originalTimezone, setOriginalTimezone] = useState<string>('America/Sao_Paulo');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+
+  const allowedTimezones = [
+    'America/Sao_Paulo',
+    'America/Manaus',
+    'America/Rio_Branco',
+    'America/Noronha',
+    'America/New_York',
+    'America/Los_Angeles',
+    'Europe/London',
+    'Europe/Paris',
+    'Asia/Tokyo',
+    'Australia/Sydney'
+  ];
 
   useEffect(() => {
     loadTimezone();
   }, []);
 
   useEffect(() => {
-    const changed = localCurrency !== currency || localLanguage !== language;
+    const changed =
+      localCurrency !== currency ||
+      localLanguage !== language ||
+      timezone !== originalTimezone;
     setHasChanges(changed);
-  }, [localCurrency, localLanguage, currency, language]);
+  }, [localCurrency, localLanguage, timezone, currency, language, originalTimezone]);
 
   const loadTimezone = async () => {
     try {
@@ -43,6 +60,9 @@ const LanguageCurrencySelector = () => {
       
       if (data && (data as any).fuso) {
         setTimezone((data as any).fuso);
+        setOriginalTimezone((data as any).fuso);
+      } else {
+        setOriginalTimezone('America/Sao_Paulo');
       }
     } catch (error) {
       console.error('Error loading timezone:', error);
@@ -60,6 +80,10 @@ const LanguageCurrencySelector = () => {
   };
 
   const handleTimezoneChange = (value: string) => {
+    if (!allowedTimezones.includes(value)) {
+      toast.error('Fuso horário inválido');
+      return;
+    }
     setTimezone(value);
   };
 
@@ -116,6 +140,7 @@ const LanguageCurrencySelector = () => {
       // Update language and currency in context
       setCurrency(localCurrency);
       setLanguage(localLanguage);
+      setOriginalTimezone(timezone);
 
       toast.success('Preferências salvas com sucesso');
       setHasChanges(false);

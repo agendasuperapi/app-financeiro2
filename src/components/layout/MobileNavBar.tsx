@@ -50,6 +50,16 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       bgColor: 'bg-green-50 hover:bg-green-100'
     },
     {
+      icon: MessageSquare,
+      label: 'Log',
+      action: () => {
+        navigate('/logs');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50 hover:bg-purple-100'
+    },
+    {
       icon: AlertTriangle,
       label: 'Metas/Limites',
       action: () => {
@@ -202,11 +212,6 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       icon: Settings,
       label: 'Configurações',
       href: '/profile'
-    },
-    {
-      icon: MessageSquare,
-      label: 'Log',
-      href: '/logs'
     }
   ];
   

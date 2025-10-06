@@ -40,26 +40,6 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
 
   const quickActionItems = [
     {
-      icon: FileText,
-      label: 'Anotações',
-      action: () => {
-        navigate('/notes');
-        setIsQuickActionsOpen(false);
-      },
-      color: 'text-green-600',
-      bgColor: 'bg-green-50 hover:bg-green-100'
-    },
-    {
-      icon: MessageSquare,
-      label: 'Log',
-      action: () => {
-        navigate('/logs');
-        setIsQuickActionsOpen(false);
-      },
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50 hover:bg-purple-100'
-    },
-    {
       icon: AlertTriangle,
       label: 'Metas/Limites',
       action: () => {
@@ -108,6 +88,26 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       },
       color: 'text-teal-600',
       bgColor: 'bg-teal-50 hover:bg-teal-100'
+    },
+    {
+      icon: FileText,
+      label: 'Anotações',
+      action: () => {
+        navigate('/notes');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-green-600',
+      bgColor: 'bg-green-50 hover:bg-green-100'
+    },
+    {
+      icon: MessageSquare,
+      label: 'Log',
+      action: () => {
+        navigate('/logs');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50 hover:bg-purple-100'
     }
   ];
 

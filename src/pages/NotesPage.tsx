@@ -282,7 +282,7 @@ const NotesPage: React.FC = () => {
                 </div>
               </div>}
             
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <h1 className="text-lg md:text-3xl font-bold text-foreground">Minhas Notas</h1>
               
               <Dialog open={isAddingNote} onOpenChange={setIsAddingNote}>

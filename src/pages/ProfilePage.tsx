@@ -370,7 +370,7 @@ const ProfilePage = () => {
         
         <div className="grid gap-6">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-6">
+            <div className="sticky z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-6 md:top-0" style={{ top: 'calc(4rem + env(safe-area-inset-top))' }}>
               <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 gap-1 p-1 h-auto bg-muted/50">
                 <TabsTrigger 
                   value="info" 

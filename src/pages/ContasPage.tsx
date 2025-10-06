@@ -435,7 +435,7 @@ const ContasPage = () => {
 
           {/* Controles de Navegação de Data */}
           {(dateFilter === 'mes' || dateFilter === 'ano') && (
-            <div className="sticky top-0 z-40 bg-background pt-2 flex justify-center mb-2 md:mb-4">
+            <div className="sticky z-40 bg-background pt-2 flex justify-center mb-2 md:mb-4 md:top-0" style={{ top: 'calc(4rem + env(safe-area-inset-top))' }}>
               <div className="flex items-center gap-1 bg-muted rounded-md p-1">
                 <Button
                   variant="ghost"

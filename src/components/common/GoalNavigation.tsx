@@ -24,16 +24,6 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
   const [actualAmount, setActualAmount] = useState(0);
   const [contaBalance, setContaBalance] = useState(0);
   
-  if (goals.length === 0) {
-    return (
-      <div className="text-center py-4">
-        <p className="text-sm text-muted-foreground">
-          {t('goals.noGoals')}
-        </p>
-      </div>
-    );
-  }
-
   const currentGoal = goals[currentGoalIndex];
 
   // Get currency symbol with space
@@ -50,6 +40,8 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
   // Calculate actual amount from transactions
   useEffect(() => {
     const fetchActualAmount = async () => {
+      if (!currentGoal) return;
+      
       try {
         const startDate = currentGoal.startDate || currentGoal.start_date;
         const endDate = currentGoal.endDate || currentGoal.end_date;
@@ -126,7 +118,7 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
   useEffect(() => {
     const fetchContaBalance = async () => {
       try {
-        const contaId = currentGoal.conta_id;
+        const contaId = currentGoal?.conta_id;
         
         if (!contaId) {
           setContaBalance(0);
@@ -162,8 +154,21 @@ const GoalNavigation: React.FC<GoalNavigationProps> = ({
       }
     };
 
-    fetchContaBalance();
+    if (currentGoal) {
+      fetchContaBalance();
+    }
   }, [currentGoal]);
+
+  // Early return after all hooks are declared
+  if (goals.length === 0 || !currentGoal) {
+    return (
+      <div className="text-center py-4">
+        <p className="text-sm text-muted-foreground">
+          {t('goals.noGoals')}
+        </p>
+      </div>
+    );
+  }
 
   const isExpense = currentGoal.type === 'expense';
   const rawValue = currentGoal.conta_id ? contaBalance : actualAmount;

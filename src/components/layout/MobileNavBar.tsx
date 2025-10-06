@@ -40,6 +40,16 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
 
   const quickActionItems = [
     {
+      icon: CreditCard,
+      label: 'Contas a Pagar',
+      action: () => {
+        navigate('/contas');
+        setIsQuickActionsOpen(false);
+      },
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50 hover:bg-indigo-100'
+    },
+    {
       icon: AlertTriangle,
       label: 'Metas/Limites',
       action: () => {
@@ -68,16 +78,6 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       },
       color: 'text-orange-600',
       bgColor: 'bg-orange-50 hover:bg-orange-100'
-    },
-    {
-      icon: CreditCard,
-      label: 'Contas a Pagar',
-      action: () => {
-        navigate('/contas');
-        setIsQuickActionsOpen(false);
-      },
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50 hover:bg-indigo-100'
     },
     {
       icon: Wallet,

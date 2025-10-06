@@ -1,19 +1,29 @@
 
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { usePreferences, Currency, Language } from '@/contexts/PreferencesContext';
-import { Flag, Globe, Clock } from 'lucide-react';
+import { Flag, Globe, Clock, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const LanguageCurrencySelector = () => {
   const { currency, setCurrency, language, setLanguage, t } = usePreferences();
+  const [localCurrency, setLocalCurrency] = useState<Currency>(currency);
+  const [localLanguage, setLocalLanguage] = useState<Language>(language);
   const [timezone, setTimezone] = useState<string>('America/Sao_Paulo');
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     loadTimezone();
   }, []);
+
+  useEffect(() => {
+    const changed = localCurrency !== currency || localLanguage !== language;
+    setHasChanges(changed);
+  }, [localCurrency, localLanguage, currency, language]);
 
   const loadTimezone = async () => {
     try {
@@ -39,30 +49,42 @@ const LanguageCurrencySelector = () => {
   };
 
   const handleCurrencyChange = (value: string) => {
-    setCurrency(value as Currency);
+    setLocalCurrency(value as Currency);
   };
   
   const handleLanguageChange = (value: string) => {
-    setLanguage(value as Language);
+    setLocalLanguage(value as Language);
   };
 
-  const handleTimezoneChange = async (value: string) => {
+  const handleTimezoneChange = (value: string) => {
+    setTimezone(value);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Update timezone in database
       const { error } = await supabase
         .from('poupeja_users')
-        .update({ fuso: value } as any)
+        .update({ fuso: timezone } as any)
         .eq('id', user.id);
 
       if (error) throw error;
 
-      setTimezone(value);
-      toast.success('Fuso horário atualizado com sucesso');
+      // Update language and currency in context
+      setCurrency(localCurrency);
+      setLanguage(localLanguage);
+
+      toast.success('Preferências salvas com sucesso');
+      setHasChanges(false);
     } catch (error) {
-      console.error('Error updating timezone:', error);
-      toast.error('Erro ao atualizar fuso horário');
+      console.error('Error saving preferences:', error);
+      toast.error('Erro ao salvar preferências');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -72,7 +94,7 @@ const LanguageCurrencySelector = () => {
         <label htmlFor="language-select" className="text-sm font-medium">
           {t('settings.language')}
         </label>
-        <Select value={language} onValueChange={handleLanguageChange}>
+        <Select value={localLanguage} onValueChange={handleLanguageChange}>
           <SelectTrigger id="language-select" className="w-[200px]">
             <Globe className="mr-2 h-4 w-4" />
             <SelectValue placeholder={t('settings.language')} />
@@ -90,7 +112,7 @@ const LanguageCurrencySelector = () => {
         <label htmlFor="currency-select" className="text-sm font-medium">
           {t('settings.currency')}
         </label>
-        <Select value={currency} onValueChange={handleCurrencyChange}>
+        <Select value={localCurrency} onValueChange={handleCurrencyChange}>
           <SelectTrigger id="currency-select" className="w-[200px]">
             <Flag className="mr-2 h-4 w-4" />
             <SelectValue placeholder={t('settings.currency')} />
@@ -128,6 +150,17 @@ const LanguageCurrencySelector = () => {
             </SelectGroup>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="pt-4">
+        <Button 
+          onClick={handleSave} 
+          disabled={!hasChanges || saving || loading}
+          className="w-full sm:w-auto"
+        >
+          <Save className="mr-2 h-4 w-4" />
+          {saving ? 'Salvando...' : 'Salvar Preferências'}
+        </Button>
       </div>
     </div>
   );

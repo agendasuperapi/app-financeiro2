@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageSquare, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useAppContext } from '@/contexts/AppContext';
 
 interface LogEntry {
   id: string;
@@ -15,21 +16,31 @@ interface LogEntry {
 }
 
 const LogPage = () => {
+  const { user } = useAppContext();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchLogs();
-  }, []);
+    if (user?.id) {
+      fetchLogs();
+    }
+  }, [user]);
 
   const fetchLogs = async () => {
+    if (!user?.id) {
+      console.log('Usuário não autenticado');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
-      console.log('Buscando logs da tabela tbl_log...');
+      console.log('Buscando logs para user_id:', user.id);
       
       const { data, error } = await supabase
         .from('tbl_log' as any)
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       console.log('Resultado da busca:', { data, error });

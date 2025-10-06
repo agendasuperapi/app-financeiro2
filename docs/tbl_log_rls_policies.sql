@@ -1,19 +1,19 @@
 -- Habilitar RLS na tabela tbl_log
 ALTER TABLE public.tbl_log ENABLE ROW LEVEL SECURITY;
 
--- Política para permitir que usuários autenticados visualizem todos os logs
-CREATE POLICY "Authenticated users can view all logs"
+-- Política para permitir que usuários visualizem apenas seus próprios logs
+CREATE POLICY "Users can view their own logs"
 ON public.tbl_log
 FOR SELECT
 TO authenticated
-USING (true);
+USING (auth.uid() = user_id);
 
--- Política para permitir que usuários autenticados insiram logs
-CREATE POLICY "Authenticated users can insert logs"
+-- Política para permitir que usuários insiram apenas seus próprios logs
+CREATE POLICY "Users can insert their own logs"
 ON public.tbl_log
 FOR INSERT
 TO authenticated
-WITH CHECK (true);
+WITH CHECK (auth.uid() = user_id);
 
 -- Política para permitir que admins atualizem logs
 CREATE POLICY "Admins can update logs"

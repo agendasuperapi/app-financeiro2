@@ -219,6 +219,10 @@ const Sidebar: React.FC<SidebarProps> = ({
     icon: FileText,
     label: 'Anotações',
     href: '/notes'
+  }, {
+    icon: BookOpen,
+    label: 'Logs',
+    href: '/logs'
   }];
 
   // Adicionar item admin apenas se o usuário for admin e não estiver na página admin

@@ -25,13 +25,22 @@ const LogPage = () => {
   const fetchLogs = async () => {
     try {
       setIsLoading(true);
+      console.log('Buscando logs da tabela tbl_log...');
+      
       const { data, error } = await supabase
         .from('tbl_log' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('Resultado da busca:', { data, error });
+
+      if (error) {
+        console.error('Erro ao buscar logs:', error);
+        throw error;
+      }
+      
       setLogs((data as any) || []);
+      console.log('Total de logs carregados:', (data as any)?.length || 0);
     } catch (error) {
       console.error('Erro ao carregar logs:', error);
     } finally {

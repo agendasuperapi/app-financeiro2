@@ -387,7 +387,7 @@ const ContasPage = () => {
           </div>
           
           {/* Filtros */}
-          <div className="flex flex-col lg:flex-row gap-2 mb-2 md:mb-4">
+          <div className="sticky top-0 z-10 bg-background pb-2 md:pb-4 flex flex-col lg:flex-row gap-2 mb-2 md:mb-4">
             {/* Campo de Pesquisa */}
             <div className="relative w-full lg:flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />

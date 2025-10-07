@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "date-fns/locale/pt-BR";
 import { formatInTimeZone } from 'date-fns-tz';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { supabase } from '@/integrations/supabase/client';

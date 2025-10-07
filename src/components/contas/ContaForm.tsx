@@ -4,6 +4,8 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientView } from '@/contexts/ClientViewContext';
 import { supabase } from '@/integrations/supabase/client';
 import { addScheduledTransaction, updateScheduledTransaction, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
+import { useDateFormat } from '@/hooks/useDateFormat';
+import { formatInTimeZone } from 'date-fns-tz';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -57,6 +59,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const {
     selectedUser
   } = useClientView();
+  const { timezone } = useDateFormat();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isOnline] = useState(navigator.onLine);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -118,7 +121,6 @@ const ContaForm: React.FC<ContaFormProps> = ({
   // Default form values for contas (income or expense) - simplified approach
   const getDefaultValues = (): ContaFormValues => {
     const now = new Date();
-    now.setHours(now.getHours() + 1, 0, 0, 0);
     if (mode === 'edit' && initialData) {
       const hasInstallments = initialData.parcela && parseInt(initialData.parcela) > 1;
       return {
@@ -127,7 +129,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
         amount: Math.abs(initialData.amount || 100),
         installments: hasInstallments ? parseInt(initialData.parcela || '1') : undefined,
         category: initialData.category_id || '',
-        scheduledDate: initialData.scheduledDate ? new Date(initialData.scheduledDate).toISOString().slice(0, 16) : now.toISOString().slice(0, 16),
+        scheduledDate: initialData.scheduledDate ? formatInTimeZone(new Date(initialData.scheduledDate), timezone, "yyyy-MM-dd'T'HH:mm") : formatInTimeZone(now, timezone, "yyyy-MM-dd'T'HH:mm"),
         recurrence: hasInstallments ? 'installments' : initialData.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' || 'once',
         goalId: initialData.goalId || null,
         // Campos obrigatórios
@@ -142,7 +144,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
       amount: '' as any,
       installments: undefined,
       category: '',
-      scheduledDate: now.toISOString().slice(0, 16),
+      scheduledDate: formatInTimeZone(now, timezone, "yyyy-MM-dd'T'HH:mm"),
       recurrence: 'once',
       goalId: null,
       // Campos obrigatórios

@@ -67,10 +67,21 @@ export const useDateFormat = () => {
     return formatInTimeZone(dateObject, timezone, 'MMM d');
   };
 
+  const formatDateTime = (date: Date | string) => {
+    const dateObject = typeof date === 'string' ? new Date(date) : date;
+    
+    if (language === 'pt') {
+      return formatInTimeZone(dateObject, timezone, 'dd/MM/yyyy HH:mm', { locale: ptBR });
+    }
+    
+    return formatInTimeZone(dateObject, timezone, 'MM/dd/yyyy HH:mm');
+  };
+
   return {
     formatDate,
     formatMonth,
     formatShortDate,
+    formatDateTime,
     timezone
   };
 };

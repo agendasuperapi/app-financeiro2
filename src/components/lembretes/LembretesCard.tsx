@@ -27,23 +27,8 @@ const LembretesCard: React.FC<LembretesCardProps> = ({
   onMarkAsPaid
 }) => {
   const { t, currency } = usePreferences();
-  const { formatShortDate } = useDateFormat();
+  const { formatShortDate, formatDateTime } = useDateFormat();
   const isMobile = useIsMobile();
-
-  // Função para formatar data e hora sem conversão de timezone
-  const formatDateTimeShort = (dateString: string) => {
-    try {
-      // Parse ISO string manually to avoid timezone conversion
-      const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
-      if (match) {
-        const [, year, month, day, hours, minutes] = match;
-        return `${day}/${month}/${year} ${hours}:${minutes}`;
-      }
-      return dateString;
-    } catch (error) {
-      return dateString;
-    }
-  };
 
   // Função para normalizar valores de recorrência
   const normalizeRecurrence = (recurrence: string | null | undefined): 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' => {
@@ -113,7 +98,7 @@ const LembretesCard: React.FC<LembretesCardProps> = ({
             <div className={`flex items-center gap-2 flex-wrap ${isMobile ? 'mb-2' : 'mb-3'}`}>
               <div className={`flex items-center gap-1 text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
                 <Calendar className="h-3 w-3" />
-                <span>{formatDateTimeShort(transaction.nextExecutionDate || transaction.scheduledDate)}</span>
+                <span>{formatDateTime(transaction.nextExecutionDate || transaction.scheduledDate)}</span>
               </div>
               
               <Badge className={cn("text-xs border", getRecurrenceColor(transaction.recurrence))}>

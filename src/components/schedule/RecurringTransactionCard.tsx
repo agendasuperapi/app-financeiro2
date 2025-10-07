@@ -28,18 +28,8 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
   onMarkAsPaid
 }) => {
   const { t, currency } = usePreferences();
-  const { formatShortDate } = useDateFormat();
+  const { formatShortDate, formatDateTime } = useDateFormat();
   const isMobile = useIsMobile();
-
-  // Função para formatar data e hora
-  const formatDateTimeShort = (dateString: string) => {
-    try {
-      const dateObject = new Date(dateString);
-      return format(dateObject, 'dd/MM/yyyy HH:mm', { locale: ptBR });
-    } catch (error) {
-      return dateString;
-    }
-  };
 
   // Função para normalizar valores de recorrência
   const normalizeRecurrence = (recurrence: string | null | undefined): 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' => {
@@ -109,7 +99,7 @@ const RecurringTransactionCard: React.FC<RecurringTransactionCardProps> = ({
             <div className={`flex items-center gap-2 flex-wrap ${isMobile ? 'mb-2' : 'mb-3'}`}>
               <div className={`flex items-center gap-1 text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
                 <Calendar className="h-3 w-3" />
-                <span>{formatDateTimeShort(transaction.nextExecutionDate || transaction.scheduledDate)}</span>
+                <span>{formatDateTime(transaction.nextExecutionDate || transaction.scheduledDate)}</span>
               </div>
               
               <Badge className={cn("text-xs border", getRecurrenceColor(transaction.recurrence))}>

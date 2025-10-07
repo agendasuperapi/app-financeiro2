@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { supabase } from '@/integrations/supabase/client';
 import { addScheduledTransaction, updateScheduledTransaction, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
+import { useDateFormat } from '@/hooks/useDateFormat';
+import { formatInTimeZone } from 'date-fns-tz';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,6 +34,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
   targetUserId,
 }) => {
   const { t } = usePreferences();
+  const { timezone } = useDateFormat();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isOnline] = useState(navigator.onLine);
 
@@ -49,11 +52,10 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
   const defaultValues = {
     description: initialData?.description || '',
     scheduledDate: initialData?.scheduledDate 
-      ? new Date(initialData.scheduledDate).toISOString().slice(0, 16)
+      ? formatInTimeZone(new Date(initialData.scheduledDate), timezone, "yyyy-MM-dd'T'HH:mm")
       : (() => {
           const now = new Date();
-          now.setHours(now.getHours() + 1, 0, 0, 0);
-          return now.toISOString().slice(0, 16);
+          return formatInTimeZone(now, timezone, "yyyy-MM-dd'T'HH:mm");
         })(),
     recurrence: (initialData?.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
     // Campos obrigatórios apenas do AddedByField
@@ -81,7 +83,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         try {
           const date = new Date(dateValue);
           if (!isNaN(date.getTime())) {
-            formattedDate = date.toISOString().slice(0, 16);
+            formattedDate = formatInTimeZone(date, timezone, "yyyy-MM-dd'T'HH:mm");
           }
         } catch (error) {
           console.error('Error parsing date:', dateValue, error);

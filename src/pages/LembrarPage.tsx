@@ -74,7 +74,7 @@ const LembrarPage = () => {
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [contaToDelete, setContaToDelete] = useState<ScheduledTransaction | null>(null);
-  const { formatDate } = useDateFormat();
+  const { formatDate, formatDateTime } = useDateFormat();
   const { currency } = usePreferences();
   const { isClientView, selectedUser, targetUserId } = useClientAwareData();
 
@@ -562,14 +562,7 @@ const LembrarPage = () => {
                                 <div className="text-sm text-muted-foreground">
                                    <div className="flex items-center gap-1">
                                      <Calendar className="h-3 w-3" />
-                                     <span>{(() => {
-                                       const match = conta.scheduledDate.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
-                                       if (match) {
-                                         const [, year, month, day, hours, minutes] = match;
-                                         return `${day}/${month}/${year} ${hours}:${minutes}`;
-                                       }
-                                       return conta.scheduledDate;
-                                     })()}</span>
+                                     <span>{formatDateTime(conta.scheduledDate)}</span>
                                    </div>
                                   <div className="mt-1">
                                     {formatRecurrence(conta.recurrence)}
@@ -628,14 +621,7 @@ const LembrarPage = () => {
                                    <div className="text-xs text-muted-foreground mt-1">
                                      <div className="flex items-center gap-1">
                                        <Calendar className="h-3 w-3" />
-                                        <span>{(() => {
-                                          const match = conta.scheduledDate.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
-                                          if (match) {
-                                            const [, year, month, day, hours, minutes] = match;
-                                            return `${day}/${month}/${year} ${hours}:${minutes}`;
-                                          }
-                                          return conta.scheduledDate;
-                                        })()}</span>
+                                        <span>{formatDateTime(conta.scheduledDate)}</span>
                                      </div>
                                      <div className="mt-1">
                                        {conta.creatorName ? (
@@ -696,14 +682,7 @@ const LembrarPage = () => {
                                 </h3>
                                  <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                                    <Calendar className="h-3 w-3" />
-                                   <span>{(() => {
-                                     const match = conta.scheduledDate.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2}):(\d{2}):(\d{2})/);
-                                     if (match) {
-                                       const [, year, month, day, hours, minutes] = match;
-                                       return `${day}/${month}/${year} ${hours}:${minutes}`;
-                                     }
-                                     return conta.scheduledDate;
-                                   })()}</span>
+                                   <span>{formatDateTime(conta.scheduledDate)}</span>
                                  </div>
                                 <div className="text-xs text-muted-foreground mt-1">
                                   {formatRecurrence(conta.recurrence)}

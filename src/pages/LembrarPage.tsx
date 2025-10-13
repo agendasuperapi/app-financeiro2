@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getScheduledTransactions, markAsPaid, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
+import { markLembreteAsPaid, deleteLembrete } from '@/services/lembreteService';
 import { ScheduledTransaction } from '@/types';
 import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User, Search, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
@@ -116,14 +116,10 @@ const LembrarPage = () => {
   const loadContas = async () => {
     setLoading(true);
     try {
-      // Buscar diretamente da tabela poupeja_transactions para o usuário específico
+      // Buscar diretamente da tabela tbl_lembrete para o usuário específico
       const { data, error } = await supabase
-        .from("poupeja_transactions")
-        .select(`
-          *,
-          category:poupeja_categories(id, name, icon, color, type)
-        `)
-        .eq('type', 'lembrete')
+        .from("tbl_lembrete" as any)
+        .select('*')
         .eq('user_id', targetUserId)
         .order("date", { ascending: true });
 
@@ -132,19 +128,21 @@ const LembrarPage = () => {
       // Converter para o formato esperado
       const filteredData = data.map((item: any) => ({
         id: item.id,
-        type: item.type,
-        amount: item.amount,
-        category: item.category?.name || "Outros",
-        category_id: item.category_id,
-        categoryIcon: item.category?.icon || "circle",
-        categoryColor: item.category?.color || "#607D8B",
+        type: 'lembrete' as const,
+        amount: item.amount || 0,
+        category: "Lembretes",
+        category_id: null,
+        categoryIcon: "bell",
+        categoryColor: "#607D8B",
         description: item.description || "",
         scheduledDate: item.date,
         recurrence: normalizeRecurrence(item.recurrence),
-        goalId: item.goal_id,
+        goalId: null,
         status: item.status || 'pending',
         situacao: item.situacao || 'pendente',
-        creatorName: item.name ? item.name : undefined
+        creatorName: item.name || undefined,
+        phone: item.phone || undefined,
+        reference_code: item.reference_code || undefined
       }));
 
       setContas(filteredData);
@@ -256,16 +254,16 @@ const LembrarPage = () => {
 
   const handleMarkAsPaid = async (id: string) => {
     try {
-      const success = await markAsPaid(id);
+      const success = await markLembreteAsPaid(id);
       if (success) {
-        toast.success('Conta marcada como paga');
+        toast.success('Lembrete marcado como concluído');
         await loadContas();
       } else {
-        toast.error('Erro ao marcar conta como paga');
+        toast.error('Erro ao marcar lembrete como concluído');
       }
     } catch (error) {
       console.error('Error marking as paid:', error);
-      toast.error('Erro ao marcar conta como paga');
+      toast.error('Erro ao marcar lembrete como concluído');
     }
   };
 
@@ -282,16 +280,16 @@ const LembrarPage = () => {
   const handleConfirmDelete = async () => {
     if (contaToDelete) {
       try {
-        const success = await deleteScheduledTransaction(contaToDelete.id);
+        const success = await deleteLembrete(contaToDelete.id);
         if (success) {
-          toast.success('Conta excluída com sucesso');
+          toast.success('Lembrete excluído com sucesso');
           await loadContas();
         } else {
-          toast.error('Erro ao excluir conta');
+          toast.error('Erro ao excluir lembrete');
         }
       } catch (error) {
-        console.error('Error deleting account:', error);
-        toast.error('Erro ao excluir conta');
+        console.error('Error deleting lembrete:', error);
+        toast.error('Erro ao excluir lembrete');
       }
     }
     setDeleteDialogOpen(false);

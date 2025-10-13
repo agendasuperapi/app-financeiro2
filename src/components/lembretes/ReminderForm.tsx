@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { supabase } from '@/integrations/supabase/client';
-import { addScheduledTransaction, updateScheduledTransaction, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
+import { createLembrete, updateLembrete, deleteLembrete } from '@/services/lembreteService';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { formatInTimeZone } from 'date-fns-tz';
 import { z } from 'zod';
@@ -104,18 +104,6 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log('🚀 Reminder form submitted with values:', values);
     
-    // For reminders, always set type to 'lembrete' and amount to 0
-    const submitData = {
-      type: 'lembrete' as const,
-      description: values.description,
-      amount: 0, // Reminders always have 0 amount
-      category: 'Lembretes', // Default category for reminders
-      category_id: null, // No category_id for reminders
-      scheduledDate: new Date(values.scheduledDate).toISOString(),
-      recurrence: values.recurrence,
-      goalId: null, // No goal for reminders
-    };
-    
     try {
       if (mode === 'create') {
         console.log('➕ Creating reminder...');
@@ -137,17 +125,20 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         }
         
         const reminderData = {
-          ...submitData,
-          reference_code: Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
+          user_id: userId,
+          description: values.description,
+          date: new Date(values.scheduledDate).toISOString(),
+          recurrence: values.recurrence,
+          reference_code: String(Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000)),
           situacao: 'ativo',
+          status: 'pending',
           phone: values.phone || userPhone,
-          user_id: userId, // Use targetUserId when creating for client
-          // Campos obrigatórios apenas do AddedByField
-          creatorName: values.name,
+          name: values.name,
+          amount: 0,
         };
         
         console.log('📋 Creating reminder with data:', reminderData);
-        const result = await addScheduledTransaction(reminderData);
+        const result = await createLembrete(reminderData);
         console.log('✅ Create request sent', result);
       } else if (initialData) {
         console.log('✏️ Updating reminder...', initialData.id);
@@ -169,18 +160,18 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         }
         
         const updateData = {
-          ...submitData,
-          reference_code: initialData?.reference_code || Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000),
-          situacao: 'ativo',
+          description: values.description,
+          date: new Date(values.scheduledDate).toISOString(),
+          recurrence: values.recurrence,
           phone: values.phone || userPhone,
-          user_id: userId, // Use targetUserId when updating for client
-          // Campos obrigatórios apenas do AddedByField
-          creatorName: values.name,
+          name: values.name,
+          situacao: 'ativo',
+          status: 'pending',
         };
         
         console.log('📋 Updating reminder with ID:', initialData.id);
         console.log('📋 Update data:', updateData);
-        const result = await updateScheduledTransaction({ ...updateData, id: initialData.id });
+        const result = await updateLembrete(initialData.id, updateData);
         console.log('✅ Update request sent', result);
       }
       
@@ -201,7 +192,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
   // Delete handler
   const handleDelete = async () => {
     if (initialData) {
-      await deleteScheduledTransaction(initialData.id);
+      await deleteLembrete(initialData.id);
       onOpenChange(false);
       setDeleteDialogOpen(false);
       // Call onSuccess callback if provided

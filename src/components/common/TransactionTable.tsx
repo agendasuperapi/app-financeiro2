@@ -208,7 +208,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                             transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
                           )}
                         >
-                          {transaction.type === 'income' ? '+' : '-'}
                           {hideValues ? renderHiddenValue() : formatCurrency(Math.abs(transaction.amount), currency)}
                         </div>
                       </div>
@@ -225,7 +224,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                       transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
                     )}
                   >
-                    {transaction.type === 'income' ? '+' : '-'}
                     {hideValues ? renderHiddenValue() : formatCurrency(Math.abs(transaction.amount), currency)}
                   </TableCell>
                   <TableCell className="pl-2 pr-2 w-[12%] min-w-[90px]">

@@ -19,7 +19,7 @@ INSERT INTO public.tbl_lembrete (
 SELECT 
     id,
     user_id,
-    codigo_trans,
+    "codigo-trans",
     name,
     amount,
     description,

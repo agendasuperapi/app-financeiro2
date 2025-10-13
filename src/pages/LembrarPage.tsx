@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +33,7 @@ import {
 } from 'date-fns';
 import { toast } from 'sonner';
 import AddContaForm from '@/components/contas/AddContaForm';
+import ReminderForm from '@/components/lembretes/ReminderForm';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -352,27 +353,13 @@ const LembrarPage = () => {
             )}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4 mb-4 lg:mb-6">
             <h1 className="text-xl md:text-2xl lg:text-3xl font-bold">Lembrar</h1>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2 w-full sm:w-auto">
-                  <Plus className="h-4 w-4" />
-                  <span>Adicionar</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md mx-4 w-full">
-                <DialogHeader>
-                  <DialogTitle>Agendar Lembrete</DialogTitle>
-                </DialogHeader>
-                <AddContaForm
-                  onSuccess={() => {
-                    setIsAddDialogOpen(false);
-                    loadContas();
-                  }}
-                  onCancel={() => setIsAddDialogOpen(false)}
-                  targetUserId={targetUserId}
-                />
-              </DialogContent>
-            </Dialog>
+            <Button 
+              className="flex items-center gap-2 w-full sm:w-auto"
+              onClick={() => setIsAddDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              <span>Adicionar</span>
+            </Button>
           </div>
           
           {/* Filtros */}
@@ -723,28 +710,34 @@ const LembrarPage = () => {
           </Card>
         </div>
         
+        {/* Dialog de Adição */}
+        <ReminderForm
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          mode="create"
+          onSuccess={() => {
+            setIsAddDialogOpen(false);
+            loadContas();
+          }}
+          targetUserId={targetUserId}
+        />
+
         {/* Dialog de Edição */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-md mx-4 w-full">
-            <DialogHeader>
-              <DialogTitle>Editar Lembrete</DialogTitle>
-            </DialogHeader>
-            <AddContaForm
-              initialData={editingConta}
-              mode="edit"
-              onSuccess={() => {
-                setIsEditDialogOpen(false);
-                setEditingConta(null);
-                loadContas();
-              }}
-              onCancel={() => {
-                setIsEditDialogOpen(false);
-                setEditingConta(null);
-              }}
-              targetUserId={targetUserId}
-            />
-          </DialogContent>
-        </Dialog>
+        <ReminderForm
+          open={isEditDialogOpen}
+          onOpenChange={(open) => {
+            setIsEditDialogOpen(open);
+            if (!open) setEditingConta(null);
+          }}
+          initialData={editingConta}
+          mode="edit"
+          onSuccess={() => {
+            setIsEditDialogOpen(false);
+            setEditingConta(null);
+            loadContas();
+          }}
+          targetUserId={targetUserId}
+        />
 
         {/* Dialog de Confirmação de Exclusão */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

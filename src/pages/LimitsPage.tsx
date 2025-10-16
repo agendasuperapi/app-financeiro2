@@ -39,31 +39,33 @@ const LimitsPage: React.FC = () => {
     return options;
   }, []);
 
-  // Separar limites/metas por tipo (receita vs despesa) e filtrar por mês selecionado
+  // Separar limites/metas por tipo (receita vs despesa)
+  // Filtro por mês aplica apenas aos limites de despesa
   const { incomeLimits, expenseLimits } = useMemo(() => {
     const allLimits = goals || [];
     const income: Goal[] = [];
     const expense: Goal[] = [];
 
-    // Calcular início e fim do mês selecionado
+    // Calcular início e fim do mês selecionado (apenas para despesas)
     const [year, month] = selectedMonth.split('-').map(Number);
     const monthStart = new Date(year, month - 1, 1);
     const monthEnd = new Date(year, month, 0, 23, 59, 59);
 
     allLimits.forEach(limit => {
-      // Verificar se o limite pertence ao mês selecionado
-      const limitStart = limit.startDate ? new Date(limit.startDate) : null;
-      const limitEnd = limit.endDate ? new Date(limit.endDate) : null;
-      
-      const isInSelectedMonth = limitStart && limitEnd && 
-        limitStart <= monthEnd && limitEnd >= monthStart;
-
-      if (!isInSelectedMonth) return;
-
       if (limit.type === 'income') {
+        // Metas (receitas) não são filtradas por mês
         income.push(limit);
       } else {
-        expense.push(limit);
+        // Limites (despesas) são filtrados por mês selecionado
+        const limitStart = limit.startDate ? new Date(limit.startDate) : null;
+        const limitEnd = limit.endDate ? new Date(limit.endDate) : null;
+        
+        const isInSelectedMonth = limitStart && limitEnd && 
+          limitStart <= monthEnd && limitEnd >= monthStart;
+
+        if (isInSelectedMonth) {
+          expense.push(limit);
+        }
       }
     });
 

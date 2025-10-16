@@ -12,11 +12,12 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface LimiteCardProps {
   limit: Goal;
+  selectedMonth?: string;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
-export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete }) => {
+export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, selectedMonth, onEdit, onDelete }) => {
   const { currency } = usePreferences();
   const { transactions } = useApp();
   const [spentAmount, setSpentAmount] = useState(0);
@@ -74,14 +75,25 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
   useEffect(() => {
     const fetchSpentAmount = async () => {
       try {
-        const startDate = limit.startDate || limit.start_date;
-        const endDate = limit.endDate || limit.end_date;
+        // Se selectedMonth for fornecido, usar esse período
+        // Senão, usar as datas do limite
+        let startStr: string | undefined;
+        let endStr: string | undefined;
+        
+        if (selectedMonth) {
+          const [year, month] = selectedMonth.split('-').map(Number);
+          startStr = `${year}-${String(month).padStart(2, '0')}-01`;
+          const lastDay = new Date(year, month, 0).getDate();
+          endStr = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+        } else {
+          const startDate = limit.startDate || limit.start_date;
+          const endDate = limit.endDate || limit.end_date;
+          startStr = normalizeDateString(startDate);
+          endStr = normalizeDateString(endDate);
+        }
         
         console.log('🔍 Fetching spent amount for limit:', limit.name);
-        console.log('📅 Date range (raw):', { startDate, endDate });
-        
-        const startStr = normalizeDateString(startDate);
-        const endStr = normalizeDateString(endDate);
+        console.log('📅 Date range:', { startStr, endStr, selectedMonth });
         
         if (!startStr) {
           console.log('❌ No start date found');
@@ -97,10 +109,9 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
           .from('poupeja_categories')
           .select('id, name')
           .eq('name', categoryName)
-          .single();
+          .maybeSingle();
 
         console.log('🏷️ Category found:', category);
-        console.log('🏷️ Category error:', categoryError);
 
         if (!category) {
           console.log('❌ Category not found for name:', categoryName);
@@ -131,7 +142,6 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
         const transactions = (txData as any[]) || [];
 
         console.log('💰 Transactions found:', transactions);
-        console.log('💰 Transactions error:', error);
 
         if (error) {
           console.error('Error fetching transactions:', error);
@@ -141,7 +151,6 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
         // Calculate sum (values already come with correct sign from database)
         const totalAmount = transactions?.reduce((sum, transaction) => sum + transaction.amount, 0) || 0;
         
-        console.log('💰 Transactions:', transactions);
         console.log('💰 Total amount:', totalAmount);
         setSpentAmount(totalAmount);
 
@@ -162,7 +171,7 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
     };
 
     fetchSpentAmount();
-  }, [limit, transactions]);
+  }, [limit, transactions, selectedMonth]);
 
   // Calcular valores
   const limitAmount = limit.targetAmount || limit.target_amount || 0;
@@ -171,10 +180,16 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
   const progressPercentage = limitAmount > 0 ? (currentValue / limitAmount) * 100 : 0;
 
   // Formatação de período
-  const startDate = limit.startDate || limit.start_date;
-  const endDate = limit.endDate || limit.end_date;
-  
   const formatPeriod = () => {
+    if (selectedMonth) {
+      // Usar o mês selecionado do filtro
+      const [year, month] = selectedMonth.split('-').map(Number);
+      const date = new Date(year, month - 1, 1);
+      return format(date, 'MMM/yyyy', { locale: ptBR });
+    }
+    
+    // Fallback para as datas do banco (se não tiver selectedMonth)
+    const startDate = limit.startDate || limit.start_date;
     if (!startDate) return 'Período não definido';
 
     const toLocalDate = (val: string | Date) => {
@@ -183,24 +198,13 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, onEdit, onDelete 
       const s = normalizeDateString(val);
       if (!s) return null as unknown as Date;
       if (s.length === 10) {
-        // Parse 'yyyy-MM-dd' as local date to avoid timezone shift
         return parse(s, 'yyyy-MM-dd', new Date());
       }
       return new Date(val);
     };
 
     const start = toLocalDate(startDate as any);
-    const end = endDate ? toLocalDate(endDate as any) : null;
-
     if (!start || isNaN(start.getTime())) return 'Período não definido';
-
-    if (end && !isNaN(end.getTime())) {
-      const sameMonthYear = start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
-      if (sameMonthYear) {
-        return format(start, 'MMM/yyyy', { locale: ptBR });
-      }
-      return `${format(start, 'MMM/yyyy', { locale: ptBR })} - ${format(end, 'MMM/yyyy', { locale: ptBR })}`;
-    }
 
     return format(start, 'MMM/yyyy', { locale: ptBR });
   };

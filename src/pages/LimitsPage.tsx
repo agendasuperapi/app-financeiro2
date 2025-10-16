@@ -39,37 +39,22 @@ const LimitsPage: React.FC = () => {
   }, []);
 
   // Separar limites/metas por tipo (receita vs despesa)
-  // Filtro por mês aplica apenas aos limites de despesa
+  // Puxar todos os cadastros sem filtrar
   const { incomeLimits, expenseLimits } = useMemo(() => {
     const allLimits = goals || [];
     const income: Goal[] = [];
     const expense: Goal[] = [];
 
-    // Calcular início e fim do mês selecionado (apenas para despesas)
-    const [year, month] = selectedMonth.split('-').map(Number);
-    const monthStart = new Date(year, month - 1, 1);
-    const monthEnd = new Date(year, month, 0, 23, 59, 59);
-
     allLimits.forEach(limit => {
       if (limit.type === 'income') {
-        // Metas (receitas) não são filtradas por mês
         income.push(limit);
       } else {
-        // Limites (despesas) são filtrados por mês selecionado
-        const limitStart = limit.startDate ? new Date(limit.startDate) : null;
-        const limitEnd = limit.endDate ? new Date(limit.endDate) : null;
-        
-        const isInSelectedMonth = limitStart && limitEnd && 
-          limitStart <= monthEnd && limitEnd >= monthStart;
-
-        if (isInSelectedMonth) {
-          expense.push(limit);
-        }
+        expense.push(limit);
       }
     });
 
     return { incomeLimits: income, expenseLimits: expense };
-  }, [goals, selectedMonth]);
+  }, [goals]);
 
   const handlePreviousMonth = () => {
     const [year, month] = selectedMonth.split('-').map(Number);
@@ -233,6 +218,7 @@ const LimitsPage: React.FC = () => {
                 <LimiteCard
                   key={limit.id}
                   limit={limit}
+                  selectedMonth={selectedMonth}
                   onEdit={handleEditLimit}
                   onDelete={handleDeleteLimit}
                 />

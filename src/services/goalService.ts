@@ -100,9 +100,10 @@ export const addGoal = async (goal: Omit<Goal, "id" | "transactions">, categoryI
         color: goal.color || "#06465f",
         category_id: categoryId,
         type: type,
+        frequencia: 'Mensal',
         user_id: session.user.id,
         conta_id: goal.conta_id
-      })
+      } as any)
       .select()
       .single();
 

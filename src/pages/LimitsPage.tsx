@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, User, Target, TrendingDown, TrendingUp } from 'lucide-react';
+import { Plus, User, Target, TrendingDown, TrendingUp, Calendar } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import { LimiteCard } from '@/components/limits/LimiteCard';
 import { AddLimitModal } from '@/components/limits/AddLimitModal';
@@ -10,32 +10,66 @@ import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useApp } from '@/contexts/AppContext';
 import { Goal } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const LimitsPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingLimit, setEditingLimit] = useState<Goal | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
   const { goals, getGoals, deleteGoal, isClientView, selectedUser, refetchClientData } = useClientAwareData();
   const { categories } = useApp();
   const { t } = usePreferences();
 
-  // Separar limites/metas por tipo (receita vs despesa)
+  // Gerar opções de meses (últimos 6 meses + próximos 6 meses)
+  const monthOptions = useMemo(() => {
+    const options = [];
+    const currentDate = new Date();
+    
+    for (let i = -6; i <= 6; i++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
+      const value = format(date, 'yyyy-MM');
+      const label = format(date, 'MMMM yyyy', { locale: ptBR });
+      options.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
+    }
+    
+    return options;
+  }, []);
+
+  // Filtrar limites/metas por mês selecionado e separar por tipo
   const { incomeLimits, expenseLimits } = useMemo(() => {
     const allLimits = goals || [];
     const income: Goal[] = [];
     const expense: Goal[] = [];
 
+    // Calcular início e fim do mês selecionado
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const monthStart = startOfMonth(new Date(year, month - 1));
+    const monthEnd = endOfMonth(new Date(year, month - 1));
+
     allLimits.forEach(limit => {
-      if (limit.type === 'income') {
-        income.push(limit);
-      } else {
-        expense.push(limit);
+      // Verificar se o limite está dentro do mês selecionado
+      const limitStart = limit.startDate ? new Date(limit.startDate) : null;
+      const limitEnd = limit.endDate ? new Date(limit.endDate) : null;
+
+      // O limite é válido se o período do limite sobrepõe com o mês selecionado
+      const isInMonth = limitStart && limitEnd && 
+        limitStart <= monthEnd && limitEnd >= monthStart;
+
+      if (isInMonth) {
+        if (limit.type === 'income') {
+          income.push(limit);
+        } else {
+          expense.push(limit);
+        }
       }
     });
 
     return { incomeLimits: income, expenseLimits: expense };
-  }, [goals]);
+  }, [goals, selectedMonth]);
 
   const handleAddLimit = () => {
     setIsAddModalOpen(true);
@@ -124,6 +158,24 @@ const LimitsPage: React.FC = () => {
               </Button>
             </div>
           )}
+        </div>
+
+        {/* Filtro de Mês */}
+        <div className="flex items-center gap-3 p-4 bg-card rounded-lg border">
+          <Calendar className="h-5 w-5 text-muted-foreground" />
+          <span className="text-sm font-medium">Filtrar por mês:</span>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {monthOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Seção de Metas (Receitas) */}

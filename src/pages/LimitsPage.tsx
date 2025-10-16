@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, User, Target, TrendingDown, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import MainLayout from '@/components/layout/MainLayout';
 import { LimiteCard } from '@/components/limits/LimiteCard';
@@ -198,7 +198,7 @@ const LimitsPage: React.FC = () => {
                 <ChevronLeft className="h-5 w-5" />
               </Button>
               <span className="text-base font-medium min-w-[140px] text-center">
-                {format(new Date(selectedMonth + '-01'), 'MMMM yyyy', { locale: ptBR })
+                {format(parse(selectedMonth, 'yyyy-MM', new Date()), 'MMMM yyyy', { locale: ptBR })
                   .split(' ')
                   .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                   .join(' ')}

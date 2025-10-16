@@ -182,9 +182,8 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, selectedMonth, on
   // Formatação de período
   const formatPeriod = () => {
     if (selectedMonth) {
-      // Usar o mês selecionado do filtro
-      const [year, month] = selectedMonth.split('-').map(Number);
-      const date = new Date(year, month - 1, 1); // month - 1 porque Date usa 0-11 para meses
+      // Usar o mês selecionado do filtro com parse para evitar erros de fuso
+      const date = parse(selectedMonth, 'yyyy-MM', new Date());
       const formatted = format(date, 'MMM/yyyy', { locale: ptBR });
       return formatted.charAt(0).toUpperCase() + formatted.slice(1);
     }

@@ -296,7 +296,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                 </div>
                 <p className="text-xs lg:text-sm font-medium opacity-90">{t('stats.currentBalance')}</p>
               </div>
-              <p className={`text-lg lg:text-xl xl:text-2xl font-bold text-white`}>
+              <p className={`text-base lg:text-lg xl:text-xl font-bold text-white`}>
                 {hideValues ? renderHiddenValue() : formatCurrency(adjustedBalance, currency)}
               </p>
             </div>

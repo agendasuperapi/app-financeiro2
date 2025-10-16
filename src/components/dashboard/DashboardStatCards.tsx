@@ -296,7 +296,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                 </div>
                 <p className="text-xs lg:text-sm font-medium opacity-90">{t('stats.currentBalance')}</p>
               </div>
-              <p className={`text-xl lg:text-2xl xl:text-3xl font-bold text-white`}>
+              <p className={`text-lg lg:text-xl xl:text-2xl font-bold text-white`}>
                 {hideValues ? renderHiddenValue() : formatCurrency(adjustedBalance, currency)}
               </p>
             </div>
@@ -324,7 +324,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                   {t('common.income')}
                 </p>
               </div>
-              <p id="income-card-value" className="text-xl lg:text-2xl xl:text-3xl font-bold text-green-700 dark:text-green-400">
+              <p id="income-card-value" className="text-lg lg:text-xl xl:text-2xl font-bold text-green-700 dark:text-green-400">
                 {hideValues ? renderHiddenValue() : formatCurrency(totalIncomesCombined, currency)}
               </p>
             </div>
@@ -352,7 +352,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                   {t('common.expense')}
                 </p>
               </div>
-              <p id="expense-card-value" className="text-xl lg:text-2xl xl:text-3xl font-bold text-red-700 dark:text-red-400">
+              <p id="expense-card-value" className="text-lg lg:text-xl xl:text-2xl font-bold text-red-700 dark:text-red-400">
                 {hideValues ? renderHiddenValue() : formatCurrency(totalExpensesCombined, currency)}
               </p>
             </div>
@@ -377,7 +377,7 @@ const DashboardStatCards: React.FC<DashboardStatCardsProps> = ({
                   Saldo Mês
                 </p>
               </div>
-              <p className={`text-xl lg:text-2xl xl:text-3xl font-bold ${monthlyCumulativeBalance >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}>
+              <p className={`text-lg lg:text-xl xl:text-2xl font-bold ${monthlyCumulativeBalance >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}>
                 {hideValues ? renderHiddenValue() : formatCurrency(monthlyCumulativeBalance, currency)}
               </p>
             </div>

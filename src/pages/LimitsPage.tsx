@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, User, Target, TrendingDown, TrendingUp } from 'lucide-react';
+import { Plus, User, Target, TrendingDown, TrendingUp, Calendar } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import MainLayout from '@/components/layout/MainLayout';
 import { LimiteCard } from '@/components/limits/LimiteCard';
 import { AddLimitModal } from '@/components/limits/AddLimitModal';
@@ -16,17 +19,47 @@ const LimitsPage: React.FC = () => {
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingLimit, setEditingLimit] = useState<Goal | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
   const { goals, getGoals, deleteGoal, isClientView, selectedUser, refetchClientData } = useClientAwareData();
   const { categories } = useApp();
   const { t } = usePreferences();
 
-  // Separar limites/metas por tipo (receita vs despesa)
+  // Gerar opções de meses (últimos 6 e próximos 6 meses)
+  const monthOptions = useMemo(() => {
+    const options = [];
+    const today = new Date();
+    
+    for (let i = -6; i <= 6; i++) {
+      const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
+      const value = format(date, 'yyyy-MM');
+      const label = format(date, 'MMMM yyyy', { locale: ptBR });
+      options.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
+    }
+    
+    return options;
+  }, []);
+
+  // Separar limites/metas por tipo (receita vs despesa) e filtrar por mês selecionado
   const { incomeLimits, expenseLimits } = useMemo(() => {
     const allLimits = goals || [];
     const income: Goal[] = [];
     const expense: Goal[] = [];
 
+    // Calcular início e fim do mês selecionado
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd = new Date(year, month, 0, 23, 59, 59);
+
     allLimits.forEach(limit => {
+      // Verificar se o limite pertence ao mês selecionado
+      const limitStart = limit.startDate ? new Date(limit.startDate) : null;
+      const limitEnd = limit.endDate ? new Date(limit.endDate) : null;
+      
+      const isInSelectedMonth = limitStart && limitEnd && 
+        limitStart <= monthEnd && limitEnd >= monthStart;
+
+      if (!isInSelectedMonth) return;
+
       if (limit.type === 'income') {
         income.push(limit);
       } else {
@@ -35,7 +68,7 @@ const LimitsPage: React.FC = () => {
     });
 
     return { incomeLimits: income, expenseLimits: expense };
-  }, [goals]);
+  }, [goals, selectedMonth]);
 
   const handleAddLimit = () => {
     setIsAddModalOpen(true);
@@ -153,6 +186,25 @@ const LimitsPage: React.FC = () => {
               <TrendingDown className="h-5 w-5 text-red-600" />
               <h2 className="text-2xl font-semibold">Limites de Despesa</h2>
             </div>
+            
+            {/* Filtro de Mês */}
+            <div className="flex items-center gap-3 p-4 bg-card rounded-lg border">
+              <Calendar className="h-5 w-5 text-muted-foreground" />
+              <span className="text-sm font-medium">Filtrar por mês:</span>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {expenseLimits.map((limit) => (
                 <LimiteCard

@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, User, Target, TrendingDown, TrendingUp, Calendar } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, User, Target, TrendingDown, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import MainLayout from '@/components/layout/MainLayout';
@@ -71,6 +70,20 @@ const LimitsPage: React.FC = () => {
 
     return { incomeLimits: income, expenseLimits: expense };
   }, [goals, selectedMonth]);
+
+  const handlePreviousMonth = () => {
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const date = new Date(year, month - 1, 1);
+    date.setMonth(date.getMonth() - 1);
+    setSelectedMonth(format(date, 'yyyy-MM'));
+  };
+
+  const handleNextMonth = () => {
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const date = new Date(year, month - 1, 1);
+    date.setMonth(date.getMonth() + 1);
+    setSelectedMonth(format(date, 'yyyy-MM'));
+  };
 
   const handleAddLimit = () => {
     setIsAddModalOpen(true);
@@ -190,21 +203,29 @@ const LimitsPage: React.FC = () => {
             </div>
             
             {/* Filtro de Mês */}
-            <div className="flex items-center gap-3 p-4 bg-card rounded-lg border">
-              <Calendar className="h-5 w-5 text-muted-foreground" />
-              <span className="text-sm font-medium">Filtrar por mês:</span>
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex items-center justify-center gap-4 p-4 bg-card rounded-lg border">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePreviousMonth}
+                className="h-8 w-8"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <span className="text-base font-medium min-w-[140px] text-center">
+                {format(new Date(selectedMonth + '-01'), 'MMMM yyyy', { locale: ptBR })
+                  .split(' ')
+                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(' ')}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleNextMonth}
+                className="h-8 w-8"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -24,14 +24,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -43,21 +37,7 @@ import { useClientView } from '@/contexts/ClientViewContext';
 
 const limitFormSchema = z.object({
   categoryId: z.string().min(1, 'Selecione uma categoria'),
-  periodType: z.enum(['monthly', 'specific']),
-  monthYear: z.string().optional(),
-  startDate: z.date().optional(),
-  endDate: z.date().optional(),
   limitAmount: z.number().min(0.01, 'Digite um valor maior que zero'),
-}).refine((data) => {
-  if (data.periodType === 'monthly' && !data.monthYear) {
-    return false;
-  }
-  if (data.periodType === 'specific' && (!data.startDate || !data.endDate)) {
-    return false;
-  }
-  return true;
-}, {
-  message: 'Complete todos os campos obrigatórios',
 });
 
 type LimitFormValues = z.infer<typeof limitFormSchema>;
@@ -118,27 +98,9 @@ export const AddLimitModal: React.FC<AddLimitModalProps> = ({
 const form = useForm<LimitFormValues>({
   resolver: zodResolver(limitFormSchema),
   defaultValues: {
-    periodType: 'monthly',
     limitAmount: 0,
   },
 });
-
-  const periodType = form.watch('periodType');
-
-  // Gerar opções de mês/ano (próximos 12 meses)
-  const generateMonthOptions = () => {
-    const options = [];
-    const currentDate = new Date();
-    
-    for (let i = 0; i < 12; i++) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
-      const value = format(date, 'yyyy-MM');
-      const label = format(date, 'MMMM yyyy', { locale: ptBR });
-      options.push({ value, label });
-    }
-    
-    return options;
-  };
 
   const onSubmit = async (data: LimitFormValues) => {
     try {
@@ -147,38 +109,26 @@ const form = useForm<LimitFormValues>({
       // Encontrar categoria selecionada
       const selectedCategory = categories.find(cat => cat.id === data.categoryId);
       
-      let startDate: string;
-      let endDate: string | undefined;
-      let limitName: string;
+      // Usar o mês atual como período padrão
+      const currentDate = new Date();
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      const lastDay = new Date(year, month, 0).getDate();
+      
+      const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+      const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      const limitName = `${selectedCategory?.name || 'Limite'} - ${format(currentDate, 'MMM/yyyy', { locale: ptBR })}`;
 
-      if (data.periodType === 'monthly' && data.monthYear) {
-        // Para período mensal (usar strings de data para evitar problemas de fuso)
-        const [year, month] = data.monthYear.split('-');
-        const start = new Date(parseInt(year), parseInt(month) - 1, 1);
-        const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
-        
-        startDate = `${year}-${month}-01`;
-        endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
-        limitName = `${selectedCategory?.name || 'Limite'} - ${format(start, 'MMM/yyyy', { locale: ptBR })}`;
-      } else if (data.startDate && data.endDate) {
-        // Para período específico
-        startDate = format(data.startDate, 'yyyy-MM-dd');
-        endDate = format(data.endDate, 'yyyy-MM-dd');
-        limitName = `${selectedCategory?.name || 'Limite'} - ${format(data.startDate, 'dd/MM')} a ${format(data.endDate, 'dd/MM/yyyy')}`;
-      } else {
-        throw new Error('Dados de período inválidos');
-      }
-
-// Criar o limite como um goal
-const newLimit = {
-  name: limitName,
-  targetAmount: data.limitAmount,
-  currentAmount: 0,
-  startDate,
-  endDate,
-  color: selectedCategory?.color || '#3B82F6',
-  transactions: [], // Propriedade obrigatória do tipo Goal
-};
+      // Criar o limite como um goal
+      const newLimit = {
+        name: limitName,
+        targetAmount: data.limitAmount,
+        currentAmount: 0,
+        startDate,
+        endDate,
+        color: selectedCategory?.color || '#3B82F6',
+        transactions: [], // Propriedade obrigatória do tipo Goal
+      };
 
       if (selectedUser?.id) {
         // Inserir diretamente para o cliente visualizado
@@ -258,143 +208,6 @@ const newLimit = {
                 </FormItem>
               )}
             />
-
-            {/* Tipo de Período */}
-            <FormField
-              control={form.control}
-              name="periodType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Período</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="flex flex-col space-y-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="monthly" id="monthly" />
-                        <Label htmlFor="monthly">Mensal</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="specific" id="specific" />
-                        <Label htmlFor="specific">Período Específico</Label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Campos condicionais de data */}
-            {periodType === 'monthly' ? (
-              <FormField
-                control={form.control}
-                name="monthYear"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mês/Ano</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o mês e ano" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {generateMonthOptions().map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Data de Início</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "dd/MM/yyyy")
-                              ) : (
-                                <span>Selecionar data</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                            className="p-3 pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Data de Fim</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "dd/MM/yyyy")
-                              ) : (
-                                <span>Selecionar data</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                            className="p-3 pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
 
             {/* Valor do Limite */}
             <FormField

@@ -184,8 +184,9 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, selectedMonth, on
     if (selectedMonth) {
       // Usar o mês selecionado do filtro
       const [year, month] = selectedMonth.split('-').map(Number);
-      const date = new Date(year, month - 1, 1);
-      return format(date, 'MMM/yyyy', { locale: ptBR });
+      const date = new Date(year, month - 1, 1); // month - 1 porque Date usa 0-11 para meses
+      const formatted = format(date, 'MMM/yyyy', { locale: ptBR });
+      return formatted.charAt(0).toUpperCase() + formatted.slice(1);
     }
     
     // Fallback para as datas do banco (se não tiver selectedMonth)
@@ -206,7 +207,8 @@ export const LimiteCard: React.FC<LimiteCardProps> = ({ limit, selectedMonth, on
     const start = toLocalDate(startDate as any);
     if (!start || isNaN(start.getTime())) return 'Período não definido';
 
-    return format(start, 'MMM/yyyy', { locale: ptBR });
+    const formatted = format(start, 'MMM/yyyy', { locale: ptBR });
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
   };
 
   // Determinar cor da barra de progresso

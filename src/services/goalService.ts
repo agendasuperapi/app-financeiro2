@@ -145,8 +145,9 @@ export const updateGoal = async (goal: Omit<Goal, "transactions">): Promise<Goal
         deadline: goal.deadline,
         color: goal.color,
         category_id: goal.category_id,
+        frequencia: 'Mensal',
         conta_id: goal.conta_id
-      })
+      } as any)
       .eq("id", goal.id)
       .select()
       .single();

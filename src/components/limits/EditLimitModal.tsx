@@ -24,14 +24,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
-import { format, parse } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -43,21 +35,7 @@ import { Goal } from '@/types';
 
 const editLimitFormSchema = z.object({
   categoryId: z.string().min(1, 'Selecione uma categoria'),
-  periodType: z.enum(['monthly', 'specific']),
-  monthYear: z.string().optional(),
-  startDate: z.date().optional(),
-  endDate: z.date().optional(),
   limitAmount: z.number().min(0.01, 'Digite um valor maior que zero'),
-}).refine((data) => {
-  if (data.periodType === 'monthly' && !data.monthYear) {
-    return false;
-  }
-  if (data.periodType === 'specific' && (!data.startDate || !data.endDate)) {
-    return false;
-  }
-  return true;
-}, {
-  message: 'Complete todos os campos obrigatórios',
 });
 
 type EditLimitFormValues = z.infer<typeof editLimitFormSchema>;
@@ -125,7 +103,6 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
   const form = useForm<EditLimitFormValues>({
     resolver: zodResolver(editLimitFormSchema),
     defaultValues: {
-      periodType: 'monthly',
       limitAmount: 0,
     },
   });
@@ -133,56 +110,16 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
   // Update form when limit changes
   useEffect(() => {
     if (limit && categories.length > 0) {
-      console.log('Populating form with limit:', limit);
-      
-      const startStr = (limit.startDate || limit.start_date || '').split('T')[0];
-      const endStrRaw = (limit.endDate || limit.end_date || '');
-      const endStr = endStrRaw ? endStrRaw.split('T')[0] : '';
-
-      // Parse as local dates to avoid timezone shifts
-      const startDate = startStr ? parse(startStr, 'yyyy-MM-dd', new Date()) : null;
-      const endDate = endStr ? parse(endStr, 'yyyy-MM-dd', new Date()) : null;
-      
-      // Get category_id from limit object
       const categoryId = (limit as any).category_id || '';
-      console.log('Using category_id:', categoryId);
       
-      // Determine period type (same month/year and starts on day 1)
-      const isMonthly = !!(startDate && endDate &&
-        startDate.getDate() === 1 &&
-        endDate.getMonth() === startDate.getMonth() &&
-        endDate.getFullYear() === startDate.getFullYear());
-
       const formData = {
         categoryId: categoryId,
-        periodType: (isMonthly ? 'monthly' : 'specific') as 'monthly' | 'specific',
-        monthYear: isMonthly && startDate ? format(startDate, 'yyyy-MM') : undefined,
-        startDate: !isMonthly && startDate ? startDate : undefined,
-        endDate: !isMonthly && endDate ? endDate : undefined,
         limitAmount: limit.targetAmount || limit.target_amount || 0,
       };
       
-      console.log('Form data to populate:', formData);
       form.reset(formData);
     }
   }, [limit, categories, form]);
-
-  const periodType = form.watch('periodType');
-
-  // Gerar opções de mês/ano (próximos 12 meses)
-  const generateMonthOptions = () => {
-    const options = [];
-    const currentDate = new Date();
-    
-    for (let i = 0; i < 12; i++) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
-      const value = format(date, 'yyyy-MM');
-      const label = format(date, 'MMMM yyyy', { locale: ptBR });
-      options.push({ value, label });
-    }
-    
-    return options;
-  };
 
   const onSubmit = async (data: EditLimitFormValues) => {
     if (!limit) return;
@@ -193,35 +130,15 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
       // Encontrar categoria selecionada
       const selectedCategory = categories.find(cat => cat.id === data.categoryId);
       
-      let startDate: string;
-      let endDate: string | undefined;
-      let limitName: string;
-
-      if (data.periodType === 'monthly' && data.monthYear) {
-        // Para período mensal (usar strings de data para evitar problemas de fuso)
-        const [year, month] = data.monthYear.split('-');
-        const start = new Date(parseInt(year), parseInt(month) - 1, 1);
-        const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
-        
-        startDate = `${year}-${month}-01`;
-        endDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
-        limitName = `${selectedCategory?.name || 'Limite'} - ${format(start, 'MMM/yyyy', { locale: ptBR })}`;
-      } else if (data.startDate && data.endDate) {
-        // Para período específico
-        startDate = format(data.startDate, 'yyyy-MM-dd');
-        endDate = format(data.endDate, 'yyyy-MM-dd');
-        limitName = `${selectedCategory?.name || 'Limite'} - ${format(data.startDate, 'dd/MM')} a ${format(data.endDate, 'dd/MM/yyyy')}`;
-      } else {
-        throw new Error('Dados de período inválidos');
-      }
+      const limitName = `${selectedCategory?.name || 'Limite'}`;
 
       // Atualizar o limite
       const updatedLimit = {
         name: limitName,
         targetAmount: data.limitAmount,
         currentAmount: limit.currentAmount || limit.current_amount || 0,
-        startDate,
-        endDate,
+        startDate: '',
+        endDate: '',
         color: selectedCategory?.color || '#3B82F6',
         category_id: data.categoryId,
         transactions: limit.transactions || [],
@@ -245,13 +162,9 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {limit?.type === 'income' ? 'Editar Meta de Receita' : 'Editar Limite'}
-          </DialogTitle>
+          <DialogTitle>Editar Limite</DialogTitle>
           <DialogDescription>
-            {limit?.type === 'income' 
-              ? 'Altere as configurações da sua meta de receitas.'
-              : 'Altere as configurações do seu limite de gastos.'}
+            Configure um limite de gastos para uma categoria específica.
           </DialogDescription>
         </DialogHeader>
 
@@ -263,9 +176,7 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
               name="categoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {limit?.type === 'income' ? 'Categoria de Receita' : 'Categoria'}
-                  </FormLabel>
+                  <FormLabel>Categoria</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -291,152 +202,13 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
               )}
             />
 
-            {/* Tipo de Período */}
-            <FormField
-              control={form.control}
-              name="periodType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Período</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      className="flex flex-col space-y-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="monthly" id="monthly" />
-                        <Label htmlFor="monthly">Mensal</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="specific" id="specific" />
-                        <Label htmlFor="specific">Período Específico</Label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Campos condicionais de data */}
-            {periodType === 'monthly' ? (
-              <FormField
-                control={form.control}
-                name="monthYear"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mês/Ano</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o mês e ano" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {generateMonthOptions().map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Data de Início</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "dd/MM/yyyy")
-                              ) : (
-                                <span>Selecionar data</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                            className="p-3 pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Data de Fim</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "dd/MM/yyyy")
-                              ) : (
-                                <span>Selecionar data</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                            className="p-3 pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
             {/* Valor do Limite */}
             <FormField
               control={form.control}
               name="limitAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {limit?.type === 'income' ? 'Valor da Meta' : 'Valor do Limite'}
-                  </FormLabel>
+                  <FormLabel>Valor do Limite</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -468,7 +240,7 @@ export const EditLimitModal: React.FC<EditLimitModalProps> = ({
                 Cancelar
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Salvando...' : (limit?.type === 'income' ? 'Atualizar Meta' : 'Atualizar Limite')}
+                {isLoading ? 'Salvando...' : 'Salvar Limite'}
               </Button>
             </DialogFooter>
           </form>

@@ -24,6 +24,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -107,15 +109,23 @@ const form = useForm<LimitFormValues>({
       // Encontrar categoria selecionada
       const selectedCategory = categories.find(cat => cat.id === data.categoryId);
       
-      const limitName = `${selectedCategory?.name || 'Limite'}`;
+      // Usar o mês atual como período padrão
+      const currentDate = new Date();
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      const lastDay = new Date(year, month, 0).getDate();
+      
+      const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+      const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      const limitName = `${selectedCategory?.name || 'Limite'} - ${format(currentDate, 'MMM/yyyy', { locale: ptBR })}`;
 
       // Criar o limite como um goal
       const newLimit = {
         name: limitName,
         targetAmount: data.limitAmount,
         currentAmount: 0,
-        startDate: '',
-        endDate: '',
+        startDate,
+        endDate,
         color: selectedCategory?.color || '#3B82F6',
         transactions: [], // Propriedade obrigatória do tipo Goal
       };
@@ -123,17 +133,20 @@ const form = useForm<LimitFormValues>({
       if (selectedUser?.id) {
         // Inserir diretamente para o cliente visualizado
         const { error } = await supabase
-          .from('poupeja_goals')
-          .insert({
-            name: newLimit.name,
-            target_amount: newLimit.targetAmount,
-            current_amount: newLimit.currentAmount || 0,
-            frequencia: 'Mensal',
-            color: newLimit.color,
-            category_id: data.categoryId,
-            type: 'expense',
-            user_id: selectedUser.id,
-          } as any);
+  .from('poupeja_goals')
+  .insert({
+    name: newLimit.name,
+    target_amount: newLimit.targetAmount,
+    current_amount: newLimit.currentAmount || 0,
+    start_date: newLimit.startDate,
+    end_date: newLimit.endDate,
+    color: newLimit.color,
+    category_id: data.categoryId,
+    type: 'expense',
+    user_id: selectedUser.id,
+  })
+          .select()
+          .single();
 
         if (error) throw error;
       } else {

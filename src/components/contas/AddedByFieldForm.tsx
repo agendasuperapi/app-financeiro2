@@ -208,11 +208,10 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
     if (!newName.trim()) return;
 
     try {
-      const { error } = await (supabase as any)
+      const { error} = await (supabase as any)
         .from('poupeja_transactions')
         .insert({
           name: newName.trim(),
-          amount: 0,
           description: 'Nome adicionado automaticamente',
           category: 'Outros',
           type: 'expense',

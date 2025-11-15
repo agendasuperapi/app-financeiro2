@@ -47,7 +47,7 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
         // Buscar nomes e telefones únicos da view "view_cadastros_unificados"
         const { data, error } = await (supabase as any)
           .from('view_cadastros_unificados')
-          .select('name, phone, id, tipo')
+          .select('primeiro_name, phone, id, tipo')
           .eq('id', user.id);
 
         console.log('📊 Dados retornados da view:', data);
@@ -59,11 +59,11 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
         const uniqueUsers = Array.from(
           new Map(
             (data as any[])
-              .filter(item => item.name && item.name.trim() !== '')
+              .filter(item => item.primeiro_name && item.primeiro_name.trim() !== '')
               .map(item => [
-                item.name,
+                item.primeiro_name,
                 {
-                  name: item.name,
+                  name: item.primeiro_name,
                   phone: item.phone || ''
                 }
               ])

@@ -42,12 +42,16 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Usuário não autenticado');
 
+        console.log('🔍 User ID autenticado:', user.id);
+
         // Buscar nomes e telefones únicos da view "view_cadastros_unificados"
         const { data, error } = await (supabase as any)
           .from('view_cadastros_unificados')
-          .select('name, phone')
-          .eq('user_id', user.id)
-          .not('name', 'is', null);
+          .select('name, phone, user_id')
+          .eq('user_id', user.id);
+
+        console.log('📊 Dados retornados da view:', data);
+        console.log('❌ Erro da query:', error);
 
         if (error) throw error;
 
@@ -66,6 +70,7 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
           ).values()
         ).sort((a, b) => a.name.localeCompare(b.name));
 
+        console.log('✅ Usuários únicos processados:', uniqueUsers);
         setUsers(uniqueUsers);
 
         // Se há apenas uma opção, definir automaticamente
@@ -74,7 +79,7 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
           form.setValue('phone', uniqueUsers[0].phone);
         }
       } catch (error) {
-        console.error('Erro ao carregar nomes da view cadastros unificados:', error);
+        console.error('❌ Erro ao carregar nomes da view cadastros unificados:', error);
         setUsers([]);
       } finally {
         setLoading(false);

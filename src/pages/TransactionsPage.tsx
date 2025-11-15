@@ -160,14 +160,30 @@ const TransactionsPage = () => {
       });
     }
 
-    // Ordenar por data (coluna date) respeitando fuso horário
+    // Ordenar por data (coluna date) respeitando fuso horário - mais recente primeiro
     filtered.sort((a, b) => {
       const dateA = createLocalDate(a.date as string, effectiveTimezone).getTime();
       const dateB = createLocalDate(b.date as string, effectiveTimezone).getTime();
       return dateB - dateA;
     });
 
-    setFilteredTransactions(filtered);
+    // Agrupar por mês (mantendo ordem mais recente primeiro dentro de cada mês)
+    const grouped: { [key: string]: Transaction[] } = {};
+    filtered.forEach(transaction => {
+      const transactionDate = createLocalDate(transaction.date as string, effectiveTimezone);
+      const monthKey = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
+      
+      if (!grouped[monthKey]) {
+        grouped[monthKey] = [];
+      }
+      grouped[monthKey].push(transaction);
+    });
+
+    // Ordenar os meses (mais recente primeiro) e flatten
+    const sortedMonths = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+    const sortedFiltered = sortedMonths.flatMap(monthKey => grouped[monthKey]);
+
+    setFilteredTransactions(sortedFiltered);
   };
 
   const handleAddTransaction = () => {

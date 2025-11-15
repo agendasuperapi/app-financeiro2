@@ -38,10 +38,15 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
       try {
         setLoading(true);
 
+        // Obter user_id autenticado
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Usuário não autenticado');
+
         // Buscar nomes e telefones únicos da view "view_cadastros_unificados"
         const { data, error } = await (supabase as any)
-          .from('poupeja_transactions')
-          .select('name')
+          .from('view_cadastros_unificados')
+          .select('name, phone')
+          .eq('user_id', user.id)
           .not('name', 'is', null);
 
         if (error) throw error;
@@ -55,7 +60,7 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
                 item.name,
                 {
                   name: item.name,
-                  phone: ''
+                  phone: item.phone || ''
                 }
               ])
           ).values()

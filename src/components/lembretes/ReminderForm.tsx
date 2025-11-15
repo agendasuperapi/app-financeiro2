@@ -134,7 +134,6 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           status: 'pending',
           phone: values.phone || userPhone,
           name: values.name,
-          amount: 0,
         };
         
         console.log('📋 Creating reminder with data:', reminderData);

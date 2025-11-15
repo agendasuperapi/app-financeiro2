@@ -70,11 +70,10 @@ export const getScheduledTransactions = async (userId?: string): Promise<Schedul
 
     if (error) throw error;
 
-    // Filtrar apenas transações com formato "agenda", status pending/paid/recebido e amount ≠ 0
+    // Filtrar apenas transações com formato "agenda" e status pending/paid/recebido
     const filteredData = (data || []).filter((item: any) => 
       item.formato === 'agenda' &&
-      (item.status === 'pending' || item.status === 'paid' || item.status === 'recebido') && 
-      item.amount !== 0
+      (item.status === 'pending' || item.status === 'paid' || item.status === 'recebido')
     );
 
     return filteredData.map((item: any) => {

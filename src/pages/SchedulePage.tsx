@@ -170,9 +170,6 @@ const SchedulePage = () => {
   };
 
   const filteredTransactions = localScheduledTransactions.filter(transaction => {
-    // Não mostrar transações com valor 0 na aba Agendamentos
-    if (transaction.amount === 0) return false;
-    
     if (selectedRecurrence) {
       const normalizedTransactionRecurrence = normalizeRecurrence(transaction.recurrence);
       if (normalizedTransactionRecurrence !== selectedRecurrence) return false;

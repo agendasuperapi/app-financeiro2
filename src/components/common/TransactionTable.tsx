@@ -27,7 +27,7 @@ import CategoryIcon from '../categories/CategoryIcon';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { useAppContext } from '@/contexts/AppContext';
-import { ArrowUp, ArrowDown, Edit, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, Edit, Trash2, ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -132,6 +132,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     Data de Criação
                     {sortField === 'created_at' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
                     {sortField === 'created_at' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
+                    {sortField !== 'created_at' && <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
                   </div>
                 </Button>
               </TableHead>
@@ -146,6 +147,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     {t('common.type')}
                     {sortField === 'type' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
                     {sortField === 'type' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
+                    {sortField !== 'type' && <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
                   </div>
                 </Button>
               </TableHead>
@@ -160,6 +162,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     {t('common.date')}
                     {sortField === 'date' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
                     {sortField === 'date' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
+                    {sortField !== 'date' && <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
                   </div>
                 </Button>
               </TableHead>
@@ -174,6 +177,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     {t('common.category')}
                     {sortField === 'category' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
                     {sortField === 'category' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
+                    {sortField !== 'category' && <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
                   </div>
                 </Button>
               </TableHead>
@@ -188,6 +192,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     {t('common.description')}
                     {sortField === 'description' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
                     {sortField === 'description' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
+                    {sortField !== 'description' && <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
                   </div>
                 </Button>
               </TableHead>
@@ -202,6 +207,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     {t('common.amount')}
                     {sortField === 'amount' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
                     {sortField === 'amount' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
+                    {sortField !== 'amount' && <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
                   </div>
                 </Button>
               </TableHead>

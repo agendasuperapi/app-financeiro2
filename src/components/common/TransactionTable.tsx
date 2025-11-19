@@ -37,6 +37,7 @@ interface TransactionTableProps {
 }
 
 type SortDirection = 'asc' | 'desc' | null;
+type SortField = 'created_at' | 'date' | 'type' | 'category' | 'description' | 'amount';
 
 const TransactionTable: React.FC<TransactionTableProps> = ({
   transactions,
@@ -47,6 +48,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const { t, currency } = usePreferences();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // Default to newest first
 
   // Timezone handling (client view or own account)
@@ -69,10 +71,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     setTransactionToDelete(null);
   };
 
-  const handleDateSort = () => {
-    if (sortDirection === null || sortDirection === 'desc') {
-      setSortDirection('asc');
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
+      setSortField(field);
       setSortDirection('desc');
     }
   };
@@ -81,16 +84,36 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     if (!sortDirection) return transactions;
     
     return [...transactions].sort((a, b) => {
-      const dateA = createLocalDate((a.date as string) || '', effectiveTimezone);
-      const dateB = createLocalDate((b.date as string) || '', effectiveTimezone);
-      
-      if (sortDirection === 'asc') {
-        return dateA.getTime() - dateB.getTime();
-      } else {
-        return dateB.getTime() - dateA.getTime();
+      let comparison = 0;
+
+      switch (sortField) {
+        case 'created_at':
+          const createdA = new Date((a.created_at as string) || '').getTime();
+          const createdB = new Date((b.created_at as string) || '').getTime();
+          comparison = createdA - createdB;
+          break;
+        case 'date':
+          const dateA = createLocalDate((a.date as string) || '', effectiveTimezone);
+          const dateB = createLocalDate((b.date as string) || '', effectiveTimezone);
+          comparison = dateA.getTime() - dateB.getTime();
+          break;
+        case 'type':
+          comparison = (a.type || '').localeCompare(b.type || '');
+          break;
+        case 'category':
+          comparison = (a.category || '').localeCompare(b.category || '');
+          break;
+        case 'description':
+          comparison = (a.description || '').localeCompare(b.description || '');
+          break;
+        case 'amount':
+          comparison = a.amount - b.amount;
+          break;
       }
+      
+      return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [transactions, sortDirection, effectiveTimezone]);
+  }, [transactions, sortField, sortDirection, effectiveTimezone]);
 
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm">
@@ -98,24 +121,90 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         <Table className="w-full table-fixed">
           <TableHeader className="bg-muted/30">
             <TableRow>
-              <TableHead className="w-[12%] min-w-[70px]">{t('common.type')}</TableHead>
-              <TableHead className="w-[13%] min-w-[90px]">
+              <TableHead className="w-[13%] min-w-[100px]">
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-auto p-0 font-medium text-xs hover:bg-transparent"
-                  onClick={handleDateSort}
+                  onClick={() => handleSort('created_at')}
                 >
                   <div className="flex items-center gap-1">
-                    {t('common.date')}
-                    {sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
-                    {sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
+                    Data de Criação
+                    {sortField === 'created_at' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
+                    {sortField === 'created_at' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
                   </div>
                 </Button>
               </TableHead>
-              <TableHead className="w-[22%] min-w-[110px]">{t('common.category')}</TableHead>
-              <TableHead className="w-[24%] hidden lg:table-cell">{t('common.description')}</TableHead>
-              <TableHead className="text-right w-[10%] min-w-[75px] hidden lg:table-cell">{t('common.amount')}</TableHead>
+              <TableHead className="w-[11%] min-w-[70px]">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 font-medium text-xs hover:bg-transparent"
+                  onClick={() => handleSort('type')}
+                >
+                  <div className="flex items-center gap-1">
+                    {t('common.type')}
+                    {sortField === 'type' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
+                    {sortField === 'type' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
+                  </div>
+                </Button>
+              </TableHead>
+              <TableHead className="w-[12%] min-w-[90px]">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 font-medium text-xs hover:bg-transparent"
+                  onClick={() => handleSort('date')}
+                >
+                  <div className="flex items-center gap-1">
+                    {t('common.date')}
+                    {sortField === 'date' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
+                    {sortField === 'date' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
+                  </div>
+                </Button>
+              </TableHead>
+              <TableHead className="w-[13%] min-w-[80px]">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 font-medium text-xs hover:bg-transparent"
+                  onClick={() => handleSort('category')}
+                >
+                  <div className="flex items-center gap-1">
+                    {t('common.category')}
+                    {sortField === 'category' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
+                    {sortField === 'category' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
+                  </div>
+                </Button>
+              </TableHead>
+              <TableHead className="w-[20%] hidden lg:table-cell">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 font-medium text-xs hover:bg-transparent"
+                  onClick={() => handleSort('description')}
+                >
+                  <div className="flex items-center gap-1">
+                    {t('common.description')}
+                    {sortField === 'description' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
+                    {sortField === 'description' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
+                  </div>
+                </Button>
+              </TableHead>
+              <TableHead className="text-right w-[10%] min-w-[75px] hidden lg:table-cell">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 font-medium text-xs hover:bg-transparent"
+                  onClick={() => handleSort('amount')}
+                >
+                  <div className="flex items-center gap-1">
+                    {t('common.amount')}
+                    {sortField === 'amount' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
+                    {sortField === 'amount' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
+                  </div>
+                </Button>
+              </TableHead>
               <TableHead className="w-[12%] min-w-[90px]">{t('common.actions') || 'Ações'}</TableHead>
             </TableRow>
           </TableHeader>
@@ -134,6 +223,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     (transaction as any).__isSimulation && "border-dashed border-orange-400"
                   )}
                 >
+                  <TableCell className="font-medium text-[10px] md:text-xs">
+                    <div className="text-muted-foreground">
+                      {transaction.created_at 
+                        ? formatDateTime(transaction.created_at as string, effectiveTimezone)
+                        : '-'
+                      }
+                    </div>
+                  </TableCell>
                   <TableCell>
                     {transaction.type === 'income' ? (
                       <div className="flex flex-col gap-1">

@@ -12,6 +12,7 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { DependentsService } from '@/services/dependentsService';
 
 interface AddedByFieldFormProps {
   form: UseFormReturn<any>; // Aceita qualquer tipo de form
@@ -216,37 +217,10 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
 
       const fullPhone = newPhone.trim() ? `${countryCode}${newPhone.trim()}` : '';
       
-      // Buscar uma categoria padrão
-      const { data: categories } = await (supabase as any)
-        .from('poupeja_categories')
-        .select('id')
-        .eq('user_id', user.id)
-        .limit(1);
+      // Usar o DependentsService para adicionar na tbl_depentes
+      await DependentsService.addDependent(user.id, newName.trim(), fullPhone);
 
-      const categoryId = categories && categories.length > 0 ? categories[0].id : null;
-
-      // Gerar reference_code único
-      const referenceCode = Math.floor(Date.now() / 1000).toString();
-      
-      // Inserir transação temporária para registrar o nome/telefone
-      const { error } = await (supabase as any)
-        .from('poupeja_transactions')
-        .insert({
-          user_id: user.id,
-          name: newName.trim(),
-          phone: fullPhone,
-          description: 'Cadastro de usuário',
-          amount: 0,
-          date: new Date().toISOString(),
-          type: 'expense',
-          category_id: categoryId,
-          reference_code: referenceCode
-        });
-
-      if (error) {
-        console.error('Erro detalhado:', error);
-        throw error;
-      }
+      console.log('✅ Dependente adicionado com sucesso!');
 
       // Adicionar à lista local
       const newUser = { name: newName.trim(), phone: fullPhone };
@@ -262,8 +236,8 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
       setCountryCode('55');
       setDialogOpen(false);
     } catch (error) {
-      console.error('❌ Erro ao adicionar usuário:', error);
-      alert('Erro ao adicionar usuário. Verifique o console para mais detalhes.');
+      console.error('❌ Erro ao adicionar dependente:', error);
+      alert('Erro ao adicionar dependente. Verifique o console para mais detalhes.');
     }
   };
 

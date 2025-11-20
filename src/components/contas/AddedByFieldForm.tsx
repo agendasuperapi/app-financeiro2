@@ -205,23 +205,46 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
   };
 
   const handleAddUser = async () => {
-    if (!newName.trim()) return;
+    if (!newName.trim()) {
+      return;
+    }
 
     try {
-      const { error} = await (supabase as any)
+      // Obter user_id autenticado
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const fullPhone = newPhone.trim() ? `${countryCode}${newPhone.trim()}` : '';
+      
+      // Buscar uma categoria padrão
+      const { data: categories } = await (supabase as any)
+        .from('poupeja_categories')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      const categoryId = categories && categories.length > 0 ? categories[0].id : null;
+
+      // Inserir transação temporária para registrar o nome/telefone
+      const { error } = await (supabase as any)
         .from('poupeja_transactions')
         .insert({
+          user_id: user.id,
           name: newName.trim(),
-          description: 'Nome adicionado automaticamente',
-          category: 'Outros',
+          phone: fullPhone,
+          description: 'Cadastro de usuário',
+          amount: 0,
+          date: new Date().toISOString(),
           type: 'expense',
-          conta: 'Sistema'
+          category_id: categoryId
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro detalhado:', error);
+        throw error;
+      }
 
       // Adicionar à lista local
-      const fullPhone = newPhone.trim() ? `${countryCode}${newPhone.trim()}` : '';
       const newUser = { name: newName.trim(), phone: fullPhone };
       setUsers([...users, newUser].sort((a, b) => a.name.localeCompare(b.name)));
       
@@ -235,7 +258,8 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
       setCountryCode('55');
       setDialogOpen(false);
     } catch (error) {
-      console.error('Erro ao adicionar nome:', error);
+      console.error('❌ Erro ao adicionar usuário:', error);
+      alert('Erro ao adicionar usuário. Verifique o console para mais detalhes.');
     }
   };
 

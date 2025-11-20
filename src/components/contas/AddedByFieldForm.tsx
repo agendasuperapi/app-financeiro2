@@ -225,6 +225,9 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
 
       const categoryId = categories && categories.length > 0 ? categories[0].id : null;
 
+      // Gerar reference_code único
+      const referenceCode = Math.floor(Date.now() / 1000).toString();
+      
       // Inserir transação temporária para registrar o nome/telefone
       const { error } = await (supabase as any)
         .from('poupeja_transactions')
@@ -236,7 +239,8 @@ const AddedByFieldForm: React.FC<AddedByFieldFormProps> = ({ form }) => {
           amount: 0,
           date: new Date().toISOString(),
           type: 'expense',
-          category_id: categoryId
+          category_id: categoryId,
+          reference_code: referenceCode
         });
 
       if (error) {

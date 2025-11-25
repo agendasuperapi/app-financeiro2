@@ -169,7 +169,7 @@ export const useTransactionForm = ({
         await updateTransaction(initialData.id, {
           type: processedValues.type,
           amount: processedValues.amount,
-          category: processedValues.category,
+          category_id: processedValues.category,
           description: processedValues.description || '',
           date: new Date(processedValues.date).toISOString(),
           goalId: processedValues.goalId,

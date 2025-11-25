@@ -65,7 +65,17 @@ export const useTransactionForm = ({
       // Update category when type changes
       const categories = await getCategoriesByType(type);
       if (categories.length > 0) {
-        form.setValue('category', categories[0].id, { shouldValidate: true });
+        // Buscar categoria específica baseada no tipo
+        let targetCategory;
+        if (type === 'income') {
+          targetCategory = categories.find(cat => cat.name === 'Receita');
+        } else if (type === 'expense') {
+          targetCategory = categories.find(cat => cat.name === 'Outros');
+        }
+        
+        // Se não encontrar a categoria específica, usar a primeira disponível
+        const categoryId = targetCategory?.id || categories[0].id;
+        form.setValue('category', categoryId, { shouldValidate: true });
       }
     }
   };

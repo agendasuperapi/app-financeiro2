@@ -88,7 +88,6 @@ serve(async (req) => {
 async function sendWebPush(tokenData: any, title: string, body: string, data: any) {
   console.log('🌐 Tentando enviar Web Push...');
   
-  const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
   const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
   let vapidEmail = Deno.env.get('VAPID_EMAIL') || 'mailto:contato@seuapp.com';
   
@@ -97,29 +96,59 @@ async function sendWebPush(tokenData: any, title: string, body: string, data: an
     vapidEmail = `mailto:${vapidEmail}`;
   }
 
-  if (!vapidPublicKey || !vapidPrivateKey) {
-    console.error('❌ Chaves VAPID não configuradas!');
-    throw new Error('Chaves VAPID não estão configuradas. Configure VAPID_PUBLIC_KEY e VAPID_PRIVATE_KEY nos secrets.');
+  if (!vapidPrivateKey) {
+    console.error('❌ Chave VAPID privada não configurada!');
+    throw new Error('VAPID_PRIVATE_KEY não está configurada nos secrets.');
   }
 
-  console.log('✅ Chaves VAPID encontradas');
+  console.log('✅ Chave VAPID encontrada');
 
-  const webpush = await import('https://esm.sh/web-push@3.6.6?target=deno');
-  webpush.default.setVapidDetails(vapidEmail, vapidPublicKey, vapidPrivateKey);
+  // Usar @pushforge/builder que é compatível com Deno
+  const { buildPushHTTPRequest } = await import('https://esm.sh/@pushforge/builder@1.0.0');
 
   console.log('📝 Token de subscription:', tokenData.token.substring(0, 100) + '...');
   
   const subscription = JSON.parse(tokenData.token);
   
-  const payload = JSON.stringify({
+  const payload = {
     title,
     body,
     data,
     tag: data?.reminderId || 'default'
+  };
+
+  const message = {
+    payload,
+    options: {
+      ttl: 3600,
+      urgency: 'normal' as const,
+      topic: 'notifications'
+    },
+    adminContact: vapidEmail
+  };
+
+  console.log('📤 Construindo requisição de push...');
+  
+  const { endpoint, headers, body: requestBody } = await buildPushHTTPRequest({
+    privateJWK: vapidPrivateKey,
+    message,
+    subscription
   });
 
-  console.log('📤 Enviando notificação...');
-  await webpush.default.sendNotification(subscription, payload);
+  console.log('📡 Enviando notificação para:', endpoint.substring(0, 50) + '...');
+  
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers,
+    body: requestBody
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('❌ Erro na resposta:', response.status, errorText);
+    throw new Error(`Push notification failed: ${response.status} ${errorText}`);
+  }
+
   console.log('✅ Web Push enviado com sucesso!');
 }
 

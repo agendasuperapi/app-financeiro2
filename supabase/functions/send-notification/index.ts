@@ -13,20 +13,27 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, title, body, data } = await req.json();
+    const requestBody = await req.json();
+    console.log('📥 Request body recebido:', JSON.stringify(requestBody));
+    
+    const { userId, title, body, data } = requestBody;
+    console.log(`📱 userId extraído: ${userId}`);
+    console.log(`📝 title: ${title}`);
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log(`📱 Buscando tokens para usuário: ${userId}`);
+    console.log(`🔍 Buscando tokens para usuário: ${userId}`);
     
     // Buscar tokens do usuário
     const { data: tokens, error } = await supabase
       .from('notification_tokens')
       .select('*')
       .eq('user_id', userId);
+    
+    console.log(`📊 Query executada para user_id: ${userId}`);
 
     if (error) {
       console.error('❌ Erro ao buscar tokens:', error);

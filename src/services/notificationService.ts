@@ -152,8 +152,10 @@ export async function sendTestNotification() {
       return false;
     }
 
-    console.log('🧪 Enviando notificação de teste...');
-    const { error } = await supabase.functions.invoke('send-notification', {
+    console.log('🧪 Enviando notificação de teste para userId:', user.id);
+    console.log('🧪 Dados completos do usuário:', user);
+    
+    const { data, error } = await supabase.functions.invoke('send-notification', {
       body: {
         userId: user.id,
         title: '🧪 Teste de Notificação',
@@ -167,6 +169,7 @@ export async function sendTestNotification() {
       return false;
     }
 
+    console.log('✅ Resposta da função send-notification:', data);
     console.log('✅ Notificação de teste enviada');
     return true;
   } catch (error) {

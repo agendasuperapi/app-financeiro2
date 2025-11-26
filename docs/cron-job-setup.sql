@@ -15,8 +15,9 @@
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
--- Passo 2: Remover cron job existente (se houver)
-SELECT cron.unschedule('check-reminders-every-5-minutes');
+-- Passo 2: Remover cron job existente (APENAS se já existir um job com esse nome)
+-- Descomente a linha abaixo APENAS se você já tiver criado esse cron job antes:
+-- SELECT cron.unschedule('check-reminders-every-5-minutes');
 
 -- Passo 3: Criar novo cron job que executa a cada 5 minutos
 SELECT cron.schedule(

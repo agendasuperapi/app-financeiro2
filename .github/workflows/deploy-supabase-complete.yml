@@ -280,7 +280,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     needs: deploy
-    if: ${{ inputs.build_apk != 'false' || github.event_name == 'push' }}
+    if: ${{ github.event_name == 'push' || inputs.build_apk != 'false' }}
     
     steps:
     - name: 📦 Checkout Repository
@@ -297,6 +297,44 @@ jobs:
 
     - name: 🏗️ Build Project
       run: npm run build
+
+    - name: 🌐 Upload Web Build to Hostinger
+      env:
+        HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST }}
+        HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER }}
+        HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+        HOSTINGER_FTP_DIR: ${{ secrets.HOSTINGER_FTP_DIR || '/public_html' }}
+      continue-on-error: true
+      run: |
+        if [ -z "$HOSTINGER_FTP_HOST" ] || [ -z "$HOSTINGER_FTP_USER" ] || [ -z "$HOSTINGER_FTP_PASSWORD" ]; then
+          echo "⚠️  Hostinger FTP secrets not configured. Skipping web upload."
+          echo "💡 To enable upload, configure HOSTINGER_FTP_HOST, HOSTINGER_FTP_USER, and HOSTINGER_FTP_PASSWORD secrets"
+          exit 0
+        fi
+        
+        echo "🌐 Uploading web build to Hostinger..."
+        
+        # Install lftp for FTP upload
+        sudo apt-get update
+        sudo apt-get install -y lftp
+        
+        # Create FTP script to upload all files from dist folder
+        cat > /tmp/ftp_upload_web.txt << EOF
+        set ftp:ssl-allow no
+        set ftp:passive-mode yes
+        open -u $HOSTINGER_FTP_USER,$HOSTINGER_FTP_PASSWORD $HOSTINGER_FTP_HOST
+        cd $HOSTINGER_FTP_DIR
+        mirror -R -e dist/ ./
+        bye
+        EOF
+        
+        # Upload web build
+        if lftp -f /tmp/ftp_upload_web.txt; then
+          echo "✅ Web build uploaded to Hostinger successfully!"
+          echo "🌐 Web app available at: https://$HOSTINGER_FTP_HOST"
+        else
+          echo "⚠️  FTP upload failed for web build"
+        fi
 
     - name: 🤖 Setup Java JDK
       uses: actions/setup-java@v4
@@ -378,14 +416,19 @@ jobs:
 
     - name: ✅ Build Summary
       run: |
-        echo "🎉 APK Build completed successfully!"
+        echo "🎉 Build and Deploy completed successfully!"
         echo ""
         echo "📋 Summary:"
         echo "- ✅ Project built"
+        echo "- ✅ Web build generated"
         echo "- ✅ Android platform configured"
         echo "- ✅ APK generated"
         if [ -n "${{ secrets.HOSTINGER_FTP_HOST }}" ]; then
+          echo "- ✅ Web build uploaded to Hostinger"
           echo "- ✅ APK uploaded to Hostinger"
+          echo ""
+          echo "🌐 Web App on Hostinger:"
+          echo "- URL: https://${{ secrets.HOSTINGER_FTP_HOST }}"
           echo ""
           echo "📱 APK Files on Hostinger:"
           echo "- Latest: https://${{ secrets.HOSTINGER_FTP_HOST }}/app-debug.apk"
@@ -394,4 +437,5 @@ jobs:
           echo "- ⚠️  Hostinger upload skipped (secrets not configured)"
         fi
         echo ""
-        echo "💾 Artifact: APK saved as GitHub artifact for download (available for 30 days)"
+        echo "💾 Artifacts:"
+        echo "- APK saved as GitHub artifact for download (available for 30 days)"

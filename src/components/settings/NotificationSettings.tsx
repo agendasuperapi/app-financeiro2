@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, BellOff, Smartphone, Globe } from 'lucide-react';
-import { registerWebPushNotification, checkNotificationPermission } from '@/services/notificationService';
+import { Bell, BellOff, Smartphone, Globe, ExternalLink } from 'lucide-react';
+import { registerWebPushNotification, checkNotificationPermission, unregisterWebPushNotification } from '@/services/notificationService';
 import { requestPushNotificationPermission } from '@/hooks/usePushNotifications';
 import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export const NotificationSettings = () => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDisabling, setIsDisabling] = useState(false);
   const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
@@ -46,6 +48,24 @@ export const NotificationSettings = () => {
       toast.error('❌ Erro ao ativar notificações');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDisableNotifications = async () => {
+    setIsDisabling(true);
+    try {
+      const success = await unregisterWebPushNotification();
+      if (success) {
+        toast.success('✅ Notificações desativadas com sucesso!');
+        setPermission('default');
+      } else {
+        toast.error('❌ Erro ao desativar notificações');
+      }
+    } catch (error) {
+      console.error('Error disabling notifications:', error);
+      toast.error('❌ Erro ao desativar notificações');
+    } finally {
+      setIsDisabling(false);
     }
   };
 
@@ -91,9 +111,18 @@ export const NotificationSettings = () => {
             </div>
 
             {permission === 'denied' && (
-              <div className="text-xs text-muted-foreground p-3 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
-                As notificações estão bloqueadas. Para ativar, vá nas configurações do navegador e permita notificações para este site.
-              </div>
+              <Alert className="bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
+                <AlertDescription className="text-sm space-y-3">
+                  <p className="font-medium">🚫 As notificações estão bloqueadas</p>
+                  <p>Para ativar, você precisa desbloquear nas configurações do navegador:</p>
+                  <ol className="list-decimal list-inside space-y-1 ml-2">
+                    <li>Clique no ícone de <strong>cadeado</strong> na barra de endereços</li>
+                    <li>Procure por <strong>"Notificações"</strong></li>
+                    <li>Mude para <strong>"Permitir"</strong></li>
+                    <li>Recarregue esta página</li>
+                  </ol>
+                </AlertDescription>
+              </Alert>
             )}
 
             {permission !== 'granted' && permission !== 'denied' && (
@@ -103,6 +132,17 @@ export const NotificationSettings = () => {
                 disabled={isLoading}
               >
                 {isLoading ? 'Ativando...' : 'Ativar Notificações'}
+              </Button>
+            )}
+
+            {permission === 'granted' && (
+              <Button 
+                onClick={handleDisableNotifications} 
+                variant="outline"
+                className="w-full"
+                disabled={isDisabling}
+              >
+                {isDisabling ? 'Desativando...' : 'Desativar Notificações'}
               </Button>
             )}
           </div>

@@ -18,6 +18,7 @@ import CategoriesTab from '@/components/profile/CategoriesTab';
 import ContasTab from '@/components/profile/ContasTab';
 import PreferencesTab from '@/components/settings/PreferencesTab';
 import PlansTab from '@/components/profile/PlansTab';
+import { NotificationSettings } from '@/components/settings/NotificationSettings';
 
 const ProfilePage = () => {
   const { t } = usePreferences();
@@ -371,7 +372,7 @@ const ProfilePage = () => {
         <div className="grid gap-6">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <div className="sticky z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-6 md:top-0" style={{ top: 'calc(4rem + env(safe-area-inset-top))' }}>
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 gap-1 p-1 h-auto bg-muted/50">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-8 gap-1 p-1 h-auto bg-muted/50">
                 <TabsTrigger 
                   value="info" 
                   className="text-xs md:text-sm px-2 py-3 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
@@ -401,6 +402,12 @@ const ProfilePage = () => {
                   className="text-xs md:text-sm px-2 py-3 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
                 >
                   Dependentes
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="notifications" 
+                  className="text-xs md:text-sm px-2 py-3 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
+                >
+                  Notificações
                 </TabsTrigger>
                 <TabsTrigger 
                   value="password" 
@@ -542,6 +549,10 @@ const ProfilePage = () => {
               
               <TabsContent value="dependents" className="mt-0">
                 <DependentsTab />
+              </TabsContent>
+              
+              <TabsContent value="notifications" className="mt-0">
+                <NotificationSettings />
               </TabsContent>
               
               <TabsContent value="password" className="mt-0">

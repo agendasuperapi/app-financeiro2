@@ -5,6 +5,10 @@ on:
     branches: [ main, developer ]
     paths: 
       - 'supabase/**'
+      - 'src/**'
+      - 'package.json'
+      - 'capacitor.config.ts'
+      - 'vite.config.ts'
   workflow_dispatch:
     inputs:
       setup_mode:
@@ -18,6 +22,11 @@ on:
       force_all_migrations:
         description: 'Force apply all migrations (including pre-installation)'
         default: false
+        required: false
+        type: boolean
+      build_apk:
+        description: 'Build and upload APK to Hostinger'
+        default: true
         required: false
         type: boolean
 
@@ -267,3 +276,122 @@ jobs:
         echo "2. Check Supabase project is active"
         echo "3. Verify permissions for the access token"
         echo "4. Check the Actions logs for specific error messages"
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: ${{ inputs.build_apk != 'false' || github.event_name == 'push' }}
+    
+    steps:
+    - name: 📦 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - name: 📥 Install Dependencies
+      run: npm ci
+
+    - name: 🏗️ Build Project
+      run: npm run build
+
+    - name: 🤖 Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: 📱 Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: 🔧 Add Android Platform
+      run: |
+        if [ ! -d "android" ]; then
+          echo "📱 Adding Android platform..."
+          npx cap add android --yes
+        else
+          echo "✅ Android platform already exists"
+        fi
+
+    - name: 🔄 Sync Capacitor
+      run: npx cap sync android
+
+    - name: 🔨 Build APK
+      working-directory: ./android
+      run: |
+        echo "🔨 Building APK..."
+        chmod +x ./gradlew
+        ./gradlew assembleDebug
+        
+        echo "📦 APK build completed!"
+        echo "📁 APK location: app/build/outputs/apk/debug/app-debug.apk"
+        ls -lh app/build/outputs/apk/debug/
+
+    - name: 📤 Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug-apk
+        path: android/app/build/outputs/apk/debug/app-debug.apk
+        retention-days: 30
+
+    - name: 🌐 Upload to Hostinger via FTP
+      env:
+        HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST }}
+        HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER }}
+        HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+        HOSTINGER_FTP_DIR: ${{ secrets.HOSTINGER_FTP_DIR || '/public_html' }}
+      continue-on-error: true
+      run: |
+        if [ -z "$HOSTINGER_FTP_HOST" ] || [ -z "$HOSTINGER_FTP_USER" ] || [ -z "$HOSTINGER_FTP_PASSWORD" ]; then
+          echo "⚠️  Hostinger FTP secrets not configured. Skipping upload."
+          echo "💡 To enable upload, configure HOSTINGER_FTP_HOST, HOSTINGER_FTP_USER, and HOSTINGER_FTP_PASSWORD secrets"
+          exit 0
+        fi
+        
+        echo "🌐 Uploading APK to Hostinger..."
+        
+        # Install lftp for FTP upload
+        sudo apt-get update
+        sudo apt-get install -y lftp
+        
+        # Create FTP script
+        cat > /tmp/ftp_upload.txt << EOF
+        set ftp:ssl-allow no
+        set ftp:passive-mode yes
+        open -u $HOSTINGER_FTP_USER,$HOSTINGER_FTP_PASSWORD $HOSTINGER_FTP_HOST
+        cd $HOSTINGER_FTP_DIR
+        put android/app/build/outputs/apk/debug/app-debug.apk -o app-debug.apk
+        put android/app/build/outputs/apk/debug/app-debug.apk -o app-debug-$(date +%Y%m%d-%H%M%S).apk
+        bye
+        EOF
+        
+        # Upload APK
+        if lftp -f /tmp/ftp_upload.txt; then
+          echo "✅ APK uploaded to Hostinger successfully!"
+          echo "📱 APK available at: https://$HOSTINGER_FTP_HOST/app-debug.apk"
+        else
+          echo "⚠️  FTP upload failed, but APK is still available as GitHub artifact"
+        fi
+
+    - name: ✅ Build Summary
+      run: |
+        echo "🎉 APK Build completed successfully!"
+        echo ""
+        echo "📋 Summary:"
+        echo "- ✅ Project built"
+        echo "- ✅ Android platform configured"
+        echo "- ✅ APK generated"
+        if [ -n "${{ secrets.HOSTINGER_FTP_HOST }}" ]; then
+          echo "- ✅ APK uploaded to Hostinger"
+          echo ""
+          echo "📱 APK Files on Hostinger:"
+          echo "- Latest: https://${{ secrets.HOSTINGER_FTP_HOST }}/app-debug.apk"
+          echo "- Archived: https://${{ secrets.HOSTINGER_FTP_HOST }}/app-debug-*.apk"
+        else
+          echo "- ⚠️  Hostinger upload skipped (secrets not configured)"
+        fi
+        echo ""
+        echo "💾 Artifact: APK saved as GitHub artifact for download (available for 30 days)"

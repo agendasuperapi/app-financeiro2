@@ -20,7 +20,7 @@ SELECT cron.schedule(
   '*/5 * * * *', -- A cada 5 minutos
   $$
   SELECT net.http_post(
-    url := 'https://SEU_PROJECT_ID.supabase.co/functions/v1/check-reminders',
+    url := 'https://gpttodmpflpzhbgzagcc.supabase.co/functions/v1/check-reminders',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key')

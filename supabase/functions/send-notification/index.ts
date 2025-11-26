@@ -40,7 +40,7 @@ serve(async (req) => {
       throw error;
     }
     
-    console.log(`📋 Tokens encontrados: ${JSON.stringify(tokens)}`);
+    console.log(`📋 Tokens encontrados: ${tokens?.length || 0}`);
     
     if (!tokens || tokens.length === 0) {
       console.log(`⚠️ Nenhum token encontrado para usuário ${userId}`);
@@ -52,15 +52,11 @@ serve(async (req) => {
 
     const results = [];
 
+    // Enviar notificação para todos os tokens usando FCM V1 API
     for (const tokenData of tokens) {
       try {
-        if (tokenData.platform === 'web') {
-          // Enviar Web Push
-          await sendWebPush(tokenData, title, body, data);
-        } else {
-          // Enviar via FCM (Android/iOS)
-          await sendFCM(tokenData, title, body, data);
-        }
+        // Usar FCM V1 API para TODAS as plataformas (web, android, ios)
+        await sendFCMV1(tokenData, title, body, data);
         results.push({ platform: tokenData.platform, success: true });
       } catch (err) {
         console.error(`❌ Erro ao enviar para ${tokenData.platform}:`, err);
@@ -85,98 +81,196 @@ serve(async (req) => {
   }
 });
 
-async function sendWebPush(tokenData: any, title: string, body: string, data: any) {
-  console.log('🌐 Tentando enviar Web Push...');
+/**
+ * Obtém access token OAuth2 para FCM V1 API
+ */
+async function getAccessToken(): Promise<string> {
+  const serviceAccountJson = Deno.env.get('FCM_SERVICE_ACCOUNT_JSON');
   
-  const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
-  let vapidEmail = Deno.env.get('VAPID_EMAIL') || 'mailto:contato@seuapp.com';
-  
-  // Garantir que o email tenha o prefixo mailto:
-  if (!vapidEmail.startsWith('mailto:')) {
-    vapidEmail = `mailto:${vapidEmail}`;
+  if (!serviceAccountJson) {
+    throw new Error('FCM_SERVICE_ACCOUNT_JSON não configurada. Configure nos secrets do Supabase.');
   }
 
-  if (!vapidPrivateKey) {
-    console.error('❌ Chave VAPID privada não configurada!');
-    throw new Error('VAPID_PRIVATE_KEY não está configurada nos secrets.');
+  let serviceAccount: any;
+  try {
+    serviceAccount = JSON.parse(serviceAccountJson);
+  } catch (e) {
+    throw new Error('FCM_SERVICE_ACCOUNT_JSON inválido. Deve ser um JSON válido.');
   }
 
-  console.log('✅ Chave VAPID encontrada');
+  const { private_key, client_email, project_id } = serviceAccount;
 
-  // Usar @pushforge/builder que é compatível com Deno
-  const { buildPushHTTPRequest } = await import('https://esm.sh/@pushforge/builder@1.0.0');
+  if (!private_key || !client_email) {
+    throw new Error('FCM_SERVICE_ACCOUNT_JSON deve conter private_key e client_email');
+  }
 
-  console.log('📝 Token de subscription:', tokenData.token.substring(0, 100) + '...');
+  // Criar JWT para autenticação
+  const now = Math.floor(Date.now() / 1000);
   
-  const subscription = JSON.parse(tokenData.token);
-  
-  const payload = {
-    title,
-    body,
-    data,
-    tag: data?.reminderId || 'default'
+  const jwtPayload = {
+    iss: client_email,
+    sub: client_email,
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600, // 1 hora
+    scope: 'https://www.googleapis.com/auth/firebase.messaging'
   };
 
-  const message = {
-    payload,
-    options: {
-      ttl: 3600,
-      urgency: 'normal' as const,
-      topic: 'notifications'
+  // Importar chave privada e criar JWT
+  // Usar biblioteca JWT para Deno
+  const { create } = await import('https://deno.land/x/djwt@v3.0.2/mod.ts');
+  
+  // Preparar chave privada
+  const keyData = private_key
+    .replace(/\\n/g, '\n')
+    .replace(/-----BEGIN PRIVATE KEY-----/, '')
+    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\s/g, '');
+  
+  const keyBuffer = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
+  
+  const key = await crypto.subtle.importKey(
+    'pkcs8',
+    keyBuffer,
+    {
+      name: 'RSASSA-PKCS1-v1_5',
+      hash: 'SHA-256'
     },
-    adminContact: vapidEmail
-  };
+    false,
+    ['sign']
+  );
 
-  console.log('📤 Construindo requisição de push...');
-  
-  const { endpoint, headers, body: requestBody } = await buildPushHTTPRequest({
-    privateJWK: vapidPrivateKey,
-    message,
-    subscription
+  // Criar e assinar JWT
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const jwt = await create(header, jwtPayload, key);
+
+  // Trocar JWT por access token
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt
+    })
   });
 
-  console.log('📡 Enviando notificação para:', endpoint.substring(0, 50) + '...');
+  if (!tokenResponse.ok) {
+    const errorText = await tokenResponse.text();
+    throw new Error(`Erro ao obter access token: ${tokenResponse.status} ${errorText}`);
+  }
+
+  const tokenData = await tokenResponse.json();
+  return tokenData.access_token;
+}
+
+/**
+ * Envia notificação via FCM V1 API (Recomendado pelo Firebase)
+ * Funciona para Web, Android e iOS
+ * 
+ * IMPORTANTE: Configure FCM_SERVICE_ACCOUNT_JSON nos secrets do Supabase
+ * Obtenha em: Firebase Console > Project Settings > Service Accounts > Generate new private key
+ */
+async function sendFCMV1(tokenData: any, title: string, body: string, data: any) {
+  console.log(`📱 Enviando FCM V1 para ${tokenData.platform}...`);
   
-  const response = await fetch(endpoint, {
+  const serviceAccountJson = Deno.env.get('FCM_SERVICE_ACCOUNT_JSON');
+  
+  if (!serviceAccountJson) {
+    throw new Error('FCM_SERVICE_ACCOUNT_JSON não configurada. Configure nos secrets do Supabase.');
+  }
+
+  let serviceAccount: any;
+  try {
+    serviceAccount = JSON.parse(serviceAccountJson);
+  } catch (e) {
+    throw new Error('FCM_SERVICE_ACCOUNT_JSON inválido.');
+  }
+
+  const projectId = serviceAccount.project_id;
+  
+  if (!projectId) {
+    throw new Error('project_id não encontrado no FCM_SERVICE_ACCOUNT_JSON');
+  }
+
+  // Obter access token
+  const accessToken = await getAccessToken();
+  console.log('✅ Access token obtido');
+
+  // Preparar payload FCM V1
+  const fcmPayload: any = {
+    message: {
+      token: tokenData.token,
+      notification: {
+        title,
+        body
+      },
+      data: {
+        // Garantir que os dados sejam strings (FCM requer strings)
+        ...Object.fromEntries(
+          Object.entries(data || {}).map(([key, value]) => [
+            key,
+            typeof value === 'string' ? value : JSON.stringify(value)
+          ])
+        )
+      },
+      webpush: {
+        fcm_options: {
+          link: '/lembretes'
+        },
+        notification: {
+          title,
+          body,
+          icon: '/app-icon.png',
+          badge: '/app-icon.png'
+        }
+      },
+      android: {
+        notification: {
+          title,
+          body,
+          sound: 'default',
+          icon: 'app_icon',
+          click_action: '/lembretes'
+        }
+      },
+      apns: {
+        payload: {
+          aps: {
+            alert: {
+              title,
+              body
+            },
+            sound: 'default',
+            badge: 1
+          }
+        }
+      }
+    }
+  };
+
+  console.log('📤 Enviando para FCM V1 API...');
+  console.log('📝 Token:', tokenData.token.substring(0, 20) + '...');
+  
+  const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+  const response = await fetch(url, {
     method: 'POST',
-    headers,
-    body: requestBody
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`
+    },
+    body: JSON.stringify(fcmPayload)
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('❌ Erro na resposta:', response.status, errorText);
-    throw new Error(`Push notification failed: ${response.status} ${errorText}`);
+    console.error('❌ Erro FCM V1:', response.status, errorText);
+    throw new Error(`FCM V1 error: ${response.status} ${errorText}`);
   }
 
-  console.log('✅ Web Push enviado com sucesso!');
-}
-
-async function sendFCM(tokenData: any, title: string, body: string, data: any) {
-  const fcmServerKey = Deno.env.get('FCM_SERVER_KEY');
+  const responseData = await response.json();
+  console.log(`✅ FCM V1 enviado para ${tokenData.platform}:`, responseData);
   
-  const response = await fetch('https://fcm.googleapis.com/fcm/send', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `key=${fcmServerKey}`
-    },
-    body: JSON.stringify({
-      to: tokenData.token,
-      notification: {
-        title,
-        body,
-        sound: 'default',
-        badge: '1'
-      },
-      data
-    })
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`FCM error: ${error}`);
-  }
-
-  console.log(`✅ FCM enviado para ${tokenData.platform}`);
+  return responseData;
 }

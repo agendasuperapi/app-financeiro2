@@ -1,106 +1,110 @@
 import { supabase } from '@/integrations/supabase/client';
+import { getFCMToken, setupForegroundMessageListener, messaging } from '@/integrations/firebase/config';
+import { toast } from 'sonner';
 
-// Função para converter chave VAPID
-function urlBase64ToUint8Array(base64String: string) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
-    .replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
-
+/**
+ * Registra notificações push usando FCM (Firebase Cloud Messaging)
+ * Funciona para Web, Android e iOS
+ */
 export async function registerWebPushNotification() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.log('❌ Push notifications não suportadas');
+  // Verificar se o navegador suporta notificações
+  if (!('Notification' in window)) {
+    console.log('❌ Notificações não suportadas neste navegador');
     return false;
   }
 
   try {
-    console.log('🔔 Iniciando registro de notificações web...');
+    console.log('🔔 Iniciando registro de notificações FCM...');
     
     // Pedir permissão
     const permission = await Notification.requestPermission();
     console.log('📱 Permissão:', permission);
     if (permission !== 'granted') {
       console.log('❌ Permissão de notificação negada');
+      toast.error('Permissão de notificação negada');
       return false;
     }
 
-    // Registrar service worker
-    console.log('⚙️ Registrando service worker...');
-    const registration = await navigator.serviceWorker.register('/sw.js');
-    await navigator.serviceWorker.ready;
-    console.log('✅ Service worker registrado');
+    // Verificar se Firebase está configurado
+    if (!messaging) {
+      console.error('❌ Firebase Messaging não está configurado');
+      console.error('💡 Configure as variáveis de ambiente do Firebase (VITE_FIREBASE_*)');
+      toast.error('Firebase não configurado. Verifique as variáveis de ambiente.');
+      return false;
+    }
 
-    // Obter chave VAPID pública do edge function
-    console.log('🔑 Buscando chave VAPID...');
-    const { data: vapidKey, error: vapidError } = await supabase.functions.invoke('get-vapid-key');
+    // Registrar service worker para FCM
+    console.log('⚙️ Registrando service worker para FCM...');
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.ready;
+      console.log('✅ Service worker registrado');
+    } catch (swError) {
+      console.warn('⚠️ Erro ao registrar service worker:', swError);
+      // Continuar mesmo se o service worker falhar
+    }
+
+    // Obter token FCM
+    console.log('🔑 Obtendo token FCM...');
+    const token = await getFCMToken();
     
-    if (vapidError) {
-      console.error('❌ Erro ao buscar chave VAPID:', vapidError);
+    if (!token) {
+      console.error('❌ Não foi possível obter token FCM');
+      toast.error('Erro ao obter token de notificação');
       return false;
     }
-    
-    if (!vapidKey?.publicKey) {
-      console.error('❌ Chave VAPID não encontrada');
-      return false;
-    }
-    console.log('✅ Chave VAPID obtida');
 
-    // Inscrever para push
-    console.log('📝 Inscrevendo para push...');
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidKey.publicKey)
-    });
-    console.log('✅ Inscrição criada');
+    console.log('✅ Token FCM obtido:', token.substring(0, 20) + '...');
 
     // Salvar token no banco
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       console.error('❌ Usuário não autenticado');
+      toast.error('Você precisa estar logado para ativar notificações');
       return false;
     }
 
-    const subscriptionJson = subscription.toJSON();
-    console.log('💾 Salvando token no banco...');
+    console.log('💾 Salvando token FCM no banco...');
     const { error: saveError } = await supabase.from('notification_tokens' as any).upsert({
       user_id: user.id,
-      token: JSON.stringify(subscriptionJson),
-      platform: 'web',
-      endpoint: subscriptionJson.endpoint || '',
-      p256dh: subscriptionJson.keys?.p256dh || '',
-      auth: subscriptionJson.keys?.auth || ''
+      token: token,
+      platform: 'web', // Mantém 'web' mas usa token FCM
+      endpoint: '', // Não necessário para FCM
+      p256dh: '', // Não necessário para FCM
+      auth: '' // Não necessário para FCM
+    }, {
+      onConflict: 'user_id,platform'
     });
 
     if (saveError) {
       console.error('❌ Erro ao salvar token:', saveError);
+      toast.error('Erro ao salvar token de notificação');
       return false;
     }
 
-    console.log('✅ Notificações web registradas com sucesso!');
+    // Configurar listener para mensagens em foreground
+    setupForegroundMessageListener((payload) => {
+      console.log('📬 Notificação recebida em foreground:', payload);
+      toast.info(payload.notification?.title || 'Nova notificação', {
+        description: payload.notification?.body
+      });
+    });
+
+    console.log('✅ Notificações FCM registradas com sucesso!');
+    toast.success('Notificações ativadas com sucesso!');
     return true;
   } catch (error) {
-    console.error('❌ Erro ao registrar notificações:', error);
+    console.error('❌ Erro ao registrar notificações FCM:', error);
+    toast.error('Erro ao ativar notificações');
     return false;
   }
 }
 
+/**
+ * Desregistra notificações push
+ */
 export async function unregisterWebPushNotification() {
   try {
-    const registration = await navigator.serviceWorker.getRegistration();
-    if (!registration) return true;
-
-    const subscription = await registration.pushManager.getSubscription();
-    if (subscription) {
-      await subscription.unsubscribe();
-    }
-
     // Remover token do banco
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -111,14 +115,19 @@ export async function unregisterWebPushNotification() {
         .eq('platform', 'web');
     }
 
-    console.log('✅ Notificações web desativadas');
+    console.log('✅ Notificações desativadas');
+    toast.success('Notificações desativadas');
     return true;
   } catch (error) {
     console.error('❌ Erro ao desativar notificações:', error);
+    toast.error('Erro ao desativar notificações');
     return false;
   }
 }
 
+/**
+ * Verifica se o usuário tem permissão para notificações
+ */
 export async function checkNotificationPermission(): Promise<NotificationPermission> {
   if (!('Notification' in window)) {
     return 'denied';
@@ -126,6 +135,9 @@ export async function checkNotificationPermission(): Promise<NotificationPermiss
   return Notification.permission;
 }
 
+/**
+ * Verifica se há um token salvo no banco
+ */
 export async function hasTokenSaved(): Promise<boolean> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -144,16 +156,19 @@ export async function hasTokenSaved(): Promise<boolean> {
   }
 }
 
+/**
+ * Envia uma notificação de teste
+ */
 export async function sendTestNotification() {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       console.error('❌ Usuário não autenticado');
+      toast.error('Você precisa estar logado');
       return false;
     }
 
     console.log('🧪 Enviando notificação de teste para userId:', user.id);
-    console.log('🧪 Dados completos do usuário:', user);
     
     const { data, error } = await supabase.functions.invoke('send-notification', {
       body: {
@@ -166,14 +181,16 @@ export async function sendTestNotification() {
 
     if (error) {
       console.error('❌ Erro ao enviar notificação de teste:', error);
+      toast.error('Erro ao enviar notificação de teste');
       return false;
     }
 
     console.log('✅ Resposta da função send-notification:', data);
-    console.log('✅ Notificação de teste enviada');
+    toast.success('Notificação de teste enviada!');
     return true;
   } catch (error) {
     console.error('❌ Erro ao enviar notificação de teste:', error);
+    toast.error('Erro ao enviar notificação de teste');
     return false;
   }
 }

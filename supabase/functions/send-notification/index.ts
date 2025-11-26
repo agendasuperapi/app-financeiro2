@@ -90,7 +90,12 @@ async function sendWebPush(tokenData: any, title: string, body: string, data: an
   
   const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
   const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
-  const vapidEmail = Deno.env.get('VAPID_EMAIL') || 'mailto:contato@seuapp.com';
+  let vapidEmail = Deno.env.get('VAPID_EMAIL') || 'mailto:contato@seuapp.com';
+  
+  // Garantir que o email tenha o prefixo mailto:
+  if (!vapidEmail.startsWith('mailto:')) {
+    vapidEmail = `mailto:${vapidEmail}`;
+  }
 
   if (!vapidPublicKey || !vapidPrivateKey) {
     console.error('❌ Chaves VAPID não configuradas!');

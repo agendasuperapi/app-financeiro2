@@ -99,7 +99,7 @@ async function sendWebPush(tokenData: any, title: string, body: string, data: an
 
   console.log('✅ Chaves VAPID encontradas');
 
-  const webpush = await import('https://esm.sh/web-push@3.6.6');
+  const webpush = await import('https://esm.sh/web-push@3.6.6?target=deno');
   webpush.default.setVapidDetails(vapidEmail, vapidPublicKey, vapidPrivateKey);
 
   console.log('📝 Token de subscription:', tokenData.token.substring(0, 100) + '...');

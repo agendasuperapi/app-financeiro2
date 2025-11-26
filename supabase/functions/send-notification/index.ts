@@ -19,17 +19,25 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    console.log(`📱 Buscando tokens para usuário: ${userId}`);
+    
     // Buscar tokens do usuário
     const { data: tokens, error } = await supabase
       .from('notification_tokens')
       .select('*')
       .eq('user_id', userId);
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Erro ao buscar tokens:', error);
+      throw error;
+    }
+    
+    console.log(`📋 Tokens encontrados: ${JSON.stringify(tokens)}`);
+    
     if (!tokens || tokens.length === 0) {
       console.log(`⚠️ Nenhum token encontrado para usuário ${userId}`);
       return new Response(
-        JSON.stringify({ message: 'Nenhum token de notificação encontrado' }),
+        JSON.stringify({ message: 'Nenhum token de notificação encontrado para este usuário' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -70,14 +78,24 @@ serve(async (req) => {
 });
 
 async function sendWebPush(tokenData: any, title: string, body: string, data: any) {
-  const webpush = await import('https://esm.sh/web-push@3.6.6');
+  console.log('🌐 Tentando enviar Web Push...');
   
   const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
   const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
   const vapidEmail = Deno.env.get('VAPID_EMAIL') || 'mailto:contato@seuapp.com';
 
-  webpush.default.setVapidDetails(vapidEmail, vapidPublicKey!, vapidPrivateKey!);
+  if (!vapidPublicKey || !vapidPrivateKey) {
+    console.error('❌ Chaves VAPID não configuradas!');
+    throw new Error('Chaves VAPID não estão configuradas. Configure VAPID_PUBLIC_KEY e VAPID_PRIVATE_KEY nos secrets.');
+  }
 
+  console.log('✅ Chaves VAPID encontradas');
+
+  const webpush = await import('https://esm.sh/web-push@3.6.6');
+  webpush.default.setVapidDetails(vapidEmail, vapidPublicKey, vapidPrivateKey);
+
+  console.log('📝 Token de subscription:', tokenData.token.substring(0, 100) + '...');
+  
   const subscription = JSON.parse(tokenData.token);
   
   const payload = JSON.stringify({
@@ -87,8 +105,9 @@ async function sendWebPush(tokenData: any, title: string, body: string, data: an
     tag: data?.reminderId || 'default'
   });
 
+  console.log('📤 Enviando notificação...');
   await webpush.default.sendNotification(subscription, payload);
-  console.log('✅ Web Push enviado');
+  console.log('✅ Web Push enviado com sucesso!');
 }
 
 async function sendFCM(tokenData: any, title: string, body: string, data: any) {

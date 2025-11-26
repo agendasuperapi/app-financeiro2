@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, BellOff, Smartphone, Globe, ExternalLink } from 'lucide-react';
-import { registerWebPushNotification, checkNotificationPermission, unregisterWebPushNotification } from '@/services/notificationService';
+import { Bell, BellOff, Smartphone, Globe, TestTube2 } from 'lucide-react';
+import { registerWebPushNotification, checkNotificationPermission, unregisterWebPushNotification, hasTokenSaved, sendTestNotification } from '@/services/notificationService';
 import { requestPushNotificationPermission } from '@/hooks/usePushNotifications';
 import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
@@ -10,17 +10,25 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export const NotificationSettings = () => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [tokenSaved, setTokenSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDisabling, setIsDisabling] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
   const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
-    const checkPermission = async () => {
+    const checkStatus = async () => {
       const perm = await checkNotificationPermission();
       setPermission(perm);
+      
+      if (perm === 'granted') {
+        const saved = await hasTokenSaved();
+        setTokenSaved(saved);
+        console.log('📊 Status:', { permission: perm, tokenSaved: saved });
+      }
     };
     if (!isNative) {
-      checkPermission();
+      checkStatus();
     }
   }, [isNative]);
 
@@ -39,8 +47,9 @@ export const NotificationSettings = () => {
         if (success) {
           toast.success('✅ Notificações ativadas com sucesso!');
           setPermission('granted');
+          setTokenSaved(true);
         } else {
-          toast.error('❌ Não foi possível ativar as notificações');
+          toast.error('❌ Não foi possível ativar as notificações. Verifique o console (F12) para detalhes.');
         }
       }
     } catch (error) {
@@ -58,6 +67,7 @@ export const NotificationSettings = () => {
       if (success) {
         toast.success('✅ Notificações desativadas com sucesso!');
         setPermission('default');
+        setTokenSaved(false);
       } else {
         toast.error('❌ Erro ao desativar notificações');
       }
@@ -66,6 +76,23 @@ export const NotificationSettings = () => {
       toast.error('❌ Erro ao desativar notificações');
     } finally {
       setIsDisabling(false);
+    }
+  };
+
+  const handleTestNotification = async () => {
+    setIsTesting(true);
+    try {
+      const success = await sendTestNotification();
+      if (success) {
+        toast.success('🧪 Notificação de teste enviada! Verifique se apareceu.');
+      } else {
+        toast.error('❌ Erro ao enviar notificação de teste. Verifique o console (F12).');
+      }
+    } catch (error) {
+      console.error('Error testing notification:', error);
+      toast.error('❌ Erro ao testar notificação');
+    } finally {
+      setIsTesting(false);
     }
   };
 
@@ -97,17 +124,30 @@ export const NotificationSettings = () => {
 
         {!isNative && (
           <div className="space-y-2">
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-              <span className="text-sm">Status:</span>
-              <span className={`text-sm font-medium ${
-                permission === 'granted' ? 'text-green-600' : 
-                permission === 'denied' ? 'text-red-600' : 
-                'text-yellow-600'
-              }`}>
-                {permission === 'granted' ? '✅ Ativadas' : 
-                 permission === 'denied' ? '🚫 Bloqueadas' : 
-                 '⏸️ Desativadas'}
-              </span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <span className="text-sm">Permissão do navegador:</span>
+                <span className={`text-sm font-medium ${
+                  permission === 'granted' ? 'text-green-600' : 
+                  permission === 'denied' ? 'text-red-600' : 
+                  'text-yellow-600'
+                }`}>
+                  {permission === 'granted' ? '✅ Concedida' : 
+                   permission === 'denied' ? '🚫 Bloqueada' : 
+                   '⏸️ Não solicitada'}
+                </span>
+              </div>
+              
+              {permission === 'granted' && (
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <span className="text-sm">Token salvo no banco:</span>
+                  <span className={`text-sm font-medium ${
+                    tokenSaved ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {tokenSaved ? '✅ Sim' : '❌ Não'}
+                  </span>
+                </div>
+              )}
             </div>
 
             {permission === 'denied' && (
@@ -136,14 +176,28 @@ export const NotificationSettings = () => {
             )}
 
             {permission === 'granted' && (
-              <Button 
-                onClick={handleDisableNotifications} 
-                variant="outline"
-                className="w-full"
-                disabled={isDisabling}
-              >
-                {isDisabling ? 'Desativando...' : 'Desativar Notificações'}
-              </Button>
+              <div className="space-y-2">
+                <Button 
+                  onClick={handleDisableNotifications} 
+                  variant="outline"
+                  className="w-full"
+                  disabled={isDisabling}
+                >
+                  {isDisabling ? 'Desativando...' : 'Desativar Notificações'}
+                </Button>
+                
+                {tokenSaved && (
+                  <Button 
+                    onClick={handleTestNotification} 
+                    variant="secondary"
+                    className="w-full"
+                    disabled={isTesting}
+                  >
+                    <TestTube2 className="h-4 w-4 mr-2" />
+                    {isTesting ? 'Enviando teste...' : 'Testar Notificação'}
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         )}

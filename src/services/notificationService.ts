@@ -16,42 +16,60 @@ function urlBase64ToUint8Array(base64String: string) {
 
 export async function registerWebPushNotification() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.log('Push notifications não suportadas');
+    console.log('❌ Push notifications não suportadas');
     return false;
   }
 
   try {
+    console.log('🔔 Iniciando registro de notificações web...');
+    
     // Pedir permissão
     const permission = await Notification.requestPermission();
+    console.log('📱 Permissão:', permission);
     if (permission !== 'granted') {
-      console.log('Permissão de notificação negada');
+      console.log('❌ Permissão de notificação negada');
       return false;
     }
 
     // Registrar service worker
+    console.log('⚙️ Registrando service worker...');
     const registration = await navigator.serviceWorker.register('/sw.js');
     await navigator.serviceWorker.ready;
+    console.log('✅ Service worker registrado');
 
     // Obter chave VAPID pública do edge function
-    const { data: vapidKey } = await supabase.functions.invoke('get-vapid-key');
+    console.log('🔑 Buscando chave VAPID...');
+    const { data: vapidKey, error: vapidError } = await supabase.functions.invoke('get-vapid-key');
     
-    if (!vapidKey?.publicKey) {
-      console.error('Chave VAPID não encontrada');
+    if (vapidError) {
+      console.error('❌ Erro ao buscar chave VAPID:', vapidError);
       return false;
     }
+    
+    if (!vapidKey?.publicKey) {
+      console.error('❌ Chave VAPID não encontrada');
+      return false;
+    }
+    console.log('✅ Chave VAPID obtida');
 
     // Inscrever para push
+    console.log('📝 Inscrevendo para push...');
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidKey.publicKey)
     });
+    console.log('✅ Inscrição criada');
 
     // Salvar token no banco
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
+    if (!user) {
+      console.error('❌ Usuário não autenticado');
+      return false;
+    }
 
     const subscriptionJson = subscription.toJSON();
-    await supabase.from('notification_tokens' as any).upsert({
+    console.log('💾 Salvando token no banco...');
+    const { error: saveError } = await supabase.from('notification_tokens' as any).upsert({
       user_id: user.id,
       token: JSON.stringify(subscriptionJson),
       platform: 'web',
@@ -60,7 +78,12 @@ export async function registerWebPushNotification() {
       auth: subscriptionJson.keys?.auth || ''
     });
 
-    console.log('✅ Notificações web registradas com sucesso');
+    if (saveError) {
+      console.error('❌ Erro ao salvar token:', saveError);
+      return false;
+    }
+
+    console.log('✅ Notificações web registradas com sucesso!');
     return true;
   } catch (error) {
     console.error('❌ Erro ao registrar notificações:', error);
@@ -101,4 +124,53 @@ export async function checkNotificationPermission(): Promise<NotificationPermiss
     return 'denied';
   }
   return Notification.permission;
+}
+
+export async function hasTokenSaved(): Promise<boolean> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    const { data, error } = await supabase
+      .from('notification_tokens' as any)
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('platform', 'web')
+      .single();
+
+    return !error && !!data;
+  } catch {
+    return false;
+  }
+}
+
+export async function sendTestNotification() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('❌ Usuário não autenticado');
+      return false;
+    }
+
+    console.log('🧪 Enviando notificação de teste...');
+    const { error } = await supabase.functions.invoke('send-notification', {
+      body: {
+        userId: user.id,
+        title: '🧪 Teste de Notificação',
+        body: 'Se você viu isso, suas notificações estão funcionando! 🎉',
+        data: { test: true }
+      }
+    });
+
+    if (error) {
+      console.error('❌ Erro ao enviar notificação de teste:', error);
+      return false;
+    }
+
+    console.log('✅ Notificação de teste enviada');
+    return true;
+  } catch (error) {
+    console.error('❌ Erro ao enviar notificação de teste:', error);
+    return false;
+  }
 }

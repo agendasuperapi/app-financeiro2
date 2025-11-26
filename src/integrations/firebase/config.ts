@@ -2,21 +2,18 @@ import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging';
 
 // Configuração do Firebase
-// IMPORTANTE: Preencha essas variáveis com os valores do seu projeto Firebase
-// Você pode obter essas informações em: https://console.firebase.google.com/
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ""
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBiBKG786eCJ9zfAIKmYDbRaoRD8okiXjc",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "appfinanceiro-22bd4.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "appfinanceiro-22bd4",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "appfinanceiro-22bd4.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "385348841860",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:385348841860:web:cedf60cafffb48210f2dd1",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-XSG6T5VF4S"
 };
 
 // VAPID Key para Web Push via FCM
-// Obtenha em: Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
-export const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY || "";
+export const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY || "BIH1RGUAJcAI2l-pb7gAo5vVwXSZuuT572HmzCDCxTQXpWSoPex9e66DSBmnTvEzX9Ha7A3WII9uC9JRG9IVriQ";
 
 // Inicializar Firebase apenas uma vez
 let app: FirebaseApp;

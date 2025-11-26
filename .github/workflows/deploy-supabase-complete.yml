@@ -336,14 +336,14 @@ jobs:
           echo "⚠️  FTP upload failed for web build"
         fi
 
+    - name: 📱 Setup Android SDK
+      uses: android-actions/setup-android@v3
+
     - name: 🤖 Setup Java JDK
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '21'
-
-    - name: 📱 Setup Android SDK
-      uses: android-actions/setup-android@v3
 
     - name: 🔧 Add Android Platform
       run: |

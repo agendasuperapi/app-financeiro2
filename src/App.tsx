@@ -52,8 +52,12 @@ import { useEffect } from 'react';
 const queryClient = new QueryClient();
 
 function App() {
-  // Inicializar notificações mobile
-  usePushNotifications();
+  // Inicializar notificações mobile com tratamento de erro
+  try {
+    usePushNotifications();
+  } catch (error) {
+    console.error('❌ Erro ao inicializar push notifications:', error);
+  }
 
   useEffect(() => {
     // Registrar notificações web após login

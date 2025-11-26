@@ -25,10 +25,10 @@ SELECT cron.schedule(
   '*/5 * * * *', -- A cada 5 minutos (formato: minuto hora dia mês dia-da-semana)
   $$
   SELECT net.http_post(
-    url := 'https://SEU_PROJECT_ID.supabase.co/functions/v1/check-reminders',
+    url := 'https://gpttodmpflpzhbgzagcc.supabase.co/functions/v1/check-reminders',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer SUA_ANON_KEY'
+      'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwdHRvZG1wZmxwemhiZ3phZ2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNzU2MTcsImV4cCI6MjA3MDg1MTYxN30.Ro2k_slVwV7hsGDM1YNcNP3csi876LPuAwFSBpxJN2I'
     )
   ) as request_id;
   $$
@@ -82,10 +82,10 @@ LIMIT 10;
 --   '* * * * *',
 --   $$
 --   SELECT net.http_post(
---     url := 'https://SEU_PROJECT_ID.supabase.co/functions/v1/check-reminders',
+--     url := 'https://gpttodmpflpzhbgzagcc.supabase.co/functions/v1/check-reminders',
 --     headers := jsonb_build_object(
 --       'Content-Type', 'application/json',
---       'Authorization', 'Bearer SUA_ANON_KEY'
+--       'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwdHRvZG1wZmxwemhiZ3phZ2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNzU2MTcsImV4cCI6MjA3MDg1MTYxN30.Ro2k_slVwV7hsGDM1YNcNP3csi876LPuAwFSBpxJN2I'
 --     )
 --   ) as request_id;
 --   $$
@@ -98,10 +98,10 @@ LIMIT 10;
 --   '*/15 * * * *',
 --   $$
 --   SELECT net.http_post(
---     url := 'https://SEU_PROJECT_ID.supabase.co/functions/v1/check-reminders',
+--     url := 'https://gpttodmpflpzhbgzagcc.supabase.co/functions/v1/check-reminders',
 --     headers := jsonb_build_object(
 --       'Content-Type', 'application/json',
---       'Authorization', 'Bearer SUA_ANON_KEY'
+--       'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwdHRvZG1wZmxwemhiZ3phZ2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNzU2MTcsImV4cCI6MjA3MDg1MTYxN30.Ro2k_slVwV7hsGDM1YNcNP3csi876LPuAwFSBpxJN2I'
 --     )
 --   ) as request_id;
 --   $$

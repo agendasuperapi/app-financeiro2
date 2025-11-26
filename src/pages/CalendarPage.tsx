@@ -260,11 +260,8 @@ const CalendarPage: React.FC = () => {
               }} modifiersClassNames={{
                 hasTransactions: "font-semibold"
               }} components={{
-                Day: ({
-                  date,
-                  displayMonth,
-                  ...props
-                }) => {
+                Day: (props) => {
+                  const date = props.day.date;
                   const dayItems = getAllItemsForDate(date);
                   
                   // Contar por formato
@@ -282,14 +279,14 @@ const CalendarPage: React.FC = () => {
                     else if (formato === 'lembrete') formatCounts.lembrete++;
                   });
                   
-                  return <button {...props} className={cn("relative w-full h-full flex flex-col items-center justify-center rounded-md transition-colors", "hover:bg-accent hover:text-accent-foreground", selectedDate && isSameDay(date, selectedDate) && "bg-primary text-primary-foreground", isSameDay(date, new Date()) && !selectedDate && "bg-accent text-accent-foreground")} onClick={() => setSelectedDate(date)}>
+                  return <div {...props} className={cn("relative w-full h-full flex flex-col items-center justify-center rounded-md transition-colors cursor-pointer", "hover:bg-accent hover:text-accent-foreground", selectedDate && isSameDay(date, selectedDate) && "bg-primary text-primary-foreground", isSameDay(date, new Date()) && !selectedDate && "bg-accent text-accent-foreground")} onClick={() => setSelectedDate(date)}>
                           <span>{format(date, 'd')}</span>
                           {dayItems.length > 0 && <div className="absolute bottom-1 flex gap-1">
                               {formatCounts.transacao > 0 && <div className="w-1.5 h-1.5 bg-gray-900 dark:bg-gray-100 rounded-full" title="Transações" />}
                               {formatCounts.agenda > 0 && <div className="w-1.5 h-1.5 bg-purple-500 rounded-full" title="Agendamentos" />}
                               {formatCounts.lembrete > 0 && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" title="Lembretes" />}
                             </div>}
-                        </button>;
+                        </div>;
                 }
               }} />
               </div>

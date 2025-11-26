@@ -357,22 +357,58 @@ jobs:
     - name: 🔄 Sync Capacitor
       run: npx cap sync android
 
+    - name: 🔑 Setup Keystore (if available)
+      env:
+        ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+      run: |
+        if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+          echo "🔑 Setting up release keystore..."
+          echo $ANDROID_KEYSTORE_BASE64 | base64 -d > android/app-release-key.jks
+          
+          cat > android/keystore.properties << EOF
+        storePassword=$ANDROID_STORE_PASSWORD
+        keyPassword=$ANDROID_KEY_PASSWORD
+        keyAlias=$ANDROID_KEY_ALIAS
+        storeFile=app-release-key.jks
+        EOF
+          
+          echo "✅ Keystore configured for release build"
+        else
+          echo "⚠️  No keystore found - will build debug APK only"
+        fi
+
     - name: 🔨 Build APK
       working-directory: ./android
       run: |
         echo "🔨 Building APK..."
         chmod +x ./gradlew
-        ./gradlew assembleDebug
         
-        echo "📦 APK build completed!"
-        echo "📁 APK location: app/build/outputs/apk/debug/app-debug.apk"
-        ls -lh app/build/outputs/apk/debug/
+        if [ -f keystore.properties ]; then
+          echo "🔐 Building signed release APK..."
+          ./gradlew assembleRelease
+          
+          echo "📦 Release APK build completed!"
+          echo "📁 APK location: app/build/outputs/apk/release/app-release.apk"
+          ls -lh app/build/outputs/apk/release/
+        else
+          echo "🔨 Building debug APK (no keystore)..."
+          ./gradlew assembleDebug
+          
+          echo "📦 Debug APK build completed!"
+          echo "📁 APK location: app/build/outputs/apk/debug/app-debug.apk"
+          ls -lh app/build/outputs/apk/debug/
+        fi
 
     - name: 📤 Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-debug-apk
-        path: android/app/build/outputs/apk/debug/app-debug.apk
+        name: app-apk
+        path: |
+          android/app/build/outputs/apk/release/app-release.apk
+          android/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
 
     - name: 🌐 Upload to Hostinger via FTP
@@ -395,21 +431,32 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y lftp
         
+        # Determine which APK to upload
+        if [ -f android/app/build/outputs/apk/release/app-release.apk ]; then
+          APK_FILE="android/app/build/outputs/apk/release/app-release.apk"
+          APK_NAME="app-release.apk"
+          echo "📱 Uploading signed release APK..."
+        else
+          APK_FILE="android/app/build/outputs/apk/debug/app-debug.apk"
+          APK_NAME="app-debug.apk"
+          echo "📱 Uploading debug APK..."
+        fi
+        
         # Create FTP script
         cat > /tmp/ftp_upload.txt << EOF
         set ftp:ssl-allow no
         set ftp:passive-mode yes
         open -u $HOSTINGER_FTP_USER,$HOSTINGER_FTP_PASSWORD $HOSTINGER_FTP_HOST
         cd $HOSTINGER_FTP_DIR
-        put android/app/build/outputs/apk/debug/app-debug.apk -o app-debug.apk
-        put android/app/build/outputs/apk/debug/app-debug.apk -o app-debug-$(date +%Y%m%d-%H%M%S).apk
+        put $APK_FILE -o $APK_NAME
+        put $APK_FILE -o app-$(date +%Y%m%d-%H%M%S).apk
         bye
         EOF
         
         # Upload APK
         if lftp -f /tmp/ftp_upload.txt; then
           echo "✅ APK uploaded to Hostinger successfully!"
-          echo "📱 APK available at: https://$HOSTINGER_FTP_HOST/app-debug.apk"
+          echo "📱 APK available at: https://$HOSTINGER_FTP_HOST/$APK_NAME"
         else
           echo "⚠️  FTP upload failed, but APK is still available as GitHub artifact"
         fi
@@ -422,7 +469,18 @@ jobs:
         echo "- ✅ Project built"
         echo "- ✅ Web build generated"
         echo "- ✅ Android platform configured"
-        echo "- ✅ APK generated"
+        
+        if [ -f android/app/build/outputs/apk/release/app-release.apk ]; then
+          echo "- ✅ Signed Release APK generated"
+        else
+          echo "- ✅ Debug APK generated"
+          echo "  ⚠️  Add keystore secrets for release APK:"
+          echo "     - ANDROID_KEYSTORE_BASE64"
+          echo "     - ANDROID_KEY_ALIAS"
+          echo "     - ANDROID_KEY_PASSWORD"
+          echo "     - ANDROID_STORE_PASSWORD"
+        fi
+        
         if [ -n "${{ secrets.HOSTINGER_FTP_HOST }}" ]; then
           echo "- ✅ Web build uploaded to Hostinger"
           echo "- ✅ APK uploaded to Hostinger"
@@ -431,8 +489,12 @@ jobs:
           echo "- URL: https://${{ secrets.HOSTINGER_FTP_HOST }}"
           echo ""
           echo "📱 APK Files on Hostinger:"
-          echo "- Latest: https://${{ secrets.HOSTINGER_FTP_HOST }}/app-debug.apk"
-          echo "- Archived: https://${{ secrets.HOSTINGER_FTP_HOST }}/app-debug-*.apk"
+          if [ -f android/app/build/outputs/apk/release/app-release.apk ]; then
+            echo "- Latest: https://${{ secrets.HOSTINGER_FTP_HOST }}/app-release.apk"
+          else
+            echo "- Latest: https://${{ secrets.HOSTINGER_FTP_HOST }}/app-debug.apk"
+          fi
+          echo "- Archived: https://${{ secrets.HOSTINGER_FTP_HOST }}/app-*.apk"
         else
           echo "- ⚠️  Hostinger upload skipped (secrets not configured)"
         fi

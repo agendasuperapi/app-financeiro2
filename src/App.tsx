@@ -44,10 +44,32 @@ import NotFound from "./pages/NotFound";
 import AdminRoute from "./components/admin/AdminRoute";
 import "./App.css";
 import { ClientViewProvider } from '@/contexts/ClientViewContext';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { registerWebPushNotification } from '@/services/notificationService';
+import { Capacitor } from '@capacitor/core';
+import { useEffect } from 'react';
 
 const queryClient = new QueryClient();
 
 function App() {
+  // Inicializar notificações mobile
+  usePushNotifications();
+
+  useEffect(() => {
+    // Registrar notificações web após login
+    if (!Capacitor.isNativePlatform()) {
+      const initWebPush = async () => {
+        try {
+          await registerWebPushNotification();
+        } catch (error) {
+          console.log('Web push não disponível:', error);
+        }
+      };
+      // Aguardar um pouco para garantir que o usuário está autenticado
+      setTimeout(initWebPush, 2000);
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

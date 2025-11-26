@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bell, BellOff, Smartphone, Globe } from 'lucide-react';
 import { registerWebPushNotification, checkNotificationPermission } from '@/services/notificationService';
+import { requestPushNotificationPermission } from '@/hooks/usePushNotifications';
 import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
 
@@ -16,18 +17,29 @@ export const NotificationSettings = () => {
       const perm = await checkNotificationPermission();
       setPermission(perm);
     };
-    checkPermission();
-  }, []);
+    if (!isNative) {
+      checkPermission();
+    }
+  }, [isNative]);
 
   const handleEnableNotifications = async () => {
     setIsLoading(true);
     try {
-      const success = await registerWebPushNotification();
-      if (success) {
-        toast.success('✅ Notificações ativadas com sucesso!');
-        setPermission('granted');
+      if (isNative) {
+        // Mobile: usar Capacitor Push Notifications
+        const success = await requestPushNotificationPermission();
+        if (!success) {
+          toast.error('❌ Não foi possível ativar as notificações');
+        }
       } else {
-        toast.error('❌ Não foi possível ativar as notificações');
+        // Web: usar Web Push
+        const success = await registerWebPushNotification();
+        if (success) {
+          toast.success('✅ Notificações ativadas com sucesso!');
+          setPermission('granted');
+        } else {
+          toast.error('❌ Não foi possível ativar as notificações');
+        }
       }
     } catch (error) {
       console.error('Error enabling notifications:', error);
@@ -97,8 +109,17 @@ export const NotificationSettings = () => {
         )}
 
         {isNative && (
-          <div className="text-sm text-muted-foreground p-3 bg-muted rounded-lg">
-            As notificações mobile serão solicitadas automaticamente quando você abrir o app. Certifique-se de permitir quando solicitado.
+          <div className="space-y-3">
+            <div className="text-sm text-muted-foreground p-3 bg-muted rounded-lg">
+              Toque no botão abaixo para ativar as notificações no seu celular. Você precisará permitir quando solicitado.
+            </div>
+            <Button 
+              onClick={handleEnableNotifications} 
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Ativando...' : 'Ativar Notificações Mobile'}
+            </Button>
           </div>
         )}
 

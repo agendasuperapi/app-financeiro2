@@ -52,27 +52,8 @@ import { useEffect } from 'react';
 const queryClient = new QueryClient();
 
 function App() {
-  // Inicializar notificações mobile com tratamento de erro
-  try {
-    usePushNotifications();
-  } catch (error) {
-    console.error('❌ Erro ao inicializar push notifications:', error);
-  }
-
-  useEffect(() => {
-    // Registrar notificações web após login
-    if (!Capacitor.isNativePlatform()) {
-      const initWebPush = async () => {
-        try {
-          await registerWebPushNotification();
-        } catch (error) {
-          console.log('Web push não disponível:', error);
-        }
-      };
-      // Aguardar um pouco para garantir que o usuário está autenticado
-      setTimeout(initWebPush, 2000);
-    }
-  }, []);
+  // Configurar listeners de notificações mobile (não solicita permissão automaticamente)
+  usePushNotifications();
 
   return (
     <QueryClientProvider client={queryClient}>

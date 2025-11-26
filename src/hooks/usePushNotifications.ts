@@ -11,12 +11,17 @@ export const usePushNotifications = () => {
       return;
     }
 
-    console.log('📱 Initializing push notifications on native platform');
+    console.log('📱 Setting up push notification listeners');
 
-    // Função para adicionar listeners
-    const setupListeners = () => {
+    let registrationListener: any;
+    let errorListener: any;
+    let notificationListener: any;
+    let actionListener: any;
+
+    // Configurar listeners
+    const setupListeners = async () => {
       // Listener para token registrado
-      PushNotifications.addListener('registration', async (token: Token) => {
+      registrationListener = await PushNotifications.addListener('registration', async (token: Token) => {
         try {
           console.log('✅ Push registration token received:', token.value);
           
@@ -44,6 +49,7 @@ export const usePushNotifications = () => {
             console.error('❌ Error saving token:', upsertError);
           } else {
             console.log('✅ Token saved successfully');
+            toast.success('Notificações ativadas com sucesso!');
           }
         } catch (error) {
           console.error('❌ Error in registration listener:', error);
@@ -51,12 +57,13 @@ export const usePushNotifications = () => {
       });
 
       // Listener para erros
-      PushNotifications.addListener('registrationError', (error: any) => {
+      errorListener = await PushNotifications.addListener('registrationError', (error: any) => {
         console.error('❌ Push registration error:', error);
+        toast.error('Erro ao ativar notificações');
       });
 
       // Listener para notificação recebida
-      PushNotifications.addListener(
+      notificationListener = await PushNotifications.addListener(
         'pushNotificationReceived',
         (notification: PushNotificationSchema) => {
           try {
@@ -71,7 +78,7 @@ export const usePushNotifications = () => {
       );
 
       // Listener para notificação clicada
-      PushNotifications.addListener(
+      actionListener = await PushNotifications.addListener(
         'pushNotificationActionPerformed',
         (notification: any) => {
           try {
@@ -82,49 +89,63 @@ export const usePushNotifications = () => {
           }
         }
       );
+
+      console.log('✅ Push notification listeners configured');
     };
 
-    // Função de inicialização
-    const initPushNotifications = async () => {
-      try {
-        console.log('📱 Checking permissions...');
-        
-        // Primeiro adicionar listeners
-        setupListeners();
-        
-        // Depois verificar permissões
-        let permStatus = await PushNotifications.checkPermissions();
-        console.log('📱 Permission status:', permStatus);
-        
-        if (permStatus.receive === 'prompt') {
-          console.log('📱 Requesting permissions...');
-          permStatus = await PushNotifications.requestPermissions();
-          console.log('📱 Permission after request:', permStatus);
-        }
-
-        if (permStatus.receive !== 'granted') {
-          console.log('⚠️ Push notification permission denied');
-          return;
-        }
-
-        // Registrar para receber notificações
-        console.log('📱 Registering for push notifications...');
-        await PushNotifications.register();
-        console.log('✅ Push notifications registered successfully');
-      } catch (error) {
-        console.error('❌ Error initializing push notifications:', error);
-      }
-    };
-
-    // Inicializar com delay para garantir que tudo está pronto
-    const timeoutId = setTimeout(() => {
-      initPushNotifications();
-    }, 1000);
+    setupListeners();
 
 
     return () => {
-      clearTimeout(timeoutId);
-      PushNotifications.removeAllListeners();
+      if (registrationListener) registrationListener.remove();
+      if (errorListener) errorListener.remove();
+      if (notificationListener) notificationListener.remove();
+      if (actionListener) actionListener.remove();
     };
   }, []);
+};
+
+// Função para ativar notificações manualmente
+export const requestPushNotificationPermission = async () => {
+  if (!Capacitor.isNativePlatform()) {
+    console.log('Not on native platform');
+    return false;
+  }
+
+  try {
+    console.log('📱 Requesting push notification permission...');
+    
+    // Verificar se o usuário está autenticado
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('User must be authenticated to enable notifications');
+      toast.error('Você precisa estar logado para ativar notificações');
+      return false;
+    }
+
+    // Verificar permissões
+    let permStatus = await PushNotifications.checkPermissions();
+    console.log('📱 Current permission status:', permStatus);
+    
+    if (permStatus.receive === 'prompt') {
+      permStatus = await PushNotifications.requestPermissions();
+      console.log('📱 Permission after request:', permStatus);
+    }
+
+    if (permStatus.receive !== 'granted') {
+      console.log('⚠️ Permission denied');
+      toast.error('Permissão de notificação negada');
+      return false;
+    }
+
+    // Registrar para push
+    await PushNotifications.register();
+    console.log('✅ Registered for push notifications');
+    
+    return true;
+  } catch (error) {
+    console.error('❌ Error requesting permission:', error);
+    toast.error('Erro ao solicitar permissão de notificação');
+    return false;
+  }
 };

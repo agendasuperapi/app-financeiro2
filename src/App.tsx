@@ -29,7 +29,6 @@ import LogPage from "./pages/LogPage";
 import RulesPage from "./pages/RulesPage";
 import SchedulePage from "./pages/SchedulePage";
 import ContasPage from "./pages/ContasPage";
-import SettingsPage from "./pages/SettingsPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import PlansPage from "./pages/PlansPage";
 import CheckoutPage from "./pages/CheckoutPage";
@@ -87,7 +86,6 @@ function App() {
                           <Route path="/contas" element={<ContasPage />} />
                           <Route path="/lembrar" element={<LembrarPage />} />
                           <Route path="/lembretes" element={<LembretesPage />} />
-                          <Route path="/settings" element={<SettingsPage />} />
                           <Route path="/categories" element={<CategoriesPage />} />
                           <Route path="/plans" element={<PlansPage />} />
                           <Route path="/checkout/:planType" element={<CheckoutPage />} />

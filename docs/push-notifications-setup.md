@@ -22,12 +22,19 @@ Para que as notificações sejam enviadas automaticamente, você precisa configu
 
 ### Passo 2: Executar o SQL do Cron Job
 
-Cole e execute o seguinte SQL (substitua `SEU_PROJECT_ID` pelo ID do seu projeto):
+**Importante:** Você precisa substituir dois valores:
+1. **SEU_PROJECT_ID**: Encontre em Settings > General (exemplo: `abc123xyz`)
+2. **SUA_ANON_KEY**: Encontre em Settings > API > Project API keys > anon public
+
+Cole e execute o seguinte SQL:
 
 ```sql
 -- Ativar extensões necessárias
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- Remover cron job existente (se houver)
+SELECT cron.unschedule('check-reminders-every-5-minutes');
 
 -- Criar cron job que executa a cada 5 minutos
 SELECT cron.schedule(
@@ -38,7 +45,7 @@ SELECT cron.schedule(
     url := 'https://SEU_PROJECT_ID.supabase.co/functions/v1/check-reminders',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key')
+      'Authorization', 'Bearer SUA_ANON_KEY'
     )
   ) as request_id;
   $$

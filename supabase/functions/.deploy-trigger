@@ -1,6 +1,6 @@
 # This file triggers deployment of Edge Functions
 # Updated: 2025-01-14
-# Version: 1.2.0 - Auto-configure generate-html as public (no JWT)
+# Version: 1.3.0 - Added push notification functions
 
 Deploy the following functions:
 - create-admin-user
@@ -22,3 +22,6 @@ Deploy the following functions:
 - update-plan-config
 - update-admin-email
 - update-user-email
+- get-vapid-key
+- check-reminders
+- send-notification

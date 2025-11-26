@@ -37,3 +37,36 @@ self.addEventListener('activate', (event) => {
     })
   );
 });
+
+// Push notifications
+self.addEventListener('push', function(event) {
+  const data = event.data ? event.data.json() : {};
+  
+  const title = data.title || 'Lembrete Financeiro';
+  const options = {
+    body: data.body || 'Você tem um lembrete pendente',
+    icon: '/app-icon.png',
+    badge: '/app-icon.png',
+    tag: data.tag || 'default',
+    data: data.data || {},
+    requireInteraction: true,
+    actions: [
+      { action: 'view', title: 'Ver detalhes' },
+      { action: 'dismiss', title: 'Dispensar' }
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  
+  if (event.action === 'view') {
+    event.waitUntil(
+      clients.openWindow('/lembretes')
+    );
+  }
+});

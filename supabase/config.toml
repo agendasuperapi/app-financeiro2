@@ -1,1 +1,10 @@
 # Project ID será configurado dinamicamente no GitHub Actions
+
+[functions.get-vapid-key]
+verify_jwt = false
+
+[functions.check-reminders]
+verify_jwt = false
+
+[functions.send-notification]
+verify_jwt = true

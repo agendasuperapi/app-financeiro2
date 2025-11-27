@@ -24,19 +24,18 @@ serve(async (req) => {
     const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
     const tenMinutesAhead = new Date(now.getTime() + 10 * 60 * 1000);
     
-    // Buscar lembretes com:
-    // - status = "pending"
-    // - situacao = "ativo" (case-insensitive)
-    // - data entre 10 minutos antes e 10 minutos depois de agora
-    // - notification_sent = false OU NULL (ainda não avisado)
+    console.log('🕐 Janela de busca:', {
+      inicio: tenMinutesAgo.toISOString(),
+      agora: now.toISOString(),
+      fim: tenMinutesAhead.toISOString()
+    });
+    
+    // Buscar lembretes dentro da janela de 10 minutos (antes e depois)
     const { data: reminders, error } = await supabase
       .from('tbl_lembrete')
       .select('*')
-      .eq('status', 'pending')
-      .in('situacao', ['ativo', 'Ativo'])
       .gte('date', tenMinutesAgo.toISOString())
-      .lte('date', tenMinutesAhead.toISOString())
-      .or('notification_sent.is.false,notification_sent.is.null');
+      .lte('date', tenMinutesAhead.toISOString());
 
     if (error) throw error;
 

@@ -182,42 +182,37 @@ export const NotificationSettings = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Tentar salvar com active_profile primeiro
-      let { error } = await supabase
-        .from('notification_settings' as any)
-        .upsert(
-          {
-            user_id: user.id,
-            sound_type: profileConfig.soundType,
-            vibration_enabled: profileConfig.vibrationEnabled,
-            notification_enabled: true,
-            active_profile: profile,
-            updated_at: new Date().toISOString()
-          },
-          { onConflict: 'user_id' }
-        );
+      // Tentar atualizar primeiro pelas configurações existentes do usuário
+      const updatePayload = {
+        user_id: user.id,
+        sound_type: profileConfig.soundType,
+        vibration_enabled: profileConfig.vibrationEnabled,
+        notification_enabled: true,
+        active_profile: profile,
+        updated_at: new Date().toISOString()
+      };
 
-      // Se der erro por causa do campo active_profile, tentar sem ele
-      if (error && error.message?.includes('active_profile')) {
-        console.log('Campo active_profile não existe, salvando sem ele...');
-        const result = await supabase
-          .from('notification_settings' as any)
-          .upsert(
-            {
-              user_id: user.id,
-              sound_type: profileConfig.soundType,
-              vibration_enabled: profileConfig.vibrationEnabled,
-              notification_enabled: true,
-              updated_at: new Date().toISOString()
-            },
-            { onConflict: 'user_id' }
-          );
-        error = result.error;
+      const { data: updated, error: updateError } = await supabase
+        .from('notification_settings' as any)
+        .update(updatePayload)
+        .eq('user_id', user.id)
+        .select('user_id');
+
+      if (updateError) {
+        console.error('Erro ao atualizar perfil de notificação:', updateError);
+        throw updateError;
       }
 
-      if (error) {
-        console.error('Erro detalhado ao aplicar perfil:', error);
-        throw error;
+      // Se nenhuma linha foi atualizada, insere um novo registro
+      if (!updated || updated.length === 0) {
+        const { error: insertError } = await supabase
+          .from('notification_settings' as any)
+          .insert(updatePayload);
+
+        if (insertError) {
+          console.error('Erro ao inserir perfil de notificação:', insertError);
+          throw insertError;
+        }
       }
 
       toast.success(`✅ Perfil "${profileConfig.name}" ativado!`);
@@ -303,42 +298,37 @@ export const NotificationSettings = () => {
         return;
       }
 
-      // Tentar salvar com active_profile primeiro
-      let { error } = await supabase
-        .from('notification_settings' as any)
-        .upsert(
-          {
-            user_id: user.id,
-            sound_type: soundType,
-            vibration_enabled: vibrationEnabled,
-            notification_enabled: true,
-            active_profile: 'custom',
-            updated_at: new Date().toISOString()
-          },
-          { onConflict: 'user_id' }
-        );
+      // Tentar atualizar primeiro pelas configurações existentes do usuário
+      const updatePayload = {
+        user_id: user.id,
+        sound_type: soundType,
+        vibration_enabled: vibrationEnabled,
+        notification_enabled: true,
+        active_profile: 'custom',
+        updated_at: new Date().toISOString()
+      };
 
-      // Se der erro por causa do campo active_profile, tentar sem ele
-      if (error && error.message?.includes('active_profile')) {
-        console.log('Campo active_profile não existe, salvando sem ele...');
-        const result = await supabase
-          .from('notification_settings' as any)
-          .upsert(
-            {
-              user_id: user.id,
-              sound_type: soundType,
-              vibration_enabled: vibrationEnabled,
-              notification_enabled: true,
-              updated_at: new Date().toISOString()
-            },
-            { onConflict: 'user_id' }
-          );
-        error = result.error;
+      const { data: updated, error: updateError } = await supabase
+        .from('notification_settings' as any)
+        .update(updatePayload)
+        .eq('user_id', user.id)
+        .select('user_id');
+
+      if (updateError) {
+        console.error('Erro ao atualizar configurações de notificação:', updateError);
+        throw updateError;
       }
 
-      if (error) {
-        console.error('Erro detalhado ao salvar:', error);
-        throw error;
+      // Se nenhuma linha foi atualizada, insere um novo registro
+      if (!updated || updated.length === 0) {
+        const { error: insertError } = await supabase
+          .from('notification_settings' as any)
+          .insert(updatePayload);
+
+        if (insertError) {
+          console.error('Erro ao inserir configurações de notificação:', insertError);
+          throw insertError;
+        }
       }
 
       setActiveProfile('custom');

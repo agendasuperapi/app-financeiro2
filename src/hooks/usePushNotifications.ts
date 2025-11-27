@@ -5,6 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export const usePushNotifications = () => {
+  // Flag simples para evitar múltiplos registros nativos simultâneos
+  // (não persiste entre reinicializações do app, mas já evita crashes por cliques repetidos)
+  
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) {
       console.log('📱 Not on native platform, skipping push notifications');
@@ -138,8 +141,16 @@ export const requestPushNotificationPermission = async () => {
       return false;
     }
 
-    // Registrar para push
+    // Se já está tudo concedido, evitar múltiplos registros que podem causar crash
+    if ((window as any).__nativePushAlreadyRegistered) {
+      console.log('📱 Push já estava registrado, evitando novo registro');
+      toast.success('Notificações já estão ativas neste dispositivo');
+      return true;
+    }
+
+    // Registrar para push (feito apenas uma vez por sessão)
     await PushNotifications.register();
+    (window as any).__nativePushAlreadyRegistered = true;
     console.log('✅ Registered for push notifications');
     
     return true;

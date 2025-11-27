@@ -71,12 +71,22 @@ serve(async (req) => {
           continue;
         }
 
+        // Formatar data em formato brasileiro
+        const reminderDate = new Date(reminder.date);
+        const formattedDate = new Intl.DateTimeFormat('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }).format(reminderDate);
+
         // Enviar para todos os tokens do usuário
         for (const tokenData of tokens) {
           await sendFCMV1(
             tokenData,
-            `💰 Lembrete: ${reminder.name || 'Transação'}`,
-            reminder.description || 'Você tem um lembrete pendente',
+            '🔔 Lembrete AppFinanceiro',
+            `📲 Sua tarefa: ${reminder.description || reminder.name || 'Sem descrição'}\n📆 Agendada para: ${formattedDate}`,
             {
               reminderId: reminder.id,
               type: 'reminder'
@@ -252,13 +262,33 @@ async function sendFCMV1(tokenData: any, title: string, body: string, data: any)
           ])
         )
       },
+      android: {
+        priority: 'high',
+        notification: {
+          title,
+          body,
+          sound: 'default',
+          channel_id: 'lembretes'
+        }
+      },
+      apns: {
+        payload: {
+          aps: {
+            alert: { title, body },
+            sound: 'default',
+            badge: 1
+          }
+        }
+      },
       webpush: {
         fcm_options: { link: '/lembretes' },
         notification: {
           title,
           body,
           icon: '/app-icon.png',
-          badge: '/app-icon.png'
+          badge: '/app-icon.png',
+          requireInteraction: true,
+          vibrate: [200, 100, 200]
         }
       }
     }

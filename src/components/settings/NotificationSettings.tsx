@@ -64,7 +64,23 @@ export const NotificationSettings = () => {
   useEffect(() => {
     const checkStatus = async () => {
       if (isNative) {
-        // Native (Android/iOS): verificar se existe token salvo na tabela notification_tokens
+        // Native (Android/iOS): verificar permissão REAL do sistema primeiro
+        const { PushNotifications } = await import('@capacitor/push-notifications');
+        const permStatus = await PushNotifications.checkPermissions();
+        
+        console.log('📱 Permissão real do dispositivo:', permStatus.receive);
+        
+        // Mapear status do Capacitor para NotificationPermission
+        let realPermission: NotificationPermission = 'default';
+        if (permStatus.receive === 'granted') {
+          realPermission = 'granted';
+        } else if (permStatus.receive === 'denied') {
+          realPermission = 'denied';
+        }
+        
+        setPermission(realPermission);
+        
+        // Depois verificar se existe token salvo
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
@@ -80,8 +96,11 @@ export const NotificationSettings = () => {
 
         const hasToken = !!data && data.length > 0;
         setTokenSaved(hasToken);
-        setPermission(hasToken ? 'granted' : 'default');
-        console.log('📊 Status nativo:', { tokenSaved: hasToken });
+        
+        console.log('📊 Status nativo:', { 
+          systemPermission: permStatus.receive, 
+          tokenSaved: hasToken 
+        });
         return;
       }
 
@@ -494,48 +513,100 @@ export const NotificationSettings = () => {
 
         {isNative && (
           <div className="space-y-3">
-            <div className="text-sm text-muted-foreground p-3 bg-muted rounded-lg">
-              Toque no botão abaixo para ativar as notificações no seu celular. Você precisará permitir quando solicitado.
-            </div>
-            <Button 
-              onClick={handleEnableNotifications} 
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Ativando...' : tokenSaved ? 'Reativar / Verificar Notificações Mobile' : 'Ativar Notificações Mobile'}
-            </Button>
-
-            <div className="space-y-2 mt-2 p-3 bg-muted rounded-lg text-sm">
-              <div className="flex items-center justify-between">
-                <span>Status no dispositivo:</span>
-                <span className={cn('font-medium', tokenSaved ? 'text-green-600' : 'text-red-600')}>
-                  {tokenSaved ? '✅ Conectado' : '❌ Não conectado'}
+            {/* Status da permissão do sistema */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <span className="text-sm">Permissão do sistema:</span>
+                <span className={`text-sm font-medium ${
+                  permission === 'granted' ? 'text-green-600' : 
+                  permission === 'denied' ? 'text-red-600' : 
+                  'text-yellow-600'
+                }`}>
+                  {permission === 'granted' ? '✅ Permitida' : 
+                   permission === 'denied' ? '🚫 Negada' : 
+                   '⏸️ Não solicitada'}
                 </span>
               </div>
+              
+              {permission === 'granted' && (
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <span className="text-sm">Status no dispositivo:</span>
+                  <span className={cn('text-sm font-medium', tokenSaved ? 'text-green-600' : 'text-red-600')}>
+                    {tokenSaved ? '✅ Conectado' : '❌ Não conectado'}
+                  </span>
+                </div>
+              )}
+            </div>
 
-              {tokenSaved && (
+            {/* Alerta quando permissão negada */}
+            {permission === 'denied' && (
+              <Alert className="bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
+                <AlertDescription className="text-sm space-y-3">
+                  <p className="font-medium">🚫 As notificações estão bloqueadas</p>
+                  <p>Para ativar, você precisa desbloquear nas configurações do Android:</p>
+                  <ol className="list-decimal list-inside space-y-1 ml-2">
+                    <li>Abra as <strong>Configurações</strong> do Android</li>
+                    <li>Vá em <strong>Aplicativos</strong></li>
+                    <li>Encontre <strong>App Financeiro</strong></li>
+                    <li>Toque em <strong>Notificações</strong></li>
+                    <li>Ative <strong>Permitir notificações</strong></li>
+                    <li>Volte aqui e toque em "Ativar Notificações"</li>
+                  </ol>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Botão de ativar (só aparece se não estiver granted) */}
+            {permission !== 'granted' && (
+              <>
+                <div className="text-sm text-muted-foreground p-3 bg-muted rounded-lg">
+                  Toque no botão abaixo para ativar as notificações no seu celular. Você precisará permitir quando solicitado.
+                </div>
+                <Button 
+                  onClick={handleEnableNotifications} 
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Ativando...' : 'Ativar Notificações Mobile'}
+                </Button>
+              </>
+            )}
+
+            {/* Controles quando conectado */}
+            {permission === 'granted' && tokenSaved && (
+              <div className="space-y-2">
                 <Button 
                   onClick={handleTestNotification} 
                   variant="secondary"
-                  className="w-full mt-2"
+                  className="w-full"
                   disabled={isTesting}
                 >
                   <TestTube2 className="h-4 w-4 mr-2" />
                   {isTesting ? 'Enviando teste...' : 'Testar Notificação no Celular'}
                 </Button>
-              )}
 
-              {tokenSaved && (
                 <Button 
                   onClick={handleDisableNotifications} 
                   variant="outline"
-                  className="w-full mt-2"
+                  className="w-full"
                   disabled={isDisabling}
                 >
                   {isDisabling ? 'Desativando...' : 'Desativar Notificações neste Dispositivo'}
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* Caso esteja granted mas sem token */}
+            {permission === 'granted' && !tokenSaved && (
+              <Button 
+                onClick={handleEnableNotifications} 
+                variant="outline"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Reconectando...' : '🔄 Reconectar Notificações'}
+              </Button>
+            )}
           </div>
         )}
 

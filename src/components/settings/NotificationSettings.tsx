@@ -177,17 +177,25 @@ export const NotificationSettings = () => {
     setIsDisabling(true);
     try {
       if (isNative) {
-        // Mobile: remover token da tabela para parar de receber push
+        // Mobile: remover apenas o token DESTE dispositivo
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           toast.error('❌ Usuário não autenticado');
           return;
         }
 
+        // Pegar device_id do localStorage
+        const deviceId = localStorage.getItem('device_id');
+        if (!deviceId) {
+          toast.error('❌ Device ID não encontrado');
+          return;
+        }
+
         const { error } = await supabase
           .from('notification_tokens' as any)
           .delete()
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .eq('device_id', deviceId);
 
         if (error) {
           console.error('Erro ao remover token de notificação nativo:', error);
@@ -198,7 +206,7 @@ export const NotificationSettings = () => {
           setPermission('default');
         }
       } else {
-        // Web: usar serviço de Web Push
+        // Web: usar serviço de Web Push (já deleta apenas o token do dispositivo atual)
         const success = await unregisterWebPushNotification();
         if (success) {
           toast.success('✅ Notificações desativadas com sucesso!');

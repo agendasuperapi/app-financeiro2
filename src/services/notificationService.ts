@@ -101,22 +101,30 @@ export async function registerWebPushNotification() {
 }
 
 /**
- * Desregistra notificações push
+ * Desregistra notificações push apenas DESTE dispositivo
  */
 export async function unregisterWebPushNotification() {
   try {
-    // Remover token do banco
+    // Remover token APENAS deste dispositivo
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      await supabase
+      // Pegar device_id do localStorage
+      const deviceId = localStorage.getItem('device_id') || 'web-default';
+      
+      const { error } = await supabase
         .from('notification_tokens' as any)
         .delete()
         .eq('user_id', user.id)
-        .eq('platform', 'web');
+        .eq('device_id', deviceId);
+      
+      if (error) {
+        console.error('❌ Erro ao remover token:', error);
+        throw error;
+      }
     }
 
-    console.log('✅ Notificações desativadas');
-    toast.success('Notificações desativadas');
+    console.log('✅ Notificações desativadas neste dispositivo');
+    toast.success('Notificações desativadas neste dispositivo');
     return true;
   } catch (error) {
     console.error('❌ Erro ao desativar notificações:', error);

@@ -63,13 +63,36 @@ export const NotificationSettings = () => {
 
   useEffect(() => {
     const checkStatus = async () => {
+      if (isNative) {
+        // Native (Android/iOS): verificar se existe token salvo na tabela notification_tokens
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('notification_tokens' as any)
+          .select('id, platform')
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Erro ao buscar tokens de notificação nativos:', error);
+          return;
+        }
+
+        const hasToken = !!data && data.length > 0;
+        setTokenSaved(hasToken);
+        setPermission(hasToken ? 'granted' : 'default');
+        console.log('📊 Status nativo:', { tokenSaved: hasToken });
+        return;
+      }
+
+      // Web: usar Notification API do navegador
       const perm = await checkNotificationPermission();
       setPermission(perm);
       
       if (perm === 'granted') {
         const saved = await hasTokenSaved();
         setTokenSaved(saved);
-        console.log('📊 Status:', { permission: perm, tokenSaved: saved });
+        console.log('📊 Status web:', { permission: perm, tokenSaved: saved });
       }
     };
     
@@ -99,9 +122,7 @@ export const NotificationSettings = () => {
       }
     };
 
-    if (!isNative) {
-      checkStatus();
-    }
+    checkStatus();
     loadSettings();
   }, [isNative]);
 
@@ -136,13 +157,37 @@ export const NotificationSettings = () => {
   const handleDisableNotifications = async () => {
     setIsDisabling(true);
     try {
-      const success = await unregisterWebPushNotification();
-      if (success) {
-        toast.success('✅ Notificações desativadas com sucesso!');
-        setPermission('default');
-        setTokenSaved(false);
+      if (isNative) {
+        // Mobile: remover token da tabela para parar de receber push
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          toast.error('❌ Usuário não autenticado');
+          return;
+        }
+
+        const { error } = await supabase
+          .from('notification_tokens' as any)
+          .delete()
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Erro ao remover token de notificação nativo:', error);
+          toast.error('❌ Erro ao desativar notificações no dispositivo');
+        } else {
+          toast.success('✅ Notificações desativadas neste dispositivo!');
+          setTokenSaved(false);
+          setPermission('default');
+        }
       } else {
-        toast.error('❌ Erro ao desativar notificações');
+        // Web: usar serviço de Web Push
+        const success = await unregisterWebPushNotification();
+        if (success) {
+          toast.success('✅ Notificações desativadas com sucesso!');
+          setPermission('default');
+          setTokenSaved(false);
+        } else {
+          toast.error('❌ Erro ao desativar notificações');
+        }
       }
     } catch (error) {
       console.error('Error disabling notifications:', error);
@@ -457,10 +502,43 @@ export const NotificationSettings = () => {
               className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? 'Ativando...' : 'Ativar Notificações Mobile'}
+              {isLoading ? 'Ativando...' : tokenSaved ? 'Reativar / Verificar Notificações Mobile' : 'Ativar Notificações Mobile'}
             </Button>
+
+            <div className="space-y-2 mt-2 p-3 bg-muted rounded-lg text-sm">
+              <div className="flex items-center justify-between">
+                <span>Status no dispositivo:</span>
+                <span className={cn('font-medium', tokenSaved ? 'text-green-600' : 'text-red-600')}>
+                  {tokenSaved ? '✅ Conectado' : '❌ Não conectado'}
+                </span>
+              </div>
+
+              {tokenSaved && (
+                <Button 
+                  onClick={handleTestNotification} 
+                  variant="secondary"
+                  className="w-full mt-2"
+                  disabled={isTesting}
+                >
+                  <TestTube2 className="h-4 w-4 mr-2" />
+                  {isTesting ? 'Enviando teste...' : 'Testar Notificação no Celular'}
+                </Button>
+              )}
+
+              {tokenSaved && (
+                <Button 
+                  onClick={handleDisableNotifications} 
+                  variant="outline"
+                  className="w-full mt-2"
+                  disabled={isDisabling}
+                >
+                  {isDisabling ? 'Desativando...' : 'Desativar Notificações neste Dispositivo'}
+                </Button>
+              )}
+            </div>
           </div>
         )}
+
 
         {permission === 'granted' && tokenSaved && (
           <>

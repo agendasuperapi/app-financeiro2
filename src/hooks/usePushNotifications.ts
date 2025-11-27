@@ -31,31 +31,46 @@ export const usePushNotifications = () => {
           const { data: { user }, error: userError } = await supabase.auth.getUser();
           if (userError) {
             console.error('❌ Error getting user:', userError);
+            toast.error('Erro ao obter usuário');
             return;
           }
           
           if (!user) {
             console.log('⚠️ User not authenticated, skipping token save');
+            toast.error('Usuário não autenticado');
             return;
           }
 
           const platform = Capacitor.getPlatform();
           console.log('📱 Platform detected:', platform);
+          console.log('👤 User ID:', user.id);
+          console.log('🔑 Token a salvar:', token.value.substring(0, 20) + '...');
           
-          const { error: upsertError } = await supabase.from('notification_tokens' as any).upsert({
+          const tokenData = {
             user_id: user.id,
             token: token.value,
             platform: platform === 'ios' ? 'ios' : 'android'
-          });
+          };
+          
+          console.log('💾 Salvando token no banco...', tokenData);
+          
+          const { data: insertData, error: upsertError } = await supabase
+            .from('notification_tokens' as any)
+            .upsert(tokenData, {
+              onConflict: 'user_id,platform'
+            })
+            .select();
           
           if (upsertError) {
             console.error('❌ Error saving token:', upsertError);
+            toast.error(`Erro ao salvar token: ${upsertError.message}`);
           } else {
-            console.log('✅ Token saved successfully');
-            toast.success('Notificações ativadas com sucesso!');
+            console.log('✅ Token saved successfully:', insertData);
+            toast.success('✅ Notificações ativadas! Token salvo no banco.');
           }
         } catch (error) {
           console.error('❌ Error in registration listener:', error);
+          toast.error('Erro ao processar token');
         }
       });
 
@@ -121,25 +136,30 @@ export const requestPushNotificationPermission = async () => {
     // Verificar se o usuário está autenticado
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.error('User must be authenticated to enable notifications');
+      console.error('❌ User must be authenticated to enable notifications');
       toast.error('Você precisa estar logado para ativar notificações');
       return false;
     }
+    
+    console.log('👤 User authenticated:', user.id);
 
     // Verificar permissões
     let permStatus = await PushNotifications.checkPermissions();
     console.log('📱 Current permission status:', permStatus);
     
     if (permStatus.receive === 'prompt') {
+      console.log('📱 Requesting permissions from user...');
       permStatus = await PushNotifications.requestPermissions();
       console.log('📱 Permission after request:', permStatus);
     }
 
     if (permStatus.receive !== 'granted') {
-      console.log('⚠️ Permission denied');
+      console.log('⚠️ Permission denied by user');
       toast.error('Permissão de notificação negada');
       return false;
     }
+
+    console.log('✅ Permission granted!');
 
     // Se já está tudo concedido, evitar múltiplos registros que podem causar crash
     if ((window as any).__nativePushAlreadyRegistered) {
@@ -148,15 +168,16 @@ export const requestPushNotificationPermission = async () => {
       return true;
     }
 
+    console.log('📱 Registering for push notifications...');
     // Registrar para push (feito apenas uma vez por sessão)
     await PushNotifications.register();
     (window as any).__nativePushAlreadyRegistered = true;
-    console.log('✅ Registered for push notifications');
+    console.log('✅ Registered for push notifications, aguardando token do listener...');
     
     return true;
   } catch (error) {
     console.error('❌ Error requesting permission:', error);
-    toast.error('Erro ao solicitar permissão de notificação');
+    toast.error(`Erro ao solicitar permissão: ${error}`);
     return false;
   }
 };

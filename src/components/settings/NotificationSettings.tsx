@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, BellOff, Smartphone, Globe, TestTube2, Volume2, Play } from 'lucide-react';
+import { Bell, BellOff, Smartphone, Globe, TestTube2, Volume2, Play, Briefcase, Home, VolumeX } from 'lucide-react';
 import { registerWebPushNotification, checkNotificationPermission, unregisterWebPushNotification, hasTokenSaved, sendTestNotification } from '@/services/notificationService';
 import { requestPushNotificationPermission } from '@/hooks/usePushNotifications';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 const SOUND_OPTIONS = [
   { value: 'default', label: '🔔 Padrão', description: 'Som padrão do sistema' },
@@ -18,7 +19,34 @@ const SOUND_OPTIONS = [
   { value: 'success', label: '✅ Sucesso', description: 'Som suave e positivo' },
   { value: 'reminder', label: '⏰ Lembrete', description: 'Som de lembrete amigável' },
   { value: 'chime', label: '🎵 Chime', description: 'Som melodioso' },
+  { value: 'silent', label: '🔇 Silencioso', description: 'Sem som' },
 ];
+
+type NotificationProfile = 'trabalho' | 'casa' | 'silencioso' | 'custom';
+
+const NOTIFICATION_PROFILES = {
+  trabalho: {
+    name: '💼 Trabalho',
+    icon: Briefcase,
+    soundType: 'alert',
+    vibrationEnabled: true,
+    description: 'Alertas importantes com som e vibração'
+  },
+  casa: {
+    name: '🏠 Casa',
+    icon: Home,
+    soundType: 'default',
+    vibrationEnabled: true,
+    description: 'Notificações normais com som suave'
+  },
+  silencioso: {
+    name: '🔇 Silencioso',
+    icon: VolumeX,
+    soundType: 'silent',
+    vibrationEnabled: false,
+    description: 'Apenas notificações visuais, sem som ou vibração'
+  }
+};
 
 export const NotificationSettings = () => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
@@ -30,6 +58,7 @@ export const NotificationSettings = () => {
   const [vibrationEnabled, setVibrationEnabled] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
+  const [activeProfile, setActiveProfile] = useState<NotificationProfile>('custom');
   const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
@@ -57,13 +86,15 @@ export const NotificationSettings = () => {
       if (data && !error) {
         setSoundType((data as any).sound_type || 'default');
         setVibrationEnabled((data as any).vibration_enabled ?? true);
+        setActiveProfile((data as any).active_profile || 'custom');
       } else if (error && error.code === 'PGRST116') {
         // Criar configurações padrão se não existir
         await supabase.from('notification_settings' as any).insert({
           user_id: user.id,
           sound_type: 'default',
           vibration_enabled: true,
-          notification_enabled: true
+          notification_enabled: true,
+          active_profile: 'custom'
         });
       }
     };
@@ -138,9 +169,48 @@ export const NotificationSettings = () => {
     }
   };
 
+  const applyProfile = async (profile: NotificationProfile) => {
+    if (profile === 'custom') return;
+    
+    const profileConfig = NOTIFICATION_PROFILES[profile];
+    setSoundType(profileConfig.soundType);
+    setVibrationEnabled(profileConfig.vibrationEnabled);
+    setActiveProfile(profile);
+    
+    // Salvar automaticamente
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('notification_settings' as any)
+        .upsert({
+          user_id: user.id,
+          sound_type: profileConfig.soundType,
+          vibration_enabled: profileConfig.vibrationEnabled,
+          notification_enabled: true,
+          active_profile: profile,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      toast.success(`✅ Perfil "${profileConfig.name}" ativado!`);
+    } catch (error) {
+      console.error('Error applying profile:', error);
+      toast.error('❌ Erro ao aplicar perfil');
+    }
+  };
+
   const playSoundPreview = async (sound: string) => {
     setIsPlayingPreview(true);
     try {
+      if (sound === 'silent') {
+        toast.info('🔇 Modo silencioso - sem som');
+        setIsPlayingPreview(false);
+        return;
+      }
+
       // Usando Web Audio API para gerar sons diferentes
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
@@ -215,12 +285,14 @@ export const NotificationSettings = () => {
           sound_type: soundType,
           vibration_enabled: vibrationEnabled,
           notification_enabled: true,
+          active_profile: 'custom',
           updated_at: new Date().toISOString()
         });
 
       if (error) throw error;
 
-      toast.success('✅ Configurações salvas com sucesso!');
+      setActiveProfile('custom');
+      toast.success('✅ Configurações personalizadas salvas!');
     } catch (error) {
       console.error('Error saving settings:', error);
       toast.error('❌ Erro ao salvar configurações');
@@ -351,17 +423,71 @@ export const NotificationSettings = () => {
         )}
 
         {permission === 'granted' && tokenSaved && (
-          <Card className="mt-6 border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Volume2 className="h-5 w-5" />
-                Personalizar Notificações
-              </CardTitle>
-              <CardDescription>
-                Configure como você deseja receber suas notificações
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <>
+            <Card className="mt-6 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Bell className="h-5 w-5" />
+                  Perfis de Notificação
+                </CardTitle>
+                <CardDescription>
+                  Alterne rapidamente entre perfis pré-configurados
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-1 gap-2">
+                  {(Object.keys(NOTIFICATION_PROFILES) as NotificationProfile[]).map((profileKey) => {
+                    const profile = NOTIFICATION_PROFILES[profileKey];
+                    const Icon = profile.icon;
+                    const isActive = activeProfile === profileKey;
+                    
+                    return (
+                      <Button
+                        key={profileKey}
+                        variant={isActive ? "default" : "outline"}
+                        className={cn(
+                          "w-full justify-start h-auto py-3",
+                          isActive && "ring-2 ring-primary"
+                        )}
+                        onClick={() => applyProfile(profileKey)}
+                      >
+                        <div className="flex items-start gap-3 text-left w-full">
+                          <Icon className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium">{profile.name}</div>
+                            <div className="text-xs opacity-80 mt-0.5">
+                              {profile.description}
+                            </div>
+                          </div>
+                          {isActive && (
+                            <div className="text-xs font-medium bg-primary-foreground/20 px-2 py-1 rounded">
+                              Ativo
+                            </div>
+                          )}
+                        </div>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="mt-4 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Volume2 className="h-5 w-5" />
+                  Configurações Personalizadas
+                  {activeProfile === 'custom' && (
+                    <span className="text-xs font-normal bg-primary/10 px-2 py-1 rounded ml-auto">
+                      Ativo
+                    </span>
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  Ajuste manualmente som e vibração
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="sound-select">Som da Notificação</Label>
                 <div className="flex gap-2">
@@ -412,10 +538,11 @@ export const NotificationSettings = () => {
                 className="w-full"
                 disabled={isSaving}
               >
-                {isSaving ? 'Salvando...' : 'Salvar Configurações'}
+                {isSaving ? 'Salvando...' : 'Salvar Configurações Personalizadas'}
               </Button>
             </CardContent>
           </Card>
+          </>
         )}
 
         <div className="pt-4 space-y-2 text-xs text-muted-foreground">

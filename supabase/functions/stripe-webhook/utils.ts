@@ -47,7 +47,8 @@ export async function verifyStripeSignature(
     );
     return true;
   } catch (err) {
-    console.error("Webhook signature verification failed:", err.message);
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error("Webhook signature verification failed:", errorMessage);
     return false;
   }
 }

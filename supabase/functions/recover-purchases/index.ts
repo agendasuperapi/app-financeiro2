@@ -62,18 +62,15 @@ serve(async (req) => {
         }
 
         // Verificar se usuário existe
-        const { data: existingUser } = await supabase.auth.admin.getUserByEmail(customerEmail);
+        const { data: usersData } = await supabase.auth.admin.listUsers();
+        const existingUser = usersData?.users?.find(u => u.email === customerEmail);
         
-        if (!existingUser.user) {
+        if (!existingUser) {
           logStep("Creating missing user", { email: customerEmail, sessionId: session.id });
           
           // Criar usuário
           const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
             email: customerEmail,
-            // Substitua:
-            password: '123mudar',
-            
-            // Por:
             password: Deno.env.get('DEFAULT_PASSWORD') || '123mudar',
             email_confirm: true,
             user_metadata: {
@@ -125,7 +122,8 @@ serve(async (req) => {
           logStep("User recovered successfully", { email: customerEmail, userId: newUser.user!.id });
         }
       } catch (error) {
-        logStep("Error processing session", { sessionId: session.id, error: error.message });
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logStep("Error processing session", { sessionId: session.id, error: errorMessage });
         errorCount++;
       }
     }
@@ -145,9 +143,10 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    logStep("ERROR in recovery", { message: error.message });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR in recovery", { message: errorMessage });
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,

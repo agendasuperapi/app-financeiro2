@@ -97,10 +97,11 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Error in create-transaction-admin:", error);
+    const errorMessage = error instanceof Error ? error.message : "Erro interno do servidor";
     
     return new Response(JSON.stringify({ 
       success: false,
-      error: error.message || "Erro interno do servidor"
+      error: errorMessage
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

@@ -105,12 +105,13 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    logStep("ERROR: Function failed", { error: error.message });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR: Function failed", { error: errorMessage });
     
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: errorMessage 
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -90,8 +90,9 @@ const handleRequest = async (req: Request) => {
     );
     console.log("Valid Stripe signature verified, proceeding with processing");
   } catch (err) {
-    console.error("Webhook signature verification failed:", err.message);
-    return new Response(`Webhook Error: ${err.message}`, {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error("Webhook signature verification failed:", errorMessage);
+    return new Response(`Webhook Error: ${errorMessage}`, {
       status: 400
     });
   }
@@ -124,7 +125,9 @@ const handleRequest = async (req: Request) => {
 
     return createSuccessResponse(event);
   } catch (error) {
-    console.error("Error processing webhook:", error.message, error.stack);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error("Error processing webhook:", errorMessage, errorStack);
     return createErrorResponse(error);
   }
 };

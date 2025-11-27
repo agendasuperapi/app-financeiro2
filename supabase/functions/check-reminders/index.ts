@@ -88,7 +88,8 @@ serve(async (req) => {
         console.log(`✅ Notificação enviada para lembrete ${reminder.id}`);
       } catch (err) {
         console.error(`❌ Erro ao processar lembrete ${reminder.id}:`, err);
-        results.push({ id: reminder.id, success: false, error: err.message });
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        results.push({ id: reminder.id, success: false, error: errorMessage });
       }
     }
 
@@ -103,8 +104,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Erro:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

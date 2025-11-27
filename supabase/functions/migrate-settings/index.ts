@@ -17,8 +17,16 @@ const encryptValue = (value: string): string => {
   return btoa(value);
 };
 
+// Type for mapping entries
+type MappingEntry = {
+  category: string;
+  key: string;
+  encrypted?: boolean;
+  type?: string;
+};
+
 // Mapping of old secret keys to new structure
-const secretsMapping = {
+const secretsMapping: Record<string, MappingEntry> = {
   // Branding
   'LOGO_URL': { category: 'branding', key: 'logo_url' },
   'FAVICON_URL': { category: 'branding', key: 'favicon_url' },

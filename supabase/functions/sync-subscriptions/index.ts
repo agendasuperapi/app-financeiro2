@@ -119,13 +119,8 @@ serve(async (req) => {
         logStep("Processing subscription", { subscriptionId: subscription.id, email: customer.email });
 
         // Verificar se usuário existe no Supabase Auth
-        const { data, error: getUserError } = await supabase.auth.admin.listUsers({
-          filter: {
-            email: customer.email
-          }
-        });
-
-        const existingUser = data?.users?.[0];
+        const { data: usersData } = await supabase.auth.admin.listUsers();
+        const existingUser = usersData?.users?.find(u => u.email === customer.email);
         let userId = existingUser?.id;
 
         if (!existingUser) {
@@ -134,10 +129,6 @@ serve(async (req) => {
           // Criar usuário no Supabase Auth
           const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
             email: customer.email,
-            // Substitua:
-            password: '123mudar',
-            
-            // Por:
             password: Deno.env.get('DEFAULT_PASSWORD') || '123mudar',
             email_confirm: true,
             user_metadata: {
@@ -245,7 +236,8 @@ serve(async (req) => {
           logStep("Subscription synced", { subscriptionId: subscription.id });
         }
       } catch (error) {
-        logStep("Error processing subscription", { subscriptionId: subscription.id, error: error.message });
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logStep("Error processing subscription", { subscriptionId: subscription.id, error: errorMessage });
       }
     }
 
@@ -268,9 +260,10 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    logStep("ERROR in sync", { message: error.message });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR in sync", { message: errorMessage });
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,

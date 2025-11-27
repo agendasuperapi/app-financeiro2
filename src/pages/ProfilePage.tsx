@@ -366,8 +366,7 @@ const ProfilePage = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg md:text-xl">Informações Pessoais</CardTitle>
-                    <CardDescription className="text-sm">Seus dados de cadastro e contato
-Versão:3.0.1</CardDescription>
+                    <CardDescription className="text-sm">Seus dados de cadastro e contato Versão:3.0.4</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">

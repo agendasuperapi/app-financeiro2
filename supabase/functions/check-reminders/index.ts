@@ -21,17 +21,21 @@ serve(async (req) => {
 
     // Buscar lembretes que precisam de notificação
     const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
     
-    // Buscar lembretes ativos cuja data já passou e que:
-    // 1. Nunca foram notificados (notification_sent = false), OU
-    // 2. Última notificação foi há mais de 1 hora atrás
+    // Buscar lembretes com:
+    // - status = "pending"
+    // - situacao = "Ativo"
+    // - data entre 10 minutos atrás e agora
+    // - notification_sent = false
     const { data: reminders, error } = await supabase
       .from('tbl_lembrete')
       .select('*')
-      .in('status', ['pending', 'Ativo'])
+      .eq('status', 'pending')
+      .eq('situacao', 'Ativo')
       .lte('date', now.toISOString())
-      .or(`notification_sent.eq.false,last_notification_at.lt.${oneHourAgo.toISOString()}`);
+      .gte('date', tenMinutesAgo.toISOString())
+      .eq('notification_sent', false);
 
     if (error) throw error;
 

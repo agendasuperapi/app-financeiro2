@@ -185,27 +185,33 @@ export const NotificationSettings = () => {
       // Tentar salvar com active_profile primeiro
       let { error } = await supabase
         .from('notification_settings' as any)
-        .upsert({
-          user_id: user.id,
-          sound_type: profileConfig.soundType,
-          vibration_enabled: profileConfig.vibrationEnabled,
-          notification_enabled: true,
-          active_profile: profile,
-          updated_at: new Date().toISOString()
-        });
+        .upsert(
+          {
+            user_id: user.id,
+            sound_type: profileConfig.soundType,
+            vibration_enabled: profileConfig.vibrationEnabled,
+            notification_enabled: true,
+            active_profile: profile,
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'user_id' }
+        );
 
       // Se der erro por causa do campo active_profile, tentar sem ele
       if (error && error.message?.includes('active_profile')) {
         console.log('Campo active_profile não existe, salvando sem ele...');
         const result = await supabase
           .from('notification_settings' as any)
-          .upsert({
-            user_id: user.id,
-            sound_type: profileConfig.soundType,
-            vibration_enabled: profileConfig.vibrationEnabled,
-            notification_enabled: true,
-            updated_at: new Date().toISOString()
-          });
+          .upsert(
+            {
+              user_id: user.id,
+              sound_type: profileConfig.soundType,
+              vibration_enabled: profileConfig.vibrationEnabled,
+              notification_enabled: true,
+              updated_at: new Date().toISOString()
+            },
+            { onConflict: 'user_id' }
+          );
         error = result.error;
       }
 
@@ -300,27 +306,33 @@ export const NotificationSettings = () => {
       // Tentar salvar com active_profile primeiro
       let { error } = await supabase
         .from('notification_settings' as any)
-        .upsert({
-          user_id: user.id,
-          sound_type: soundType,
-          vibration_enabled: vibrationEnabled,
-          notification_enabled: true,
-          active_profile: 'custom',
-          updated_at: new Date().toISOString()
-        });
+        .upsert(
+          {
+            user_id: user.id,
+            sound_type: soundType,
+            vibration_enabled: vibrationEnabled,
+            notification_enabled: true,
+            active_profile: 'custom',
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'user_id' }
+        );
 
       // Se der erro por causa do campo active_profile, tentar sem ele
       if (error && error.message?.includes('active_profile')) {
         console.log('Campo active_profile não existe, salvando sem ele...');
         const result = await supabase
           .from('notification_settings' as any)
-          .upsert({
-            user_id: user.id,
-            sound_type: soundType,
-            vibration_enabled: vibrationEnabled,
-            notification_enabled: true,
-            updated_at: new Date().toISOString()
-          });
+          .upsert(
+            {
+              user_id: user.id,
+              sound_type: soundType,
+              vibration_enabled: vibrationEnabled,
+              notification_enabled: true,
+              updated_at: new Date().toISOString()
+            },
+            { onConflict: 'user_id' }
+          );
         error = result.error;
       }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, BellOff, Smartphone, Globe, TestTube2, Volume2 } from 'lucide-react';
+import { Bell, BellOff, Smartphone, Globe, TestTube2, Volume2, Play } from 'lucide-react';
 import { registerWebPushNotification, checkNotificationPermission, unregisterWebPushNotification, hasTokenSaved, sendTestNotification } from '@/services/notificationService';
 import { requestPushNotificationPermission } from '@/hooks/usePushNotifications';
 import { toast } from 'sonner';
@@ -29,6 +29,7 @@ export const NotificationSettings = () => {
   const [soundType, setSoundType] = useState('default');
   const [vibrationEnabled, setVibrationEnabled] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPlayingPreview, setIsPlayingPreview] = useState(false);
   const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
@@ -134,6 +135,67 @@ export const NotificationSettings = () => {
       toast.error('❌ Erro ao testar notificação');
     } finally {
       setIsTesting(false);
+    }
+  };
+
+  const playSoundPreview = async (sound: string) => {
+    setIsPlayingPreview(true);
+    try {
+      // Usando Web Audio API para gerar sons diferentes
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      // Configurar frequência e tipo de onda baseado no tipo de som
+      switch (sound) {
+        case 'default':
+          oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+          oscillator.type = 'sine';
+          break;
+        case 'alert':
+          oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5
+          oscillator.type = 'square';
+          break;
+        case 'success':
+          oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime); // E5
+          oscillator.type = 'sine';
+          break;
+        case 'reminder':
+          oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4
+          oscillator.type = 'triangle';
+          break;
+        case 'chime':
+          oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime); // G5
+          oscillator.type = 'sine';
+          break;
+      }
+
+      // Envelope de volume para som mais natural
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+
+      // Adicionar vibração se habilitada
+      if (vibrationEnabled && 'vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200]);
+      }
+
+      setTimeout(() => {
+        setIsPlayingPreview(false);
+        audioContext.close();
+      }, 500);
+
+      toast.success(`🔊 Preview: ${SOUND_OPTIONS.find(o => o.value === sound)?.label}`);
+    } catch (error) {
+      console.error('Error playing preview:', error);
+      toast.error('❌ Erro ao reproduzir preview');
+      setIsPlayingPreview(false);
     }
   };
 
@@ -302,21 +364,33 @@ export const NotificationSettings = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="sound-select">Som da Notificação</Label>
-                <Select value={soundType} onValueChange={setSoundType}>
-                  <SelectTrigger id="sound-select">
-                    <SelectValue placeholder="Selecione um som" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SOUND_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{option.label}</span>
-                          <span className="text-xs text-muted-foreground">{option.description}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select value={soundType} onValueChange={setSoundType}>
+                    <SelectTrigger id="sound-select" className="flex-1">
+                      <SelectValue placeholder="Selecione um som" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SOUND_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{option.label}</span>
+                            <span className="text-xs text-muted-foreground">{option.description}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => playSoundPreview(soundType)}
+                    disabled={isPlayingPreview}
+                    title="Testar som"
+                  >
+                    <Play className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
 
               <div className="flex items-center justify-between space-x-2">

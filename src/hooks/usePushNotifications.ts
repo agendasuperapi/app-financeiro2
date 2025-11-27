@@ -46,18 +46,28 @@ export const usePushNotifications = () => {
           console.log('👤 User ID:', user.id);
           console.log('🔑 Token a salvar:', token.value.substring(0, 20) + '...');
           
+          // Gerar ID único do dispositivo (persiste no localStorage)
+          let deviceId = localStorage.getItem('device_id');
+          if (!deviceId) {
+            deviceId = `${platform}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            localStorage.setItem('device_id', deviceId);
+          }
+
           const tokenData = {
             user_id: user.id,
             token: token.value,
-            platform: platform === 'ios' ? 'ios' : 'android'
+            platform: platform === 'ios' ? 'ios' : 'android',
+            device_id: deviceId,
+            last_used: new Date().toISOString()
           };
           
           console.log('💾 Salvando token no banco...', tokenData);
           
+          // Agora usa o token como chave única, permitindo múltiplos dispositivos
           const { data: insertData, error: upsertError } = await supabase
             .from('notification_tokens' as any)
             .upsert(tokenData, {
-              onConflict: 'user_id,platform'
+              onConflict: 'token'
             })
             .select();
           

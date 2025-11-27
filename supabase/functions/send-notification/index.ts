@@ -161,6 +161,7 @@ async function getAccessToken(): Promise<string> {
   const jwt = `${signatureInput}.${signatureB64}`;
 
   // Trocar JWT por access token
+  console.log('🔄 Trocando JWT por access token OAuth2...');
   const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: {
@@ -172,12 +173,19 @@ async function getAccessToken(): Promise<string> {
     })
   });
 
+  console.log('📡 Token response status:', tokenResponse.status);
+
   if (!tokenResponse.ok) {
     const errorText = await tokenResponse.text();
+    console.error('❌ Erro ao obter access token:', {
+      status: tokenResponse.status,
+      body: errorText
+    });
     throw new Error(`Erro ao obter access token: ${tokenResponse.status} ${errorText}`);
   }
 
   const tokenData = await tokenResponse.json();
+  console.log('✅ Access token obtido com sucesso');
   return tokenData.access_token;
 }
 
@@ -213,6 +221,7 @@ async function sendFCMV1(tokenData: any, title: string, body: string, data: any)
   // Obter access token
   const accessToken = await getAccessToken();
   console.log('✅ Access token obtido');
+  console.log('🔑 Access token preview:', accessToken.substring(0, 50) + '...');
 
   // Preparar payload FCM V1
   const fcmPayload: any = {
@@ -267,7 +276,9 @@ async function sendFCMV1(tokenData: any, title: string, body: string, data: any)
   };
 
   console.log('📤 Enviando para FCM V1 API...');
-  console.log('📝 Token:', tokenData.token.substring(0, 20) + '...');
+  console.log('📝 Device token:', tokenData.token.substring(0, 20) + '...');
+  console.log('🌐 FCM URL:', `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`);
+  console.log('📦 Payload:', JSON.stringify(fcmPayload).substring(0, 200) + '...');
   
   const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
   const response = await fetch(url, {
@@ -279,9 +290,38 @@ async function sendFCMV1(tokenData: any, title: string, body: string, data: any)
     body: JSON.stringify(fcmPayload)
   });
 
+  console.log('📡 FCM Response status:', response.status);
+  console.log('📡 FCM Response headers:', JSON.stringify(Object.fromEntries(response.headers.entries())));
+
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('❌ Erro FCM V1:', response.status, errorText);
+    console.error('❌ Erro FCM V1 completo:', {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorText,
+      projectId,
+      tokenPreview: tokenData.token.substring(0, 20)
+    });
+    
+    // Tentar parsear o erro como JSON para mais detalhes
+    try {
+      const errorJson = JSON.parse(errorText);
+      console.error('❌ Erro FCM V1 (JSON):', JSON.stringify(errorJson, null, 2));
+      
+      // Mensagens de erro mais específicas
+      if (errorJson.error?.message?.includes('not found')) {
+        throw new Error(`FCM API não habilitada ou projeto não encontrado. Verifique se a API está ativa no Google Cloud Console para o projeto ${projectId}`);
+      }
+      if (errorJson.error?.message?.includes('permission')) {
+        throw new Error(`Service account não tem permissões. Verifique as permissões do service account no Firebase Console`);
+      }
+      if (errorJson.error?.message?.includes('Invalid JWT') || errorJson.error?.message?.includes('Unauthorized')) {
+        throw new Error(`Token JWT inválido. Verifique se o service account está correto e se a chave privada está válida`);
+      }
+    } catch (parseError) {
+      // Se não for JSON, continua com erro genérico
+    }
+    
     throw new Error(`FCM V1 error: ${response.status} ${errorText}`);
   }
 

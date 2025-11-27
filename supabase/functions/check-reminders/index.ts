@@ -71,6 +71,18 @@ serve(async (req) => {
           continue;
         }
 
+        // Buscar configurações de notificação do usuário
+        const { data: settings } = await supabase
+          .from('notification_settings')
+          .select('*')
+          .eq('user_id', reminder.user_id)
+          .single();
+
+        const soundType = settings?.sound_type || 'default';
+        const vibrationEnabled = settings?.vibration_enabled ?? true;
+        
+        console.log(`🎵 Configurações do usuário ${reminder.user_id}:`, { soundType, vibrationEnabled });
+
         // Formatar data em formato brasileiro
         const reminderDate = new Date(reminder.date);
         const formattedDate = new Intl.DateTimeFormat('pt-BR', {
@@ -92,7 +104,9 @@ serve(async (req) => {
             {
               reminderId: reminder.id,
               type: 'reminder'
-            }
+            },
+            soundType,
+            vibrationEnabled
           );
         }
 
@@ -229,8 +243,15 @@ async function getAccessToken(): Promise<string> {
   return tokenData.access_token;
 }
 
-async function sendFCMV1(tokenData: any, title: string, body: string, data: any) {
-  console.log(`📱 [check-reminders] Enviando FCM V1 para usuário ${tokenData.user_id}...`);
+async function sendFCMV1(
+  tokenData: any, 
+  title: string, 
+  body: string, 
+  data: any, 
+  soundType: string = 'default',
+  vibrationEnabled: boolean = true
+) {
+  console.log(`📱 [check-reminders] Enviando FCM V1 para usuário ${tokenData.user_id} com som: ${soundType}...`);
 
   const serviceAccountJson = Deno.env.get('FCM_SERVICE_ACCOUNT_JSON');
   if (!serviceAccountJson) {
@@ -269,17 +290,17 @@ async function sendFCMV1(tokenData: any, title: string, body: string, data: any)
         notification: {
           title,
           body,
-          sound: 'default',
+          sound: soundType === 'default' ? 'default' : soundType,
           channel_id: 'lembretes',
-          default_sound: true,
-          default_vibrate_timings: true
+          default_sound: soundType === 'default',
+          default_vibrate_timings: vibrationEnabled
         }
       },
       apns: {
         payload: {
           aps: {
             alert: { title, body },
-            sound: 'default',
+            sound: soundType === 'default' ? 'default' : `${soundType}.caf`,
             badge: 1
           }
         },
@@ -295,10 +316,14 @@ async function sendFCMV1(tokenData: any, title: string, body: string, data: any)
           icon: '/app-icon.png',
           badge: '/app-icon.png',
           requireInteraction: true,
-          vibrate: [200, 100, 200],
+          vibrate: vibrationEnabled ? [200, 100, 200] : [0],
           silent: false,
           renotify: true,
-          tag: 'lembrete'
+          tag: 'lembrete',
+          data: {
+            ...data,
+            soundType
+          }
         },
         headers: {
           'Urgency': 'high'

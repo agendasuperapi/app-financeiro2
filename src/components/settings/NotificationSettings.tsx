@@ -1,12 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, BellOff, Smartphone, Globe, TestTube2 } from 'lucide-react';
+import { Bell, BellOff, Smartphone, Globe, TestTube2, Volume2 } from 'lucide-react';
 import { registerWebPushNotification, checkNotificationPermission, unregisterWebPushNotification, hasTokenSaved, sendTestNotification } from '@/services/notificationService';
 import { requestPushNotificationPermission } from '@/hooks/usePushNotifications';
 import { toast } from 'sonner';
 import { Capacitor } from '@capacitor/core';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+
+const SOUND_OPTIONS = [
+  { value: 'default', label: '🔔 Padrão', description: 'Som padrão do sistema' },
+  { value: 'alert', label: '⚠️ Alerta', description: 'Som de alerta urgente' },
+  { value: 'success', label: '✅ Sucesso', description: 'Som suave e positivo' },
+  { value: 'reminder', label: '⏰ Lembrete', description: 'Som de lembrete amigável' },
+  { value: 'chime', label: '🎵 Chime', description: 'Som melodioso' },
+];
 
 export const NotificationSettings = () => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
@@ -14,6 +26,9 @@ export const NotificationSettings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDisabling, setIsDisabling] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
+  const [soundType, setSoundType] = useState('default');
+  const [vibrationEnabled, setVibrationEnabled] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
@@ -27,9 +42,35 @@ export const NotificationSettings = () => {
         console.log('📊 Status:', { permission: perm, tokenSaved: saved });
       }
     };
+    
+    const loadSettings = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('notification_settings' as any)
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (data && !error) {
+        setSoundType((data as any).sound_type || 'default');
+        setVibrationEnabled((data as any).vibration_enabled ?? true);
+      } else if (error && error.code === 'PGRST116') {
+        // Criar configurações padrão se não existir
+        await supabase.from('notification_settings' as any).insert({
+          user_id: user.id,
+          sound_type: 'default',
+          vibration_enabled: true,
+          notification_enabled: true
+        });
+      }
+    };
+
     if (!isNative) {
       checkStatus();
     }
+    loadSettings();
   }, [isNative]);
 
   const handleEnableNotifications = async () => {
@@ -93,6 +134,36 @@ export const NotificationSettings = () => {
       toast.error('❌ Erro ao testar notificação');
     } finally {
       setIsTesting(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    setIsSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('❌ Usuário não autenticado');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('notification_settings' as any)
+        .upsert({
+          user_id: user.id,
+          sound_type: soundType,
+          vibration_enabled: vibrationEnabled,
+          notification_enabled: true,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      toast.success('✅ Configurações salvas com sucesso!');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast.error('❌ Erro ao salvar configurações');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -217,10 +288,66 @@ export const NotificationSettings = () => {
           </div>
         )}
 
+        {permission === 'granted' && tokenSaved && (
+          <Card className="mt-6 border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Volume2 className="h-5 w-5" />
+                Personalizar Notificações
+              </CardTitle>
+              <CardDescription>
+                Configure como você deseja receber suas notificações
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="sound-select">Som da Notificação</Label>
+                <Select value={soundType} onValueChange={setSoundType}>
+                  <SelectTrigger id="sound-select">
+                    <SelectValue placeholder="Selecione um som" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SOUND_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{option.label}</span>
+                          <span className="text-xs text-muted-foreground">{option.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between space-x-2">
+                <div className="space-y-0.5">
+                  <Label htmlFor="vibration-toggle">Vibração</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Ativar vibração nas notificações
+                  </p>
+                </div>
+                <Switch
+                  id="vibration-toggle"
+                  checked={vibrationEnabled}
+                  onCheckedChange={setVibrationEnabled}
+                />
+              </div>
+
+              <Button 
+                onClick={handleSaveSettings}
+                className="w-full"
+                disabled={isSaving}
+              >
+                {isSaving ? 'Salvando...' : 'Salvar Configurações'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="pt-4 space-y-2 text-xs text-muted-foreground">
           <p className="flex items-start gap-2">
             <span>•</span>
-            <span>Você receberá notificações 5 minutos antes dos lembretes</span>
+            <span>Você receberá notificações 10 minutos antes dos lembretes</span>
           </p>
           <p className="flex items-start gap-2">
             <span>•</span>
@@ -228,7 +355,7 @@ export const NotificationSettings = () => {
           </p>
           <p className="flex items-start gap-2">
             <span>•</span>
-            <span>Você pode desativar a qualquer momento nas configurações</span>
+            <span>Você pode personalizar o som e vibração acima</span>
           </p>
         </div>
       </CardContent>

@@ -182,7 +182,8 @@ export const NotificationSettings = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
+      // Tentar salvar com active_profile primeiro
+      let { error } = await supabase
         .from('notification_settings' as any)
         .upsert({
           user_id: user.id,
@@ -193,12 +194,30 @@ export const NotificationSettings = () => {
           updated_at: new Date().toISOString()
         });
 
-      if (error) throw error;
+      // Se der erro por causa do campo active_profile, tentar sem ele
+      if (error && error.message?.includes('active_profile')) {
+        console.log('Campo active_profile não existe, salvando sem ele...');
+        const result = await supabase
+          .from('notification_settings' as any)
+          .upsert({
+            user_id: user.id,
+            sound_type: profileConfig.soundType,
+            vibration_enabled: profileConfig.vibrationEnabled,
+            notification_enabled: true,
+            updated_at: new Date().toISOString()
+          });
+        error = result.error;
+      }
+
+      if (error) {
+        console.error('Erro detalhado ao aplicar perfil:', error);
+        throw error;
+      }
 
       toast.success(`✅ Perfil "${profileConfig.name}" ativado!`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error applying profile:', error);
-      toast.error('❌ Erro ao aplicar perfil');
+      toast.error(`❌ Erro ao aplicar perfil: ${error.message || 'Erro desconhecido'}`);
     }
   };
 
@@ -278,7 +297,8 @@ export const NotificationSettings = () => {
         return;
       }
 
-      const { error } = await supabase
+      // Tentar salvar com active_profile primeiro
+      let { error } = await supabase
         .from('notification_settings' as any)
         .upsert({
           user_id: user.id,
@@ -289,13 +309,31 @@ export const NotificationSettings = () => {
           updated_at: new Date().toISOString()
         });
 
-      if (error) throw error;
+      // Se der erro por causa do campo active_profile, tentar sem ele
+      if (error && error.message?.includes('active_profile')) {
+        console.log('Campo active_profile não existe, salvando sem ele...');
+        const result = await supabase
+          .from('notification_settings' as any)
+          .upsert({
+            user_id: user.id,
+            sound_type: soundType,
+            vibration_enabled: vibrationEnabled,
+            notification_enabled: true,
+            updated_at: new Date().toISOString()
+          });
+        error = result.error;
+      }
+
+      if (error) {
+        console.error('Erro detalhado ao salvar:', error);
+        throw error;
+      }
 
       setActiveProfile('custom');
       toast.success('✅ Configurações personalizadas salvas!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving settings:', error);
-      toast.error('❌ Erro ao salvar configurações');
+      toast.error(`❌ Erro ao salvar configurações: ${error.message || 'Erro desconhecido'}`);
     } finally {
       setIsSaving(false);
     }

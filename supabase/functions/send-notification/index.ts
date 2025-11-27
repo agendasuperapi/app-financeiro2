@@ -13,6 +13,7 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🚀 send-notification iniciado (config JWT via config.toml)');
     const requestBody = await req.json();
     console.log('📥 Request body recebido:', JSON.stringify(requestBody));
     

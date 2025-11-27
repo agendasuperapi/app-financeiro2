@@ -83,10 +83,12 @@ serve(async (req) => {
 
         // Enviar para todos os tokens do usuário
         for (const tokenData of tokens) {
+          const notificationBody = `📲 Sua tarefa: ${reminder.description || reminder.name || 'Sem descrição'}\n\n📆 Agendada para: ${formattedDate}`;
+          
           await sendFCMV1(
             tokenData,
             '🔔 Lembrete AppFinanceiro',
-            `📲 Sua tarefa: ${reminder.description || reminder.name || 'Sem descrição'}\n📆 Agendada para: ${formattedDate}`,
+            notificationBody,
             {
               reminderId: reminder.id,
               type: 'reminder'
@@ -268,7 +270,9 @@ async function sendFCMV1(tokenData: any, title: string, body: string, data: any)
           title,
           body,
           sound: 'default',
-          channel_id: 'lembretes'
+          channel_id: 'lembretes',
+          default_sound: true,
+          default_vibrate_timings: true
         }
       },
       apns: {
@@ -278,6 +282,9 @@ async function sendFCMV1(tokenData: any, title: string, body: string, data: any)
             sound: 'default',
             badge: 1
           }
+        },
+        headers: {
+          'apns-priority': '10'
         }
       },
       webpush: {
@@ -288,7 +295,13 @@ async function sendFCMV1(tokenData: any, title: string, body: string, data: any)
           icon: '/app-icon.png',
           badge: '/app-icon.png',
           requireInteraction: true,
-          vibrate: [200, 100, 200]
+          vibrate: [200, 100, 200],
+          silent: false,
+          renotify: true,
+          tag: 'lembrete'
+        },
+        headers: {
+          'Urgency': 'high'
         }
       }
     }

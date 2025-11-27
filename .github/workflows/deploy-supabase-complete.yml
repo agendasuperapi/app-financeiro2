@@ -371,7 +371,7 @@ jobs:
     - name: 📤 Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-debug-apk
+        name: App-Financeiro-v1.0.0
         path: android/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
 
@@ -401,15 +401,15 @@ jobs:
         set ftp:passive-mode yes
         open -u $HOSTINGER_FTP_USER,$HOSTINGER_FTP_PASSWORD $HOSTINGER_FTP_HOST
         cd $HOSTINGER_FTP_DIR
-        put android/app/build/outputs/apk/debug/app-debug.apk -o app-debug.apk
-        put android/app/build/outputs/apk/debug/app-debug.apk -o app-debug-$(date +%Y%m%d-%H%M%S).apk
+        put android/app/build/outputs/apk/debug/app-debug.apk -o App-Financeiro-v1.0.0.apk
+        put android/app/build/outputs/apk/debug/app-debug.apk -o App-Financeiro-v1.0.0-$(date +%Y%m%d-%H%M%S).apk
         bye
         EOF
         
         # Upload APK
         if lftp -f /tmp/ftp_upload.txt; then
           echo "✅ Debug APK uploaded to Hostinger successfully!"
-          echo "📱 APK disponível em: https://$HOSTINGER_FTP_HOST/app-debug.apk"
+          echo "📱 APK disponível em: https://$HOSTINGER_FTP_HOST/App-Financeiro-v1.0.0.apk"
         else
           echo "⚠️  FTP upload falhou, mas APK está disponível como artifact do GitHub"
         fi
@@ -434,10 +434,10 @@ jobs:
           echo "  https://${{ secrets.HOSTINGER_FTP_HOST }}"
           echo ""
           echo "📱 APK para Testes:"
-          echo "  https://${{ secrets.HOSTINGER_FTP_HOST }}/app-debug.apk"
+          echo "  https://${{ secrets.HOSTINGER_FTP_HOST }}/App-Financeiro-v1.0.0.apk"
           echo ""
           echo "📁 Histórico de APKs:"
-          echo "  https://${{ secrets.HOSTINGER_FTP_HOST }}/app-debug-*.apk"
+          echo "  https://${{ secrets.HOSTINGER_FTP_HOST }}/App-Financeiro-v1.0.0-*.apk"
         else
           echo "- ⚠️  Upload Hostinger não configurado"
           echo ""

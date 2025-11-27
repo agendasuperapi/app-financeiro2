@@ -1,4 +1,4 @@
-# Project ID será configurado dinamicamente no GitHub Actions
+project_id = "gpttodmpflpzhbgzagcc"
 
 [functions.get-vapid-key]
 verify_jwt = false

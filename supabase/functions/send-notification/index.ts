@@ -13,6 +13,7 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🚀 send-notification iniciado (config JWT via config.toml)');
     const requestBody = await req.json();
     console.log('📥 Request body recebido:', JSON.stringify(requestBody));
     
@@ -104,22 +105,19 @@ async function getAccessToken(): Promise<string> {
     throw new Error('FCM_SERVICE_ACCOUNT_JSON deve conter private_key e client_email');
   }
 
-  // Criar JWT para autenticação
+  // Criar JWT manualmente usando Web Crypto API (compatível com Deno Edge Runtime)
   const now = Math.floor(Date.now() / 1000);
   
-  const jwtPayload = {
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const payload = {
     iss: client_email,
     sub: client_email,
     aud: 'https://oauth2.googleapis.com/token',
     iat: now,
-    exp: now + 3600, // 1 hora
+    exp: now + 3600,
     scope: 'https://www.googleapis.com/auth/firebase.messaging'
   };
 
-  // Importar chave privada e criar JWT
-  // Usar biblioteca JWT para Deno
-  const { create } = await import('https://deno.land/x/djwt@v3.0.2/mod.ts');
-  
   // Preparar chave privada
   const keyData = private_key
     .replace(/\\n/g, '\n')
@@ -140,9 +138,25 @@ async function getAccessToken(): Promise<string> {
     ['sign']
   );
 
-  // Criar e assinar JWT
-  const header = { alg: 'RS256', typ: 'JWT' };
-  const jwt = await create(header, jwtPayload, key);
+  // Criar JWT manualmente
+  const encoder = new TextEncoder();
+  const base64url = (data: Uint8Array) => {
+    const base64 = btoa(String.fromCharCode(...data));
+    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  };
+
+  const headerB64 = base64url(encoder.encode(JSON.stringify(header)));
+  const payloadB64 = base64url(encoder.encode(JSON.stringify(payload)));
+  const signatureInput = `${headerB64}.${payloadB64}`;
+  
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    key,
+    encoder.encode(signatureInput)
+  );
+  
+  const signatureB64 = base64url(new Uint8Array(signature));
+  const jwt = `${signatureInput}.${signatureB64}`;
 
   // Trocar JWT por access token
   const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {

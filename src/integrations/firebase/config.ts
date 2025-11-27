@@ -18,24 +18,44 @@ const firebaseConfig = {
 // Obtenha em: Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
 export const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY || "";
 
+// Verificar se as variáveis estão configuradas
+const isFirebaseConfigured = 
+  firebaseConfig.apiKey && 
+  firebaseConfig.authDomain && 
+  firebaseConfig.projectId &&
+  firebaseConfig.appId;
+
+if (!isFirebaseConfigured) {
+  console.error('❌ Firebase Messaging não está configurado');
+  console.error('💡 Configure as variáveis de ambiente do Firebase (VITE_FIREBASE_*)');
+  console.error('📝 Verifique se o arquivo .env.local existe e contém todas as variáveis necessárias');
+  console.error('🔄 Reinicie o servidor de desenvolvimento após criar/atualizar .env.local');
+}
+
 // Inicializar Firebase apenas uma vez
-let app: FirebaseApp;
+let app: FirebaseApp | null = null;
 let messaging: Messaging | null = null;
 
-if (typeof window !== 'undefined') {
-  // Inicializar app apenas no cliente
-  if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApps()[0];
-  }
-
-  // Inicializar messaging apenas no cliente e se o navegador suportar
+if (typeof window !== 'undefined' && isFirebaseConfigured) {
   try {
-    messaging = getMessaging(app);
+    // Inicializar app apenas no cliente
+    if (getApps().length === 0) {
+      app = initializeApp(firebaseConfig);
+      console.log('✅ Firebase inicializado com sucesso');
+    } else {
+      app = getApps()[0];
+    }
+
+    // Inicializar messaging apenas no cliente e se o navegador suportar
+    try {
+      messaging = getMessaging(app);
+      console.log('✅ Firebase Messaging inicializado com sucesso');
+    } catch (error) {
+      console.warn('⚠️ Firebase Messaging não disponível:', error);
+      // Messaging não está disponível (pode ser SSR ou navegador não suporta)
+    }
   } catch (error) {
-    console.warn('⚠️ Firebase Messaging não disponível:', error);
-    // Messaging não está disponível (pode ser SSR ou navegador não suporta)
+    console.error('❌ Erro ao inicializar Firebase:', error);
   }
 }
 

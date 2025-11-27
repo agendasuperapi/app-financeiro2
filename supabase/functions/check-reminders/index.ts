@@ -44,25 +44,36 @@ serve(async (req) => {
 
     // Enviar notificações
     const results = [];
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    
     for (const reminder of reminders) {
       try {
-        // Invocar função de envio de notificação
-        const { data, error: sendError } = await supabase.functions.invoke(
-          'send-notification',
-          {
-            body: {
-              userId: reminder.user_id,
-              title: `💰 Lembrete: ${reminder.name || 'Transação'}`,
-              body: reminder.description || 'Você tem um lembrete pendente',
-              data: {
-                reminderId: reminder.id,
-                type: 'reminder'
-              }
+        // Chamar send-notification diretamente via fetch com autenticação
+        const response = await fetch(`${supabaseUrl}/functions/v1/send-notification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${serviceRoleKey}`,
+            'apikey': serviceRoleKey
+          },
+          body: JSON.stringify({
+            userId: reminder.user_id,
+            title: `💰 Lembrete: ${reminder.name || 'Transação'}`,
+            body: reminder.description || 'Você tem um lembrete pendente',
+            data: {
+              reminderId: reminder.id,
+              type: 'reminder'
             }
-          }
-        );
+          })
+        });
 
-        if (sendError) throw sendError;
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Erro ao enviar notificação: ${response.status} ${errorText}`);
+        }
+
+        const data = await response.json();
 
         // Marcar como notificado
         await supabase

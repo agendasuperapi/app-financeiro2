@@ -705,12 +705,35 @@ export const NotificationSettings = () => {
               </div>
               
               {permission === 'granted' && (
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <span className="text-sm">Status no dispositivo:</span>
-                  <span className={cn('text-sm font-medium', tokenSaved ? 'text-green-600' : 'text-red-600')}>
-                    {tokenSaved ? '✅ Conectado' : '❌ Não conectado'}
-                  </span>
-                </div>
+                <>
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <span className="text-sm">Status no dispositivo:</span>
+                    <span className={cn('text-sm font-medium', tokenSaved ? 'text-green-600' : 'text-red-600')}>
+                      {tokenSaved ? '✅ Conectado' : '❌ Não conectado'}
+                    </span>
+                  </div>
+                  
+                  {deviceCount > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <span className="text-sm font-medium">📱 Dispositivos conectados:</span>
+                        <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                          {deviceCount} {deviceCount === 1 ? 'dispositivo' : 'dispositivos'}
+                        </span>
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setShowDeviceManager(true)}
+                      >
+                        <Smartphone className="h-4 w-4 mr-2" />
+                        Gerenciar Dispositivos
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 

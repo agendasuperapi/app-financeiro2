@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, BellOff, Smartphone, Globe, TestTube2, Volume2, Play, Briefcase, Home, VolumeX } from 'lucide-react';
+import { Bell, BellOff, Smartphone, Globe, TestTube2, Volume2, Play, Briefcase, Home, VolumeX, Trash2, Monitor, TabletSmartphone } from 'lucide-react';
 import { registerWebPushNotification, checkNotificationPermission, unregisterWebPushNotification, hasTokenSaved, sendTestNotification } from '@/services/notificationService';
 import { requestPushNotificationPermission } from '@/hooks/usePushNotifications';
 import { toast } from 'sonner';
@@ -12,6 +12,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const SOUND_OPTIONS = [
   { value: 'default', label: '🔔 Padrão', description: 'Som padrão do sistema' },
@@ -23,6 +33,15 @@ const SOUND_OPTIONS = [
 ];
 
 type NotificationProfile = 'trabalho' | 'casa' | 'silencioso' | 'custom';
+
+interface ConnectedDevice {
+  id: string;
+  device_id: string;
+  platform: string;
+  created_at: string;
+  last_used: string;
+  device_name?: string;
+}
 
 const NOTIFICATION_PROFILES = {
   trabalho: {
@@ -60,6 +79,9 @@ export const NotificationSettings = () => {
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
   const [activeProfile, setActiveProfile] = useState<NotificationProfile>('custom');
   const [deviceCount, setDeviceCount] = useState(0);
+  const [connectedDevices, setConnectedDevices] = useState<ConnectedDevice[]>([]);
+  const [showDeviceManager, setShowDeviceManager] = useState(false);
+  const [deviceToDelete, setDeviceToDelete] = useState<string | null>(null);
   const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
@@ -85,28 +107,29 @@ export const NotificationSettings = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-    // Check if THIS device already has a token
-    const { data: existingToken } = await supabase
+    // Buscar TODOS os dispositivos (Android, iOS, Web)
+    const { data: allTokens } = await supabase
       .from('notification_tokens' as any)
-      .select('id, platform, device_id, created_at')
+      .select('id, platform, device_id, created_at, last_used')
       .eq('user_id', user.id)
       .order('last_used', { ascending: false });
 
-    const count = existingToken?.length || 0;
+    const devices = (allTokens || []) as unknown as ConnectedDevice[];
+    const count = devices.length;
     setDeviceCount(count);
+    setConnectedDevices(devices);
     
-    const hasToken = count > 0;
+    // Verificar se ESTE dispositivo tem token
+    const deviceId = localStorage.getItem('device_id');
+    const hasToken = devices.some(token => token.device_id === deviceId);
     setTokenSaved(hasToken);
     
     console.log('📊 Status nativo:', { 
       systemPermission: permStatus.receive, 
       tokenSaved: hasToken,
-      deviceCount: count
+      deviceCount: count,
+      allDevices: devices
     });
-    
-    if (count > 0) {
-      console.log('📱 Dispositivos com notificações:', existingToken);
-    }
         return;
       }
 
@@ -118,18 +141,25 @@ export const NotificationSettings = () => {
         const saved = await hasTokenSaved();
         setTokenSaved(saved);
         
-        // Contar dispositivos web
+        // Contar TODOS os dispositivos (não só web)
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const { data } = await supabase
+          const { data: allTokens } = await supabase
             .from('notification_tokens' as any)
-            .select('id')
+            .select('id, platform, device_id, created_at, last_used')
             .eq('user_id', user.id)
-            .eq('platform', 'web');
+            .order('last_used', { ascending: false });
           
-          const count = data?.length || 0;
+          const devices = (allTokens || []) as unknown as ConnectedDevice[];
+          const count = devices.length;
           setDeviceCount(count);
-          console.log('📊 Status web:', { permission: perm, tokenSaved: saved, deviceCount: count });
+          setConnectedDevices(devices);
+          console.log('📊 Status web:', { 
+            permission: perm, 
+            tokenSaved: saved, 
+            deviceCount: count,
+            allDevices: devices
+          });
         }
       }
     };
@@ -138,25 +168,21 @@ export const NotificationSettings = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Carregar configurações DESTE dispositivo
+      const deviceId = localStorage.getItem('device_id');
+      if (!deviceId) return;
+
       const { data, error } = await supabase
         .from('notification_settings' as any)
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .eq('device_id', deviceId)
+        .maybeSingle();
 
       if (data && !error) {
         setSoundType((data as any).sound_type || 'default');
         setVibrationEnabled((data as any).vibration_enabled ?? true);
         setActiveProfile((data as any).active_profile || 'custom');
-      } else if (error && error.code === 'PGRST116') {
-        // Criar configurações padrão se não existir
-        await supabase.from('notification_settings' as any).insert({
-          user_id: user.id,
-          sound_type: 'default',
-          vibration_enabled: true,
-          notification_enabled: true,
-          active_profile: 'custom'
-        });
       }
     };
 
@@ -290,14 +316,23 @@ export const NotificationSettings = () => {
     setVibrationEnabled(profileConfig.vibrationEnabled);
     setActiveProfile(profile);
     
-    // Salvar automaticamente
+    // Salvar automaticamente para ESTE dispositivo
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Tentar atualizar primeiro pelas configurações existentes do usuário
+      const deviceId = localStorage.getItem('device_id');
+      if (!deviceId) {
+        toast.error('❌ Device ID não encontrado');
+        return;
+      }
+
+      const platform = isNative ? 'android' : 'web';
+      
       const updatePayload = {
         user_id: user.id,
+        device_id: deviceId,
+        platform: platform,
         sound_type: profileConfig.soundType,
         vibration_enabled: profileConfig.vibrationEnabled,
         notification_enabled: true,
@@ -305,30 +340,18 @@ export const NotificationSettings = () => {
         updated_at: new Date().toISOString()
       };
 
-      const { data: updated, error: updateError } = await supabase
+      const { error } = await supabase
         .from('notification_settings' as any)
-        .update(updatePayload)
-        .eq('user_id', user.id)
-        .select('user_id');
+        .upsert(updatePayload, {
+          onConflict: 'user_id,device_id'
+        });
 
-      if (updateError) {
-        console.error('Erro ao atualizar perfil de notificação:', updateError);
-        throw updateError;
+      if (error) {
+        console.error('Erro ao salvar perfil de notificação:', error);
+        throw error;
       }
 
-      // Se nenhuma linha foi atualizada, insere um novo registro
-      if (!updated || updated.length === 0) {
-        const { error: insertError } = await supabase
-          .from('notification_settings' as any)
-          .insert(updatePayload);
-
-        if (insertError) {
-          console.error('Erro ao inserir perfil de notificação:', insertError);
-          throw insertError;
-        }
-      }
-
-      toast.success(`✅ Perfil "${profileConfig.name}" ativado!`);
+      toast.success(`✅ Perfil "${profileConfig.name}" ativado neste dispositivo!`);
     } catch (error: any) {
       console.error('Error applying profile:', error);
       toast.error(`❌ Erro ao aplicar perfil: ${error.message || 'Erro desconhecido'}`);
@@ -411,9 +434,18 @@ export const NotificationSettings = () => {
         return;
       }
 
-      // Tentar atualizar primeiro pelas configurações existentes do usuário
+      const deviceId = localStorage.getItem('device_id');
+      if (!deviceId) {
+        toast.error('❌ Device ID não encontrado');
+        return;
+      }
+
+      const platform = isNative ? 'android' : 'web';
+
       const updatePayload = {
         user_id: user.id,
+        device_id: deviceId,
+        platform: platform,
         sound_type: soundType,
         vibration_enabled: vibrationEnabled,
         notification_enabled: true,
@@ -421,37 +453,109 @@ export const NotificationSettings = () => {
         updated_at: new Date().toISOString()
       };
 
-      const { data: updated, error: updateError } = await supabase
+      const { error } = await supabase
         .from('notification_settings' as any)
-        .update(updatePayload)
-        .eq('user_id', user.id)
-        .select('user_id');
+        .upsert(updatePayload, {
+          onConflict: 'user_id,device_id'
+        });
 
-      if (updateError) {
-        console.error('Erro ao atualizar configurações de notificação:', updateError);
-        throw updateError;
-      }
-
-      // Se nenhuma linha foi atualizada, insere um novo registro
-      if (!updated || updated.length === 0) {
-        const { error: insertError } = await supabase
-          .from('notification_settings' as any)
-          .insert(updatePayload);
-
-        if (insertError) {
-          console.error('Erro ao inserir configurações de notificação:', insertError);
-          throw insertError;
-        }
+      if (error) {
+        console.error('Erro ao salvar configurações de notificação:', error);
+        throw error;
       }
 
       setActiveProfile('custom');
-      toast.success('✅ Configurações personalizadas salvas!');
+      toast.success('✅ Configurações personalizadas salvas neste dispositivo!');
     } catch (error: any) {
       console.error('Error saving settings:', error);
       toast.error(`❌ Erro ao salvar configurações: ${error.message || 'Erro desconhecido'}`);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleDeleteDevice = async (deviceId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Deletar token
+      const { error: tokenError } = await supabase
+        .from('notification_tokens' as any)
+        .delete()
+        .eq('user_id', user.id)
+        .eq('device_id', deviceId);
+
+      if (tokenError) throw tokenError;
+
+      // Deletar configurações
+      await supabase
+        .from('notification_settings' as any)
+        .delete()
+        .eq('user_id', user.id)
+        .eq('device_id', deviceId);
+
+      // Atualizar lista
+      const newDevices = connectedDevices.filter(d => d.device_id !== deviceId);
+      setConnectedDevices(newDevices);
+      setDeviceCount(newDevices.length);
+
+      // Se deletou o dispositivo atual, atualizar status
+      const currentDeviceId = localStorage.getItem('device_id');
+      if (deviceId === currentDeviceId) {
+        setTokenSaved(false);
+      }
+
+      toast.success('✅ Dispositivo desconectado com sucesso!');
+      setDeviceToDelete(null);
+    } catch (error: any) {
+      console.error('Error deleting device:', error);
+      toast.error('❌ Erro ao desconectar dispositivo');
+    }
+  };
+
+  const getPlatformIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'android':
+      case 'ios':
+        return <Smartphone className="h-4 w-4" />;
+      case 'web':
+        return <Monitor className="h-4 w-4" />;
+      default:
+        return <TabletSmartphone className="h-4 w-4" />;
+    }
+  };
+
+  const getPlatformName = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'android':
+        return 'Android';
+      case 'ios':
+        return 'iOS';
+      case 'web':
+        return 'Web';
+      default:
+        return platform;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Agora mesmo';
+    if (diffMins < 60) return `${diffMins}min atrás`;
+    if (diffHours < 24) return `${diffHours}h atrás`;
+    if (diffDays < 7) return `${diffDays}d atrás`;
+    
+    return date.toLocaleDateString('pt-BR', { 
+      day: '2-digit', 
+      month: 'short' 
+    });
   };
 
   return (
@@ -507,12 +611,24 @@ export const NotificationSettings = () => {
                     </span>
                   </div>
                   
-                  {tokenSaved && deviceCount > 0 && (
-                    <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <span className="text-sm font-medium">📱 Dispositivos conectados:</span>
-                      <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                        {deviceCount} {deviceCount === 1 ? 'dispositivo' : 'dispositivos'}
-                      </span>
+                  {deviceCount > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <span className="text-sm font-medium">📱 Dispositivos conectados:</span>
+                        <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                          {deviceCount} {deviceCount === 1 ? 'dispositivo' : 'dispositivos'}
+                        </span>
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setShowDeviceManager(true)}
+                      >
+                        <Smartphone className="h-4 w-4 mr-2" />
+                        Gerenciar Dispositivos
+                      </Button>
                     </div>
                   )}
                 </>
@@ -805,10 +921,113 @@ export const NotificationSettings = () => {
           </p>
           <p className="flex items-start gap-2">
             <span>•</span>
-            <span>Você pode personalizar o som e vibração acima</span>
+            <span>Cada dispositivo pode ter suas próprias configurações</span>
           </p>
         </div>
       </CardContent>
+
+      {/* Modal de Gerenciamento de Dispositivos */}
+      <AlertDialog open={showDeviceManager} onOpenChange={setShowDeviceManager}>
+        <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5" />
+              Dispositivos Conectados
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Gerencie todos os dispositivos que recebem notificações
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="flex-1 overflow-y-auto space-y-2 py-4">
+            {connectedDevices.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Smartphone className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>Nenhum dispositivo conectado</p>
+              </div>
+            ) : (
+              connectedDevices.map((device) => {
+                const isCurrentDevice = device.device_id === localStorage.getItem('device_id');
+                
+                return (
+                  <div
+                    key={device.id}
+                    className={cn(
+                      "flex items-center justify-between p-4 rounded-lg border",
+                      isCurrentDevice 
+                        ? "bg-primary/5 border-primary/20" 
+                        : "bg-muted/50"
+                    )}
+                  >
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="p-2 rounded-full bg-background">
+                        {getPlatformIcon(device.platform)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">
+                            {getPlatformName(device.platform)}
+                          </span>
+                          {isCurrentDevice && (
+                            <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                              Este dispositivo
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Última atividade: {formatDate(device.last_used || device.created_at)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          ID: {device.device_id.substring(0, 20)}...
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => setDeviceToDelete(device.device_id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Fechar</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Modal de Confirmação de Exclusão */}
+      <AlertDialog open={!!deviceToDelete} onOpenChange={() => setDeviceToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desconectar Dispositivo</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja desconectar este dispositivo? Ele não receberá mais notificações push.
+              {deviceToDelete === localStorage.getItem('device_id') && (
+                <p className="mt-2 text-yellow-600 dark:text-yellow-500 font-medium">
+                  ⚠️ Este é o dispositivo atual. Você precisará ativar as notificações novamente para recebê-las.
+                </p>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deviceToDelete && handleDeleteDevice(deviceToDelete)}
+            >
+              Desconectar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

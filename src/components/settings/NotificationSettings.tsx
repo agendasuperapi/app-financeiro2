@@ -59,6 +59,7 @@ export const NotificationSettings = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
   const [activeProfile, setActiveProfile] = useState<NotificationProfile>('custom');
+  const [deviceCount, setDeviceCount] = useState(0);
   const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
@@ -84,23 +85,28 @@ export const NotificationSettings = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data, error } = await supabase
-          .from('notification_tokens' as any)
-          .select('id, platform')
-          .eq('user_id', user.id);
+    // Check if THIS device already has a token
+    const { data: existingToken } = await supabase
+      .from('notification_tokens' as any)
+      .select('id, platform, device_id, created_at')
+      .eq('user_id', user.id)
+      .order('last_used', { ascending: false });
 
-        if (error) {
-          console.error('Erro ao buscar tokens de notificação nativos:', error);
-          return;
-        }
-
-        const hasToken = !!data && data.length > 0;
-        setTokenSaved(hasToken);
-        
-        console.log('📊 Status nativo:', { 
-          systemPermission: permStatus.receive, 
-          tokenSaved: hasToken 
-        });
+    const count = existingToken?.length || 0;
+    setDeviceCount(count);
+    
+    const hasToken = count > 0;
+    setTokenSaved(hasToken);
+    
+    console.log('📊 Status nativo:', { 
+      systemPermission: permStatus.receive, 
+      tokenSaved: hasToken,
+      deviceCount: count
+    });
+    
+    if (count > 0) {
+      console.log('📱 Dispositivos com notificações:', existingToken);
+    }
         return;
       }
 
@@ -111,7 +117,20 @@ export const NotificationSettings = () => {
       if (perm === 'granted') {
         const saved = await hasTokenSaved();
         setTokenSaved(saved);
-        console.log('📊 Status web:', { permission: perm, tokenSaved: saved });
+        
+        // Contar dispositivos web
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from('notification_tokens' as any)
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('platform', 'web');
+          
+          const count = data?.length || 0;
+          setDeviceCount(count);
+          console.log('📊 Status web:', { permission: perm, tokenSaved: saved, deviceCount: count });
+        }
       }
     };
     
@@ -478,14 +497,25 @@ export const NotificationSettings = () => {
               </div>
               
               {permission === 'granted' && (
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <span className="text-sm">Token salvo no banco:</span>
-                  <span className={`text-sm font-medium ${
-                    tokenSaved ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {tokenSaved ? '✅ Sim' : '❌ Não'}
-                  </span>
-                </div>
+                <>
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <span className="text-sm">Token salvo no banco:</span>
+                    <span className={`text-sm font-medium ${
+                      tokenSaved ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {tokenSaved ? '✅ Sim' : '❌ Não'}
+                    </span>
+                  </div>
+                  
+                  {tokenSaved && deviceCount > 0 && (
+                    <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <span className="text-sm font-medium">📱 Dispositivos conectados:</span>
+                      <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                        {deviceCount} {deviceCount === 1 ? 'dispositivo' : 'dispositivos'}
+                      </span>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 

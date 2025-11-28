@@ -165,16 +165,25 @@ export const requestPushNotificationPermission = async () => {
     
     console.log('👤 User authenticated:', user.id);
 
-    // Verificar se já existe token salvo (reconexão)
-    const { data: existingTokens } = await supabase
+    // Generate unique device_id for this device
+    const platform = Capacitor.getPlatform();
+    let deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+      deviceId = `${platform}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('device_id', deviceId);
+    }
+
+    // Check if THIS device already has a token
+    const { data: existingToken } = await supabase
       .from('notification_tokens' as any)
       .select('id')
       .eq('user_id', user.id)
-      .limit(1);
+      .eq('device_id', deviceId)
+      .maybeSingle();
 
-    if (existingTokens && existingTokens.length > 0) {
-      console.log('✅ Token já existe no banco, não é necessário re-registrar');
-      toast.success('Notificações já estão ativas!');
+    if (existingToken) {
+      console.log('✅ Este dispositivo já tem token registrado');
+      toast.success('Notificações já estão ativas neste dispositivo!');
       return true;
     }
 

@@ -64,16 +64,25 @@ export async function registerWebPushNotification() {
       return false;
     }
 
+    // Generate unique device_id for this browser
+    let deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+      deviceId = `web-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('device_id', deviceId);
+    }
+
     console.log('💾 Salvando token FCM no banco...');
     const { error: saveError } = await supabase.from('notification_tokens' as any).upsert({
       user_id: user.id,
       token: token,
-      platform: 'web', // Mantém 'web' mas usa token FCM
+      platform: 'web',
+      device_id: deviceId,
+      last_used: new Date().toISOString(),
       endpoint: '', // Não necessário para FCM
       p256dh: '', // Não necessário para FCM
       auth: '' // Não necessário para FCM
     }, {
-      onConflict: 'user_id,platform'
+      onConflict: 'token'
     });
 
     if (saveError) {
@@ -151,12 +160,15 @@ export async function hasTokenSaved(): Promise<boolean> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
+    const deviceId = localStorage.getItem('device_id');
+    if (!deviceId) return false;
+
     const { data, error } = await supabase
       .from('notification_tokens' as any)
       .select('id')
       .eq('user_id', user.id)
-      .eq('platform', 'web')
-      .single();
+      .eq('device_id', deviceId)
+      .maybeSingle();
 
     return !error && !!data;
   } catch {

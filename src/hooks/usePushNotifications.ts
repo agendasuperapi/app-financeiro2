@@ -153,6 +153,19 @@ export const requestPushNotificationPermission = async () => {
     
     console.log('👤 User authenticated:', user.id);
 
+    // Verificar se já existe token salvo (reconexão)
+    const { data: existingTokens } = await supabase
+      .from('notification_tokens' as any)
+      .select('id')
+      .eq('user_id', user.id)
+      .limit(1);
+
+    if (existingTokens && existingTokens.length > 0) {
+      console.log('✅ Token já existe no banco, não é necessário re-registrar');
+      toast.success('Notificações já estão ativas!');
+      return true;
+    }
+
     // Verificar permissões
     let permStatus = await PushNotifications.checkPermissions();
     console.log('📱 Current permission status:', permStatus);
@@ -171,23 +184,57 @@ export const requestPushNotificationPermission = async () => {
 
     console.log('✅ Permission granted!');
 
-    // Se já está tudo concedido, evitar múltiplos registros que podem causar crash
-    if ((window as any).__nativePushAlreadyRegistered) {
-      console.log('📱 Push já estava registrado, evitando novo registro');
-      toast.success('Notificações já estão ativas neste dispositivo');
-      return true;
+    // Prevenir múltiplos registros simultâneos
+    if ((window as any).__nativePushRegistering) {
+      console.log('⚠️ Registro já em andamento, aguarde...');
+      toast.info('Aguarde, conectando notificações...');
+      return false;
     }
 
+    (window as any).__nativePushRegistering = true;
+
     console.log('📱 Registering for push notifications...');
-    // Registrar para push (feito apenas uma vez por sessão)
-    await PushNotifications.register();
-    (window as any).__nativePushAlreadyRegistered = true;
+    
+    // Adicionar timeout para evitar travamentos
+    const registerPromise = PushNotifications.register();
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout ao registrar notificações')), 10000);
+    });
+
+    await Promise.race([registerPromise, timeoutPromise]);
+    
     console.log('✅ Registered for push notifications, aguardando token do listener...');
     
-    return true;
-  } catch (error) {
+    // Aguardar um pouco para o listener processar o token
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Verificar se o token foi salvo
+    const { data: savedToken } = await supabase
+      .from('notification_tokens' as any)
+      .select('id')
+      .eq('user_id', user.id)
+      .limit(1);
+
+    (window as any).__nativePushRegistering = false;
+
+    if (savedToken && savedToken.length > 0) {
+      toast.success('✅ Notificações conectadas com sucesso!');
+      return true;
+    } else {
+      console.warn('⚠️ Token não foi salvo após registro');
+      toast.warning('Aguarde... processando conexão');
+      return true;
+    }
+  } catch (error: any) {
+    (window as any).__nativePushRegistering = false;
     console.error('❌ Error requesting permission:', error);
-    toast.error(`Erro ao solicitar permissão: ${error}`);
+    
+    if (error.message?.includes('Timeout')) {
+      toast.error('Tempo limite excedido. Tente novamente.');
+    } else {
+      toast.error(`Erro ao solicitar permissão: ${error.message || error}`);
+    }
+    
     return false;
   }
 };

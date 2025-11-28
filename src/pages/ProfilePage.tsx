@@ -323,7 +323,7 @@ const ProfilePage = () => {
       <div className="space-y-6 pb-16">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('profile.title')}</h1>
-          <p className="text-muted-foreground">Gerencie seus dados pessoais</p>
+          <p className="text-muted-foreground">Gerencie seus dados pessoais Versão: 3.0.5</p>
         </div>
         
         <Separator />
@@ -366,8 +366,7 @@ const ProfilePage = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg md:text-xl">Informações Pessoais</CardTitle>
-                    <CardDescription className="text-sm">Seus dados de cadastro e contato
-Versão: 3.0.5</CardDescription>
+                    <CardDescription className="text-sm">Seus dados de cadastro e contato</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">

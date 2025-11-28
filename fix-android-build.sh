@@ -29,8 +29,15 @@ echo "[4/7] Removendo arquivos Capacitor Android antigos..."
 rm -rf android/capacitor-cordova-android-plugins
 
 echo ""
-echo "[5/7] Instalando dependencias..."
-npm install
+echo "[5/7] Verificando e instalando dependencias..."
+if [ ! -d "node_modules" ]; then
+    echo "Node modules nao encontrados. Instalando..."
+    npm install
+else
+    echo "Node modules encontrados. Reinstalando para garantir integridade..."
+    rm -rf node_modules
+    npm install
+fi
 
 echo ""
 echo "[6/7] Buildando projeto web..."

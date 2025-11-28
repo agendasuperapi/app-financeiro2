@@ -151,7 +151,22 @@ export const NotificationSettings = () => {
       if (isNative) {
         // Mobile: usar Capacitor Push Notifications
         const success = await requestPushNotificationPermission();
-        if (!success) {
+        if (success) {
+          // Aguardar um pouco e recarregar o status
+          setTimeout(async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { data } = await supabase
+                .from('notification_tokens' as any)
+                .select('id')
+                .eq('user_id', user.id);
+              
+              const hasToken = !!data && data.length > 0;
+              setTokenSaved(hasToken);
+              console.log('🔄 Status atualizado após registro:', hasToken);
+            }
+          }, 3000);
+        } else {
           toast.error('❌ Não foi possível ativar as notificações');
         }
       } else {

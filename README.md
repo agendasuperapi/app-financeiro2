@@ -1,4 +1,4 @@
-# 💰 PoupeJá - Sistema Completo de Gestão Financeira
+# 💰 App Financeiro - Sistema Completo de Gestão Financeira
 
 Sistema completo de gestão financeira pessoal com foco em facilidade de uso, automação e redistribuição para múltiplas organizações.
 
@@ -17,6 +17,7 @@ Sistema completo de gestão financeira pessoal com foco em facilidade de uso, au
 ## 🛠️ Tecnologias Utilizadas
 
 ### Frontend
+
 - **React 18** com TypeScript
 - **Vite** para build e desenvolvimento
 - **Tailwind CSS** + **shadcn/ui** para interface
@@ -26,12 +27,14 @@ Sistema completo de gestão financeira pessoal com foco em facilidade de uso, au
 - **Framer Motion** para animações
 
 ### Backend & Database
+
 - **Supabase** (PostgreSQL + Auth + Storage + Edge Functions)
 - **Row Level Security (RLS)** para segurança
 - **Edge Functions** para APIs serverless
 - **Stripe** para pagamentos
 
 ### DevOps & Deploy
+
 - **GitHub Actions** para CI/CD automático
 - **Vercel** para frontend
 - **Supabase** para backend
@@ -40,12 +43,14 @@ Sistema completo de gestão financeira pessoal com foco em facilidade de uso, au
 ## 📋 Pré-requisitos para Instalação
 
 ### Para Desenvolvedores
+
 - Node.js 18+ e npm
 - Conta no Supabase
 - Conta no Stripe (para pagamentos)
 - Conta no GitHub (para CI/CD)
 
 ### Para Redistribuição
+
 - Conta no Supabase (gratuita)
 - Conta no GitHub (gratuita)
 - Opcional: Conta no Stripe (para monetização)
@@ -78,16 +83,17 @@ cd poupeja
 
 No seu repositório forkado, vá em **Settings > Secrets and variables > Actions** e adicione:
 
-| Secret | Descrição | Onde Encontrar |
-|--------|-----------|----------------|
-| `SUPABASE_ACCESS_TOKEN` | Token de acesso pessoal | [Dashboard Supabase > Account > Access Tokens](https://supabase.com/dashboard/account/tokens) |
-| `SUPABASE_PROJECT_ID` | ID do projeto | URL do projeto (parte após https://) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Chave service_role | Project Settings > API > service_role |
-| `SUPABASE_DB_PASSWORD` | Senha do banco | Definida na criação do projeto |
+| Secret                      | Descrição               | Onde Encontrar                                                                                |
+| --------------------------- | ----------------------- | --------------------------------------------------------------------------------------------- |
+| `SUPABASE_ACCESS_TOKEN`     | Token de acesso pessoal | [Dashboard Supabase > Account > Access Tokens](https://supabase.com/dashboard/account/tokens) |
+| `SUPABASE_PROJECT_ID`       | ID do projeto           | URL do projeto (parte após https://)                                                          |
+| `SUPABASE_SERVICE_ROLE_KEY` | Chave service_role      | Project Settings > API > service_role                                                         |
+| `SUPABASE_DB_PASSWORD`      | Senha do banco          | Definida na criação do projeto                                                                |
 
 ### 4. Deploy Automático
 
 1. **Para Nova Instalação** (primeira vez):
+
    ```bash
    # No seu repositório forkado, vá em Actions
    # Execute o workflow "Complete Supabase Deployment"
@@ -231,10 +237,12 @@ supabase functions serve --debug
 ## 📚 Documentação
 
 ### 📋 Instalação e Configuração
+
 - **[Checklist de Instalação](./docs/installation/checklist.md)** - Lista completa de verificação
 - **[Configuração do Admin](./docs/installation/admin-setup.md)** - Setup inicial do administrador
 
 ### 🚀 Deploy e CI/CD
+
 - **[Configurar Secrets GitHub](./docs/deployment/github-secrets.md)** - Configuração básica
 - **[Secrets Detalhados](./docs/deployment/github-secrets-detailed.md)** - Guia completo de configuração
 

@@ -245,7 +245,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Logo/Header */}
       <div className="p-6 border-b flex-shrink-0">
         <BrandLogo size="md" showCompanyName={true} />
-        <p className="text-xs text-muted-foreground mt-2 text-center">Versão 3.0.4</p>
+        <p className="text-xs text-muted-foreground mt-2 text-center">Versão 3.0.5</p>
       </div>
 
       {/* Navigation - Scrollable content */}

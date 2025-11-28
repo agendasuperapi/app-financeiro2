@@ -5,10 +5,10 @@ const config: CapacitorConfig = {
   appName: 'App Financeiro',
   webDir: 'dist',
   // Remova o server.url para build de produção
-  // server: {
-  //   url: 'https://098fbad6-4e43-4a26-aed2-9f249e0763e3.lovableproject.com?forceHideBadge=true',
-  //   cleartext: true
-  // },
+  server: {
+    url: 'https://098fbad6-4e43-4a26-aed2-9f249e0763e3.lovableproject.com?forceHideBadge=true',
+    cleartext: true
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 0

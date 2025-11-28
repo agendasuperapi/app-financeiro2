@@ -252,10 +252,14 @@ async function sendFCMV1(tokenData: any, title: string, body: string, data: any)
         }
       },
       android: {
+        priority: 'high',
         notification: {
           title,
           body,
           sound: 'default',
+          channel_id: 'lembretes',
+          default_sound: true,
+          default_vibrate_timings: true,
           icon: 'app_icon',
           click_action: '/lembretes'
         }
@@ -270,6 +274,24 @@ async function sendFCMV1(tokenData: any, title: string, body: string, data: any)
             sound: 'default',
             badge: 1
           }
+        },
+        headers: {
+          'apns-priority': '10'
+        }
+      },
+      webpush: {
+        fcm_options: {
+          link: '/lembretes'
+        },
+        notification: {
+          title,
+          body,
+          icon: '/app-icon.png',
+          badge: '/app-icon.png',
+          requireInteraction: true
+        },
+        headers: {
+          'Urgency': 'high'
         }
       }
     }

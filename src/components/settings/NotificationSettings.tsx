@@ -148,7 +148,14 @@ export const NotificationSettings = () => {
   const handleEnableNotifications = async () => {
     setIsLoading(true);
     try {
+      console.log('🔔 Tentando ativar notificações...');
+      console.log('📱 Plataforma:', isNative ? 'Mobile (Capacitor)' : 'Web (PWA)');
+      
       if (isNative) {
+        console.log('📱 Usando Capacitor Push Notifications para mobile nativo');
+        console.log('⚠️ ATENÇÃO: Certifique-se que o google-services.json está em android/app/');
+        console.log('📖 Veja as instruções em: docs/CONFIGURAR_FCM_ANDROID.md');
+        
         // Mobile: usar Capacitor Push Notifications
         const success = await requestPushNotificationPermission();
         if (success) {

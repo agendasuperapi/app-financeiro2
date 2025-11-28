@@ -87,7 +87,19 @@ export const usePushNotifications = () => {
       // Listener para erros
       errorListener = await PushNotifications.addListener('registrationError', (error: any) => {
         console.error('❌ Push registration error:', error);
-        toast.error('Erro ao ativar notificações');
+        console.error('💡 Detalhes do erro:', JSON.stringify(error));
+        
+        // Verificar se é erro de configuração do Firebase
+        if (error.message?.includes('SERVICE_NOT_AVAILABLE') || 
+            error.message?.includes('MISSING_DEFAULT_TOKEN') ||
+            error.message?.includes('SENDER_ID')) {
+          console.error('❌ Firebase não configurado corretamente!');
+          console.error('💡 Verifique se o arquivo google-services.json está em android/app/');
+          console.error('📝 Siga as instruções em docs/CONFIGURAR_FCM_ANDROID.md');
+          toast.error('Firebase não configurado. Verifique os logs.');
+        } else {
+          toast.error(`Erro ao ativar notificações: ${error.message || 'Erro desconhecido'}`);
+        }
       });
 
       // Listener para notificação recebida
@@ -194,19 +206,22 @@ export const requestPushNotificationPermission = async () => {
     (window as any).__nativePushRegistering = true;
 
     console.log('📱 Registering for push notifications...');
+    console.log('⏳ Aguardando token do Firebase Cloud Messaging...');
+    console.log('💡 Se demorar muito, pode ser que o google-services.json esteja faltando');
     
     // Adicionar timeout para evitar travamentos
     const registerPromise = PushNotifications.register();
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout ao registrar notificações')), 10000);
+      setTimeout(() => reject(new Error('Timeout ao registrar notificações. Verifique se o google-services.json está configurado.')), 15000);
     });
 
     await Promise.race([registerPromise, timeoutPromise]);
     
     console.log('✅ Registered for push notifications, aguardando token do listener...');
+    console.log('⏳ Esperando 5 segundos para o Firebase gerar o token...');
     
-    // Aguardar um pouco para o listener processar o token
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Aguardar mais tempo para o listener processar o token
+    await new Promise(resolve => setTimeout(resolve, 5000));
     
     // Verificar se o token foi salvo
     const { data: savedToken } = await supabase

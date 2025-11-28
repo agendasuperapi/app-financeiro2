@@ -3,12 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Poupe Já</title>
+    <title>App Financeiro</title>
     <meta name="description" content="Gerencie suas finanças com o App Financeiro" />
     <meta name="author" content="Lovable" />
 
     <!-- Favicon -->
-    <link rel="icon" href="https://gpttodmpflpzhbgzagcc.supabase.co/storage/v1/object/public/uploads/logos/1755281624894-t3x8jtqig18.png" type="image/png" />
+    <link
+      rel="icon"
+      href="https://gpttodmpflpzhbgzagcc.supabase.co/storage/v1/object/public/uploads/logos/1755281624894-t3x8jtqig18.png"
+      type="image/png"
+    />
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#4ECDC4" />
@@ -16,13 +20,19 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="App Financeiro" />
-    <link rel="apple-touch-icon" href="https://gpttodmpflpzhbgzagcc.supabase.co/storage/v1/object/public/uploads/logos/1755281624894-t3x8jtqig18.png" />
+    <link
+      rel="apple-touch-icon"
+      href="https://gpttodmpflpzhbgzagcc.supabase.co/storage/v1/object/public/uploads/logos/1755281624894-t3x8jtqig18.png"
+    />
 
     <!-- Open Graph / WhatsApp Meta Tags -->
     <meta property="og:title" content="App Financeiro" />
     <meta property="og:description" content="Gerencie suas finanças com o App Finaceiro." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://gpttodmpflpzhbgzagcc.supabase.co/storage/v1/object/public/uploads/logos/1755281624894-t3x8jtqig18.png" />
+    <meta
+      property="og:image"
+      content="https://gpttodmpflpzhbgzagcc.supabase.co/storage/v1/object/public/uploads/logos/1755281624894-t3x8jtqig18.png"
+    />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
 
@@ -30,7 +40,10 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="App Financeiro" />
     <meta name="twitter:description" content="Gerencie suas finanças com o App Financeiro" />
-    <meta name="twitter:image" content="https://gpttodmpflpzhbgzagcc.supabase.co/storage/v1/object/public/uploads/logos/1755281624894-t3x8jtqig18.png" />
+    <meta
+      name="twitter:image"
+      content="https://gpttodmpflpzhbgzagcc.supabase.co/storage/v1/object/public/uploads/logos/1755281624894-t3x8jtqig18.png"
+    />
 
     <!-- Vite -->
     <link rel="modulepreload" href="/src/main.tsx" />
@@ -43,7 +56,7 @@
           try {
             const branding = JSON.parse(cached);
             const isExpired = Date.now() - branding.timestamp > 300000; // 5 min
-            
+
             if (!isExpired && branding.logoUrl) {
               // Pre-carregar imagem
               const link = document.createElement('link');
@@ -51,12 +64,12 @@
               link.as = 'image';
               link.href = branding.logoUrl;
               document.head.appendChild(link);
-              
+
               // Atualizar título
               if (branding.companyName) {
                 document.title = branding.companyName + ' - Controle Financeiro';
               }
-              
+
               // Atualizar favicon
               if (branding.faviconUrl && branding.faviconUrl !== '/favicon.ico') {
                 const favicon = document.querySelector("link[rel*='icon']");
@@ -103,7 +116,7 @@
         } catch (e) { console.warn('Redirect guard error', e); }
       })();
     </script>
-   </head>
+  </head>
   <body>
     <div id="root"></div>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->

@@ -5,16 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -87,20 +78,16 @@ const NotesPage: React.FC = () => {
   useEffect(() => {
     // As notas já são carregadas pelo hook useClientAwareNotes
   }, []);
-  
+
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
-  
   const filteredNotes = notes.filter(note => note.descricao.toLowerCase().includes(searchTerm.toLowerCase()) || note.notas.toLowerCase().includes(searchTerm.toLowerCase()));
-  
+
   // Pagination
   const totalPages = Math.ceil(filteredNotes.length / itemsPerPage);
-  const paginatedNotes = filteredNotes.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedNotes = filteredNotes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const handleAddNote = async (values: NoteFormValues) => {
     try {
       if (isClientView && selectedUser) {
@@ -180,7 +167,6 @@ const NotesPage: React.FC = () => {
       });
     }
   };
-
   const handleDeleteClick = (note: Note) => {
     // Desabilitar exclusão na visualização de cliente
     if (isClientView) {
@@ -194,7 +180,6 @@ const NotesPage: React.FC = () => {
     setNoteToDelete(note);
     setDeleteDialogOpen(true);
   };
-
   const handleConfirmDelete = async () => {
     if (noteToDelete) {
       try {
@@ -220,7 +205,6 @@ const NotesPage: React.FC = () => {
     setDeleteDialogOpen(false);
     setNoteToDelete(null);
   };
-
   const handleCopyContent = async (content: string) => {
     try {
       await navigator.clipboard.writeText(content);
@@ -237,7 +221,6 @@ const NotesPage: React.FC = () => {
       });
     }
   };
-
   const handleEditNote = (note: Note) => {
     setEditingNote(note);
     form.reset({
@@ -249,14 +232,14 @@ const NotesPage: React.FC = () => {
     });
     setIsEditingNote(true);
   };
-
   const handleUpdateNote = async (values: NoteFormValues) => {
     if (!editingNote) return;
-    
     try {
       if (isClientView && selectedUser) {
         // Atualizar nota para o cliente selecionado
-        const { error } = await (supabase as any).from('financeiro_notas').update({
+        const {
+          error
+        } = await (supabase as any).from('financeiro_notas').update({
           data: values.data,
           descricao: values.descricao,
           notas: values.notas,
@@ -274,7 +257,6 @@ const NotesPage: React.FC = () => {
           phone: values.phone
         });
       }
-      
       setIsEditingNote(false);
       setEditingNote(null);
       toast({
@@ -303,9 +285,9 @@ const NotesPage: React.FC = () => {
     }
   };
   return <MainLayout>
-      <SubscriptionGuard feature="notas ilimitadas">
+      <SubscriptionGuard feature="notas ilimitadas" className="px-[24px] py-[24px]">
         <div className="w-full px-4 py-4 md:py-8 pb-20 md:pb-8 min-h-0">
-          <div className="container mx-auto space-y-6">
+          <div className="container mx-auto space-y-6 px-[24px] py-[24px]">
             {/* Indicador de visualização de cliente */}
             {isClientView && selectedUser && <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center gap-2 text-blue-800">
@@ -324,7 +306,7 @@ const NotesPage: React.FC = () => {
                   <Button size={isMobile ? "sm" : "lg"} className={isMobile ? "gap-1" : "shrink-0"}>
                     <Plus className={isMobile ? "h-3 w-3" : "mr-2 h-4 w-4"} />
                     <span className={isMobile ? "text-xs" : ""}>
-                      {isMobile ? 'Adicionar' : (isClientView ? `Adicionar para ${selectedUser?.name}` : 'Adicionar Nota')}
+                      {isMobile ? 'Adicionar' : isClientView ? `Adicionar para ${selectedUser?.name}` : 'Adicionar Nota'}
                     </span>
                   </Button>
                 </DialogTrigger>
@@ -477,38 +459,19 @@ const NotesPage: React.FC = () => {
                             <Calendar className="h-4 w-4" />
                             {formatDate(note.data)}
                           </div>
-                          {(note as any).name && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          {(note as any).name && <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <User className="h-4 w-4" />
                               Adicionado por: {(note as any).name}
-                            </div>
-                          )}
+                            </div>}
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => handleEditNote(note)}
-                            className={cn("text-primary hover:text-primary", isClientView && "opacity-50 cursor-not-allowed")}
-                            disabled={isClientView}
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => handleEditNote(note)} className={cn("text-primary hover:text-primary", isClientView && "opacity-50 cursor-not-allowed")} disabled={isClientView}>
                             <Edit2 className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => handleCopyContent(note.notas)}
-                            className="text-primary hover:text-primary"
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => handleCopyContent(note.notas)} className="text-primary hover:text-primary">
                             <Copy className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => handleDeleteClick(note)} 
-                            className={cn("text-destructive hover:text-destructive", isClientView && "opacity-50 cursor-not-allowed")} 
-                            disabled={isClientView}
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(note)} className={cn("text-destructive hover:text-destructive", isClientView && "opacity-50 cursor-not-allowed")} disabled={isClientView}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -521,36 +484,24 @@ const NotesPage: React.FC = () => {
             </div>
 
             {/* Paginação */}
-            {filteredNotes.length > 0 && (
-              <div className="flex items-center justify-between pt-4">
+            {filteredNotes.length > 0 && <div className="flex items-center justify-between pt-4">
                 <div className="text-sm text-muted-foreground">
                   Mostrando {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, filteredNotes.length)} de {filteredNotes.length} notas
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => prev - 1)}
-                    disabled={currentPage === 1}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => prev - 1)} disabled={currentPage === 1}>
                     <ChevronLeft className="h-4 w-4 mr-1" />
                     Anterior
                   </Button>
                   <div className="text-sm">
                     Página {currentPage} de {totalPages}
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => prev + 1)}
-                    disabled={currentPage === totalPages}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => prev + 1)} disabled={currentPage === totalPages}>
                     Próxima
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
-              </div>
-            )}
+              </div>}
           </div>
         </div>
       </SubscriptionGuard>
@@ -561,16 +512,14 @@ const NotesPage: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
-              {noteToDelete && (
-                <div className="bg-muted p-3 rounded-md">
+              {noteToDelete && <div className="bg-muted p-3 rounded-md">
                   <p className="font-medium">
                     {noteToDelete.descricao}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {formatDate(noteToDelete.data)}
                   </p>
-                </div>
-              )}
+                </div>}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -55,7 +55,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   return <div className="bg-background w-full">
       {isMobile ? <div className="flex flex-col min-h-screen w-full">
           <MobileHeader hideValues={hideValues} toggleHideValues={toggleHideValues} />
-          <main className="flex-1 overflow-y-auto p-2 pb-20 w-full" style={{ paddingTop: 'calc(3.5rem + env(safe-area-inset-top))' }}>
+          <main className="flex-1 overflow-y-auto p-2 pb-20 w-full" style={{ paddingTop: 'calc(7.5rem + env(safe-area-inset-top))' }}>
             {title && <div className="mb-6">
                 
               </div>}

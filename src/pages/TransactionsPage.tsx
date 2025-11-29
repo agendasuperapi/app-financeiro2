@@ -229,7 +229,7 @@ const TransactionsPage = () => {
   return (
     <MainLayout>
       <SubscriptionGuard feature="movimentações ilimitadas">
-        <div className="w-full px-4 md:px-6 md:py-6 lg:py-8 pb-20 md:pb-8 min-h-0" style={{ paddingTop: isMobile ? 'calc(5.5rem + env(safe-area-inset-top) + 1rem)' : undefined }}>
+        <div className="w-full px-4 md:px-6 py-4 md:py-6 lg:py-8 pb-20 md:pb-8 min-h-0">
           {/* Indicador de visualização de cliente */}
           {isClientView && selectedUser && (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -336,7 +336,7 @@ const TransactionsPage = () => {
           
           {/* Controles de Navegação de Data */}
           {(dateFilter === 'mes' || dateFilter === 'ano') && (
-            <div className="sticky z-40 bg-background/95 backdrop-blur-sm border-b py-3 flex justify-center mb-4" style={{ top: isMobile ? 'calc(5.5rem + env(safe-area-inset-top))' : '0' }}>
+            <div className="sticky z-40 bg-background/95 backdrop-blur-sm border-b pt-2 pb-2 flex justify-center mb-2 md:mb-4" style={{ top: isMobile ? 'calc(5.5rem + env(safe-area-inset-top))' : '0' }}>
               <div className="flex items-center gap-1 bg-muted rounded-md p-1">
                 <Button
                   variant="ghost"

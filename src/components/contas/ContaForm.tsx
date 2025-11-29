@@ -710,27 +710,27 @@ const ContaForm: React.FC<ContaFormProps> = ({
       const currentDate = (initialData as any)?.date || initialData.scheduledDate;
       console.log('🗑️ handleDeleteClick - currentDate usado:', currentDate);
       
+      // Aguardar a validação completar
       const related = await checkForRelatedTransactions(
         codigoTrans,
         initialData.id,
         currentDate
       );
       console.log('🗑️ handleDeleteClick - related:', related);
+      console.log('🗑️ handleDeleteClick - past:', related.past.length, 'future:', related.future.length);
       
-      // Definir os estados e então abrir o dialog
+      // Definir os estados
       setPastTransactions(related.past);
       setFutureTransactions(related.future);
       
-      // Aguardar um tick para garantir que os estados foram atualizados
-      setTimeout(() => {
-        setDeleteDialogOpen(true);
-      }, 0);
+      // Abrir o dialog somente após a validação estar completa
+      // Usar Promise para garantir que os estados sejam atualizados
+      await new Promise(resolve => setTimeout(resolve, 100));
+      setDeleteDialogOpen(true);
     } else {
       console.log('🗑️ handleDeleteClick - Sem codigo-trans');
       setPastTransactions([]);
       setFutureTransactions([]);
-      
-      // Abrir o dialog imediatamente se não tem codigo-trans
       setDeleteDialogOpen(true);
     }
   };
@@ -739,30 +739,58 @@ const ContaForm: React.FC<ContaFormProps> = ({
     if (!initialData) return;
     
     try {
-      let idsToDelete: string[] = [initialData.id];
+      // Revalidar transações relacionadas antes de deletar
+      const codigoTrans = (initialData as any)['codigo-trans'];
       
-      if (deleteOption === 'future') {
-        idsToDelete = [initialData.id, ...futureTransactions.map(t => t.id)];
-      } else if (deleteOption === 'past') {
-        idsToDelete = [initialData.id, ...pastTransactions.map(t => t.id)];
-      } else if (deleteOption === 'all') {
-        idsToDelete = [initialData.id, ...pastTransactions.map(t => t.id), ...futureTransactions.map(t => t.id)];
-      }
-      
-      let success: boolean;
-      if (idsToDelete.length === 1) {
-        success = await deleteScheduledTransaction(initialData.id);
-      } else {
-        success = await deleteMultipleTransactions(idsToDelete);
-      }
-      
-      if (success) {
-        toast.success(idsToDelete.length === 1 
-          ? 'Transação excluída com sucesso' 
-          : `${idsToDelete.length} transação(ões) excluída(s) com sucesso`
+      if (codigoTrans) {
+        const currentDate = (initialData as any)?.date || initialData.scheduledDate;
+        const related = await checkForRelatedTransactions(
+          codigoTrans,
+          initialData.id,
+          currentDate
         );
+        
+        // Atualizar estados com a validação mais recente
+        setPastTransactions(related.past);
+        setFutureTransactions(related.future);
+        
+        // Construir lista de IDs baseado na validação atual
+        let idsToDelete: string[] = [initialData.id];
+        
+        if (deleteOption === 'future') {
+          idsToDelete = [initialData.id, ...related.future.map(t => t.id)];
+        } else if (deleteOption === 'past') {
+          idsToDelete = [initialData.id, ...related.past.map(t => t.id)];
+        } else if (deleteOption === 'all') {
+          idsToDelete = [initialData.id, ...related.past.map(t => t.id), ...related.future.map(t => t.id)];
+        }
+        
+        console.log('🗑️ Deletando IDs:', idsToDelete);
+        
+        let success: boolean;
+        if (idsToDelete.length === 1) {
+          success = await deleteScheduledTransaction(initialData.id);
+        } else {
+          success = await deleteMultipleTransactions(idsToDelete);
+        }
+        
+        if (success) {
+          toast.success(idsToDelete.length === 1 
+            ? 'Transação excluída com sucesso' 
+            : `${idsToDelete.length} transação(ões) excluída(s) com sucesso`
+          );
+        } else {
+          toast.error('Erro ao excluir transação(ões)');
+        }
       } else {
-        toast.error('Erro ao excluir transação(ões)');
+        // Sem codigo-trans, deletar apenas a transação atual
+        const success = await deleteScheduledTransaction(initialData.id);
+        
+        if (success) {
+          toast.success('Transação excluída com sucesso');
+        } else {
+          toast.error('Erro ao excluir transação');
+        }
       }
       
       setDeleteDialogOpen(false);

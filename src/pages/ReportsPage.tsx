@@ -46,7 +46,7 @@ const ReportsPage = () => {
   return <MainLayout>
       <SubscriptionGuard feature="relatórios detalhados">
         <div className="space-y-6 px-[24px] py-[24px]">
-          <div className="w-full max-w-full px-4 py-6 lg:py-8 overflow-hidden">
+          <div className="w-full max-w-full lg:py-8 overflow-hidden px-0 py-0">
           {/* Indicador de visualização de cliente */}
           {isClientView && selectedUser && <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center gap-2 text-blue-800">

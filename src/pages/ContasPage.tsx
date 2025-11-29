@@ -330,8 +330,8 @@ const ContasPage = () => {
                   </span>
                 </div>
               </div>}
-          <div className="flex items-center justify-between mb-4 md:mb-6 py-[20px]">
-            <h1 className="md:text-xl font-bold text-xl">Contas a Pagar</h1>
+          <div className="flex items-center justify-between mb-4 md:mb-6 py-[20px] gap-0">
+            <h1 className="md:text-xl text-xl font-semibold">Contas a Pagar</h1>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="flex items-center gap-2">

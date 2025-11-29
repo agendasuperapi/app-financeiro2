@@ -41,6 +41,10 @@ export default {
     hide: 'Ocultar',
     values: 'valores',
     close: 'Fechar',
+    showing: 'Exibindo',
+    of: 'de',
+    previous: 'Anterior',
+    next: 'Próximo',
   },
   theme: {
     light: "Claro",

@@ -288,80 +288,83 @@ const TransactionsPage = () => {
             </div>
           </div>
           
-          {/* Filtros */}
-          <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-2 md:pb-4 flex flex-col lg:flex-row gap-2 mb-2 md:mb-4">
-            {/* Campo de Pesquisa */}
-            <div className="relative w-full lg:flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Pesquisar transações..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            
-            {/* Status e Período na mesma linha */}
-            <div className="flex gap-2 lg:gap-2">
-              {/* Filtro de Status */}
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="flex-1 lg:w-[180px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos Status</SelectItem>
-                  <SelectItem value="receita">Receita</SelectItem>
-                  <SelectItem value="despesa">Despesa</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Container Sticky Único - Filtros + Navegação */}
+          <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm">
+            {/* Filtros */}
+            <div className="pb-2 md:pb-4 flex flex-col lg:flex-row gap-2">
+              {/* Campo de Pesquisa */}
+              <div className="relative w-full lg:flex-1">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Pesquisar transações..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              
+              {/* Status e Período na mesma linha */}
+              <div className="flex gap-2 lg:gap-2">
+                {/* Filtro de Status */}
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="flex-1 lg:w-[180px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos Status</SelectItem>
+                    <SelectItem value="receita">Receita</SelectItem>
+                    <SelectItem value="despesa">Despesa</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              {/* Filtro de Data */}
-              <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="flex-1 lg:w-[180px]">
-                  <SelectValue placeholder="Data" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todas as Datas</SelectItem>
-                  <SelectItem value="ontem">Ontem</SelectItem>
-                  <SelectItem value="hoje">Hoje</SelectItem>
-                  <SelectItem value="amanha">Amanhã</SelectItem>
-                  <SelectItem value="proximos7dias">Próximos 7 dias</SelectItem>
-                  <SelectItem value="mes">Mês</SelectItem>
-                  <SelectItem value="ano">Ano</SelectItem>
-                  <SelectItem value="periodo">Período</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          {/* Controles de Navegação de Data */}
-          {(dateFilter === 'mes' || dateFilter === 'ano') && (
-            <div className="sticky z-40 bg-background/95 backdrop-blur-sm border-b pt-2 pb-2 flex justify-center mb-2 md:mb-4" style={{ top: 0 }}>
-              <div className="flex items-center gap-1 bg-muted rounded-md p-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDateNavigation('prev')}
-                  className="h-8 w-8 p-0"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                
-                <span className="text-sm font-medium px-2 min-w-[120px] text-center">
-                  {getDateFilterLabel()}
-                </span>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDateNavigation('next')}
-                  className="h-8 w-8 p-0"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                {/* Filtro de Data */}
+                <Select value={dateFilter} onValueChange={setDateFilter}>
+                  <SelectTrigger className="flex-1 lg:w-[180px]">
+                    <SelectValue placeholder="Data" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todas as Datas</SelectItem>
+                    <SelectItem value="ontem">Ontem</SelectItem>
+                    <SelectItem value="hoje">Hoje</SelectItem>
+                    <SelectItem value="amanha">Amanhã</SelectItem>
+                    <SelectItem value="proximos7dias">Próximos 7 dias</SelectItem>
+                    <SelectItem value="mes">Mês</SelectItem>
+                    <SelectItem value="ano">Ano</SelectItem>
+                    <SelectItem value="periodo">Período</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-          )}
+            
+            {/* Controles de Navegação de Data */}
+            {(dateFilter === 'mes' || dateFilter === 'ano') && (
+              <div className="border-t pt-2 pb-2 flex justify-center mb-2 md:mb-4">
+                <div className="flex items-center gap-1 bg-muted rounded-md p-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDateNavigation('prev')}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  <span className="text-sm font-medium px-2 min-w-[120px] text-center">
+                    {getDateFilterLabel()}
+                  </span>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDateNavigation('next')}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Seletor de Período */}
           {dateFilter === 'periodo' && (

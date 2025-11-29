@@ -29,7 +29,7 @@ const ReportSummary: React.FC<ReportSummaryProps> = ({
     <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6 mb-6 lg:mb-8">
       <Card className="border border-border/50 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground">
+          <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
             {t('reports.totalIncome')}
           </CardTitle>
         </CardHeader>
@@ -41,7 +41,7 @@ const ReportSummary: React.FC<ReportSummaryProps> = ({
       </Card>
       <Card className="border border-border/50 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground">
+          <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
             {t('reports.totalExpenses')}
           </CardTitle>
         </CardHeader>
@@ -53,7 +53,7 @@ const ReportSummary: React.FC<ReportSummaryProps> = ({
       </Card>
       <Card className="border border-border/50 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground">
+          <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
             {t('reports.balance')}
           </CardTitle>
         </CardHeader>

@@ -285,7 +285,7 @@ const NotesPage: React.FC = () => {
     }
   };
   return <MainLayout>
-      <SubscriptionGuard feature="notas ilimitadas" className="px-[24px] py-[24px]">
+      <SubscriptionGuard feature="notas ilimitadas" className="px-0 py-0">
         <div className="w-full px-4 py-4 md:py-8 pb-20 md:pb-8 min-h-0">
           <div className="container mx-auto space-y-6 px-[24px] py-[24px]">
             {/* Indicador de visualização de cliente */}

@@ -66,10 +66,10 @@ const SaldoPage: React.FC = () => {
   const accountNames = accountBalances.map(acc => acc.conta);
   return <MainLayout>
       <div className="p-6">
-        <div className="flex items-center justify-between flex-wrap mb-6 py-[20px] gap-[8px]">
+        <div className="flex items-center justify-between mb-6 gap-2 py-[20px]">
           <h1 className="md:text-2xl font-semibold text-lg">Saldo por Conta</h1>
-          {accountBalances.length > 1 && <Button onClick={() => setIsTransferModalOpen(true)} className="gap-2">
-              <ArrowLeftRight className="h-4 w-4" />
+          {accountBalances.length > 1 && <Button onClick={() => setIsTransferModalOpen(true)} size="lg" className="shrink-0">
+              <ArrowLeftRight className="mr-2 h-4 w-4" />
               Transferir Saldo
             </Button>}
         </div>

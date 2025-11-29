@@ -95,13 +95,13 @@ const GoalsPage = () => {
     <MainLayout>
       <SubscriptionGuard>
         <div className="min-h-0">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-[20px]">
-            <h2 className="md:text-2xl font-semibold text-lg">{t('goals.yourGoals')}</h2>
+          <div className="flex items-center justify-between mb-6 gap-2 py-[20px]">
+            <h1 className="md:text-2xl font-semibold text-lg">{t('goals.yourGoals')}</h1>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleRefreshGoals}>
+              <Button variant="outline" size="lg" onClick={handleRefreshGoals} className="shrink-0">
                 <RefreshCw className="mr-2 h-4 w-4" /> {t('common.update')}
               </Button>
-              <Button onClick={handleAddGoal}>
+              <Button onClick={handleAddGoal} size="lg" className="shrink-0">
                 <Plus className="mr-2 h-4 w-4" /> {t('goals.add')}
               </Button>
             </div>

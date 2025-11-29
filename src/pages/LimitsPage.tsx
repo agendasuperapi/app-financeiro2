@@ -10,7 +10,9 @@ import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useApp } from '@/contexts/AppContext';
 import { Goal } from '@/types';
+import { useIsMobile } from '@/hooks/use-mobile';
 const LimitsPage: React.FC = () => {
+  const isMobile = useIsMobile();
   const [formOpen, setFormOpen] = useState(false);
   const [defaultType, setDefaultType] = useState<'income' | 'expense'>('expense');
   const [editingLimit, setEditingLimit] = useState<Goal | null>(null);
@@ -132,16 +134,16 @@ const LimitsPage: React.FC = () => {
           </div>}
         
         {/* Cabeçalho */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between py-[20px]">
+        <div className="flex items-center justify-between mb-6 gap-2 py-[20px]">
           <h1 className="md:text-2xl font-semibold text-lg">Meus controles</h1>
           {!isClientView && <div className="flex gap-2">
-              <Button onClick={handleAddLimit} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Adicionar Limite
+              <Button onClick={handleAddLimit} size={isMobile ? "sm" : "lg"} className={isMobile ? "gap-1" : "shrink-0"}>
+                <Plus className={isMobile ? "h-3 w-3" : "mr-2 h-4 w-4"} />
+                <span className={isMobile ? "text-xs" : ""}>Adicionar Limite</span>
               </Button>
-              <Button onClick={handleAddGoal} className="gap-2" variant="secondary">
-                <Target className="h-4 w-4" />
-                Adicionar Metas
+              <Button onClick={handleAddGoal} size={isMobile ? "sm" : "lg"} variant="secondary" className={isMobile ? "gap-1" : "shrink-0"}>
+                <Target className={isMobile ? "h-3 w-3" : "mr-2 h-4 w-4"} />
+                <span className={isMobile ? "text-xs" : ""}>Adicionar Metas</span>
               </Button>
             </div>}
         </div>

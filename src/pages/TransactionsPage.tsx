@@ -232,7 +232,7 @@ const TransactionsPage = () => {
             </div>}
           
           {/* Header and Add Button */}
-          <div className="flex items-center justify-between mb-6 gap-2 py-[10px]">
+          <div className="flex items-center justify-between mb-6 gap-2 py-[20px]">
             <h1 className="text-xl md:text-2xl font-semibold">
               {isMobile ? 'Transações' : 'Transações Recentes'}
             </h1>

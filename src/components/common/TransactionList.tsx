@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Button } from '@/components/ui/button';
 import { Transaction } from '@/types';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import TransactionCard from './TransactionCard';
@@ -66,35 +67,35 @@ const TransactionList: React.FC<TransactionListProps> = ({
         </div>
         
         {/* Mobile Pagination */}
-        {totalPages > 1 && <div className="flex justify-center mt-6">
-            <Pagination>
-              <PaginationContent className="mx-0 px-0">
-                {currentPage > 1 && <PaginationItem>
-                    <PaginationPrevious href="#" onClick={e => {
-                e.preventDefault();
-                setCurrentPage(currentPage - 1);
-              }} />
-                  </PaginationItem>}
-                
-                {Array.from({
-              length: totalPages
-            }, (_, i) => i + 1).map(page => <PaginationItem key={page}>
-                    <PaginationLink href="#" isActive={page === currentPage} onClick={e => {
-                e.preventDefault();
-                setCurrentPage(page);
-              }}>
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>)}
-                
-                {currentPage < totalPages && <PaginationItem>
-                    <PaginationNext href="#" onClick={e => {
-                e.preventDefault();
-                setCurrentPage(currentPage + 1);
-              }} />
-                  </PaginationItem>}
-              </PaginationContent>
-            </Pagination>
+        {totalPages > 1 && <div className="flex items-center justify-between mt-6 px-2">
+            <div className="text-sm text-muted-foreground">
+              {t('common.showing')} {startIndex + 1}-{Math.min(endIndex, transactions.length)} {t('common.of')} {transactions.length}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m15 18-6-6 6-6"/>
+                </svg>
+              </Button>
+              <span className="text-sm font-medium min-w-[60px] text-center">
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m9 18 6-6-6-6"/>
+                </svg>
+              </Button>
+            </div>
           </div>}
       </div>;
   }
@@ -102,35 +103,35 @@ const TransactionList: React.FC<TransactionListProps> = ({
       <TransactionTable transactions={currentTransactions} onEdit={onEdit} onDelete={onDelete} hideValues={hideValues} />
 
       {/* Desktop Pagination */}
-      {totalPages > 1 && <div className="flex justify-center">
-          <Pagination>
-            <PaginationContent>
-              {currentPage > 1 && <PaginationItem>
-                  <PaginationPrevious href="#" onClick={e => {
-              e.preventDefault();
-              setCurrentPage(currentPage - 1);
-            }} />
-                </PaginationItem>}
-              
-              {Array.from({
-            length: totalPages
-          }, (_, i) => i + 1).map(page => <PaginationItem key={page}>
-                  <PaginationLink href="#" isActive={page === currentPage} onClick={e => {
-              e.preventDefault();
-              setCurrentPage(page);
-            }}>
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>)}
-              
-              {currentPage < totalPages && <PaginationItem>
-                  <PaginationNext href="#" onClick={e => {
-              e.preventDefault();
-              setCurrentPage(currentPage + 1);
-            }} />
-                </PaginationItem>}
-            </PaginationContent>
-          </Pagination>
+      {totalPages > 1 && <div className="flex items-center justify-between px-2">
+          <div className="text-sm text-muted-foreground">
+            {t('common.showing')} {startIndex + 1}-{Math.min(endIndex, transactions.length)} {t('common.of')} {transactions.length}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m15 18-6-6 6-6"/>
+              </svg>
+            </Button>
+            <span className="text-sm font-medium min-w-[60px] text-center">
+              {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m9 18 6-6-6-6"/>
+              </svg>
+            </Button>
+          </div>
         </div>}
     </div>;
 };

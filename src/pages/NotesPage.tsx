@@ -314,8 +314,8 @@ const NotesPage: React.FC = () => {
                 </div>
               </div>}
             
-            <div className="flex items-center justify-between">
-              <h1 className="text-lg md:text-3xl font-bold text-foreground">Minhas Notas</h1>
+            <div className="flex items-center justify-between py-[20px]">
+              <h1 className="md:text-2xl font-semibold text-lg">Minhas Notas</h1>
               
               <Dialog open={isAddingNote} onOpenChange={setIsAddingNote}>
                 <DialogTrigger asChild>

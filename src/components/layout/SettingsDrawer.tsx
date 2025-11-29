@@ -1,11 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -19,10 +18,12 @@ import {
   Settings,
   ChevronRight
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface SettingsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  trigger?: React.ReactNode;
 }
 
 interface SettingsOption {
@@ -83,7 +84,46 @@ const settingsOptions: SettingsOption[] = [
   }
 ];
 
-const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ open, onOpenChange }) => {
+const containerVariants = {
+  hidden: {
+    opacity: 0,
+    y: 10,
+    scale: 0.95
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.2,
+      staggerChildren: 0.03
+    }
+  },
+  exit: {
+    opacity: 0,
+    y: 10,
+    scale: 0.95,
+    transition: {
+      duration: 0.15
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: {
+    opacity: 0,
+    x: -10
+  },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 0.2
+    }
+  }
+};
+
+const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ open, onOpenChange, trigger }) => {
   const navigate = useNavigate();
 
   const handleOptionClick = (tab: string) => {
@@ -91,39 +131,53 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ open, onOpenChange }) =
     localStorage.setItem('profileActiveTab', tab);
     // Navegar para o profile
     navigate('/profile');
-    // Fechar o drawer
+    // Fechar o popup
     onOpenChange(false);
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-[280px] sm:w-[340px] p-0">
-        <SheetHeader className="px-6 py-4 border-b">
-          <SheetTitle className="text-lg font-semibold">Configurações</SheetTitle>
-        </SheetHeader>
-        
-        <div className="py-2">
-          {settingsOptions.map((option, index) => (
-            <React.Fragment key={option.id}>
-              <Button
-                variant="ghost"
-                className="w-full justify-between px-6 py-4 h-auto rounded-none hover:bg-accent"
-                onClick={() => handleOptionClick(option.tab)}
-              >
-                <div className="flex items-center gap-3">
-                  <option.icon className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-base font-normal">{option.label}</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </Button>
-              {index < settingsOptions.length - 1 && (
-                <Separator className="my-0" />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </SheetContent>
-    </Sheet>
+    <Popover open={open} onOpenChange={onOpenChange}>
+      {trigger && <PopoverTrigger asChild>{trigger}</PopoverTrigger>}
+      
+      <PopoverContent 
+        side="top" 
+        align="end" 
+        className="w-[280px] p-0 mb-2 shadow-lg border-2"
+        sideOffset={8}
+      >
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <div className="px-4 py-3 border-b bg-muted/30">
+            <h3 className="font-semibold text-base">Configurações</h3>
+          </div>
+          
+          <div className="py-1 max-h-[400px] overflow-y-auto">
+            {settingsOptions.map((option, index) => (
+              <motion.div key={option.id} variants={itemVariants}>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-between px-4 py-3 h-auto rounded-none hover:bg-accent"
+                  onClick={() => handleOptionClick(option.tab)}
+                >
+                  <div className="flex items-center gap-3">
+                    <option.icon className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-normal">{option.label}</span>
+                  </div>
+                  <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                </Button>
+                {index < settingsOptions.length - 1 && (
+                  <Separator className="my-0" />
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </PopoverContent>
+    </Popover>
   );
 };
 

@@ -271,30 +271,30 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
 
   return (
     <>
-      <SettingsDrawer 
-        open={isSettingsDrawerOpen} 
-        onOpenChange={setIsSettingsDrawerOpen}
-      />
-      
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t md:hidden">
         <nav className="flex items-center justify-around py-2">
           {menuItems.map((item, index) => {
             if (item.type === 'settings-drawer') {
               return (
-                <button
+                <SettingsDrawer 
                   key="settings-drawer"
-                  onClick={() => setIsSettingsDrawerOpen(true)}
-                  className={cn(
-                    "flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
-                    "hover:bg-accent hover:text-accent-foreground min-w-0",
-                    isSettingsDrawerOpen || location.pathname === '/profile'
-                      ? "bg-green-600 text-white shadow-md"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  {item.label && <span className="truncate">{item.label}</span>}
-                </button>
+                  open={isSettingsDrawerOpen} 
+                  onOpenChange={setIsSettingsDrawerOpen}
+                  trigger={
+                    <button
+                      className={cn(
+                        "flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+                        "hover:bg-accent hover:text-accent-foreground min-w-0",
+                        isSettingsDrawerOpen || location.pathname === '/profile'
+                          ? "bg-green-600 text-white shadow-md"
+                          : "text-muted-foreground"
+                      )}
+                    >
+                      <item.icon className="h-5 w-5 flex-shrink-0" />
+                      {item.label && <span className="truncate">{item.label}</span>}
+                    </button>
+                  }
+                />
               );
             }
             

@@ -330,8 +330,8 @@ const ContasPage = () => {
                   </span>
                 </div>
               </div>}
-          <div className="flex items-center justify-between mb-4 md:mb-6">
-            <h1 className="text-base md:text-xl font-bold">Contas a Pagar</h1>
+          <div className="flex items-center justify-between mb-4 md:mb-6 py-[20px]">
+            <h1 className="md:text-xl font-bold text-xl">Contas a Pagar</h1>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="flex items-center gap-2">
@@ -546,40 +546,28 @@ const ContasPage = () => {
                              </div>}
                         </CardContent>
                       </Card>;
-               })}
+              })}
                 </div>}
               
               {/* Paginação */}
-              {!loading && filteredContas.length > itemsPerPage && (
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              {!loading && filteredContas.length > itemsPerPage && <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="text-sm text-muted-foreground">
-                    Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredContas.length)} de {filteredContas.length} contas
+                    Mostrando {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, filteredContas.length)} de {filteredContas.length} contas
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={currentPage === 1}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>
                       <ChevronLeft className="h-4 w-4" />
                       Anterior
                     </Button>
                     <div className="text-sm font-medium">
                       Página {currentPage} de {Math.ceil(filteredContas.length / itemsPerPage)}
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredContas.length / itemsPerPage), prev + 1))}
-                      disabled={currentPage >= Math.ceil(filteredContas.length / itemsPerPage)}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredContas.length / itemsPerPage), prev + 1))} disabled={currentPage >= Math.ceil(filteredContas.length / itemsPerPage)}>
                       Próxima
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
-              )}
+                </div>}
             </CardContent>
           </Card>
         </div>

@@ -33,7 +33,6 @@ const CalendarPage: React.FC = () => {
   const {
     toast
   } = useToast();
-
   const handleEditTransaction = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setEditDialogOpen(true);
@@ -166,10 +165,13 @@ const CalendarPage: React.FC = () => {
   };
   const selectedDateItems = selectedDate ? getAllItemsForDate(selectedDate) : [];
   return <MainLayout>
-      <div className="container mx-auto p-4 space-y-6 px-0 py-0">
+      <div className="container mx-auto p-4 space-y-6 px-[24px] py-[24px]">
         <div className="flex items-center justify-between mb-6 gap-2 py-[20px]">
           <h1 className="md:text-2xl font-semibold text-lg">Calendário</h1>
-          <Button onClick={() => { setSelectedTransaction(null); setEditDialogOpen(true); }} size={isMobile ? "sm" : "lg"} className={isMobile ? "gap-1" : "shrink-0"}>
+          <Button onClick={() => {
+          setSelectedTransaction(null);
+          setEditDialogOpen(true);
+        }} size={isMobile ? "sm" : "lg"} className={isMobile ? "gap-1" : "shrink-0"}>
             <Plus className={isMobile ? "h-3 w-3" : "mr-2 h-4 w-4"} />
             <span className={isMobile ? "text-xs" : ""}>{isMobile ? 'Adicionar' : 'Adicionar Transação'}</span>
           </Button>

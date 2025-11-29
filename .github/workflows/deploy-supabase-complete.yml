@@ -277,10 +277,10 @@ jobs:
         echo "3. Verify permissions for the access token"
         echo "4. Check the Actions logs for specific error messages"
 
-  build-and-deploy:
+  build-web:
     runs-on: ubuntu-latest
     needs: deploy
-    if: ${{ github.event_name == 'push' || inputs.build_apk != 'false' }}
+    if: ${{ github.event_name == 'push' }}
     
     steps:
     - name: 📦 Checkout Repository
@@ -336,6 +336,63 @@ jobs:
           echo "⚠️  FTP upload failed for web build"
         fi
 
+    - name: ✅ Build Summary
+      run: |
+        echo "🎉 Build e Deploy concluídos com sucesso!"
+        echo ""
+        echo "📋 Resumo:"
+        echo "- ✅ Projeto compilado"
+        echo "- ✅ Build web gerado"
+        echo ""
+        
+        if [ -n "${{ secrets.HOSTINGER_FTP_HOST }}" ]; then
+          echo "📤 Upload Hostinger:"
+          echo "- ✅ Build web enviado"
+          echo ""
+          echo "🌐 App Web:"
+          echo "  https://${{ secrets.HOSTINGER_FTP_HOST }}"
+        else
+          echo "- ⚠️  Upload Hostinger não configurado"
+          echo ""
+          echo "💡 Para habilitar upload automático, configure:"
+          echo "   - HOSTINGER_FTP_HOST"
+          echo "   - HOSTINGER_FTP_USER"
+          echo "   - HOSTINGER_FTP_PASSWORD"
+        fi
+        echo ""
+        echo "📖 Para gerar APK: Execute manualmente o workflow com build_apk=true"
+
+    - name: 🚨 Build Failed
+      if: failure()
+      run: |
+        echo "❌ Build web falhou!"
+        echo ""
+        echo "🔍 Verifique:"
+        echo "1. Node.js instalado corretamente"
+        echo "2. Todas as dependências necessárias"
+        echo "3. Logs de erro acima para detalhes específicos"
+
+  build-apk:
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_apk == true }}
+    
+    steps:
+    - name: 📦 Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - name: 📥 Install Dependencies
+      run: npm ci
+
+    - name: 🏗️ Build Project
+      run: npm run build
+
     - name: 📱 Setup Android SDK
       uses: android-actions/setup-android@v3
 
@@ -375,7 +432,7 @@ jobs:
         path: android/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
 
-    - name: 🌐 Upload to Hostinger via FTP
+    - name: 🌐 Upload APK to Hostinger via FTP
       env:
         HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST }}
         HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER }}
@@ -414,24 +471,18 @@ jobs:
           echo "⚠️  FTP upload falhou, mas APK está disponível como artifact do GitHub"
         fi
 
-    - name: ✅ Build Summary
+    - name: ✅ APK Build Summary
       run: |
-        echo "🎉 Build e Deploy concluídos com sucesso!"
+        echo "🎉 Build do APK concluído com sucesso!"
         echo ""
         echo "📋 Resumo:"
-        echo "- ✅ Projeto compilado"
-        echo "- ✅ Build web gerado"
-        echo "- ✅ Plataforma Android configurada"
         echo "- ✅ APK debug gerado (para testes)"
+        echo "- ✅ APK disponível como artifact do GitHub"
         echo ""
         
         if [ -n "${{ secrets.HOSTINGER_FTP_HOST }}" ]; then
           echo "📤 Upload Hostinger:"
-          echo "- ✅ Build web enviado"
           echo "- ✅ APK enviado"
-          echo ""
-          echo "🌐 App Web:"
-          echo "  https://${{ secrets.HOSTINGER_FTP_HOST }}"
           echo ""
           echo "📱 APK para Testes:"
           echo "  https://${{ secrets.HOSTINGER_FTP_HOST }}/App-Financeiro-v1.0.0.apk"
@@ -439,13 +490,16 @@ jobs:
           echo "📁 Histórico de APKs:"
           echo "  https://${{ secrets.HOSTINGER_FTP_HOST }}/App-Financeiro-v1.0.0-*.apk"
         else
-          echo "- ⚠️  Upload Hostinger não configurado"
-          echo ""
-          echo "💡 Para habilitar upload automático, configure:"
-          echo "   - HOSTINGER_FTP_HOST"
-          echo "   - HOSTINGER_FTP_USER"
-          echo "   - HOSTINGER_FTP_PASSWORD"
+          echo "💾 Download alternativo:"
+          echo "  APK disponível como artifact do GitHub (30 dias)"
         fi
+
+    - name: 🚨 APK Build Failed
+      if: failure()
+      run: |
+        echo "❌ Build do APK falhou!"
         echo ""
-        echo "💾 Download alternativo:"
-        echo "  APK disponível como artifact do GitHub (30 dias)"
+        echo "🔍 Verifique:"
+        echo "1. Android SDK e Java JDK configurados"
+        echo "2. Todas as dependências necessárias"
+        echo "3. Logs de erro acima para detalhes específicos"

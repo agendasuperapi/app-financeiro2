@@ -207,14 +207,14 @@ const TransactionsPage = () => {
           
           {/* Header and Add Button */}
           <div className="flex items-center justify-between mb-6 gap-2 py-[20px]">
-            <h1 className="text-xl md:text-2xl font-semibold">
+            <h1 className="md:text-2xl font-semibold text-lg">
               {isMobile ? 'Transações' : 'Transações Recentes'}
             </h1>
             
             <Button onClick={handleAddTransaction} size={isMobile ? "sm" : "lg"} className={isMobile ? "gap-1" : "shrink-0"}>
               <Plus className={isMobile ? "h-3 w-3" : "mr-2 h-4 w-4"} />
               <span className={isMobile ? "text-xs" : ""}>
-                {isMobile ? 'Adicionar' : (isClientView ? 'Adicionar para Cliente' : 'Adicionar Transação')}
+                {isMobile ? 'Adicionar' : isClientView ? 'Adicionar para Cliente' : 'Adicionar Transação'}
               </span>
             </Button>
           </div>

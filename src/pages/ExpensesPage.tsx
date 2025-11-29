@@ -95,8 +95,8 @@ const ExpensesPage = () => {
           </div>
         )}
         
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h2 className="text-2xl font-bold">{t('expenses.title')}</h2>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-[20px]">
+          <h2 className="md:text-2xl font-semibold text-lg">{t('expenses.title')}</h2>
           <div className="flex gap-2 items-center">
             <TimeRangeSelector />
             <Button onClick={handleAddExpense}>

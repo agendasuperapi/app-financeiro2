@@ -58,7 +58,7 @@ const ReportsPage = () => {
             </div>
           )}
           
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-6 lg:mb-8">{t('reports.title')}</h1>
+          <h1 className="md:text-2xl font-semibold text-lg mb-6 lg:mb-8 py-[20px]">{t('reports.title')}</h1>
           
           <ReportFilters 
             reportType={reportType}

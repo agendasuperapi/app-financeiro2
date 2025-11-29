@@ -147,8 +147,8 @@ const LimitsPage: React.FC = () => {
           </div>}
         
         {/* Cabeçalho */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <h1 className="tracking-tight py-[20px] text-xl font-semibold">Meus controles</h1>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between py-[20px]">
+          <h1 className="md:text-2xl font-semibold text-lg">Meus controles</h1>
           {!isClientView && <div className="flex gap-2">
               <Button onClick={handleAddLimit} className="gap-2">
                 <Plus className="h-4 w-4" />

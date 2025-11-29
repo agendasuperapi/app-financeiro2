@@ -200,11 +200,8 @@ const LembretesPage = () => {
       <SubscriptionGuard feature="lembretes">
         <div className="space-y-4 md:space-y-6 min-h-0">
           {/* Header Section */}
-          <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center md:gap-4">
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold">Lembretes</h2>
-              <p className="text-sm md:text-base text-muted-foreground">Gerencie seus lembretes e notificações</p>
-            </div>
+          <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center md:gap-4 py-[20px]">
+            <h2 className="md:text-2xl font-semibold text-lg">Lembretes</h2>
             
             <div className="flex gap-2">
               {(isMobile || isTablet) && (

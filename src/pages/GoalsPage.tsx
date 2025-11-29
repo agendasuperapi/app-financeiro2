@@ -95,8 +95,8 @@ const GoalsPage = () => {
     <MainLayout>
       <SubscriptionGuard>
         <div className="min-h-0">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h2 className="text-2xl font-bold">{t('goals.yourGoals')}</h2>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-[20px]">
+            <h2 className="md:text-2xl font-semibold text-lg">{t('goals.yourGoals')}</h2>
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleRefreshGoals}>
                 <RefreshCw className="mr-2 h-4 w-4" /> {t('common.update')}

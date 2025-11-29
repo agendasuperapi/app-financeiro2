@@ -75,11 +75,8 @@ const SaldoPage: React.FC = () => {
   return (
     <MainLayout>
       <div className="p-6">
-        <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            <Wallet className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">Saldo por Conta</h1>
-          </div>
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-6 py-[20px]">
+          <h1 className="md:text-2xl font-semibold text-lg">Saldo por Conta</h1>
           {accountBalances.length > 1 && (
             <Button onClick={() => setIsTransferModalOpen(true)} className="gap-2">
               <ArrowLeftRight className="h-4 w-4" />

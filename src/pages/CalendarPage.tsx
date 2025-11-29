@@ -188,7 +188,7 @@ const CalendarPage: React.FC = () => {
   };
 
   // Helpers de data ignorando fuso para manter o "dia do ISO" original
-  const getISODateKey = (iso?: string) => (iso ? iso.slice(0, 10) : ''); // yyyy-MM-dd do próprio ISO
+  const getISODateKey = (iso?: string) => iso ? iso.slice(0, 10) : ''; // yyyy-MM-dd do próprio ISO
   const getLocalDateKey = (d: Date) => format(d, 'yyyy-MM-dd'); // yyyy-MM-dd da célula do calendário
 
   // Agrupa todas as transações e lembretes do dia (evitando duplicatas) usando chaves de data
@@ -199,17 +199,23 @@ const CalendarPage: React.FC = () => {
     // Transações normais
     for (const t of transactions) {
       if (getISODateKey(t.date) === targetKey) {
-        items.set(t.id, { ...t, sourceType: 'transaction' });
+        items.set(t.id, {
+          ...t,
+          sourceType: 'transaction'
+        });
       }
     }
 
     // Lembretes/agendados
     for (const r of reminders) {
       if (getISODateKey(r.scheduledDate) === targetKey && !items.has(r.id)) {
-        items.set(r.id, { ...r, date: r.scheduledDate, sourceType: 'reminder' });
+        items.set(r.id, {
+          ...r,
+          date: r.scheduledDate,
+          sourceType: 'reminder'
+        });
       }
     }
-
     return Array.from(items.values());
   };
 
@@ -217,27 +223,22 @@ const CalendarPage: React.FC = () => {
   const getDatesWithTransactions = () => {
     const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
-
     const keys = new Set<string>();
     transactions.forEach(t => keys.add(getISODateKey(t.date)));
     reminders.forEach(r => keys.add(getISODateKey(r.scheduledDate)));
 
     // Converter cada key (yyyy-MM-dd) para Date local correspondente e filtrar pelo mês atual
-    const dates = Array.from(keys)
-      .filter(k => !!k)
-      .map(k => {
-        const [y, m, d] = k.split('-').map(Number);
-        return new Date(y, (m || 1) - 1, d || 1);
-      })
-      .filter(d => d >= startOfMonth && d <= endOfMonth);
-
+    const dates = Array.from(keys).filter(k => !!k).map(k => {
+      const [y, m, d] = k.split('-').map(Number);
+      return new Date(y, (m || 1) - 1, d || 1);
+    }).filter(d => d >= startOfMonth && d <= endOfMonth);
     return dates;
   };
   const selectedDateItems = selectedDate ? getAllItemsForDate(selectedDate) : [];
   return <MainLayout>
       <div className="container mx-auto p-4 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Calendário</h1>
+        <div className="flex items-center justify-between py-[15px]">
+          <h1 className="text-xl font-semibold">Calendário</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -260,25 +261,20 @@ const CalendarPage: React.FC = () => {
               }} modifiersClassNames={{
                 hasTransactions: "font-semibold"
               }} components={{
-                Day: (props) => {
+                Day: props => {
                   const date = props.day.date;
                   const dayItems = getAllItemsForDate(date);
-                  
+
                   // Contar por formato
                   const formatCounts = {
                     transacao: 0,
                     agenda: 0,
                     lembrete: 0
                   };
-                  
                   dayItems.forEach(item => {
-                    const formato = (item as any).formato || 
-                                   (item.sourceType === 'reminder' || item.status === 'pending' ? 'lembrete' : 'transacao');
-                    if (formato === 'transacao') formatCounts.transacao++;
-                    else if (formato === 'agenda') formatCounts.agenda++;
-                    else if (formato === 'lembrete') formatCounts.lembrete++;
+                    const formato = (item as any).formato || (item.sourceType === 'reminder' || item.status === 'pending' ? 'lembrete' : 'transacao');
+                    if (formato === 'transacao') formatCounts.transacao++;else if (formato === 'agenda') formatCounts.agenda++;else if (formato === 'lembrete') formatCounts.lembrete++;
                   });
-                  
                   return <div {...props} className={cn("relative w-full h-full flex flex-col items-center justify-center rounded-md transition-colors cursor-pointer", "hover:bg-accent hover:text-accent-foreground", selectedDate && isSameDay(date, selectedDate) && "bg-primary text-primary-foreground", isSameDay(date, new Date()) && !selectedDate && "bg-accent text-accent-foreground")} onClick={() => setSelectedDate(date)}>
                           <span>{format(date, 'd')}</span>
                           {dayItems.length > 0 && <div className="absolute bottom-1 flex gap-1">
@@ -331,14 +327,12 @@ const CalendarPage: React.FC = () => {
                   // Definir cor da bolinha e estilo baseado no formato
                   let bolinhaColor = 'bg-gray-900'; // Preta para "transacao"
                   let cardClassName = 'flex items-center justify-between p-2 border rounded-lg';
-                  
                   if (formato === 'agenda') {
                     bolinhaColor = 'bg-purple-500'; // Roxa para "agenda"
                   } else if (formato === 'lembrete' || isReminder) {
                     bolinhaColor = 'bg-blue-500'; // Azul para "lembrete"
                     cardClassName = 'flex items-center justify-between p-2 border rounded-lg bg-blue-50 dark:bg-blue-950/20';
                   }
-                  
                   return <div key={item.id} className={cardClassName}>
                             <div className="flex items-center gap-2">
                               <div className={`w-2 h-2 rounded-full ${bolinhaColor}`} />

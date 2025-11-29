@@ -442,10 +442,9 @@ const ContasPage = () => {
                 </Popover>
               </div>
             </div>}
+          <h2 className="text-base md:text-2xl font-bold mb-4">Agendadas</h2>
+          
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base md:text-2xl font-bold">Agendadas</CardTitle>
-            </CardHeader>
             <CardContent>
               {loading ? <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin" />

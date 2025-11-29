@@ -9,6 +9,7 @@ import { LayoutDashboard, Receipt, Settings, Crown, Plus, Calendar, Clock, Shiel
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import SettingsDrawer from './SettingsDrawer';
 
 interface MobileNavBarProps {
   onAddTransaction?: (type: 'income' | 'expense') => void;
@@ -26,6 +27,7 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
   const { user, isLoading } = useAppContext();
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
   const [activeAdminSection, setActiveAdminSection] = useState<string>('gestao');
+  const [isSettingsDrawerOpen, setIsSettingsDrawerOpen] = useState(false);
   
   // Redirecionar para login se não estiver logado (após carregar) e apenas em rotas protegidas
   React.useEffect(() => {
@@ -209,9 +211,10 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
       href: '/calendar'
     },
     {
+      type: 'settings-drawer',
       icon: Settings,
       label: 'Configurações',
-      href: '/profile'
+      href: '#'
     }
   ];
   
@@ -267,12 +270,37 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t md:hidden">
-      <nav className="flex items-center justify-around py-2">
-        {menuItems.map((item, index) => {
-          if (item.type === 'quick-actions') {
-            return (
-              <Popover key="quick-actions" open={isQuickActionsOpen} onOpenChange={setIsQuickActionsOpen}>
+    <>
+      <SettingsDrawer 
+        open={isSettingsDrawerOpen} 
+        onOpenChange={setIsSettingsDrawerOpen}
+      />
+      
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t md:hidden">
+        <nav className="flex items-center justify-around py-2">
+          {menuItems.map((item, index) => {
+            if (item.type === 'settings-drawer') {
+              return (
+                <button
+                  key="settings-drawer"
+                  onClick={() => setIsSettingsDrawerOpen(true)}
+                  className={cn(
+                    "flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+                    "hover:bg-accent hover:text-accent-foreground min-w-0",
+                    isSettingsDrawerOpen || location.pathname === '/profile'
+                      ? "bg-green-600 text-white shadow-md"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  {item.label && <span className="truncate">{item.label}</span>}
+                </button>
+              );
+            }
+            
+            if (item.type === 'quick-actions') {
+              return (
+                <Popover key="quick-actions" open={isQuickActionsOpen} onOpenChange={setIsQuickActionsOpen}>
                 <PopoverTrigger asChild>
                   <button className={cn("flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground min-w-0", isQuickActionsOpen ? "bg-green-600 text-white shadow-md" : "text-muted-foreground")}>
                     <div className="rounded-full bg-primary text-primary-foreground p-1">
@@ -295,21 +323,23 @@ const MobileNavBar: React.FC<MobileNavBarProps> = ({
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </PopoverContent>
-              </Popover>
+                  </PopoverContent>
+                </Popover>
+              );
+            }
+            
+            return (
+              <NavLink key={item.href} to={item.href} className={({
+                isActive
+              }) => cn("flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground min-w-0", isActive ? "bg-green-600 text-white shadow-md" : "text-muted-foreground")}>
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                {item.label && <span className="truncate">{item.label}</span>}
+              </NavLink>
             );
-          }
-          return (
-            <NavLink key={item.href} to={item.href} className={({
-              isActive
-            }) => cn("flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors", "hover:bg-accent hover:text-accent-foreground min-w-0", isActive ? "bg-green-600 text-white shadow-md" : "text-muted-foreground")}>
-              <item.icon className="h-5 w-5 flex-shrink-0" />
-              {item.label && <span className="truncate">{item.label}</span>}
-            </NavLink>
-          );
-        })}
-      </nav>
-    </div>
+          })}
+        </nav>
+      </div>
+    </>
   );
 };
 

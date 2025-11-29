@@ -335,7 +335,7 @@ const LembrarPage = () => {
                   </span>
                 </div>
               </div>}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4 mb-4 lg:mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 lg:mb-6 py-[20px] md:gap-[8px]">
             <h1 className="text-xl md:text-2xl lg:text-2xl font-semibold">Lembrar</h1>
             <Button className="flex items-center gap-2 w-full sm:w-auto" onClick={() => setIsAddDialogOpen(true)}>
               <Plus className="h-4 w-4" />

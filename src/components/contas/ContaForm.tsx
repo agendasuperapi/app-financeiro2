@@ -695,6 +695,29 @@ const ContaForm: React.FC<ContaFormProps> = ({
   };
 
   // Delete handler
+  const handleDeleteClick = async () => {
+    if (!initialData) return;
+    
+    // Verificar transações relacionadas antes de abrir o dialog
+    const codigoTrans = (initialData as any)['codigo-trans'];
+    if (codigoTrans) {
+      const related = await checkForRelatedTransactions(
+        codigoTrans,
+        initialData.id,
+        initialData.scheduledDate
+      );
+      setPastTransactions(related.past);
+      setFutureTransactions(related.future);
+    } else {
+      // Se não tem codigo-trans, limpar os arrays
+      setPastTransactions([]);
+      setFutureTransactions([]);
+    }
+    
+    // Abrir o dialog
+    setDeleteDialogOpen(true);
+  };
+
   const handleDelete = async () => {
     if (!initialData) return;
     
@@ -985,7 +1008,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           )}
 
           <div className="flex flex-col sm:flex-row gap-3 justify-between items-center pt-4">
-            {mode === 'edit' && <Button type="button" variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)} disabled={!isOnline} className="w-full sm:w-auto">
+            {mode === 'edit' && <Button type="button" variant="destructive" size="sm" onClick={handleDeleteClick} disabled={!isOnline} className="w-full sm:w-auto">
                 {t('common.delete')}
               </Button>}
             <div className="flex gap-2 w-full sm:w-auto">

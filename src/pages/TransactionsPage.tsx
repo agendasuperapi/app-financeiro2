@@ -289,7 +289,7 @@ const TransactionsPage = () => {
           </div>
           
           {/* Container Sticky Único - Filtros + Navegação */}
-          <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm">
+          <div className="sticky top-16 md:top-0 z-30 bg-background/95 backdrop-blur-sm">
             {/* Filtros */}
             <div className="pb-2 md:pb-4 flex flex-col lg:flex-row gap-2">
               {/* Campo de Pesquisa */}

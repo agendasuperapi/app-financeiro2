@@ -338,7 +338,14 @@ const TransactionsPage = () => {
             
           {/* Controles de Navegação de Data - STICKY */}
           {(dateFilter === 'mes' || dateFilter === 'ano') && (
-            <div className="sticky top-14 md:top-0 z-30 bg-background/95 backdrop-blur-sm border-y py-2 flex justify-center mb-2 md:mb-4">
+            <div 
+              className="sticky z-30 bg-background/95 backdrop-blur-sm border-y py-2 flex justify-center mb-2 md:mb-4 md:top-0"
+              style={{ 
+                top: isMobile 
+                  ? 'calc(3.5rem + env(safe-area-inset-top))' 
+                  : '0' 
+              }}
+            >
                 <div className="flex items-center gap-1 bg-muted rounded-md p-1">
                   <Button
                     variant="ghost"

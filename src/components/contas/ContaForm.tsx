@@ -701,10 +701,12 @@ const ContaForm: React.FC<ContaFormProps> = ({
     // Verificar transações relacionadas antes de abrir o dialog
     const codigoTrans = (initialData as any)['codigo-trans'];
     if (codigoTrans) {
+      // Usar o campo 'date' do banco (não scheduledDate)
+      const currentDate = (initialData as any)?.date as string | undefined;
       const related = await checkForRelatedTransactions(
         codigoTrans,
         initialData.id,
-        initialData.scheduledDate
+        currentDate
       );
       setPastTransactions(related.past);
       setFutureTransactions(related.future);

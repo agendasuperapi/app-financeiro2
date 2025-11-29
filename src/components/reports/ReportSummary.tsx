@@ -29,36 +29,36 @@ const ReportSummary: React.FC<ReportSummaryProps> = ({
     <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6 mb-6 lg:mb-8">
       <Card className="border border-border/50 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight text-center">
+          <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
             {t('reports.totalIncome')}
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0 flex justify-center">
-          <p className="text-sm sm:text-base lg:text-lg font-bold text-green-600 dark:text-green-400">
+        <CardContent>
+          <p className="text-[11px] sm:text-xs lg:text-sm font-bold text-green-600 dark:text-green-400">
             {formatCurrency(totalIncome)}
           </p>
         </CardContent>
       </Card>
       <Card className="border border-border/50 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight text-center">
+          <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
             {t('reports.totalExpenses')}
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0 flex justify-center">
-          <p className="text-sm sm:text-base lg:text-lg font-bold text-red-600 dark:text-red-400">
+        <CardContent>
+          <p className="text-[11px] sm:text-xs lg:text-sm font-bold text-red-600 dark:text-red-400">
             {formatCurrency(totalExpenses)}
           </p>
         </CardContent>
       </Card>
       <Card className="border border-border/50 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground leading-tight text-center">
+          <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
             {t('reports.balance')}
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0 flex justify-center">
-          <p className={`text-sm sm:text-base lg:text-lg font-bold ${
+        <CardContent>
+          <p className={`text-[11px] sm:text-xs lg:text-sm font-bold ${
             balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
           }`}>
             {formatCurrency(balance)}

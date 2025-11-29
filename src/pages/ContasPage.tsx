@@ -458,7 +458,7 @@ const ContasPage = () => {
                 const isPaid = conta.status === 'paid';
                 const isSimulation = conta.__isSimulation;
                 return <Card key={conta.id} className={`transition-all hover:shadow-md ${isSimulation ? 'border-dashed border-2 border-orange-300 bg-orange-50/30' : ''}`}>
-                         <CardContent className="p-2 md:p-4">
+                         <CardContent className="p-2 md:p-4 px-[2px] py-[2px]">
                            {/* Primeira linha: Descrição e Status */}
                            <div className="flex items-center justify-between mb-3">
                              <div className="flex-1">

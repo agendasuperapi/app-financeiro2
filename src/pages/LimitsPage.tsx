@@ -136,7 +136,7 @@ const LimitsPage: React.FC = () => {
         {/* Cabeçalho */}
         <div className="flex items-center justify-between mb-6 gap-2 py-[20px]">
           <h1 className="md:text-2xl font-semibold text-lg">Meus controles</h1>
-        {!isClientView && <div className="flex gap-2 flex-wrap">
+        {!isClientView && <div className="flex gap-2 flex-nowrap">
             <Button onClick={handleAddLimit} size="sm" className="gap-1">
               <Plus className="h-3 w-3" />
               <span className="text-xs">{isMobile ? "Limite" : "Adicionar Limite"}</span>

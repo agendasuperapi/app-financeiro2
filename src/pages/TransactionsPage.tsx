@@ -229,7 +229,7 @@ const TransactionsPage = () => {
   return (
     <MainLayout>
       <SubscriptionGuard feature="movimentações ilimitadas">
-        <div className="w-full px-4 md:px-6 pt-0 md:py-6 lg:py-8 pb-20 md:pb-8 min-h-0">
+        <div className="w-full px-4 md:px-6 py-4 md:py-6 lg:py-8 pb-20 md:pb-8 min-h-0">
           {/* Indicador de visualização de cliente */}
           {isClientView && selectedUser && (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -289,7 +289,7 @@ const TransactionsPage = () => {
           </div>
           
           {/* Container Sticky Único - Filtros + Navegação */}
-          <div className="sticky top-[calc(env(safe-area-inset-top)+5rem)] md:top-0 z-30 bg-background/95 backdrop-blur-sm border-b pt-4 md:pt-0">
+          <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b pt-2 md:pt-0">
             {/* Filtros */}
             <div className="pb-2 md:pb-4 flex flex-col lg:flex-row gap-2">
               {/* Campo de Pesquisa */}

@@ -322,7 +322,7 @@ const ContasPage = () => {
     };
   };
   return <MainLayout>
-      <SubscriptionGuard>
+      <SubscriptionGuard className="px-[24px] py-[24px]">
           <div className="container mx-auto p-2 md:p-6 space-y-4 md:space-y-6">
             {isClientView && selectedUser && <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center gap-2 text-blue-800">

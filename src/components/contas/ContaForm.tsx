@@ -65,11 +65,12 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [futureTransactions, setFutureTransactions] = useState<any[]>([]);
-  const [editOption, setEditOption] = useState<'single' | 'all'>('single');
+  const [pastTransactions, setPastTransactions] = useState<any[]>([]);
+  const [editOption, setEditOption] = useState<'single' | 'future' | 'past' | 'all'>('single');
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [selectOpen, setSelectOpen] = useState(false);
 
-  // Check for future transactions with same codigo-trans
+  // Check for related transactions (both past and future) with same codigo-trans
   const checkForRelatedTransactions = async (codigoTrans: string | number, currentId: string, currentDate?: string) => {
     try {
       const codeStr = String(codigoTrans);
@@ -77,7 +78,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
 
       const { data: user } = await supabase.auth.getUser();
       const targetUserId = selectedUser?.id || user?.user?.id;
-      if (!targetUserId || !codeStr) return [];
+      if (!targetUserId || !codeStr) return { past: [], future: [] };
 
       // 1) Tentativa direta pelo campo codigo-trans
       let { data, error } = await (supabase as any)
@@ -104,17 +105,21 @@ const ContaForm: React.FC<ContaFormProps> = ({
         rows = likeData || [];
       }
 
-      // Manter apenas as futuras em relação à data atual da transação
+      // Separar em passadas e futuras em relação à data da transação
+      let past: any[] = [];
+      let future: any[] = [];
+      
       if (currentDate) {
         const baseDate = new Date(currentDate);
-        rows = rows.filter((r: any) => r?.date && new Date(r.date) > baseDate);
+        past = rows.filter((r: any) => r?.date && new Date(r.date) < baseDate);
+        future = rows.filter((r: any) => r?.date && new Date(r.date) > baseDate);
       }
 
-      console.log(`✅ Encontradas ${rows.length} transações relacionadas (futuras)`);
-      return rows;
+      console.log(`✅ Encontradas ${past.length} transações passadas e ${future.length} transações futuras`);
+      return { past, future };
     } catch (error) {
       console.error('❌ Erro em checkForRelatedTransactions:', error);
-      return [];
+      return { past: [], future: [] };
     }
   };
 
@@ -229,17 +234,14 @@ const ContaForm: React.FC<ContaFormProps> = ({
         const currentDate = (initialData as any)?.date as string | undefined;
         if (codigoTrans) {
           console.log(`🔍 Verificando duplicatas ao carregar para codigo-trans: ${codigoTrans}`);
-          const relatedTransactions = await checkForRelatedTransactions(codigoTrans, initialData.id, currentDate);
+          const { past, future } = await checkForRelatedTransactions(codigoTrans, initialData.id, currentDate);
           
-          if (Array.isArray(relatedTransactions) && relatedTransactions.length > 0) {
-            console.log(`📋 Encontradas ${relatedTransactions.length} transações relacionadas ao carregar`);
-            setFutureTransactions(relatedTransactions);
-          } else {
-            console.log('✅ Nenhuma duplicata futura encontrada ao carregar');
-            setFutureTransactions([]);
-          }
+          console.log(`📋 Encontradas ${past.length} transações passadas e ${future.length} transações futuras ao carregar`);
+          setPastTransactions(past);
+          setFutureTransactions(future);
         } else {
           console.log('ℹ️ Transação não possui codigo-trans');
+          setPastTransactions([]);
           setFutureTransactions([]);
         }
       };
@@ -286,14 +288,14 @@ const ContaForm: React.FC<ContaFormProps> = ({
         if (codigoTrans) {
           console.log(`🔍 Verificando duplicatas para codigo-trans: ${codigoTrans}`);
           const currentDate = (initialData as any)?.date as string | undefined;
-          const relatedTransactions = await checkForRelatedTransactions(codigoTrans, initialData.id, currentDate);
+          const { past, future } = await checkForRelatedTransactions(codigoTrans, initialData.id, currentDate);
           
-          if (Array.isArray(relatedTransactions) && relatedTransactions.length > 0) {
-            console.log(`📋 Encontradas ${relatedTransactions.length} transações com o mesmo codigo-trans`);
-            setFutureTransactions(relatedTransactions);
+          if (past.length > 0 || future.length > 0) {
+            console.log(`📋 Encontradas ${past.length} transações passadas e ${future.length} transações futuras`);
+            setPastTransactions(past);
+            setFutureTransactions(future);
             // Não abrir o dialog, usar a escolha inline
-            const shouldEditAll = editOption === 'all';
-            await performUpdate(values, shouldEditAll);
+            await performUpdate(values, editOption);
             return;
           } else {
             console.log('✅ Nenhuma duplicata encontrada, prosseguindo com edição normal');
@@ -304,7 +306,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
       }
 
       // Se chegou aqui, não há duplicatas ou é criação - prosseguir normalmente
-      await performUpdate(values, false);
+      await performUpdate(values, 'single');
     } catch (error) {
       console.error('❌ Error in onSubmit:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao processar transação';
@@ -313,7 +315,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
   };
 
   // Perform the actual update
-  const performUpdate = async (values: ContaFormValues, editAll: boolean) => {
+  const performUpdate = async (values: ContaFormValues, editOption: 'single' | 'future' | 'past' | 'all') => {
     try {
       if (mode === 'create') {
         console.log('➕ Creating scheduled transaction...');
@@ -453,17 +455,22 @@ const ContaForm: React.FC<ContaFormProps> = ({
         toast.success('✅ Conta criada com sucesso');
       }
 
-      // If user selected to edit all, update future ones BEFORE closing dialog
-      if (editAll && futureTransactions.length > 0) {
-        // Tentar obter codigo-trans; se não existir, tentar extrair do reference_code (removendo a letra inicial)
+      // Process based on edit option
+      if (editOption === 'future' && futureTransactions.length > 0) {
         const codigoTransRaw = (initialData as any)?.['codigo-trans'] || (initialData as any)?.reference_code?.toString()?.replace(/^[A-Za-z]/, '');
         if (codigoTransRaw) {
           await updateFutureTransactions(values, codigoTransRaw);
         } else {
-          // Sem codigo-trans: usar a lista de transações futuras já carregada
           await updateFutureTransactionsByList(values, futureTransactions as any);
         }
-        toast.success(`✅ Transação atual e mais ${futureTransactions.length} transações futuras atualizadas`);
+        toast.success(`✅ Transação atual e ${futureTransactions.length} transações futuras atualizadas`);
+      } else if (editOption === 'past' && pastTransactions.length > 0) {
+        await updatePastTransactions(values, pastTransactions as any);
+        toast.success(`✅ Transação atual e ${pastTransactions.length} transações passadas atualizadas`);
+      } else if (editOption === 'all' && (pastTransactions.length > 0 || futureTransactions.length > 0)) {
+        const allRelated = [...pastTransactions, ...futureTransactions];
+        await updateAllTransactions(values, allRelated as any);
+        toast.success(`✅ Transação atual e ${allRelated.length} transações relacionadas atualizadas`);
       } else {
         toast.success('✅ Transação atualizada com sucesso');
       }
@@ -606,6 +613,82 @@ const ContaForm: React.FC<ContaFormProps> = ({
     } catch (error) {
       console.error('❌ Erro em updateFutureTransactionsByList:', error);
       toast.error('Erro ao atualizar transações futuras');
+      throw error;
+    }
+  };
+
+  // Atualiza transações passadas
+  const updatePastTransactions = async (values: ContaFormValues, list: Array<{ id: string; date: string }>) => {
+    try {
+      // Calcular a diferença entre a data original e a nova data
+      const originalDate = new Date((initialData as any)?.date);
+      const newDate = new Date(values.scheduledDate);
+      const timeDifference = newDate.getTime() - originalDate.getTime();
+
+      for (const tx of list) {
+        const originalTxDate = new Date(tx.date);
+        const newTxDate = new Date(originalTxDate.getTime() + timeDifference);
+
+        const updateData = {
+          type: values.type,
+          amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
+          category_id: values.category,
+          conta_id: values.conta_id,
+          name: values.name,
+          phone: values.phone,
+          date: newTxDate.toISOString(),
+        };
+
+        const { error: updateError } = await (supabase as any)
+          .from('poupeja_transactions')
+          .update(updateData)
+          .eq('id', tx.id);
+
+        if (updateError) throw updateError;
+      }
+
+      console.log(`✅ ${list.length} transações passadas atualizadas com sucesso`);
+    } catch (error) {
+      console.error('❌ Erro em updatePastTransactions:', error);
+      toast.error('Erro ao atualizar transações passadas');
+      throw error;
+    }
+  };
+
+  // Atualiza todas as transações (passadas + futuras)
+  const updateAllTransactions = async (values: ContaFormValues, list: Array<{ id: string; date: string }>) => {
+    try {
+      // Calcular a diferença entre a data original e a nova data
+      const originalDate = new Date((initialData as any)?.date);
+      const newDate = new Date(values.scheduledDate);
+      const timeDifference = newDate.getTime() - originalDate.getTime();
+
+      for (const tx of list) {
+        const originalTxDate = new Date(tx.date);
+        const newTxDate = new Date(originalTxDate.getTime() + timeDifference);
+
+        const updateData = {
+          type: values.type,
+          amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
+          category_id: values.category,
+          conta_id: values.conta_id,
+          name: values.name,
+          phone: values.phone,
+          date: newTxDate.toISOString(),
+        };
+
+        const { error: updateError } = await (supabase as any)
+          .from('poupeja_transactions')
+          .update(updateData)
+          .eq('id', tx.id);
+
+        if (updateError) throw updateError;
+      }
+
+      console.log(`✅ ${list.length} transações (passadas + futuras) atualizadas com sucesso`);
+    } catch (error) {
+      console.error('❌ Erro em updateAllTransactions:', error);
+      toast.error('Erro ao atualizar todas as transações');
       throw error;
     }
   };
@@ -782,13 +865,14 @@ const ContaForm: React.FC<ContaFormProps> = ({
                 </FormItem>} />}
 
           {/* Opções de edição - só aparece quando há duplicatas */}
-          {futureTransactions.length > 0 && (
+          {(futureTransactions.length > 0 || pastTransactions.length > 0) && (
             <div className="bg-muted/30 p-4 rounded-lg border">
               <FormLabel className="text-sm font-medium mb-3 block">
-                Transações Relacionadas Encontradas ({futureTransactions.length})
+                Transações Relacionadas Encontradas
               </FormLabel>
               <p className="text-sm text-muted-foreground mb-3">
-                Encontramos {futureTransactions.length} transação(ões) com o mesmo código desta transação. 
+                Encontramos {pastTransactions.length + futureTransactions.length} transação(ões) relacionadas 
+                ({pastTransactions.length} passadas e {futureTransactions.length} futuras). 
                 Como você gostaria de proceder?
               </p>
               <div className="flex flex-col gap-2">
@@ -808,22 +892,63 @@ const ContaForm: React.FC<ContaFormProps> = ({
                     </label>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="radio" 
-                      id="todas-futuras" 
-                      name="editOption" 
-                      value="all" 
-                      checked={editOption === 'all'}
-                      onChange={(e) => setEditOption('all')}
-                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-                    />
-                    <label htmlFor="todas-futuras" className="text-sm cursor-pointer font-medium">
-                      Aplicar edição a todas as transações futuras ({futureTransactions.length + 1} total)
-                    </label>
+                
+                {futureTransactions.length > 0 && (
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                      <input 
+                        type="radio" 
+                        id="todas-futuras" 
+                        name="editOption" 
+                        value="future" 
+                        checked={editOption === 'future'}
+                        onChange={(e) => setEditOption('future')}
+                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                      />
+                      <label htmlFor="todas-futuras" className="text-sm cursor-pointer font-medium">
+                        Aplicar a todas as transações futuras ({futureTransactions.length} futuras)
+                      </label>
+                    </div>
                   </div>
-                </div>
+                )}
+                
+                {pastTransactions.length > 0 && (
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                      <input 
+                        type="radio" 
+                        id="todas-passadas" 
+                        name="editOption" 
+                        value="past" 
+                        checked={editOption === 'past'}
+                        onChange={(e) => setEditOption('past')}
+                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                      />
+                      <label htmlFor="todas-passadas" className="text-sm cursor-pointer font-medium">
+                        Aplicar a todas as transações passadas ({pastTransactions.length} passadas)
+                      </label>
+                    </div>
+                  </div>
+                )}
+                
+                {(pastTransactions.length > 0 || futureTransactions.length > 0) && (
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                      <input 
+                        type="radio" 
+                        id="todas" 
+                        name="editOption" 
+                        value="all" 
+                        checked={editOption === 'all'}
+                        onChange={(e) => setEditOption('all')}
+                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                      />
+                      <label htmlFor="todas" className="text-sm cursor-pointer font-medium">
+                        Aplicar a TODAS as transações ({pastTransactions.length + futureTransactions.length + 1} total)
+                      </label>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

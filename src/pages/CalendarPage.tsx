@@ -253,8 +253,8 @@ const CalendarPage: React.FC = () => {
               <div className="flex justify-center">
                 <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} month={currentMonth} onMonthChange={setCurrentMonth} locale={ptBR} className="rounded-md border p-3 pointer-events-auto" classNames={{
                 day: cn("h-12 w-12 p-0 font-normal aria-selected:opacity-100 relative cursor-pointer hover:bg-accent hover:text-accent-foreground"),
-                day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                day_today: "bg-accent text-accent-foreground"
+                selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                today: "bg-accent text-accent-foreground"
               }} modifiers={{
                 hasTransactions: getDatesWithTransactions()
               }} modifiersClassNames={{

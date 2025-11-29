@@ -121,18 +121,16 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
         {/* Pagination Controls */}
         {totalPages > 1 && <div className="flex items-center justify-between mt-4 pt-4 border-t">
             <p className="text-sm text-muted-foreground">
-              {t('common.showing')} {startIndex + 1}-{Math.min(endIndex, transactions.length)} {t('common.of')} {transactions.length}
+              Exibindo {startIndex + 1}-{Math.min(endIndex, transactions.length)} de {transactions.length}
             </p>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="h-8 w-8">
                 <ChevronLeft className="h-4 w-4" />
-                {!isMobile && t('common.previous')}
               </Button>
-              <span className="text-sm">
+              <span className="text-sm font-medium">
                 {currentPage} / {totalPages}
               </span>
-              <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-                {!isMobile && t('common.next')}
+              <Button variant="ghost" size="icon" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="h-8 w-8">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

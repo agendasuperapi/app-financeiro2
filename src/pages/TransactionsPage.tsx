@@ -288,10 +288,9 @@ const TransactionsPage = () => {
             </div>
           </div>
           
-          {/* Container Sticky Único - Filtros + Navegação */}
-          <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b">
-            {/* Filtros */}
-            <div className="pb-2 md:pb-4 flex flex-col lg:flex-row gap-2">
+          {/* Filtros */}
+          <div className="mb-2 md:mb-4">
+            <div className="flex flex-col lg:flex-row gap-2">
               {/* Campo de Pesquisa */}
               <div className="relative w-full lg:flex-1">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -335,10 +334,11 @@ const TransactionsPage = () => {
                 </Select>
               </div>
             </div>
+          </div>
             
-            {/* Controles de Navegação de Data */}
-            {(dateFilter === 'mes' || dateFilter === 'ano') && (
-              <div className="border-t pt-2 pb-2 flex justify-center mb-2 md:mb-4">
+          {/* Controles de Navegação de Data - STICKY */}
+          {(dateFilter === 'mes' || dateFilter === 'ano') && (
+            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-y py-2 flex justify-center mb-2 md:mb-4">
                 <div className="flex items-center gap-1 bg-muted rounded-md p-1">
                   <Button
                     variant="ghost"
@@ -361,10 +361,9 @@ const TransactionsPage = () => {
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
-                </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Seletor de Período */}
           {dateFilter === 'periodo' && (

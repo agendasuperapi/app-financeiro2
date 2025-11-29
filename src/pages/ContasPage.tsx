@@ -458,94 +458,147 @@ const ContasPage = () => {
                 const isPaid = conta.status === 'paid';
                 const isSimulation = conta.__isSimulation;
                 return <Card key={conta.id} className={`transition-all hover:shadow-md ${isSimulation ? 'border-dashed border-2 border-orange-300 bg-orange-50/30' : ''}`}>
-                         <CardContent className="p-2 md:p-4 px-[2px] py-[2px]">
-                           {/* Primeira linha: Descrição e Status */}
-                           <div className="flex items-center justify-between mb-3">
-                             <div className="flex-1">
-                               <h3 className="font-semibold text-xs md:text-lg flex items-center gap-2">
-                                 {conta.description || 'Conta sem descrição'}
-                                 {isSimulation && <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800">
+                         <CardContent className="p-3 md:p-4">
+                           <div className="flex gap-3">
+                             {/* Ícone à esquerda */}
+                             <div className={`flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center ${
+                               conta.amount > 0 ? 'bg-green-100' : 'bg-red-100'
+                             }`}>
+                               <div className={`w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center ${
+                                 conta.amount > 0 ? 'bg-green-500' : 'bg-red-500'
+                               }`}>
+                                 {conta.amount > 0 ? (
+                                   <svg className="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                                   </svg>
+                                 ) : (
+                                   <svg className="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                                   </svg>
+                                 )}
+                               </div>
+                             </div>
+
+                             {/* Conteúdo principal */}
+                             <div className="flex-1 min-w-0">
+                               {/* Primeira linha: Valor e Menu */}
+                               <div className="flex items-start justify-between mb-1">
+                                 <div>
+                                   <div className={`font-bold text-base md:text-xl ${conta.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                     {conta.amount > 0 ? '+' : '-'}{formatCurrency(Math.abs(conta.amount))}
+                                   </div>
+                                   <div className="text-[10px] md:text-xs text-muted-foreground">
+                                     {formatDate(conta.scheduledDate, 'dd/MM/yyyy HH:mm')}
+                                   </div>
+                                 </div>
+                                 <Badge variant={isSimulation ? 'outline' : status.variant} className="ml-2">
+                                   {isSimulation ? 'Previsto' : status.label}
+                                 </Badge>
+                               </div>
+
+                               {/* Segunda linha: Tags/Badges */}
+                               <div className="flex items-center gap-1 md:gap-2 mb-2 flex-wrap">
+                                 <Badge variant="secondary" className="text-[10px] md:text-xs">
+                                   {conta.category}
+                                 </Badge>
+                                 {conta.creatorName && (
+                                   <Badge variant="outline" className="text-[10px] md:text-xs">
+                                     {conta.creatorName}
+                                   </Badge>
+                                 )}
+                                 {isSimulation && (
+                                   <Badge variant="secondary" className="text-[10px] md:text-xs bg-orange-100 text-orange-800">
                                      Simulação
-                                   </Badge>}
-                               </h3>
-                             </div>
-                             <Badge variant={isSimulation ? 'outline' : status.variant} className="ml-2">
-                               {isSimulation ? 'Previsto' : status.label}
-                             </Badge>
-                           </div>
+                                   </Badge>
+                                 )}
+                               </div>
 
-                           {/* Segunda linha: Data, Recorrência e Categoria */}
-                           <div className="flex items-center gap-1 md:gap-4 mb-2 md:mb-3 text-[10px] md:text-sm text-muted-foreground">
-                             <div className="flex items-center gap-1">
-                               <CalendarIcon className="h-2.5 w-2.5 md:h-4 md:w-4" />
-                               <span>{formatDate(conta.scheduledDate, 'dd/MM/yyyy HH:mm')}</span>
-                             </div>
-                             <div className="flex items-center gap-1">
-                               <span>•</span>
-                               {conta.creatorName && <span className="inline-flex items-center px-1 py-0.5 rounded-md bg-primary/10 text-primary text-[8px] md:text-[9px] font-medium mr-1">
-                                   {conta.creatorName}
-                                 </span>}
-                               <span>{formatRecurrence(conta.recurrence)}</span>
-                             </div>
-                             <div className="flex items-center gap-1">
-                               <span>•</span>
-                               <span className="truncate">{conta.category}</span>
-                             </div>
-                           </div>
+                               {/* Terceira linha: Descrição */}
+                               <div className="text-xs md:text-sm text-foreground mb-2">
+                                 {conta.description || 'Conta sem descrição'}
+                               </div>
 
-                           {/* Terceira linha: Valor e Ações */}
-                           <div className="flex items-center justify-between">
-             <div className="font-bold text-sm md:text-xl">
-               {formatCurrency(Math.abs(conta.amount))}
-             </div>
-                             
-                              <div className="flex items-center gap-1 flex-wrap">
-                                 {!isSimulation && !isPaid && <>
-                                     {/* Botão para Marcar como Pago (despesas) */}
-                                     {conta.amount < 0 && <Button size="sm" variant="outline" onClick={() => {
-                            console.log('🖱️ Mark as Paid clicked for ID:', conta.id);
-                            handleMarkAsPaid(conta.id);
-                          }} className="text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7 text-red-600 border-red-600 hover:bg-red-50">
-                                        <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
-                                        Marcar como Pago
-                                       </Button>}
+                               {/* Informações adicionais */}
+                               {!isSimulation && isPaid && conta.paidDate && (
+                                 <div className="text-[10px] md:text-xs text-green-600 mb-2">
+                                   Pago em: {formatDate(conta.paidDate)}
+                                 </div>
+                               )}
+
+                               {isSimulation && (
+                                 <div className="text-[10px] md:text-xs text-orange-700 bg-orange-50 p-2 rounded mb-2">
+                                   Esta é uma simulação da recorrência mensal desta transação
+                                 </div>
+                               )}
+
+                               {/* Botões de ação */}
+                               <div className="flex items-center gap-1 flex-wrap">
+                                 {!isSimulation && !isPaid && (
+                                   <>
+                                     {conta.amount < 0 && (
+                                       <Button 
+                                         size="sm" 
+                                         variant="outline" 
+                                         onClick={() => handleMarkAsPaid(conta.id)}
+                                         className="text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7 text-red-600 border-red-600 hover:bg-red-50"
+                                       >
+                                         <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
+                                         Marcar como Pago
+                                       </Button>
+                                     )}
                                      
-                                     {/* Botão para Marcar como Recebido (receitas) */}
-                                     {conta.amount > 0 && <Button size="sm" variant="outline" onClick={() => {
-                            console.log('🖱️ Mark as Received clicked for ID:', conta.id);
-                            handleMarkAsReceived(conta.id);
-                          }} className="text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7 text-green-600 border-green-600 hover:bg-green-50">
-                                        <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
-                                        Marcar como Recebido
-                                       </Button>}
-                                   </>}
+                                     {conta.amount > 0 && (
+                                       <Button 
+                                         size="sm" 
+                                         variant="outline" 
+                                         onClick={() => handleMarkAsReceived(conta.id)}
+                                         className="text-[8px] md:text-[10px] px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7 text-green-600 border-green-600 hover:bg-green-50"
+                                       >
+                                         <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
+                                         Marcar como Recebido
+                                       </Button>
+                                     )}
+                                   </>
+                                 )}
                                
-                                {!isSimulation && isPaid && <Button size="sm" variant="outline" disabled className={`text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7 ${conta.amount > 0 ? 'text-green-600 border-green-600' : 'text-red-600 border-red-600'}`}>
+                                 {!isSimulation && isPaid && (
+                                   <Button 
+                                     size="sm" 
+                                     variant="outline" 
+                                     disabled 
+                                     className={`text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7 ${
+                                       conta.amount > 0 ? 'text-green-600 border-green-600' : 'text-red-600 border-red-600'
+                                     }`}
+                                   >
                                      <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
                                      {conta.amount > 0 ? 'Recebido' : 'Pago'}
-                                   </Button>}
+                                   </Button>
+                                 )}
                                
-                               {!isSimulation && <>
-                                   <Button size="sm" variant="outline" onClick={() => handleEdit(conta)} className="h-6 md:h-7 w-6 md:w-7 p-0">
-                                     <Edit className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                   </Button>
-                                   
-                                   <Button size="sm" variant="outline" onClick={() => handleDeleteClick(conta)} className="text-red-600 border-red-600 hover:bg-red-50 h-6 md:h-7 w-6 md:w-7 p-0">
-                                     <Trash2 className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                   </Button>
-                                 </>}
+                                 {!isSimulation && (
+                                   <>
+                                     <Button 
+                                       size="sm" 
+                                       variant="outline" 
+                                       onClick={() => handleEdit(conta)}
+                                       className="h-6 md:h-7 w-6 md:w-7 p-0"
+                                     >
+                                       <Edit className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                                     </Button>
+                                     
+                                     <Button 
+                                       size="sm" 
+                                       variant="outline" 
+                                       onClick={() => handleDeleteClick(conta)}
+                                       className="text-red-600 border-red-600 hover:bg-red-50 h-6 md:h-7 w-6 md:w-7 p-0"
+                                     >
+                                       <Trash2 className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                                     </Button>
+                                   </>
+                                 )}
+                               </div>
                              </div>
                            </div>
-
-                           {/* Mostrar data de pagamento se foi pago */}
-                           {!isSimulation && isPaid && conta.paidDate && <div className="mt-2 text-sm text-green-600">
-                               Pago em: {formatDate(conta.paidDate)}
-                             </div>}
-
-                           {/* Informação adicional para simulações */}
-                           {isSimulation && <div className="mt-2 text-sm text-orange-700 bg-orange-50 p-2 rounded">
-                               Esta é uma simulação da recorrência mensal desta transação
-                             </div>}
                         </CardContent>
                       </Card>;
               })}

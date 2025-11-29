@@ -444,9 +444,7 @@ const ContasPage = () => {
             </div>}
           <h2 className="text-base md:text-2xl font-bold mb-4">Agendadas</h2>
           
-          <Card>
-            <CardContent>
-              {loading ? <div className="flex items-center justify-center py-8">
+          {loading ? <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin" />
                   <span className="ml-2">Carregando contas...</span>
                 </div> : filteredContas.length === 0 ? <div className="text-center py-8 text-muted-foreground">
@@ -569,8 +567,6 @@ const ContasPage = () => {
                     </Button>
                   </div>
                 </div>}
-            </CardContent>
-          </Card>
         </div>
         
         {/* Dialog de Edição */}

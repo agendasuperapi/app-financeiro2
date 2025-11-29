@@ -641,6 +641,21 @@ const handleRecurrenceAfterStatusChange = async (
   }
 };
 
+export const markAsUnpaid = async (transactionId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from("poupeja_transactions")
+      .update({ status: "pending" } as any)
+      .eq("id", transactionId);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error("Error marking transaction as unpaid:", error);
+    return false;
+  }
+};
+
 export const deleteScheduledTransaction = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase

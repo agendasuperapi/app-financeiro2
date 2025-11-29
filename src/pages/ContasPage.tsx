@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { getScheduledTransactions, markAsPaid, markAsReceived, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
+import { getScheduledTransactions, markAsPaid, markAsReceived, deleteScheduledTransaction, markAsUnpaid } from '@/services/scheduledTransactionService';
 import { Loader2, Edit, Trash2, CheckCircle, Plus, Filter, User, ChevronLeft, ChevronRight, CalendarIcon, Search } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -249,6 +249,20 @@ const ContasPage = () => {
       toast.error('Erro ao marcar conta como recebida: ' + error);
     }
   };
+
+  const handleMarkAsUnpaid = async (id: string) => {
+    try {
+      const success = await markAsUnpaid(id);
+      if (success) {
+        toast.success('Conta marcada como pendente');
+        await loadContas();
+      } else {
+        toast.error('Erro ao reverter status');
+      }
+    } catch (error) {
+      toast.error('Erro ao reverter status');
+    }
+  };
   const handleEdit = async (conta: ScheduledTransaction) => {
     setEditingConta(conta);
     setIsEditDialogOpen(true);
@@ -452,7 +466,13 @@ const ContasPage = () => {
                 const status = getStatus(conta);
                 const isPaid = conta.status === 'paid';
                 const isSimulation = conta.__isSimulation;
-                return <Card key={conta.id} className={`transition-all hover:shadow-md ${isSimulation ? 'border-dashed border-2 border-orange-300 bg-orange-50/30' : ''}`}>
+                return <Card key={conta.id} className={`transition-all hover:shadow-md ${
+                  isPaid 
+                    ? 'bg-green-50 border-green-300 dark:bg-green-900/20 dark:border-green-700' 
+                    : isSimulation 
+                      ? 'border-dashed border-2 border-orange-300 bg-orange-50/30' 
+                      : ''
+                }`}>
                          <CardContent className="p-2 md:p-4 px-[2px] py-[2px]">
                            {/* Primeira linha: Descrição e Status */}
                            <div className="flex items-center justify-between mb-3">
@@ -514,11 +534,20 @@ const ContasPage = () => {
                                         Marcar como Recebido
                                        </Button>}
                                    </>}
-                               
-                                {!isSimulation && isPaid && <Button size="sm" variant="outline" disabled className={`text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7 ${conta.amount > 0 ? 'text-green-600 border-green-600' : 'text-red-600 border-red-600'}`}>
-                                     <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
-                                     {conta.amount > 0 ? 'Recebido' : 'Pago'}
-                                   </Button>}
+                                
+                                {!isSimulation && isPaid && <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button size="sm" variant="outline" className="text-[10px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 h-6 md:h-7 text-green-600 border-green-600 bg-green-50 hover:bg-green-100">
+                                        <CheckCircle className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1" />
+                                        {conta.amount > 0 ? 'Recebido' : 'Pago'}
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-2">
+                                      <Button size="sm" variant="ghost" onClick={() => handleMarkAsUnpaid(conta.id)} className="text-orange-600 hover:text-orange-700 hover:bg-orange-50">
+                                        Marcar como Pendente
+                                      </Button>
+                                    </PopoverContent>
+                                  </Popover>}
                                
                                {!isSimulation && <>
                                    <Button size="sm" variant="outline" onClick={() => handleEdit(conta)} className="h-6 md:h-7 w-6 md:w-7 p-0">

@@ -148,7 +148,7 @@ const LimitsPage: React.FC = () => {
         
         {/* Cabeçalho */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <h1 className="font-bold tracking-tight py-[20px] text-xl">Meus controles</h1>
+          <h1 className="tracking-tight py-[20px] text-xl font-semibold">Meus controles</h1>
           {!isClientView && <div className="flex gap-2">
               <Button onClick={handleAddLimit} className="gap-2">
                 <Plus className="h-4 w-4" />
@@ -165,7 +165,7 @@ const LimitsPage: React.FC = () => {
         {incomeLimits.length > 0 && <div className="space-y-4">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-green-600" />
-              <h2 className="text-2xl font-semibold">Minhas Metas</h2>
+              <h2 className="font-semibold text-lg">Minhas Metas</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {incomeLimits.map(limit => <LimiteCard key={limit.id} limit={limit} onEdit={handleEditLimit} onDelete={handleDeleteLimit} />)}
@@ -176,7 +176,7 @@ const LimitsPage: React.FC = () => {
         {expenseLimits.length > 0 && <div className="space-y-4">
             <div className="flex items-center gap-2">
               <TrendingDown className="h-5 w-5 text-red-600" />
-              <h2 className="text-2xl font-semibold">Limites de Despesa</h2>
+              <h2 className="font-semibold text-lg">Limites de Despesa</h2>
             </div>
             
             {/* Filtro de Mês */}

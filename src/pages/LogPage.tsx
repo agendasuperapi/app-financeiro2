@@ -7,7 +7,6 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAppContext } from '@/contexts/AppContext';
 import MainLayout from '@/components/layout/MainLayout';
-
 interface LogEntry {
   id: string;
   created_at: string;
@@ -16,43 +15,41 @@ interface LogEntry {
   user_id?: string;
   reference_code?: string;
 }
-
 const LogPage = () => {
-  const { user } = useAppContext();
+  const {
+    user
+  } = useAppContext();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     if (user?.id) {
       fetchLogs();
     }
   }, [user]);
-
   const fetchLogs = async () => {
     if (!user?.id) {
       console.log('Usuário não autenticado');
       setIsLoading(false);
       return;
     }
-
     try {
       setIsLoading(true);
       console.log('Buscando logs para user_id:', user.id);
-      
-      const { data, error } = await supabase
-        .from('tbl_log' as any)
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      console.log('Resultado da busca:', { data, error });
-
+      const {
+        data,
+        error
+      } = await supabase.from('tbl_log' as any).select('*').eq('user_id', user.id).order('created_at', {
+        ascending: false
+      });
+      console.log('Resultado da busca:', {
+        data,
+        error
+      });
       if (error) {
         console.error('Erro ao buscar logs:', error);
         throw error;
       }
-      
-      setLogs((data as any) || []);
+      setLogs(data as any || []);
       console.log('Total de logs carregados:', (data as any)?.length || 0);
     } catch (error) {
       console.error('Erro ao carregar logs:', error);
@@ -60,21 +57,20 @@ const LogPage = () => {
       setIsLoading(false);
     }
   };
-
   const formatDateTime = (dateString: string) => {
     try {
-      return format(new Date(dateString), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+      return format(new Date(dateString), "dd/MM/yyyy 'às' HH:mm", {
+        locale: ptBR
+      });
     } catch {
       return dateString;
     }
   };
-
-  return (
-    <MainLayout>
+  return <MainLayout>
       <div className="container mx-auto p-4 md:p-6 space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex items-center justify-between flex-wrap py-[20px] gap-[8px]">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Histórico de Logs</h1>
+          <h1 className="text-2xl md:text-2xl font-semibold">Histórico de Logs</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Visualize o histórico de conversas
           </p>
@@ -90,18 +86,12 @@ const LogPage = () => {
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[600px] pr-4">
-            {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">
+            {isLoading ? <div className="text-center py-8 text-muted-foreground">
                 Carregando logs...
-              </div>
-            ) : logs.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              </div> : logs.length === 0 ? <div className="text-center py-8 text-muted-foreground">
                 Nenhum log encontrado
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {logs.map((log) => (
-                  <div key={log.id} className="space-y-3 pb-6 border-b last:border-b-0">
+              </div> : <div className="space-y-6">
+                {logs.map(log => <div key={log.id} className="space-y-3 pb-6 border-b last:border-b-0">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
                       {formatDateTime(log.created_at)}
@@ -126,16 +116,12 @@ const LogPage = () => {
                         {log.msg_agente}
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </div>)}
+              </div>}
           </ScrollArea>
         </CardContent>
       </Card>
       </div>
-    </MainLayout>
-  );
+    </MainLayout>;
 };
-
 export default LogPage;

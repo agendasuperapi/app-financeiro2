@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
 import { getTransactions, deleteTransaction } from '@/services/transactionService';
 import { getScheduledTransactions, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
 import { Transaction, ScheduledTransaction } from '@/types';
@@ -19,10 +17,6 @@ import { cn } from '@/lib/utils';
 import { Edit, Trash2, MoreVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import TransactionForm from '@/components/common/TransactionForm';
-import ScheduledTransactionForm from '@/components/schedule/ScheduledTransactionForm';
-import AddContaForm from '@/components/contas/AddContaForm';
-import ContaFormFields from '@/components/common/ContaFormFields';
-import TransactionFormFields from '@/components/common/TransactionFormFields';
 const CalendarPage: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -31,10 +25,6 @@ const CalendarPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editReminderDialogOpen, setEditReminderDialogOpen] = useState(false);
-  const [editContaDialogOpen, setEditContaDialogOpen] = useState(false);
-  const [editContaFormDialogOpen, setEditContaFormDialogOpen] = useState(false);
-  const [editTransactionFormDialogOpen, setEditTransactionFormDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [selectedReminder, setSelectedReminder] = useState<ScheduledTransaction | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -42,73 +32,9 @@ const CalendarPage: React.FC = () => {
     toast
   } = useToast();
 
-  // Form for ContaFormFields
-  const contaForm = useForm({
-    defaultValues: {
-      type: 'expense',
-      description: '',
-      amount: 0,
-      conta: '',
-      addedBy: '',
-      recurrence: 'once',
-      category: '',
-      scheduledDate: '',
-      installments: 1
-    }
-  });
-
-  // Form for TransactionFormFields
-  const transactionForm = useForm({
-    defaultValues: {
-      type: 'expense',
-      description: '',
-      amount: 0,
-      conta_id: '',
-      addedBy: '',
-      category: '',
-      date: '',
-      goalId: ''
-    }
-  });
   const handleEditTransaction = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
-
-    // Verificar o campo formato para abrir o diálogo correto
-    const formato = (transaction as any).formato || 'transacao';
-    if (formato === 'agenda') {
-      // Abrir ContaFormFields quando formato for "agenda"
-      contaForm.reset({
-        type: transaction.type,
-        description: transaction.description || '',
-        amount: transaction.amount,
-        conta: (transaction as any).conta || '',
-        addedBy: (transaction as any).addedBy || '',
-        recurrence: 'once',
-        category: transaction.category,
-        scheduledDate: transaction.date,
-        installments: 1
-      });
-      setEditContaFormDialogOpen(true);
-    } else if (formato === 'lembrete') {
-      // Abrir formulário da aba "contas" (AddContaForm que usa ReminderForm para lembretes)
-      setEditContaDialogOpen(true);
-    } else if (formato === 'transacao') {
-      // Abrir TransactionFormFields quando formato for "transacao"
-      transactionForm.reset({
-        type: transaction.type as 'income' | 'expense',
-        description: transaction.description || '',
-        amount: transaction.amount,
-        conta_id: (transaction as any).conta_id || '',
-        addedBy: (transaction as any).addedBy || '',
-        category: (transaction as any).category_id || '',
-        date: new Date(transaction.date).toISOString().split('T')[0],
-        goalId: (transaction as any).goalId || ''
-      });
-      setEditTransactionFormDialogOpen(true);
-    } else {
-      // formato padrão - abrir formulário da aba "transactions"
-      setEditDialogOpen(true);
-    }
+    setEditDialogOpen(true);
   };
   const handleDeleteTransaction = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -116,7 +42,13 @@ const CalendarPage: React.FC = () => {
   };
   const handleEditReminder = (reminder: ScheduledTransaction) => {
     setSelectedReminder(reminder);
-    setEditReminderDialogOpen(true);
+    // Converter reminder para transaction format e abrir o mesmo modal
+    const transactionData = {
+      ...reminder,
+      date: reminder.scheduledDate
+    } as any as Transaction;
+    setSelectedTransaction(transactionData);
+    setEditDialogOpen(true);
   };
   const handleDeleteReminder = (reminder: ScheduledTransaction) => {
     setSelectedReminder(reminder);
@@ -156,10 +88,6 @@ const CalendarPage: React.FC = () => {
   };
   const handleTransactionSuccess = async () => {
     setEditDialogOpen(false);
-    setEditReminderDialogOpen(false);
-    setEditContaDialogOpen(false);
-    setEditContaFormDialogOpen(false);
-    setEditTransactionFormDialogOpen(false);
     setSelectedTransaction(null);
     setSelectedReminder(null);
     await loadData();
@@ -387,38 +315,6 @@ const CalendarPage: React.FC = () => {
 
       {/* Dialogs */}
       {selectedTransaction && <TransactionForm open={editDialogOpen} onOpenChange={setEditDialogOpen} initialData={selectedTransaction} mode="edit" />}
-
-      {selectedTransaction && editReminderDialogOpen && selectedReminder && <ScheduledTransactionForm open={editReminderDialogOpen} onOpenChange={setEditReminderDialogOpen} initialData={selectedReminder} mode="edit" onSuccess={handleTransactionSuccess} />}
-
-      {selectedTransaction && editContaDialogOpen && <AddContaForm onSuccess={handleTransactionSuccess} onCancel={() => setEditContaDialogOpen(false)} initialData={selectedTransaction} mode="edit" />}
-
-      {/* ContaFormFields Dialog for "agenda" format */}
-      {selectedTransaction && editContaFormDialogOpen && <Dialog open={editContaFormDialogOpen} onOpenChange={setEditContaFormDialogOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Editar Transação (Formato Agenda)</DialogTitle>
-            </DialogHeader>
-            <Form {...contaForm}>
-              <form onSubmit={contaForm.handleSubmit(() => handleTransactionSuccess())}>
-                <ContaFormFields form={contaForm} mode="edit" onCancel={() => setEditContaFormDialogOpen(false)} onSubmit={() => handleTransactionSuccess()} submitLabel="Atualizar" cancelLabel="Cancelar" />
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>}
-
-      {/* TransactionFormFields Dialog for "transacao" format */}
-      {selectedTransaction && editTransactionFormDialogOpen && <Dialog open={editTransactionFormDialogOpen} onOpenChange={setEditTransactionFormDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Editar Transação</DialogTitle>
-            </DialogHeader>
-            <Form {...transactionForm}>
-              <form onSubmit={transactionForm.handleSubmit(() => handleTransactionSuccess())}>
-                <TransactionFormFields form={transactionForm} mode="edit" selectedType={transactionForm.watch('type') as 'income' | 'expense'} onCancel={() => setEditTransactionFormDialogOpen(false)} onSubmit={() => handleTransactionSuccess()} submitLabel="Atualizar" cancelLabel="Cancelar" />
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

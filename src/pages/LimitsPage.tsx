@@ -5,17 +5,14 @@ import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import MainLayout from '@/components/layout/MainLayout';
 import { LimiteCard } from '@/components/limits/LimiteCard';
-import { AddLimitModal } from '@/components/limits/AddLimitModal';
-import { AddGoalModal } from '@/components/limits/AddGoalModal';
-import { EditLimitModal } from '@/components/limits/EditLimitModal';
+import TransactionForm from '@/components/common/TransactionForm';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useApp } from '@/contexts/AppContext';
 import { Goal } from '@/types';
 const LimitsPage: React.FC = () => {
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [defaultType, setDefaultType] = useState<'income' | 'expense'>('expense');
   const [editingLimit, setEditingLimit] = useState<Goal | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
   const {
@@ -85,44 +82,32 @@ const LimitsPage: React.FC = () => {
     setSelectedMonth(format(date, 'yyyy-MM'));
   };
   const handleAddLimit = () => {
-    setIsAddModalOpen(true);
+    setDefaultType('expense');
+    setEditingLimit(null);
+    setFormOpen(true);
   };
   const handleAddGoal = () => {
-    setIsAddGoalModalOpen(true);
+    setDefaultType('income');
+    setEditingLimit(null);
+    setFormOpen(true);
   };
-  const handleLimitAdded = async () => {
+  const handleFormSuccess = async () => {
     if (isClientView) {
       await refetchClientData();
     } else {
       await getGoals();
     }
-    setIsAddModalOpen(false);
-  };
-  const handleGoalAdded = async () => {
-    if (isClientView) {
-      await refetchClientData();
-    } else {
-      await getGoals();
-    }
-    setIsAddGoalModalOpen(false);
+    setFormOpen(false);
+    setEditingLimit(null);
   };
   const handleEditLimit = (id: string) => {
     const allLimits = [...incomeLimits, ...expenseLimits];
     const limit = allLimits.find(l => l.id === id);
     if (limit) {
       console.log('Editing limit:', limit);
-      setEditingLimit(limit);
-      setIsEditModalOpen(true);
+      setEditingLimit(limit as any);
+      setFormOpen(true);
     }
-  };
-  const handleLimitUpdated = async () => {
-    if (isClientView) {
-      await refetchClientData();
-    } else {
-      await getGoals();
-    }
-    setIsEditModalOpen(false);
-    setEditingLimit(null);
   };
   const handleDeleteLimit = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este limite?')) {
@@ -218,14 +203,14 @@ const LimitsPage: React.FC = () => {
           </div>}
       </div>
 
-      {/* Modal de Adição de Limite */}
-      <AddLimitModal open={isAddModalOpen} onOpenChange={setIsAddModalOpen} onSuccess={handleLimitAdded} />
-
-      {/* Modal de Adição de Meta */}
-      <AddGoalModal open={isAddGoalModalOpen} onOpenChange={setIsAddGoalModalOpen} onSuccess={handleGoalAdded} />
-
-      {/* Modal de Edição */}
-      <EditLimitModal open={isEditModalOpen} onOpenChange={setIsEditModalOpen} onSuccess={handleLimitUpdated} limit={editingLimit} />
+      {/* Modal de Transação */}
+      <TransactionForm 
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        initialData={editingLimit as any}
+        mode={editingLimit ? 'edit' : 'create'}
+        defaultType={defaultType}
+      />
     </MainLayout>;
 };
 export default LimitsPage;

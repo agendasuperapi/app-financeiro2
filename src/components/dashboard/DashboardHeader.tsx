@@ -23,10 +23,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 }) => {
   const { t } = usePreferences();
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   return (
     <motion.div 
-      className="sticky top-0 md:top-0 z-40 bg-background border-b flex flex-col sm:flex-row justify-between items-center gap-4 p-4"
-      style={{ top: 'max(0px, env(safe-area-inset-top))' }}
+      className="sticky z-40 bg-background border-b flex flex-col sm:flex-row justify-between items-center gap-4 p-4 md:top-0"
+      style={{
+        top: isMobile 
+          ? 'calc(3.5rem + env(safe-area-inset-top))' 
+          : '0'
+      }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}

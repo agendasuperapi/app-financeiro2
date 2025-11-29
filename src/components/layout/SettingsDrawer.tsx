@@ -127,12 +127,18 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ open, onOpenChange, tri
   const navigate = useNavigate();
 
   const handleOptionClick = (tab: string) => {
+    console.log('Settings option clicked:', tab);
+    
     // Salvar a aba no localStorage para que o ProfilePage abra nela
     localStorage.setItem('profileActiveTab', tab);
-    // Navegar para o profile
-    navigate('/profile');
-    // Fechar o popup
+    
+    // Fechar o popup primeiro
     onOpenChange(false);
+    
+    // Navegar para o profile após um pequeno delay
+    setTimeout(() => {
+      navigate('/profile');
+    }, 100);
   };
 
   return (
@@ -145,37 +151,34 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ open, onOpenChange, tri
         className="w-[280px] p-0 mb-2 shadow-lg border-2"
         sideOffset={8}
       >
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-        >
-          <div className="px-4 py-3 border-b bg-muted/30">
-            <h3 className="font-semibold text-base">Configurações</h3>
-          </div>
-          
-          <div className="py-1 max-h-[400px] overflow-y-auto">
-            {settingsOptions.map((option, index) => (
-              <motion.div key={option.id} variants={itemVariants}>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-between px-4 py-3 h-auto rounded-none hover:bg-accent"
-                  onClick={() => handleOptionClick(option.tab)}
-                >
-                  <div className="flex items-center gap-3">
-                    <option.icon className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-normal">{option.label}</span>
-                  </div>
-                  <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                </Button>
-                {index < settingsOptions.length - 1 && (
-                  <Separator className="my-0" />
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+        <div className="px-4 py-3 border-b bg-muted/30">
+          <h3 className="font-semibold text-base">Configurações</h3>
+        </div>
+        
+        <div className="py-1 max-h-[400px] overflow-y-auto">
+          {settingsOptions.map((option, index) => (
+            <React.Fragment key={option.id}>
+              <Button
+                variant="ghost"
+                className="w-full justify-between px-4 py-3 h-auto rounded-none hover:bg-accent"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleOptionClick(option.tab);
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <option.icon className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-normal">{option.label}</span>
+                </div>
+                <ChevronRight className="h-3 w-3 text-muted-foreground" />
+              </Button>
+              {index < settingsOptions.length - 1 && (
+                <Separator className="my-0" />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       </PopoverContent>
     </Popover>
   );

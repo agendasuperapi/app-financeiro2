@@ -75,47 +75,48 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const checkForRelatedTransactions = async (codigoTrans: string | number, currentId: string, currentDate?: string) => {
     try {
       const codeStr = String(codigoTrans);
-      console.log(`🔍 Verificando transações relacionadas por codigo-trans: ${codeStr}, excluindo id: ${currentId}`);
+      console.log(`🔍 Buscando transações com codigo-trans: "${codeStr}", excluindo id: ${currentId}`);
 
       const { data: user } = await supabase.auth.getUser();
       const targetUserId = selectedUser?.id || user?.user?.id;
-      if (!targetUserId || !codeStr) return { past: [], future: [] };
+      if (!targetUserId || !codeStr) {
+        console.log('❌ Sem userId ou codeStr');
+        return { past: [], future: [] };
+      }
 
-      // 1) Tentativa direta pelo campo codigo-trans
-      let { data, error } = await (supabase as any)
+      // 1. Buscar TODAS as transações do usuário (sem filtrar por formato)
+      const { data: allData, error } = await (supabase as any)
         .from('poupeja_transactions')
-        .select('id, date, description, reference_code')
+        .select('id, date, description, reference_code, "codigo-trans"')
         .eq('user_id', targetUserId)
-        .eq('formato', 'agenda')
-        .eq('codigo-trans', codeStr)
         .neq('id', currentId)
         .order('date', { ascending: true });
 
-      let rows = data || [];
-
-      // 2) Fallback: usar sufixo numérico no reference_code (ex.: B1757096724 -> 1757096724)
-      if ((error || rows.length === 0) && codeStr) {
-        const { data: likeData } = await (supabase as any)
-          .from('poupeja_transactions')
-          .select('id, date, description, reference_code')
-          .eq('user_id', targetUserId)
-          .eq('formato', 'agenda')
-          .like('reference_code', `%${codeStr}`)
-          .neq('id', currentId)
-          .order('date', { ascending: true });
-        rows = likeData || [];
+      if (error) {
+        console.error('❌ Erro na query:', error);
+        return { past: [], future: [] };
       }
 
-      // Separar em passadas e futuras em relação à data da transação
-      let past: any[] = [];
-      let future: any[] = [];
-      
-      // Usar currentDate se existir, senão usar a data atual como referência
-      const baseDate = currentDate ? new Date(currentDate) : new Date();
-      past = rows.filter((r: any) => r?.date && new Date(r.date) < baseDate);
-      future = rows.filter((r: any) => r?.date && new Date(r.date) >= baseDate && r.id !== currentId);
+      console.log(`📊 Total de transações do usuário: ${allData?.length || 0}`);
 
-      console.log(`✅ Encontradas ${past.length} transações passadas e ${future.length} transações futuras (baseDate: ${baseDate.toISOString()})`);
+      // 2. Filtrar em JavaScript pelo codigo-trans
+      const rows = (allData || []).filter((item: any) => {
+        const itemCodigo = item['codigo-trans'];
+        const matches = String(itemCodigo) === codeStr;
+        if (matches) {
+          console.log(`✅ Match: ${item.description} (id: ${item.id}, date: ${item.date})`);
+        }
+        return matches;
+      });
+
+      console.log(`🔗 Transações relacionadas encontradas: ${rows.length}`);
+
+      // 3. Separar em passadas e futuras
+      const baseDate = currentDate ? new Date(currentDate) : new Date();
+      const past = rows.filter((r: any) => r?.date && new Date(r.date) < baseDate);
+      const future = rows.filter((r: any) => r?.date && new Date(r.date) >= baseDate);
+
+      console.log(`✅ Resultado: ${past.length} passadas, ${future.length} futuras (baseDate: ${baseDate.toISOString()})`);
       return { past, future };
     } catch (error) {
       console.error('❌ Erro em checkForRelatedTransactions:', error);

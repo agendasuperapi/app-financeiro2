@@ -110,13 +110,12 @@ const ContaForm: React.FC<ContaFormProps> = ({
       let past: any[] = [];
       let future: any[] = [];
       
-      if (currentDate) {
-        const baseDate = new Date(currentDate);
-        past = rows.filter((r: any) => r?.date && new Date(r.date) < baseDate);
-        future = rows.filter((r: any) => r?.date && new Date(r.date) > baseDate);
-      }
+      // Usar currentDate se existir, senão usar a data atual como referência
+      const baseDate = currentDate ? new Date(currentDate) : new Date();
+      past = rows.filter((r: any) => r?.date && new Date(r.date) < baseDate);
+      future = rows.filter((r: any) => r?.date && new Date(r.date) >= baseDate && r.id !== currentId);
 
-      console.log(`✅ Encontradas ${past.length} transações passadas e ${future.length} transações futuras`);
+      console.log(`✅ Encontradas ${past.length} transações passadas e ${future.length} transações futuras (baseDate: ${baseDate.toISOString()})`);
       return { past, future };
     } catch (error) {
       console.error('❌ Erro em checkForRelatedTransactions:', error);
@@ -700,18 +699,24 @@ const ContaForm: React.FC<ContaFormProps> = ({
     
     // Verificar transações relacionadas antes de abrir o dialog
     const codigoTrans = (initialData as any)['codigo-trans'];
+    console.log('🗑️ handleDeleteClick - codigo-trans:', codigoTrans);
+    console.log('🗑️ handleDeleteClick - initialData:', initialData);
+    
     if (codigoTrans) {
-      // Usar o campo 'date' do banco (não scheduledDate)
-      const currentDate = (initialData as any)?.date as string | undefined;
+      // Usar o campo 'date' do banco, com fallback para scheduledDate
+      const currentDate = (initialData as any)?.date || initialData.scheduledDate;
+      console.log('🗑️ handleDeleteClick - currentDate usado:', currentDate);
+      
       const related = await checkForRelatedTransactions(
         codigoTrans,
         initialData.id,
         currentDate
       );
+      console.log('🗑️ handleDeleteClick - related:', related);
       setPastTransactions(related.past);
       setFutureTransactions(related.future);
     } else {
-      // Se não tem codigo-trans, limpar os arrays
+      console.log('🗑️ handleDeleteClick - Sem codigo-trans');
       setPastTransactions([]);
       setFutureTransactions([]);
     }

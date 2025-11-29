@@ -350,34 +350,32 @@ const ProfilePage = () => {
             <div className="sticky z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-6 md:top-0 hidden md:block" style={{
             top: 'calc(4rem + env(safe-area-inset-top))'
           }}>
-              <div className="overflow-x-auto scrollbar-hide">
-                <TabsList className="inline-flex w-auto min-w-full gap-1 p-1 h-auto bg-muted/50">
-                  <TabsTrigger value="info" className="text-xs md:text-sm px-3 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground flex-shrink-0">
-                    Informações
-                  </TabsTrigger>
-                  <TabsTrigger value="plans" className="text-xs md:text-sm px-3 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground flex-shrink-0">
-                    Planos
-                  </TabsTrigger>
-                  <TabsTrigger value="categories" className="text-xs md:text-sm px-3 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground flex-shrink-0">
-                    Categorias
-                  </TabsTrigger>
-                  <TabsTrigger value="contas" className="text-xs md:text-sm px-3 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground flex-shrink-0">
-                    Contas
-                  </TabsTrigger>
-                  <TabsTrigger value="dependents" className="text-xs md:text-sm px-3 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground flex-shrink-0">
-                    Dependentes
-                  </TabsTrigger>
-                  <TabsTrigger value="notifications" className="text-xs md:text-sm px-3 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground flex-shrink-0">
-                    Notificações
-                  </TabsTrigger>
-                  <TabsTrigger value="password" className="text-xs md:text-sm px-3 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground flex-shrink-0">
-                    Senha
-                  </TabsTrigger>
-                  <TabsTrigger value="preferences" className="text-xs md:text-sm px-3 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground flex-shrink-0">
-                    Preferências
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+              <TabsList className="flex flex-wrap w-full gap-2 p-2 h-auto bg-muted/50 justify-start">
+                <TabsTrigger value="info" className="text-xs md:text-sm px-4 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                  Informações
+                </TabsTrigger>
+                <TabsTrigger value="plans" className="text-xs md:text-sm px-4 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                  Planos
+                </TabsTrigger>
+                <TabsTrigger value="categories" className="text-xs md:text-sm px-4 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                  Categorias
+                </TabsTrigger>
+                <TabsTrigger value="contas" className="text-xs md:text-sm px-4 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                  Contas
+                </TabsTrigger>
+                <TabsTrigger value="dependents" className="text-xs md:text-sm px-4 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                  Dependentes
+                </TabsTrigger>
+                <TabsTrigger value="notifications" className="text-xs md:text-sm px-4 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                  Notificações
+                </TabsTrigger>
+                <TabsTrigger value="password" className="text-xs md:text-sm px-4 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                  Senha
+                </TabsTrigger>
+                <TabsTrigger value="preferences" className="text-xs md:text-sm px-4 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                  Preferências
+                </TabsTrigger>
+              </TabsList>
             </div>
             
             <div className="space-y-6 max-h-[calc(100vh-320px)] md:max-h-none overflow-y-auto px-1">

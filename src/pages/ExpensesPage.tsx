@@ -14,8 +14,10 @@ import TimeRangeSelector from '@/components/common/TimeRangeSelector';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { formatCurrency } from '@/utils/transactionUtils';
 import { useToast } from '@/components/ui/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const ExpensesPage = () => {
+  const isMobile = useIsMobile();
   const { filteredTransactions } = useAppContext();
   const { transactions, deleteTransaction, isClientView, selectedUser, targetUserId } = useClientAwareData();
   const { t, currency } = usePreferences();
@@ -95,12 +97,13 @@ const ExpensesPage = () => {
           </div>
         )}
         
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-[20px]">
-          <h2 className="md:text-2xl font-semibold text-lg">{t('expenses.title')}</h2>
+        <div className="flex items-center justify-between mb-6 gap-2 py-[20px]">
+          <h1 className="md:text-2xl font-semibold text-lg">{t('expenses.title')}</h1>
           <div className="flex gap-2 items-center">
             <TimeRangeSelector />
-            <Button onClick={handleAddExpense}>
-              <Plus className="mr-2 h-4 w-4" /> {isClientView ? 'Adicionar para Cliente' : t('expenses.add')}
+            <Button onClick={handleAddExpense} size={isMobile ? "sm" : "lg"} className={isMobile ? "gap-1" : "shrink-0"}>
+              <Plus className={isMobile ? "h-3 w-3" : "mr-2 h-4 w-4"} />
+              <span className={isMobile ? "text-xs" : ""}>{isClientView ? 'Adicionar' : t('expenses.add')}</span>
             </Button>
           </div>
         </div>

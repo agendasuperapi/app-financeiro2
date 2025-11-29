@@ -200,8 +200,8 @@ const LembretesPage = () => {
       <SubscriptionGuard feature="lembretes">
         <div className="space-y-4 md:space-y-6 min-h-0">
           {/* Header Section */}
-          <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center md:gap-4 py-[20px]">
-            <h2 className="md:text-2xl font-semibold text-lg">Lembretes</h2>
+          <div className="flex items-center justify-between mb-6 gap-2 py-[20px]">
+            <h1 className="md:text-2xl font-semibold text-lg">Lembretes</h1>
             
             <div className="flex gap-2">
               {(isMobile || isTablet) && (
@@ -217,10 +217,9 @@ const LembretesPage = () => {
                 </Button>
               )}
               
-              <Button onClick={handleAddSchedule} disabled={!isOnline} size={isMobile || isTablet ? "sm" : "default"}>
-                <Plus className="mr-2 h-4 w-4" /> 
-                <span className="hidden sm:inline">Adicionar Lembrete</span>
-                <span className="sm:hidden">Adicionar</span>
+              <Button onClick={handleAddSchedule} disabled={!isOnline} size={isMobile || isTablet ? "sm" : "lg"}>
+                <Plus className={isMobile || isTablet ? "h-3 w-3" : "mr-2 h-4 w-4"} /> 
+                <span className={isMobile || isTablet ? "text-xs" : ""}>{isMobile || isTablet ? 'Adicionar' : 'Adicionar Lembrete'}</span>
               </Button>
             </div>
           </div>

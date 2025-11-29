@@ -20,7 +20,9 @@ import { ScheduledTransaction } from '@/types';
 import { isAfter, isToday, isYesterday, isTomorrow, isWithinInterval, startOfDay, endOfDay, addDays, startOfMonth, endOfMonth, startOfYear, endOfYear, addMonths, addYears, subMonths, subYears } from 'date-fns';
 import { toast } from 'sonner';
 import ContaForm from '@/components/contas/ContaForm';
+import { useIsMobile } from '@/hooks/use-mobile';
 const ContasPage = () => {
+  const isMobile = useIsMobile();
   const [contas, setContas] = useState<ScheduledTransaction[]>([]);
   const [filteredContas, setFilteredContas] = useState<ScheduledTransaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -330,13 +332,13 @@ const ContasPage = () => {
                   </span>
                 </div>
               </div>}
-          <div className="flex items-center justify-between mb-4 md:mb-6 py-[20px] gap-0">
+          <div className="flex items-center justify-between mb-6 gap-2 py-[20px]">
             <h1 className="md:text-2xl font-semibold text-lg">Contas a Pagar</h1>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Adicionar
+                <Button size={isMobile ? "sm" : "lg"} className={isMobile ? "gap-1" : "shrink-0"}>
+                  <Plus className={isMobile ? "h-3 w-3" : "mr-2 h-4 w-4"} />
+                  <span className={isMobile ? "text-xs" : ""}>Adicionar</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md">

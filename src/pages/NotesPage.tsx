@@ -30,6 +30,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import AddedByFieldForm from '@/components/contas/AddedByFieldForm';
+import { useIsMobile } from '@/hooks/use-mobile';
 interface Note {
   id: string;
   data: string;
@@ -68,6 +69,7 @@ const NotesPage: React.FC = () => {
   const {
     toast
   } = useToast();
+  const isMobile = useIsMobile();
 
   // Form setup
   const form = useForm<NoteFormValues>({
@@ -314,14 +316,16 @@ const NotesPage: React.FC = () => {
                 </div>
               </div>}
             
-            <div className="flex items-center justify-between py-[20px]">
+            <div className="flex items-center justify-between mb-6 gap-2 py-[20px]">
               <h1 className="md:text-2xl font-semibold text-lg">Minhas Notas</h1>
               
               <Dialog open={isAddingNote} onOpenChange={setIsAddingNote}>
                 <DialogTrigger asChild>
-                  <Button className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    {isClientView ? `Adicionar Nota para ${selectedUser?.name}` : 'Adicionar Nota'}
+                  <Button size={isMobile ? "sm" : "lg"} className={isMobile ? "gap-1" : "shrink-0"}>
+                    <Plus className={isMobile ? "h-3 w-3" : "mr-2 h-4 w-4"} />
+                    <span className={isMobile ? "text-xs" : ""}>
+                      {isMobile ? 'Adicionar' : (isClientView ? `Adicionar para ${selectedUser?.name}` : 'Adicionar Nota')}
+                    </span>
                   </Button>
                 </DialogTrigger>
                   <DialogContent className="sm:max-w-[525px]">

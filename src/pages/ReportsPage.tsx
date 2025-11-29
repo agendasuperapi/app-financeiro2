@@ -58,9 +58,11 @@ const ReportsPage = () => {
             </div>
           )}
           
-          <h1 className="md:text-2xl font-semibold text-lg mb-6 lg:mb-8 py-[20px]">{t('reports.title')}</h1>
+          <div className="flex items-center justify-between mb-6 gap-2 py-[20px]">
+            <h1 className="md:text-2xl font-semibold text-lg">{t('reports.title')}</h1>
+          </div>
           
-          <ReportFilters 
+          <ReportFilters
             reportType={reportType}
             setReportType={setReportType}
             startDate={startDate}

@@ -63,6 +63,23 @@ const ProfilePage = () => {
     localStorage.setItem('profileActiveTab', value);
   };
 
+  // Escutar eventos customizados para mudança de aba
+  useEffect(() => {
+    const handleChangeTab = (event: CustomEvent) => {
+      const { tab } = event.detail;
+      if (tab) {
+        setActiveTab(tab);
+        localStorage.setItem('profileActiveTab', tab);
+      }
+    };
+
+    window.addEventListener('changeProfileTab', handleChangeTab as EventListener);
+    
+    return () => {
+      window.removeEventListener('changeProfileTab', handleChangeTab as EventListener);
+    };
+  }, []);
+
   // Fetch the latest user data from Supabase
   useEffect(() => {
     const fetchUserData = async () => {

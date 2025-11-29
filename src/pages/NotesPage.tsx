@@ -487,19 +487,17 @@ const NotesPage: React.FC = () => {
             {/* Paginação */}
             {filteredNotes.length > 0 && <div className="flex items-center justify-between pt-4">
                 <div className="text-sm text-muted-foreground">
-                  Mostrando {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, filteredNotes.length)} de {filteredNotes.length} notas
+                  Exibindo {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredNotes.length)} de {filteredNotes.length}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => prev - 1)} disabled={currentPage === 1}>
-                    <ChevronLeft className="h-4 w-4 mr-1" />
-                    Anterior
+                <div className="flex items-center gap-4">
+                  <Button variant="ghost" size="icon" onClick={() => setCurrentPage(prev => prev - 1)} disabled={currentPage === 1} className="h-8 w-8">
+                    <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <div className="text-sm">
-                    Página {currentPage} de {totalPages}
+                  <div className="text-sm font-medium">
+                    {currentPage} / {totalPages}
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => prev + 1)} disabled={currentPage === totalPages}>
-                    Próxima
-                    <ChevronRight className="h-4 w-4 ml-1" />
+                  <Button variant="ghost" size="icon" onClick={() => setCurrentPage(prev => prev + 1)} disabled={currentPage === totalPages} className="h-8 w-8">
+                    <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>}

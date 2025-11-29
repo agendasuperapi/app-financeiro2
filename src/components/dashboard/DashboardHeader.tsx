@@ -27,10 +27,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
   return (
     <motion.div 
-      className="sticky z-40 bg-background border-b flex flex-col sm:flex-row justify-between items-center gap-4 p-4 md:top-0"
+      className="fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-b flex flex-col sm:flex-row justify-between items-center gap-4 p-4 md:relative md:top-0"
       style={{
         top: isMobile 
-          ? 'calc(3.5rem + env(safe-area-inset-top))' 
+          ? 'calc(3rem + env(safe-area-inset-top))' 
           : '0'
       }}
       initial={{ opacity: 0, y: 20 }}

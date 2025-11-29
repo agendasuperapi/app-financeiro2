@@ -6,7 +6,7 @@ import TransactionTable from '@/components/common/TransactionTable';
 import TransactionForm from '@/components/common/TransactionForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, User, RotateCcw, Filter, Search, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
+import { Plus, User, Search, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { useAppContext } from '@/contexts/AppContext';
 import { Transaction } from '@/types';
@@ -23,7 +23,6 @@ import { createLocalDate } from '@/utils/transactionUtils';
 const TransactionsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [dateFilter, setDateFilter] = useState('mes');
@@ -193,31 +192,6 @@ const TransactionsPage = () => {
   const handleDeleteTransaction = (id: string) => {
     deleteTransaction(id);
   };
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      if (refetchClientData) {
-        console.log('🔄 [REFRESH] Manual refresh requested - reloading client data...');
-        await refetchClientData();
-      } else {
-        // Força atualização dos dados via evento personalizado
-        window.dispatchEvent(new CustomEvent('refresh-transactions'));
-      }
-      toast({
-        title: 'Dados atualizados',
-        description: 'A página foi atualizada com sucesso.'
-      });
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-      toast({
-        title: 'Erro ao atualizar',
-        description: 'Não foi possível atualizar os dados.',
-        variant: 'destructive'
-      });
-    } finally {
-      setRefreshing(false);
-    }
-  };
   return <MainLayout>
       <SubscriptionGuard feature="movimentações ilimitadas">
         <div className="w-full px-4 md:px-6 pt-2 md:py-6 lg:py-8 pb-20 md:pb-8 min-h-0">
@@ -237,28 +211,12 @@ const TransactionsPage = () => {
               {isMobile ? 'Transações' : 'Transações Recentes'}
             </h1>
             
-            <div className="gap-2 flex items-center justify-end shrink-0">
-              {/* Mobile - Compact buttons with text */}
-              {isMobile ? <>
-                  <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="gap-1">
-                    <RotateCcw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
-                    <span className="text-xs">Atualizar</span>
-                  </Button>
-                  <Button onClick={handleAddTransaction} size="sm" className="gap-1">
-                    <Plus className="h-3 w-3" />
-                    <span className="text-xs">Adicionar</span>
-                  </Button>
-                </> : <>
-                  <Button variant="outline" size="lg" onClick={handleRefresh} disabled={refreshing} className="flex items-center gap-2">
-                    <RotateCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                    Atualizar
-                  </Button>
-                  <Button onClick={handleAddTransaction} size="lg" className="shrink-0">
-                    <Plus className="mr-2 h-4 w-4" />
-                    {isClientView ? 'Adicionar para Cliente' : 'Adicionar Transação'}
-                  </Button>
-                </>}
-            </div>
+            <Button onClick={handleAddTransaction} size={isMobile ? "sm" : "lg"} className={isMobile ? "gap-1" : "shrink-0"}>
+              <Plus className={isMobile ? "h-3 w-3" : "mr-2 h-4 w-4"} />
+              <span className={isMobile ? "text-xs" : ""}>
+                {isMobile ? 'Adicionar' : (isClientView ? 'Adicionar para Cliente' : 'Adicionar Transação')}
+              </span>
+            </Button>
           </div>
           
           {/* Filtros */}

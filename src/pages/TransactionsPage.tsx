@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
@@ -16,17 +15,11 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  addMonths, 
-  subMonths, 
-  addYears, 
-  subYears 
-} from 'date-fns';
+import { addMonths, subMonths, addYears, subYears } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { createLocalDate } from '@/utils/transactionUtils';
-
 const TransactionsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -38,14 +31,26 @@ const TransactionsPage = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
-  const { transactions, deleteTransaction, isClientView, selectedUser, targetUserId, userTimezone, refetchClientData } = useClientAwareData();
+  const {
+    transactions,
+    deleteTransaction,
+    isClientView,
+    selectedUser,
+    targetUserId,
+    userTimezone,
+    refetchClientData
+  } = useClientAwareData();
   const appContext = useAppContext();
-  
+
   // Get timezone: prefer client view timezone, fallback to app context timezone
   const effectiveTimezone = userTimezone || appContext.userTimezone;
   const isMobile = useIsMobile();
-  const { toast } = useToast();
-  const { formatDate } = useDateFormat();
+  const {
+    toast
+  } = useToast();
+  const {
+    formatDate
+  } = useDateFormat();
 
   // Função para navegação de data
   const handleDateNavigation = (direction: 'prev' | 'next') => {
@@ -55,10 +60,10 @@ const TransactionsPage = () => {
       setSelectedDate(direction === 'prev' ? subYears(selectedDate, 1) : addYears(selectedDate, 1));
     }
   };
-
   const getDateFilterLabel = () => {
-    const { formatMonth } = useDateFormat();
-    
+    const {
+      formatMonth
+    } = useDateFormat();
     switch (dateFilter) {
       case 'mes':
         return formatMonth(selectedDate);
@@ -77,12 +82,11 @@ const TransactionsPage = () => {
   // Filter transactions based on search, status, and date
   const baseFilteredTransactions = transactions.filter(transaction => {
     const formato = transaction.formato;
-    
+
     // Se não tem formato definido, considera como 'transacao' (padrão)
     if (!formato) {
       return true; // Inclui transações sem formato definido
     }
-    
     return formato === 'agenda' || formato === 'transacao';
   });
 
@@ -90,23 +94,18 @@ const TransactionsPage = () => {
   React.useEffect(() => {
     applyFilters();
   }, [baseFilteredTransactions, searchQuery, statusFilter, dateFilter, selectedDate, startDate, endDate]);
-
   const applyFilters = () => {
     let filtered = [...baseFilteredTransactions];
 
     // Aplicar filtro de pesquisa
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter((transaction) => 
-        transaction.description?.toLowerCase().includes(query) ||
-        transaction.category?.toLowerCase().includes(query) ||
-        transaction.creatorName?.toLowerCase().includes(query)
-      );
+      filtered = filtered.filter(transaction => transaction.description?.toLowerCase().includes(query) || transaction.category?.toLowerCase().includes(query) || transaction.creatorName?.toLowerCase().includes(query));
     }
 
     // Aplicar filtro de status (tipo de transação)
     if (statusFilter !== 'todos') {
-      filtered = filtered.filter((transaction) => {
+      filtered = filtered.filter(transaction => {
         switch (statusFilter) {
           case 'receita':
             return transaction.type === 'income';
@@ -126,12 +125,10 @@ const TransactionsPage = () => {
       tomorrow.setDate(tomorrow.getDate() + 1);
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
-
-      filtered = filtered.filter((transaction) => {
+      filtered = filtered.filter(transaction => {
         const sourceDateStr = transaction.date as string;
         const transactionDate = createLocalDate(sourceDateStr, effectiveTimezone);
         const transactionDateOnly = new Date(transactionDate.getFullYear(), transactionDate.getMonth(), transactionDate.getDate());
-
         switch (dateFilter) {
           case 'hoje':
             return transactionDateOnly.getTime() === today.getTime();
@@ -168,11 +165,12 @@ const TransactionsPage = () => {
     });
 
     // Agrupar por mês (mantendo ordem mais recente primeiro dentro de cada mês)
-    const grouped: { [key: string]: Transaction[] } = {};
+    const grouped: {
+      [key: string]: Transaction[];
+    } = {};
     filtered.forEach(transaction => {
       const transactionDate = createLocalDate(transaction.date as string, effectiveTimezone);
       const monthKey = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
-      
       if (!grouped[monthKey]) {
         grouped[monthKey] = [];
       }
@@ -182,24 +180,19 @@ const TransactionsPage = () => {
     // Ordenar os meses (mais recente primeiro) e flatten
     const sortedMonths = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
     const sortedFiltered = sortedMonths.flatMap(monthKey => grouped[monthKey]);
-
     setFilteredTransactions(sortedFiltered);
   };
-
   const handleAddTransaction = () => {
     setEditingTransaction(null);
     setFormOpen(true);
   };
-
   const handleEditTransaction = (transaction: Transaction) => {
     setEditingTransaction(transaction);
     setFormOpen(true);
   };
-
   const handleDeleteTransaction = (id: string) => {
     deleteTransaction(id);
   };
-
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
@@ -212,35 +205,31 @@ const TransactionsPage = () => {
       }
       toast({
         title: 'Dados atualizados',
-        description: 'A página foi atualizada com sucesso.',
+        description: 'A página foi atualizada com sucesso.'
       });
     } catch (error) {
       console.error('Error refreshing data:', error);
       toast({
         title: 'Erro ao atualizar',
         description: 'Não foi possível atualizar os dados.',
-        variant: 'destructive',
+        variant: 'destructive'
       });
     } finally {
       setRefreshing(false);
     }
   };
-
-  return (
-    <MainLayout>
+  return <MainLayout>
       <SubscriptionGuard feature="movimentações ilimitadas">
         <div className="w-full px-4 md:px-6 pt-2 md:py-6 lg:py-8 pb-20 md:pb-8 min-h-0">
           {/* Indicador de visualização de cliente */}
-          {isClientView && selectedUser && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          {isClientView && selectedUser && <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center gap-2 text-blue-800">
                 <User className="h-4 w-4" />
                 <span className="font-medium">
                   Visualizando transações de: {selectedUser.name} ({selectedUser.email})
                 </span>
               </div>
-            </div>
-          )}
+            </div>}
           
           {/* Header and Add Button */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
@@ -248,17 +237,10 @@ const TransactionsPage = () => {
               {isMobile ? 'Transações' : 'Transações Recentes'}
             </h1>
             
-            <div className="flex items-center gap-2">
+            <div className="gap-2 flex items-center justify-end">
               {/* Mobile - Compact buttons with text */}
-              {isMobile ? (
-                <>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={handleRefresh}
-                    disabled={refreshing}
-                    className="gap-1"
-                  >
+              {isMobile ? <>
+                  <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="gap-1">
                     <RotateCcw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
                     <span className="text-xs">Atualizar</span>
                   </Button>
@@ -266,16 +248,8 @@ const TransactionsPage = () => {
                     <Plus className="h-3 w-3" />
                     <span className="text-xs">Adicionar</span>
                   </Button>
-                </>
-              ) : (
-                <>
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    onClick={handleRefresh}
-                    disabled={refreshing}
-                    className="flex items-center gap-2"
-                  >
+                </> : <>
+                  <Button variant="outline" size="lg" onClick={handleRefresh} disabled={refreshing} className="flex items-center gap-2">
                     <RotateCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
                     Atualizar
                   </Button>
@@ -283,8 +257,7 @@ const TransactionsPage = () => {
                     <Plus className="mr-2 h-4 w-4" />
                     {isClientView ? 'Adicionar para Cliente' : 'Adicionar Transação'}
                   </Button>
-                </>
-              )}
+                </>}
             </div>
           </div>
           
@@ -294,12 +267,7 @@ const TransactionsPage = () => {
               {/* Campo de Pesquisa */}
               <div className="relative w-full lg:flex-1">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Pesquisar transações..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8"
-                />
+                <Input placeholder="Pesquisar transações..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-8" />
               </div>
               
               {/* Status e Período na mesma linha */}
@@ -337,22 +305,11 @@ const TransactionsPage = () => {
           </div>
             
           {/* Controles de Navegação de Data - STICKY */}
-          {(dateFilter === 'mes' || dateFilter === 'ano') && (
-            <div 
-              className="sticky z-30 bg-background/95 backdrop-blur-sm border-y py-2 flex justify-center mb-2 md:mb-4 md:top-0"
-              style={{ 
-                top: isMobile 
-                  ? 'calc(3.5rem + env(safe-area-inset-top))' 
-                  : '0' 
-              }}
-            >
+          {(dateFilter === 'mes' || dateFilter === 'ano') && <div className="sticky z-30 bg-background/95 backdrop-blur-sm border-y py-2 flex justify-center mb-2 md:mb-4 md:top-0" style={{
+          top: isMobile ? 'calc(3.5rem + env(safe-area-inset-top))' : '0'
+        }}>
                 <div className="flex items-center gap-1 bg-muted rounded-md p-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDateNavigation('prev')}
-                    className="h-8 w-8 p-0"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => handleDateNavigation('prev')} className="h-8 w-8 p-0">
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   
@@ -360,125 +317,62 @@ const TransactionsPage = () => {
                     {getDateFilterLabel()}
                   </span>
                   
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDateNavigation('next')}
-                    className="h-8 w-8 p-0"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => handleDateNavigation('next')} className="h-8 w-8 p-0">
                     <ChevronRight className="h-4 w-4" />
                   </Button>
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Seletor de Período */}
-          {dateFilter === 'periodo' && (
-            <div className="flex justify-center mb-2 md:mb-4">
+          {dateFilter === 'periodo' && <div className="flex justify-center mb-2 md:mb-4">
               <div className="flex flex-col sm:flex-row gap-2">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={cn(
-                        "justify-start text-left font-normal w-full sm:w-[140px]",
-                        !startDate && "text-muted-foreground"
-                      )}
-                    >
+                    <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal w-full sm:w-[140px]", !startDate && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {startDate ? formatDate(startDate) : "Data inicial"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={setStartDate}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
+                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus className={cn("p-3 pointer-events-auto")} />
                   </PopoverContent>
                 </Popover>
 
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className={cn(
-                        "justify-start text-left font-normal w-full sm:w-[140px]",
-                        !endDate && "text-muted-foreground"
-                      )}
-                    >
+                    <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal w-full sm:w-[140px]", !endDate && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {endDate ? formatDate(endDate) : "Data final"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={setEndDate}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
+                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus className={cn("p-3 pointer-events-auto")} />
                   </PopoverContent>
                 </Popover>
               </div>
-            </div>
-          )}
+            </div>}
           
           {/* Content Container */}
           <div className="space-y-4">
             {/* Content */}
-            {isMobile ? (
-              <TransactionList 
-                transactions={filteredTransactions}
-                onEdit={handleEditTransaction}
-                onDelete={handleDeleteTransaction}
-              />
-            ) : (
-              <Card className="animate-fade-in p-1">
+            {isMobile ? <TransactionList transactions={filteredTransactions} onEdit={handleEditTransaction} onDelete={handleDeleteTransaction} /> : <Card className="animate-fade-in p-1">
                 <CardHeader className="pb-6">
                   <CardTitle className="text-xl">Lista de Transações</CardTitle>
-                  {(searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos') && (
-                    <p className="text-sm text-muted-foreground">
+                  {(searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos') && <p className="text-sm text-muted-foreground">
                       {filteredTransactions.length} transação{filteredTransactions.length !== 1 ? 'ões' : ''} encontrada{filteredTransactions.length !== 1 ? 's' : ''}
-                    </p>
-                  )}
+                    </p>}
                 </CardHeader>
                 <CardContent className="pt-0 px-8">
-                  {filteredTransactions.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      {searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos' 
-                        ? 'Nenhuma transação encontrada com os filtros aplicados' 
-                        : 'Nenhuma transação encontrada'
-                      }
-                    </div>
-                  ) : (
-                    <TransactionTable 
-                      transactions={filteredTransactions}
-                      onEdit={handleEditTransaction}
-                      onDelete={handleDeleteTransaction}
-                    />
-                  )}
+                  {filteredTransactions.length === 0 ? <div className="text-center py-8 text-muted-foreground">
+                      {searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos' ? 'Nenhuma transação encontrada com os filtros aplicados' : 'Nenhuma transação encontrada'}
+                    </div> : <TransactionTable transactions={filteredTransactions} onEdit={handleEditTransaction} onDelete={handleDeleteTransaction} />}
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
           </div>
         </div>
 
-        <TransactionForm
-          open={formOpen}
-          onOpenChange={setFormOpen}
-          initialData={editingTransaction}
-          mode={editingTransaction ? 'edit' : 'create'}
-          targetUserId={targetUserId}
-        />
+        <TransactionForm open={formOpen} onOpenChange={setFormOpen} initialData={editingTransaction} mode={editingTransaction ? 'edit' : 'create'} targetUserId={targetUserId} />
       </SubscriptionGuard>
-    </MainLayout>
-  );
+    </MainLayout>;
 };
-
 export default TransactionsPage;

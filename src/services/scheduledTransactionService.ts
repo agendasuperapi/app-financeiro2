@@ -671,3 +671,19 @@ export const deleteScheduledTransaction = async (id: string): Promise<boolean> =
     return false;
   }
 };
+
+export const deleteMultipleTransactions = async (ids: string[]): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from("poupeja_transactions")
+      .delete()
+      .in("id", ids);
+
+    if (error) throw error;
+
+    return true;
+  } catch (error) {
+    console.error("Error deleting multiple transactions:", error);
+    return false;
+  }
+};

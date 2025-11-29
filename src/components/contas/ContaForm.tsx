@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientView } from '@/contexts/ClientViewContext';
 import { supabase } from '@/integrations/supabase/client';
-import { addScheduledTransaction, updateScheduledTransaction, deleteScheduledTransaction } from '@/services/scheduledTransactionService';
+import { addScheduledTransaction, updateScheduledTransaction, deleteScheduledTransaction, deleteMultipleTransactions } from '@/services/scheduledTransactionService';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { formatInTimeZone } from 'date-fns-tz';
 import { z } from 'zod';
@@ -67,6 +67,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const [futureTransactions, setFutureTransactions] = useState<any[]>([]);
   const [pastTransactions, setPastTransactions] = useState<any[]>([]);
   const [editOption, setEditOption] = useState<'single' | 'future' | 'past' | 'all'>('single');
+  const [deleteOption, setDeleteOption] = useState<'single' | 'future' | 'past' | 'all'>('single');
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [selectOpen, setSelectOpen] = useState(false);
 
@@ -695,13 +696,43 @@ const ContaForm: React.FC<ContaFormProps> = ({
 
   // Delete handler
   const handleDelete = async () => {
-    if (initialData) {
-      await deleteScheduledTransaction(initialData.id);
+    if (!initialData) return;
+    
+    try {
+      let idsToDelete: string[] = [initialData.id];
+      
+      if (deleteOption === 'future') {
+        idsToDelete = [initialData.id, ...futureTransactions.map(t => t.id)];
+      } else if (deleteOption === 'past') {
+        idsToDelete = [initialData.id, ...pastTransactions.map(t => t.id)];
+      } else if (deleteOption === 'all') {
+        idsToDelete = [initialData.id, ...pastTransactions.map(t => t.id), ...futureTransactions.map(t => t.id)];
+      }
+      
+      let success: boolean;
+      if (idsToDelete.length === 1) {
+        success = await deleteScheduledTransaction(initialData.id);
+      } else {
+        success = await deleteMultipleTransactions(idsToDelete);
+      }
+      
+      if (success) {
+        toast.success(idsToDelete.length === 1 
+          ? 'Transação excluída com sucesso' 
+          : `${idsToDelete.length} transação(ões) excluída(s) com sucesso`
+        );
+      } else {
+        toast.error('Erro ao excluir transação(ões)');
+      }
+      
       setDeleteDialogOpen(false);
-      // Call onSuccess callback if provided
+      setDeleteOption('single'); // Reset option
       if (onSuccess) {
         onSuccess();
       }
+    } catch (error) {
+      console.error('Erro ao excluir:', error);
+      toast.error('Erro ao excluir transação(ões)');
     }
   };
   return <>
@@ -976,9 +1007,97 @@ const ContaForm: React.FC<ContaFormProps> = ({
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('common.confirmDelete')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('schedule.confirmDeleteSchedule')}
+            <AlertDialogTitle>
+              {(pastTransactions.length > 0 || futureTransactions.length > 0) 
+                ? 'Transações Relacionadas Encontradas' 
+                : t('common.confirmDelete')}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                {(pastTransactions.length > 0 || futureTransactions.length > 0) ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Encontramos {pastTransactions.length + futureTransactions.length} transação(ões) relacionadas 
+                      ({pastTransactions.length} passadas e {futureTransactions.length} futuras). 
+                      Como você gostaria de proceder?
+                    </p>
+                    
+                    <div className="flex flex-col gap-2">
+                      {/* Opção 1: Apenas esta */}
+                      <div className="flex items-center space-x-2">
+                        <input 
+                          type="radio" 
+                          id="delete-single" 
+                          name="deleteOption" 
+                          value="single"
+                          checked={deleteOption === 'single'} 
+                          onChange={() => setDeleteOption('single')}
+                          className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                        />
+                        <label htmlFor="delete-single" className="text-sm cursor-pointer font-medium">
+                          Excluir apenas esta transação
+                        </label>
+                      </div>
+                      
+                      {/* Opção 2: Todas as futuras */}
+                      {futureTransactions.length > 0 && (
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="radio" 
+                            id="delete-future" 
+                            name="deleteOption" 
+                            value="future"
+                            checked={deleteOption === 'future'} 
+                            onChange={() => setDeleteOption('future')}
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                          />
+                          <label htmlFor="delete-future" className="text-sm cursor-pointer font-medium">
+                            Excluir todas as transações futuras ({futureTransactions.length} futuras)
+                          </label>
+                        </div>
+                      )}
+                      
+                      {/* Opção 3: Todas as passadas */}
+                      {pastTransactions.length > 0 && (
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="radio" 
+                            id="delete-past" 
+                            name="deleteOption" 
+                            value="past"
+                            checked={deleteOption === 'past'} 
+                            onChange={() => setDeleteOption('past')}
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                          />
+                          <label htmlFor="delete-past" className="text-sm cursor-pointer font-medium">
+                            Excluir todas as transações passadas ({pastTransactions.length} passadas)
+                          </label>
+                        </div>
+                      )}
+                      
+                      {/* Opção 4: Todas */}
+                      {(pastTransactions.length > 0 || futureTransactions.length > 0) && (
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="radio" 
+                            id="delete-all" 
+                            name="deleteOption" 
+                            value="all"
+                            checked={deleteOption === 'all'} 
+                            onChange={() => setDeleteOption('all')}
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                          />
+                          <label htmlFor="delete-all" className="text-sm cursor-pointer font-medium">
+                            Excluir TODAS as transações ({pastTransactions.length + futureTransactions.length + 1} total)
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <span>{t('schedule.confirmDeleteSchedule')}</span>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

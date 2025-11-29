@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { markLembreteAsPaid, deleteLembrete } from '@/services/lembreteService';
 import { ScheduledTransaction } from '@/types';
 import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User, Search, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
@@ -24,6 +25,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 const LembrarPage = () => {
+  const isMobile = useIsMobile();
+  
   // Função para normalizar valores de recorrência
   const normalizeRecurrence = (recurrence: string | null | undefined): 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' => {
     if (!recurrence) return 'once';
@@ -325,8 +328,8 @@ const LembrarPage = () => {
     }
   };
   return <MainLayout>
-      <SubscriptionGuard className="px-[24px] py-[24px]">
-          <div className="container mx-auto p-3 md:p-4 lg:p-6 space-y-4 lg:space-y-6">
+      <SubscriptionGuard>
+          <div className="container mx-auto p-3 md:p-4 lg:p-6 space-y-4 lg:space-y-6 px-[24px] py-[24px]">
             {isClientView && selectedUser && <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center gap-2 text-blue-800">
                   <User className="h-4 w-4" />
@@ -335,11 +338,15 @@ const LembrarPage = () => {
                   </span>
                 </div>
               </div>}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 lg:mb-6 py-[20px] md:gap-[8px]">
-            <h1 className="text-xl md:text-2xl lg:text-2xl font-semibold">Lembrar</h1>
-            <Button className="flex items-center gap-2 w-full sm:w-auto" onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="h-4 w-4" />
-              <span>Adicionar</span>
+          <div className="flex items-center justify-between mb-6 gap-2 py-[20px]">
+            <h1 className="md:text-2xl font-semibold text-lg">Lembrar</h1>
+            <Button 
+              size={isMobile ? "sm" : "lg"} 
+              className={isMobile ? "gap-1" : "shrink-0"} 
+              onClick={() => setIsAddDialogOpen(true)}
+            >
+              <Plus className={isMobile ? "h-3 w-3" : "mr-2 h-4 w-4"} />
+              <span className={isMobile ? "text-xs" : ""}>Adicionar</span>
             </Button>
           </div>
           

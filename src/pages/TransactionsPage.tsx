@@ -289,7 +289,7 @@ const TransactionsPage = () => {
           </div>
           
           {/* Filtros */}
-          <div className="bg-background pb-2 md:pb-4 flex flex-col lg:flex-row gap-2 mb-2 md:mb-4 md:sticky md:top-0 md:z-30">
+          <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm pb-2 md:pb-4 flex flex-col lg:flex-row gap-2 mb-2 md:mb-4">
             {/* Campo de Pesquisa */}
             <div className="relative w-full lg:flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -336,7 +336,7 @@ const TransactionsPage = () => {
           
           {/* Controles de Navegação de Data */}
           {(dateFilter === 'mes' || dateFilter === 'ano') && (
-            <div className="sticky z-40 bg-background/95 backdrop-blur-sm border-b pt-2 pb-2 flex justify-center mb-2 md:mb-4" style={{ top: isMobile ? 'calc(5.5rem + env(safe-area-inset-top))' : '0' }}>
+            <div className="sticky z-40 bg-background/95 backdrop-blur-sm border-b pt-2 pb-2 flex justify-center mb-2 md:mb-4" style={{ top: 0 }}>
               <div className="flex items-center gap-1 bg-muted rounded-md p-1">
                 <Button
                   variant="ghost"

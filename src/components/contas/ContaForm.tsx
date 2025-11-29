@@ -714,16 +714,23 @@ const ContaForm: React.FC<ContaFormProps> = ({
         currentDate
       );
       console.log('🗑️ handleDeleteClick - related:', related);
+      
+      // Definir os estados e então abrir o dialog
       setPastTransactions(related.past);
       setFutureTransactions(related.future);
+      
+      // Aguardar um tick para garantir que os estados foram atualizados
+      setTimeout(() => {
+        setDeleteDialogOpen(true);
+      }, 0);
     } else {
       console.log('🗑️ handleDeleteClick - Sem codigo-trans');
       setPastTransactions([]);
       setFutureTransactions([]);
+      
+      // Abrir o dialog imediatamente se não tem codigo-trans
+      setDeleteDialogOpen(true);
     }
-    
-    // Abrir o dialog
-    setDeleteDialogOpen(true);
   };
 
   const handleDelete = async () => {

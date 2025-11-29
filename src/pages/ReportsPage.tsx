@@ -63,7 +63,7 @@ const ReportsPage = () => {
           
           <ReportFilters reportType={reportType} setReportType={setReportType} startDate={startDate} setStartDate={setStartDate} endDate={endDate} setEndDate={setEndDate} onDownload={handleDownload} />
           
-          <ReportSummary totalIncome={totalIncome} totalExpenses={totalExpenses} balance={balance} />
+          
           
           <TransactionsTable transactions={filteredTransactions} />
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Calendar, FileText, Trash2, User, Edit2, Copy } from 'lucide-react';
+import { Search, Plus, Calendar, FileText, Trash2, User, Edit2, Copy, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -63,6 +63,8 @@ const NotesPage: React.FC = () => {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const {
     toast
   } = useToast();
@@ -83,7 +85,20 @@ const NotesPage: React.FC = () => {
   useEffect(() => {
     // As notas já são carregadas pelo hook useClientAwareNotes
   }, []);
+  
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+  
   const filteredNotes = notes.filter(note => note.descricao.toLowerCase().includes(searchTerm.toLowerCase()) || note.notas.toLowerCase().includes(searchTerm.toLowerCase()));
+  
+  // Pagination
+  const totalPages = Math.ceil(filteredNotes.length / itemsPerPage);
+  const paginatedNotes = filteredNotes.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
   const handleAddNote = async (values: NoteFormValues) => {
     try {
       if (isClientView && selectedUser) {
@@ -449,7 +464,7 @@ const NotesPage: React.FC = () => {
                       {searchTerm ? 'Tente ajustar sua pesquisa.' : 'Comece adicionando sua primeira nota.'}
                     </p>
                   </CardContent>
-                </Card> : filteredNotes.map(note => <Card key={note.id} className="hover:shadow-md transition-shadow">
+                </Card> : paginatedNotes.map(note => <Card key={note.id} className="hover:shadow-md transition-shadow">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
@@ -500,6 +515,38 @@ const NotesPage: React.FC = () => {
                     </CardContent>
                   </Card>)}
             </div>
+
+            {/* Paginação */}
+            {filteredNotes.length > 0 && (
+              <div className="flex items-center justify-between pt-4">
+                <div className="text-sm text-muted-foreground">
+                  Mostrando {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, filteredNotes.length)} de {filteredNotes.length} notas
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => prev - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Anterior
+                  </Button>
+                  <div className="text-sm">
+                    Página {currentPage} de {totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => prev + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Próxima
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </SubscriptionGuard>

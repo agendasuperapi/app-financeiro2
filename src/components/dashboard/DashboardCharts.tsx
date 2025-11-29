@@ -142,7 +142,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
         {/* Expense Categories Pie Chart */}
         <Card className="transition-all hover:shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg text-center">{t('charts.expenseBreakdown')} - Período Total</CardTitle>
+            <CardTitle className="text-lg text-center">{t('charts.expenseBreakdown')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64 flex items-center justify-center">

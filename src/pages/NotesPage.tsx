@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Calendar, FileText, Trash2, User, Edit2 } from 'lucide-react';
+import { Search, Plus, Calendar, FileText, Trash2, User, Edit2, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -202,6 +202,23 @@ const NotesPage: React.FC = () => {
     }
     setDeleteDialogOpen(false);
     setNoteToDelete(null);
+  };
+
+  const handleCopyContent = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      toast({
+        title: "Copiado!",
+        description: "Conteúdo copiado para a área de transferência."
+      });
+    } catch (error) {
+      console.error('Erro ao copiar:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível copiar o conteúdo.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleEditNote = (note: Note) => {
@@ -457,6 +474,14 @@ const NotesPage: React.FC = () => {
                             disabled={isClientView}
                           >
                             <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleCopyContent(note.notas)}
+                            className="text-primary hover:text-primary"
+                          >
+                            <Copy className="h-4 w-4" />
                           </Button>
                           <Button 
                             variant="ghost" 

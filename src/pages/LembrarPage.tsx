@@ -413,7 +413,7 @@ const LembrarPage = () => {
           
           {/* Controles de Navegação de Data */}
           {(dateFilter === 'mes' || dateFilter === 'ano') && (
-            <div className="flex justify-center mb-2 md:mb-4">
+            <div className="sticky top-0 z-10 bg-background py-2 flex justify-center mb-2 md:mb-4">
               <div className="flex items-center gap-1 bg-muted rounded-md p-1">
                 <Button
                   variant="ghost"

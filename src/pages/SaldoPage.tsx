@@ -82,7 +82,7 @@ const SaldoPage: React.FC = () => {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${totalBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-lg font-bold ${totalBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(totalBalance, currency)}
               </div>
             </CardContent>
@@ -94,7 +94,7 @@ const SaldoPage: React.FC = () => {
               <TrendingDown className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{negativeAccounts.length}</div>
+              <div className="text-lg font-bold text-red-600">{negativeAccounts.length}</div>
             </CardContent>
           </Card>
         </div>

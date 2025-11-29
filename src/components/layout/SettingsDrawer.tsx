@@ -129,16 +129,24 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ open, onOpenChange, tri
   const handleOptionClick = (tab: string) => {
     console.log('Settings option clicked:', tab);
     
-    // Salvar a aba no localStorage para que o ProfilePage abra nela
+    // Salvar a aba no localStorage
     localStorage.setItem('profileActiveTab', tab);
     
     // Fechar o popup primeiro
     onOpenChange(false);
     
-    // Navegar para o profile após um pequeno delay
-    setTimeout(() => {
-      navigate('/profile');
-    }, 100);
+    // Verificar se já estamos na página de profile
+    const isOnProfilePage = window.location.pathname === '/profile';
+    
+    if (isOnProfilePage) {
+      // Se já estamos em /profile, disparar evento customizado para mudar a aba
+      window.dispatchEvent(new CustomEvent('changeProfileTab', { detail: { tab } }));
+    } else {
+      // Se não estamos em /profile, navegar para lá
+      setTimeout(() => {
+        navigate('/profile');
+      }, 100);
+    }
   };
 
   return (

@@ -285,8 +285,9 @@ const NotesPage: React.FC = () => {
     }
   };
   return <MainLayout>
-      <SubscriptionGuard feature="notas ilimitadas" className="px-[24px] py-[24px]">
-        <div className="w-full px-4 py-4 md:py-8 pb-20 md:pb-8 min-h-0">
+      <SubscriptionGuard feature="notas ilimitadas">
+        <div className="space-y-6 px-[24px] py-[24px]">
+          <div className="w-full px-4 py-4 md:py-8 pb-20 md:pb-8 min-h-0">
           <div className="container mx-auto space-y-6 py-0 px-0">
             {/* Indicador de visualização de cliente */}
             {isClientView && selectedUser && <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -503,6 +504,7 @@ const NotesPage: React.FC = () => {
                 </div>
               </div>}
           </div>
+        </div>
         </div>
       </SubscriptionGuard>
 

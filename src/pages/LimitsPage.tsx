@@ -122,7 +122,7 @@ const LimitsPage: React.FC = () => {
     }
   };
   return <MainLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 px-[24px] py-[24px]">
         {/* Indicador de visualização de cliente */}
         {isClientView && selectedUser && <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center gap-2 text-blue-800">
@@ -206,13 +206,7 @@ const LimitsPage: React.FC = () => {
       </div>
 
       {/* Modal de Transação */}
-      <TransactionForm 
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        initialData={editingLimit as any}
-        mode={editingLimit ? 'edit' : 'create'}
-        defaultType={defaultType}
-      />
+      <TransactionForm open={formOpen} onOpenChange={setFormOpen} initialData={editingLimit as any} mode={editingLimit ? 'edit' : 'create'} defaultType={defaultType} />
     </MainLayout>;
 };
 export default LimitsPage;

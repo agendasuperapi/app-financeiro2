@@ -26,39 +26,39 @@ const ReportSummary: React.FC<ReportSummaryProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
+    <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6 mb-6 lg:mb-8">
       <Card className="border border-border/50 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm lg:text-base font-medium text-muted-foreground">
+        <CardHeader className="pb-2 sm:pb-3">
+          <CardTitle className="text-xs sm:text-sm lg:text-base font-medium text-muted-foreground">
             {t('reports.totalIncome')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-green-600 dark:text-green-400">
+          <p className="text-sm sm:text-xl lg:text-2xl xl:text-3xl font-bold text-green-600 dark:text-green-400">
             {formatCurrency(totalIncome)}
           </p>
         </CardContent>
       </Card>
       <Card className="border border-border/50 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm lg:text-base font-medium text-muted-foreground">
+        <CardHeader className="pb-2 sm:pb-3">
+          <CardTitle className="text-xs sm:text-sm lg:text-base font-medium text-muted-foreground">
             {t('reports.totalExpenses')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-xl lg:text-2xl xl:text-3xl font-bold text-red-600 dark:text-red-400">
+          <p className="text-sm sm:text-xl lg:text-2xl xl:text-3xl font-bold text-red-600 dark:text-red-400">
             {formatCurrency(totalExpenses)}
           </p>
         </CardContent>
       </Card>
-      <Card className="border border-border/50 shadow-sm sm:col-span-2 lg:col-span-1">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm lg:text-base font-medium text-muted-foreground">
+      <Card className="border border-border/50 shadow-sm">
+        <CardHeader className="pb-2 sm:pb-3">
+          <CardTitle className="text-xs sm:text-sm lg:text-base font-medium text-muted-foreground">
             {t('reports.balance')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className={`text-xl lg:text-2xl xl:text-3xl font-bold ${
+          <p className={`text-sm sm:text-xl lg:text-2xl xl:text-3xl font-bold ${
             balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
           }`}>
             {formatCurrency(balance)}

@@ -232,12 +232,12 @@ const TransactionsPage = () => {
             </div>}
           
           {/* Header and Add Button */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4 py-[10px]">
+          <div className="flex items-center justify-between mb-6 gap-2 py-[10px]">
             <h1 className="text-xl md:text-2xl font-semibold">
               {isMobile ? 'Transações' : 'Transações Recentes'}
             </h1>
             
-            <div className="gap-2 flex items-center justify-end">
+            <div className="gap-2 flex items-center justify-end shrink-0">
               {/* Mobile - Compact buttons with text */}
               {isMobile ? <>
                   <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="gap-1">

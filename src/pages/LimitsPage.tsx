@@ -136,16 +136,16 @@ const LimitsPage: React.FC = () => {
         {/* Cabeçalho */}
         <div className="flex items-center justify-between mb-6 gap-2 py-[20px]">
           <h1 className="md:text-2xl font-semibold text-lg">Meus controles</h1>
-          {!isClientView && <div className="flex gap-2">
-              <Button onClick={handleAddLimit} size={isMobile ? "sm" : "lg"} className={isMobile ? "gap-1" : "shrink-0"}>
-                <Plus className={isMobile ? "h-3 w-3" : "mr-2 h-4 w-4"} />
-                <span className={isMobile ? "text-xs" : ""}>Adicionar Limite</span>
-              </Button>
-              <Button onClick={handleAddGoal} size={isMobile ? "sm" : "lg"} variant="secondary" className={isMobile ? "gap-1" : "shrink-0"}>
-                <Target className={isMobile ? "h-3 w-3" : "mr-2 h-4 w-4"} />
-                <span className={isMobile ? "text-xs" : ""}>Adicionar Metas</span>
-              </Button>
-            </div>}
+        {!isClientView && <div className="flex gap-2 flex-wrap">
+            <Button onClick={handleAddLimit} size="sm" className="gap-1">
+              <Plus className="h-3 w-3" />
+              <span className="text-xs">{isMobile ? "Limite" : "Adicionar Limite"}</span>
+            </Button>
+            <Button onClick={handleAddGoal} size="sm" variant="secondary" className="gap-1">
+              <Target className="h-3 w-3" />
+              <span className="text-xs">{isMobile ? "Metas" : "Adicionar Metas"}</span>
+            </Button>
+          </div>}
         </div>
 
         {/* Seção de Metas (Receitas) */}

@@ -9,6 +9,7 @@ import { formatCurrency } from '@/utils/transactionUtils';
 import { getSaldoByAccount } from '@/services/saldoService';
 import { toast } from 'sonner';
 import { TransferModal } from '@/components/saldo/TransferModal';
+import { useIsMobile } from '@/hooks/use-mobile';
 interface AccountBalance {
   conta: string;
   total: number;
@@ -23,6 +24,7 @@ const SaldoPage: React.FC = () => {
   const [accountBalances, setAccountBalances] = useState<AccountBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const isMobile = useIsMobile();
   useEffect(() => {
     if (user) {
       loadAccountBalances();
@@ -82,7 +84,7 @@ const SaldoPage: React.FC = () => {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${totalBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`${isMobile ? 'text-sm' : 'text-2xl'} font-bold ${totalBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(totalBalance, currency)}
               </div>
             </CardContent>
@@ -94,7 +96,7 @@ const SaldoPage: React.FC = () => {
               <TrendingDown className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{negativeAccounts.length}</div>
+              <div className={`${isMobile ? 'text-sm' : 'text-2xl'} font-bold text-red-600`}>{negativeAccounts.length}</div>
             </CardContent>
           </Card>
         </div>
@@ -119,7 +121,7 @@ const SaldoPage: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${account.total >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className={`${isMobile ? 'text-sm' : 'text-2xl'} font-bold ${account.total >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatCurrency(account.total, currency)}
                   </div>
                   <div className="flex items-center gap-1 mt-2">

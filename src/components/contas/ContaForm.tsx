@@ -75,12 +75,13 @@ const ContaForm: React.FC<ContaFormProps> = ({
   const checkForRelatedTransactions = async (codigoTrans: string | number, currentId: string, currentDate?: string) => {
     try {
       const codeStr = String(codigoTrans);
-      console.log(`🔍 Buscando transações com codigo-trans: "${codeStr}", excluindo id: ${currentId}`);
+      const normalizedCode = codeStr.replace(/\D/g, ''); // manter apenas dígitos para comparar "códigos similares"
+      console.log(`🔍 Buscando transações com codigo-trans similar a "${codeStr}" (normalizado: ${normalizedCode}), excluindo id: ${currentId}`);
 
       const { data: user } = await supabase.auth.getUser();
       const targetUserId = selectedUser?.id || user?.user?.id;
-      if (!targetUserId || !codeStr) {
-        console.log('❌ Sem userId ou codeStr');
+      if (!targetUserId || !normalizedCode) {
+        console.log('❌ Sem userId ou codigo-trans normalizado');
         return { past: [], future: [] };
       }
 
@@ -99,12 +100,13 @@ const ContaForm: React.FC<ContaFormProps> = ({
 
       console.log(`📊 Total de transações do usuário: ${allData?.length || 0}`);
 
-      // 2. Filtrar em JavaScript pelo codigo-trans
+      // 2. Filtrar em JavaScript pelo codigo-trans "similar" (comparando apenas dígitos)
       const rows = (allData || []).filter((item: any) => {
-        const itemCodigo = item['codigo-trans'];
-        const matches = String(itemCodigo) === codeStr;
+        const itemCodigoRaw = item['codigo-trans'];
+        const itemCodigoNorm = String(itemCodigoRaw ?? '').replace(/\D/g, '');
+        const matches = itemCodigoNorm && itemCodigoNorm === normalizedCode;
         if (matches) {
-          console.log(`✅ Match: ${item.description} (id: ${item.id}, date: ${item.date})`);
+          console.log(`✅ Match: ${item.description} (id: ${item.id}, date: ${item.date}, codigo-trans: ${itemCodigoRaw})`);
         }
         return matches;
       });

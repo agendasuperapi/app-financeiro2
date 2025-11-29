@@ -35,6 +35,8 @@ const ContasPage = () => {
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [contaToDelete, setContaToDelete] = useState<ScheduledTransaction | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const {
     formatDate
   } = useDateFormat();
@@ -53,6 +55,7 @@ const ContasPage = () => {
   }, [targetUserId]);
   useEffect(() => {
     applyFilters();
+    setCurrentPage(1); // Reset para primeira página quando filtros mudam
   }, [contas, statusFilter, dateFilter, selectedDate, startDate, endDate, searchQuery]);
   const loadContas = async () => {
     setLoading(true);
@@ -448,7 +451,7 @@ const ContasPage = () => {
                 </div> : filteredContas.length === 0 ? <div className="text-center py-8 text-muted-foreground">
                   {statusFilter === 'todos' && dateFilter === 'todos' && !searchQuery.trim() ? 'Nenhuma conta encontrada' : 'Nenhuma conta encontrada para os filtros selecionados'}
                 </div> : <div className="space-y-4">
-                   {filteredContas.map(conta => {
+                   {filteredContas.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(conta => {
                 const status = getStatus(conta);
                 const isPaid = conta.status === 'paid';
                 const isSimulation = conta.__isSimulation;
@@ -543,8 +546,40 @@ const ContasPage = () => {
                              </div>}
                         </CardContent>
                       </Card>;
-              })}
+               })}
                 </div>}
+              
+              {/* Paginação */}
+              {!loading && filteredContas.length > itemsPerPage && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredContas.length)} de {filteredContas.length} contas
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Anterior
+                    </Button>
+                    <div className="text-sm font-medium">
+                      Página {currentPage} de {Math.ceil(filteredContas.length / itemsPerPage)}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredContas.length / itemsPerPage), prev + 1))}
+                      disabled={currentPage >= Math.ceil(filteredContas.length / itemsPerPage)}
+                    >
+                      Próxima
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

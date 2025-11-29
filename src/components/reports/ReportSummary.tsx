@@ -34,7 +34,7 @@ const ReportSummary: React.FC<ReportSummaryProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-xs sm:text-sm lg:text-base font-bold text-green-600 dark:text-green-400">
+          <p className="text-[11px] sm:text-xs lg:text-sm font-bold text-green-600 dark:text-green-400">
             {formatCurrency(totalIncome)}
           </p>
         </CardContent>
@@ -46,7 +46,7 @@ const ReportSummary: React.FC<ReportSummaryProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-xs sm:text-sm lg:text-base font-bold text-red-600 dark:text-red-400">
+          <p className="text-[11px] sm:text-xs lg:text-sm font-bold text-red-600 dark:text-red-400">
             {formatCurrency(totalExpenses)}
           </p>
         </CardContent>
@@ -58,7 +58,7 @@ const ReportSummary: React.FC<ReportSummaryProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className={`text-xs sm:text-sm lg:text-base font-bold ${
+          <p className={`text-[11px] sm:text-xs lg:text-sm font-bold ${
             balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
           }`}>
             {formatCurrency(balance)}

@@ -9,6 +9,7 @@ import DashboardContent from '@/components/dashboard/DashboardContent';
 import { useAppContext } from '@/contexts/AppContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { calculateTotalIncome, calculateTotalExpenses, calculateMonthlyFinancialData, getGoalsForMonth } from '@/utils/transactionUtils';
 import { useToast } from '@/components/ui/use-toast';
 import { markAsPaid } from '@/services/scheduledTransactionService';
@@ -19,6 +20,7 @@ import { User } from 'lucide-react';
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   // Use client-aware data para suportar visualização de clientes
   const {
@@ -287,7 +289,7 @@ const Index = () => {
   return (
     <MainLayout title={t('dashboard.title')} onAddTransaction={handleAddTransaction}>
       <SubscriptionGuard feature="o dashboard completo">
-        <div className="space-y-8 min-h-0">
+        <div className="space-y-8 min-h-0 md:pt-0" style={{ paddingTop: isMobile ? 'calc(4rem)' : '0' }}>
           {/* Indicador de visualização de cliente */}
           {isClientView && selectedUser && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">

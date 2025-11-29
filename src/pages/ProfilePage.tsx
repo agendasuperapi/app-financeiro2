@@ -66,15 +66,15 @@ const ProfilePage = () => {
   // Escutar eventos customizados para mudança de aba
   useEffect(() => {
     const handleChangeTab = (event: CustomEvent) => {
-      const { tab } = event.detail;
+      const {
+        tab
+      } = event.detail;
       if (tab) {
         setActiveTab(tab);
         localStorage.setItem('profileActiveTab', tab);
       }
     };
-
     window.addEventListener('changeProfileTab', handleChangeTab as EventListener);
-    
     return () => {
       window.removeEventListener('changeProfileTab', handleChangeTab as EventListener);
     };
@@ -337,9 +337,9 @@ const ProfilePage = () => {
       </MainLayout>;
   }
   return <MainLayout title={t('profile.title')}>
-      <div className="space-y-6 pb-16">
+      <div className="space-y-6 pb-16 px-[24px] py-[24px]">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('profile.title')}</h1>
+          <h1 className="text-2xl tracking-tight font-semibold">{t('profile.title')}</h1>
           <p className="text-muted-foreground">Gerencie seus dados pessoais Versão: 3.0.5</p>
         </div>
         

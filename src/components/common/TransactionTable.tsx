@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -27,7 +27,7 @@ import CategoryIcon from '../categories/CategoryIcon';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { useAppContext } from '@/contexts/AppContext';
-import { ArrowUp, ArrowDown, Edit, Trash2, ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, Edit, Trash2, ChevronUp, ChevronDown, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -50,6 +50,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // Default to newest first
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Timezone handling (client view or own account)
   const { userTimezone } = useClientAwareData();
@@ -79,6 +83,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       setSortDirection('desc');
     }
   };
+
+  // Reset to first page when transactions change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [transactions.length]);
 
   const sortedTransactions = React.useMemo(() => {
     if (!sortDirection) return transactions;
@@ -114,6 +123,12 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       return sortDirection === 'asc' ? comparison : -comparison;
     });
   }, [transactions, sortField, sortDirection, effectiveTimezone]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(sortedTransactions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentTransactions = sortedTransactions.slice(startIndex, endIndex);
 
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm">
@@ -215,7 +230,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedTransactions.map((transaction, index) => {
+            {currentTransactions.map((transaction, index) => {
               const iconColor = transaction.type === 'income' ? '#26DE81' : '#EF4444';
 
               return (
@@ -366,6 +381,40 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-4 py-3 border-t">
+          <div className="text-sm text-muted-foreground">
+            {t('common.showing')} {startIndex + 1}-{Math.min(endIndex, sortedTransactions.length)} {t('common.of')} {sortedTransactions.length}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              {t('common.previous')}
+            </Button>
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-medium">
+                {currentPage} / {totalPages}
+              </span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              {t('common.next')}
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

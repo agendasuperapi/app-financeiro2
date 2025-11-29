@@ -124,7 +124,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
         {/* Monthly Income/Expense Bar Chart */}
         <Card className="transition-all hover:shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg">{t('charts.incomeVsExpenses')} - 3 meses antes e depois</CardTitle>
+            <CardTitle className="text-lg">{t('charts.incomeVsExpenses')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">

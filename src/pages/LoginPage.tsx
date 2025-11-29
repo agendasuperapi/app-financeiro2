@@ -108,15 +108,6 @@ const LoginPage = () => {
     setShowPassword(!showPassword);
   };
 
-  // Show loading spinner while auth context is loading
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-h-screen">
       {/* Left side with illustration and text */}

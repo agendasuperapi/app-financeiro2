@@ -41,6 +41,7 @@ import SaldoPage from "./pages/SaldoPage";
 import CalendarPage from "./pages/CalendarPage";
 import NotFound from "./pages/NotFound";
 import AdminRoute from "./components/admin/AdminRoute";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import "./App.css";
 import { ClientViewProvider } from '@/contexts/ClientViewContext';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -66,35 +67,116 @@ function App() {
                     <ClientViewProvider>
                       <BrowserRouter>
                         <Routes>
-                          <Route path="/" element={<LoginPage />} />
-                          <Route path="/dashboard" element={<Index />} />
+                          {/* Root path - protected, goes to dashboard */}
+                          <Route path="/" element={
+                            <ProtectedRoute>
+                              <Index />
+                            </ProtectedRoute>
+                          } />
+                          
+                          {/* Public routes */}
                           <Route path="/landing" element={<LandingPage />} />
                           <Route path="/login" element={<LoginPage />} />
                           <Route path="/register" element={<RegisterPage />} />
                           <Route path="/register/:planType" element={<RegisterWithPlanPage />} />
                           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                           <Route path="/reset-password" element={<ResetPasswordPage />} />
-                          <Route path="/profile" element={<ProfilePage />} />
-                          <Route path="/transactions" element={<TransactionsPage />} />
-                          <Route path="/expenses" element={<ExpensesPage />} />
-                          <Route path="/goals" element={<GoalsPage />} />
-                          <Route path="/reports" element={<ReportsPage />} />
-                          <Route path="/notes" element={<NotesPage />} />
-                          <Route path="/logs" element={<LogPage />} />
-                          <Route path="/rules" element={<RulesPage />} />
-                          <Route path="/schedule" element={<SchedulePage />} />
-                          <Route path="/contas" element={<ContasPage />} />
-                          <Route path="/lembrar" element={<LembrarPage />} />
-                          <Route path="/lembretes" element={<LembretesPage />} />
-                          <Route path="/categories" element={<CategoriesPage />} />
                           <Route path="/plans" element={<PlansPage />} />
                           <Route path="/checkout/:planType" element={<CheckoutPage />} />
                           <Route path="/payment-success" element={<PaymentSuccessPage />} />
                           <Route path="/thank-you" element={<ThankYouPage />} />
-                          <Route path="/achievements" element={<AchievementsPage />} />
-                          <Route path="/limits" element={<LimitsPage />} />
-                          <Route path="/saldo" element={<SaldoPage />} />
-                          <Route path="/calendar" element={<CalendarPage />} />
+                          
+                          {/* Protected routes */}
+                          <Route path="/dashboard" element={
+                            <ProtectedRoute>
+                              <Index />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/profile" element={
+                            <ProtectedRoute>
+                              <ProfilePage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/transactions" element={
+                            <ProtectedRoute>
+                              <TransactionsPage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/expenses" element={
+                            <ProtectedRoute>
+                              <ExpensesPage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/goals" element={
+                            <ProtectedRoute>
+                              <GoalsPage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/reports" element={
+                            <ProtectedRoute>
+                              <ReportsPage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/notes" element={
+                            <ProtectedRoute>
+                              <NotesPage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/logs" element={
+                            <ProtectedRoute>
+                              <LogPage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/rules" element={
+                            <ProtectedRoute>
+                              <RulesPage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/schedule" element={
+                            <ProtectedRoute>
+                              <SchedulePage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/contas" element={
+                            <ProtectedRoute>
+                              <ContasPage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/lembrar" element={
+                            <ProtectedRoute>
+                              <LembrarPage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/lembretes" element={
+                            <ProtectedRoute>
+                              <LembretesPage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/categories" element={
+                            <ProtectedRoute>
+                              <CategoriesPage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/achievements" element={
+                            <ProtectedRoute>
+                              <AchievementsPage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/limits" element={
+                            <ProtectedRoute>
+                              <LimitsPage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/saldo" element={
+                            <ProtectedRoute>
+                              <SaldoPage />
+                            </ProtectedRoute>
+                          } />
+                          <Route path="/calendar" element={
+                            <ProtectedRoute>
+                              <CalendarPage />
+                            </ProtectedRoute>
+                          } />
                           <Route 
                             path="/admin" 
                             element={

@@ -26,11 +26,7 @@ const en = {
     clearAll: "Clear All",
     confirmDelete: "Are you sure you want to delete?",
     income: "Income",
-    expense: "Expense",
-    showing: "Showing",
-    of: "of",
-    previous: "Previous",
-    next: "Next"
+    expense: "Expense"
   },
   theme: {
     light: "Light",

@@ -1,12 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Transaction } from '@/types';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Calendar, TrendingUp, TrendingDown, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, TrendingUp, TrendingDown, FileText } from 'lucide-react';
 
 interface TransactionsTableProps {
   transactions: Transaction[];
@@ -15,8 +14,6 @@ interface TransactionsTableProps {
 const TransactionsTable: React.FC<TransactionsTableProps> = ({ transactions }) => {
   const { t, currency } = usePreferences();
   const isMobile = useIsMobile();
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
   
   // Format currency based on currency preference
   const formatCurrency = (amount: number) => {
@@ -25,17 +22,6 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ transactions }) =
       currency: currency 
     }).format(amount);
   };
-
-  // Reset to first page when transactions change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [transactions]);
-
-  // Pagination calculations
-  const totalPages = Math.ceil(transactions.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentTransactions = transactions.slice(startIndex, endIndex);
 
   if (transactions.length === 0) {
     return (
@@ -64,7 +50,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ transactions }) =
         {isMobile ? (
           // Mobile: Card layout
           <div className="space-y-3">
-            {currentTransactions.map((transaction) => (
+            {transactions.map((transaction) => (
               <Card key={transaction.id} className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -111,7 +97,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ transactions }) =
                 </tr>
               </thead>
               <tbody>
-                {currentTransactions.map((transaction) => (
+                {transactions.map((transaction) => (
                   <tr key={transaction.id} className="border-b hover:bg-muted">
                     <td className="py-2 px-4">{new Date(transaction.date).toLocaleDateString('pt-BR')} {new Date(transaction.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
                     <td className="py-2 px-4">
@@ -128,38 +114,6 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({ transactions }) =
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
-        
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4 pt-4 border-t">
-            <p className="text-sm text-muted-foreground">
-              {t('common.showing')} {startIndex + 1}-{Math.min(endIndex, transactions.length)} {t('common.of')} {transactions.length}
-            </p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                {!isMobile && t('common.previous')}
-              </Button>
-              <span className="text-sm">
-                {currentPage} / {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-              >
-                {!isMobile && t('common.next')}
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
         )}
       </CardContent>

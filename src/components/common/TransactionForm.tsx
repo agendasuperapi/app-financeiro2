@@ -4,6 +4,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { Transaction } from '@/types';
 import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -49,6 +51,13 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const [loadingComprovante, setLoadingComprovante] = useState(false);
   const [uploadingComprovante, setUploadingComprovante] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  
+  // States for edit scope dialog
+  const [pastTransactions, setPastTransactions] = useState<any[]>([]);
+  const [futureTransactions, setFutureTransactions] = useState<any[]>([]);
+  const [editOption, setEditOption] = useState<'single' | 'future' | 'past' | 'all'>('single');
+  const [editScopeDialogOpen, setEditScopeDialogOpen] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState<any>(null);
   
   // Initialize form
   const { form, selectedType, handleTypeChange, onSubmit } = useTransactionForm({
@@ -210,6 +219,137 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     }
   };
 
+  // Function to check for related transactions
+  const checkForRelatedTransactions = async (codigoTrans: string | number, currentId: string, currentDate?: string) => {
+    try {
+      const codeStr = String(codigoTrans).replace(/\D/g, '');
+      console.log(`🔍 TransactionForm - Buscando codigo-trans: "${codeStr}"`);
+
+      const targetUserIdValue = selectedUser?.id || (await supabase.auth.getUser())?.data?.user?.id;
+      if (!targetUserIdValue || !codeStr) return { past: [], future: [] };
+
+      const { data: allData, error } = await (supabase as any)
+        .from('poupeja_transactions')
+        .select('id, date, description, amount, "codigo-trans"')
+        .eq('user_id', targetUserIdValue)
+        .neq('id', currentId)
+        .order('date', { ascending: true });
+
+      if (error) return { past: [], future: [] };
+
+      const rows = (allData || []).filter((item: any) => {
+        const itemCodigo = String(item['codigo-trans'] || '').replace(/\D/g, '');
+        return itemCodigo === codeStr;
+      });
+
+      const baseDate = currentDate ? new Date(currentDate) : new Date();
+      const past = rows.filter((r: any) => new Date(r.date) < baseDate);
+      const future = rows.filter((r: any) => new Date(r.date) >= baseDate);
+
+      console.log(`✅ TransactionForm - Resultado: ${past.length} passadas, ${future.length} futuras`);
+      return { past, future };
+    } catch (error) {
+      console.error('Erro ao buscar transações relacionadas:', error);
+      return { past: [], future: [] };
+    }
+  };
+
+  // Handler to intercept form submission
+  const handleFormSubmit = async (values: any) => {
+    // Se é criação, submeter diretamente
+    if (mode === 'create') {
+      return onSubmit(values);
+    }
+    
+    // Se é edição, verificar transações relacionadas
+    if (initialData?.id) {
+      const codigoTrans = (initialData as any)['codigo-trans'];
+      
+      if (codigoTrans) {
+        const currentDate = initialData.date as string;
+        const related = await checkForRelatedTransactions(codigoTrans, initialData.id, currentDate);
+        
+        setPastTransactions(related.past);
+        setFutureTransactions(related.future);
+        
+        // Se há transações relacionadas, mostrar dialog
+        if (related.past.length > 0 || related.future.length > 0) {
+          setPendingSubmit(values);
+          setEditOption('single');
+          setEditScopeDialogOpen(true);
+          return;
+        }
+      }
+      
+      // Se não há relacionadas, submeter diretamente
+      return onSubmit(values);
+    }
+  };
+
+  // Function to confirm and apply edit with scope
+  const handleConfirmEdit = async () => {
+    if (!pendingSubmit || !initialData) return;
+    
+    setEditScopeDialogOpen(false);
+    
+    try {
+      // Primeiro, atualizar a transação principal
+      await onSubmit(pendingSubmit);
+      
+      // Se escolheu apenas esta, já terminou
+      if (editOption === 'single') return;
+      
+      // Determinar IDs para atualizar em massa
+      let idsToUpdate: string[] = [];
+      
+      if (editOption === 'future') {
+        idsToUpdate = futureTransactions.map(t => t.id);
+      } else if (editOption === 'past') {
+        idsToUpdate = pastTransactions.map(t => t.id);
+      } else if (editOption === 'all') {
+        idsToUpdate = [...pastTransactions.map(t => t.id), ...futureTransactions.map(t => t.id)];
+      }
+      
+      // Atualizar transações relacionadas com os mesmos dados (exceto date)
+      if (idsToUpdate.length > 0) {
+        const updatePayload = {
+          description: pendingSubmit.description,
+          amount: pendingSubmit.type === 'expense' ? -Math.abs(pendingSubmit.amount) : Math.abs(pendingSubmit.amount),
+          category_id: pendingSubmit.category,
+          type: pendingSubmit.type,
+          conta_id: pendingSubmit.conta_id,
+          name: pendingSubmit.name || null,
+        };
+        
+        const { error } = await (supabase as any)
+          .from('poupeja_transactions')
+          .update(updatePayload)
+          .in('id', idsToUpdate);
+        
+        if (error) {
+          console.error('Erro ao atualizar transações relacionadas:', error);
+          toast({
+            title: 'Aviso',
+            description: `Transação principal atualizada, mas erro ao atualizar ${idsToUpdate.length} transações relacionadas`,
+            variant: 'destructive'
+          });
+        } else {
+          toast({
+            title: 'Sucesso',
+            description: `${idsToUpdate.length + 1} transações atualizadas com sucesso`,
+          });
+        }
+        
+        // Refresh transactions
+        await getTransactions();
+      }
+    } catch (error) {
+      console.error('Erro na edição em massa:', error);
+    } finally {
+      setPendingSubmit(null);
+    }
+  };
+
   // Function to fetch comprovante
   const fetchComprovante = async () => {
     if (!initialData?.id) {
@@ -322,7 +462,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         
         <div className="p-6 max-h-[calc(85vh-120px)] overflow-y-auto">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
               <TransactionTypeSelector form={form} onTypeChange={handleTypeChange} />
               <DescriptionField form={form} />
               <AmountInput form={form} />
@@ -423,31 +563,55 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           </Form>
         </div>
         
-        <AlertDialog open={bulkEditDialogOpen} onOpenChange={setBulkEditDialogOpen}>
+        <AlertDialog open={editScopeDialogOpen} onOpenChange={setEditScopeDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Editar Transações Relacionadas</AlertDialogTitle>
-              <AlertDialogDescription>
-                Encontramos {relatedTransactionInfo?.count} transações com o mesmo código.
-                Deseja editar todas as transações futuras ou apenas esta?
+              <AlertDialogTitle>Transações Relacionadas Encontradas</AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3">
+                <p className="text-sm">
+                  Encontramos {pastTransactions.length + futureTransactions.length} transação(ões) relacionadas 
+                  ({pastTransactions.length} passadas e {futureTransactions.length} futuras). 
+                  Como você gostaria de proceder?
+                </p>
+                
+                <RadioGroup value={editOption} onValueChange={(value: any) => setEditOption(value)} className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="single" id="edit-single" />
+                    <Label htmlFor="edit-single">Aplicar edição apenas a esta transação</Label>
+                  </div>
+                  
+                  {futureTransactions.length > 0 && (
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="future" id="edit-future" />
+                      <Label htmlFor="edit-future">Aplicar a todas as transações futuras ({futureTransactions.length} futuras)</Label>
+                    </div>
+                  )}
+                  
+                  {pastTransactions.length > 0 && (
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="past" id="edit-past" />
+                      <Label htmlFor="edit-past">Aplicar a todas as transações passadas ({pastTransactions.length} passadas)</Label>
+                    </div>
+                  )}
+                  
+                  {pastTransactions.length > 0 && futureTransactions.length > 0 && (
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="all" id="edit-all" />
+                      <Label htmlFor="edit-all">Aplicar a TODAS as transações ({pastTransactions.length + futureTransactions.length + 1} total)</Label>
+                    </div>
+                  )}
+                </RadioGroup>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => {
-                setBulkEditDialogOpen(false);
-                if (pendingFormValues?.resolve) {
-                  pendingFormValues.resolve('single');
-                }
+                setEditScopeDialogOpen(false);
+                setPendingSubmit(null);
               }}>
-                Apenas Esta
+                Cancelar
               </AlertDialogCancel>
-              <AlertDialogAction onClick={() => {
-                setBulkEditDialogOpen(false);
-                if (pendingFormValues?.resolve) {
-                  pendingFormValues.resolve('all');
-                }
-              }}>
-                Todas Futuras
+              <AlertDialogAction onClick={handleConfirmEdit}>
+                Confirmar
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -8,6 +8,7 @@ import { Category } from '@/types/categories';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { getCategoriesByType, addCategory, updateCategory, deleteCategory } from '@/services/categoryService';
 import { useToast } from "@/hooks/use-toast";
+import { useUserRole } from '@/hooks/useUserRole';
 import CategoryForm from '@/components/categories/CategoryForm';
 import CategoryIcon from '@/components/categories/CategoryIcon';
 import {
@@ -30,6 +31,7 @@ import {
 const CategoriesTab: React.FC = () => {
   const { t } = usePreferences();
   const { toast } = useToast();
+  const { isAdmin } = useUserRole();
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -210,9 +212,11 @@ const CategoriesTab: React.FC = () => {
                   </div>
                   <div>
                     {category.isDefault ? (
-                      <Button variant="ghost" size="sm" onClick={() => handleEditCategory(category)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                      isAdmin ? (
+                        <Button variant="ghost" size="sm" onClick={() => handleEditCategory(category)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      ) : null
                     ) : (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -257,9 +261,11 @@ const CategoriesTab: React.FC = () => {
                   </div>
                   <div>
                     {category.isDefault ? (
-                      <Button variant="ghost" size="sm" onClick={() => handleEditCategory(category)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                      isAdmin ? (
+                        <Button variant="ghost" size="sm" onClick={() => handleEditCategory(category)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      ) : null
                     ) : (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

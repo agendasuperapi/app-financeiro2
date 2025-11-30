@@ -139,9 +139,13 @@ export const updateCategory = async (category: Category): Promise<Category | nul
       })
       .eq("id", category.id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
+
+    if (!data) {
+      throw new Error("Não foi possível atualizar a categoria. Verifique suas permissões.");
+    }
 
     return {
       id: data.id,

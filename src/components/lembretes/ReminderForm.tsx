@@ -40,6 +40,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
   const [futureReminders, setFutureReminders] = useState<any[]>([]);
   const [pastReminders, setPastReminders] = useState<any[]>([]);
   const [editOption, setEditOption] = useState<'single' | 'future' | 'past' | 'all'>('single');
+  const [deleteOption, setDeleteOption] = useState<'single' | 'future' | 'past' | 'all'>('single');
 
   // Schema for reminder form
   const formSchema = z.object({
@@ -254,11 +255,42 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
   };
 
   const handleDelete = async () => {
-    if (initialData) {
-      await deleteLembrete(initialData.id);
+    if (!initialData) return;
+
+    try {
+      console.log('🗑️ Deleting with option:', deleteOption);
+
+      // Delete based on selected option
+      if (deleteOption === 'single') {
+        console.log('📋 Deleting only current reminder');
+        await deleteLembrete(initialData.id);
+      } else if (deleteOption === 'future') {
+        console.log('📋 Deleting current and future reminders');
+        await deleteLembrete(initialData.id);
+        for (const reminder of futureReminders) {
+          await deleteLembrete(reminder.id);
+        }
+      } else if (deleteOption === 'past') {
+        console.log('📋 Deleting current and past reminders');
+        await deleteLembrete(initialData.id);
+        for (const reminder of pastReminders) {
+          await deleteLembrete(reminder.id);
+        }
+      } else if (deleteOption === 'all') {
+        console.log('📋 Deleting all related reminders');
+        await deleteLembrete(initialData.id);
+        for (const reminder of [...pastReminders, ...futureReminders]) {
+          await deleteLembrete(reminder.id);
+        }
+      }
+
+      console.log('✅ Delete completed successfully');
       onOpenChange(false);
       setDeleteDialogOpen(false);
+      setDeleteOption('single'); // Reset option
       if (onSuccess) onSuccess();
+    } catch (error) {
+      console.error('❌ Error deleting:', error);
     }
   };
 
@@ -487,13 +519,100 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('common.confirmDelete')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir este lembrete?
+            <AlertDialogTitle>
+              {(futureReminders.length > 0 || pastReminders.length > 0) 
+                ? 'Parcelas Relacionadas Encontradas' 
+                : t('common.confirmDelete')}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                {(futureReminders.length > 0 || pastReminders.length > 0) ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Encontramos {pastReminders.length + futureReminders.length} lembrete(s) relacionado(s). 
+                      Como você gostaria de proceder?
+                    </p>
+                    
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center space-x-2">
+                        <input 
+                          type="radio" 
+                          id="delete-single" 
+                          name="deleteOption" 
+                          value="single"
+                          checked={deleteOption === 'single'} 
+                          onChange={() => setDeleteOption('single')}
+                          className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                        />
+                        <label htmlFor="delete-single" className="text-sm cursor-pointer font-medium">
+                          Excluir apenas este lembrete
+                        </label>
+                      </div>
+                      
+                      {futureReminders.length > 0 && (
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="radio" 
+                            id="delete-future" 
+                            name="deleteOption" 
+                            value="future"
+                            checked={deleteOption === 'future'} 
+                            onChange={() => setDeleteOption('future')}
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                          />
+                          <label htmlFor="delete-future" className="text-sm cursor-pointer font-medium">
+                            Excluir todas as parcelas futuras ({futureReminders.length} futuras)
+                          </label>
+                        </div>
+                      )}
+                      
+                      {pastReminders.length > 0 && (
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="radio" 
+                            id="delete-past" 
+                            name="deleteOption" 
+                            value="past"
+                            checked={deleteOption === 'past'} 
+                            onChange={() => setDeleteOption('past')}
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                          />
+                          <label htmlFor="delete-past" className="text-sm cursor-pointer font-medium">
+                            Excluir todas as parcelas passadas ({pastReminders.length} passadas)
+                          </label>
+                        </div>
+                      )}
+                      
+                      {(pastReminders.length > 0 || futureReminders.length > 0) && (
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="radio" 
+                            id="delete-all" 
+                            name="deleteOption" 
+                            value="all"
+                            checked={deleteOption === 'all'} 
+                            onChange={() => setDeleteOption('all')}
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                          />
+                          <label htmlFor="delete-all" className="text-sm cursor-pointer font-medium">
+                            Excluir TODAS as parcelas ({pastReminders.length + futureReminders.length + 1} total)
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Tem certeza que deseja excluir este lembrete? Esta ação não pode ser desfeita.
+                  </p>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setDeleteOption('single')}>
+              {t('common.cancel')}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700"

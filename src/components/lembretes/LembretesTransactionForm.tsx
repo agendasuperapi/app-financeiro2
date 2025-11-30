@@ -47,6 +47,9 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
   const [isOnline] = useState(navigator.onLine);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [editScopeDialogOpen, setEditScopeDialogOpen] = useState(false);
+  const [pendingFormValues, setPendingFormValues] = useState<any>(null);
+  const [relatedReminders, setRelatedReminders] = useState<any[]>([]);
 
   // Schema for the scheduled transaction form
   const formSchema = z.object({
@@ -155,6 +158,95 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
     return translations[recurrence as keyof typeof translations] || recurrence;
   };
 
+  // Check for related reminders with the same codigo_trans
+  const checkRelatedReminders = async (codigoTrans: string) => {
+    console.log('🔍 Checking for related reminders with codigo_trans:', codigoTrans);
+    
+    try {
+      const { data, error } = await (supabase as any)
+        .from('tbl_lembrete')
+        .select('*')
+        .eq('codigo_trans', codigoTrans)
+        .order('date', { ascending: true });
+
+      if (error) {
+        console.error('❌ Error checking related reminders:', error);
+        return [];
+      }
+
+      console.log('✅ Found related reminders:', data?.length || 0);
+      return data || [];
+    } catch (error) {
+      console.error('❌ Exception checking related reminders:', error);
+      return [];
+    }
+  };
+
+  // Handle edit scope selection
+  const handleEditScopeSelection = async (scope: 'current' | 'future' | 'all') => {
+    if (!pendingFormValues || !initialData) return;
+
+    console.log('📝 Applying edit with scope:', scope);
+    console.log('🔢 Related reminders count:', relatedReminders.length);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      let userPhone = '';
+      if (user?.user_metadata?.phone) {
+        const rawPhone = user.user_metadata.phone;
+        userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
+      }
+
+      const outrosCategoryId = 'd6c7432e-2b7a-4937-95db-4ce2df58d40f';
+      const referenceCode = await getNextReferenceCode();
+
+      const updateData = {
+        type: pendingFormValues.type,
+        description: pendingFormValues.description,
+        amount: pendingFormValues.amount,
+        category: 'Outros',
+        category_id: outrosCategoryId,
+        scheduledDate: new Date(pendingFormValues.scheduledDate).toISOString(),
+        recurrence: pendingFormValues.recurrence,
+        goalId: pendingFormValues.goalId,
+        reference_code: referenceCode,
+        status: 'pending' as const,
+        phone: userPhone,
+        situacao: 'ativo'
+      };
+
+      if (scope === 'current') {
+        // Update only the current reminder
+        await updateScheduledTransaction(initialData.id, updateData);
+      } else if (scope === 'future') {
+        // Update current and all future reminders
+        const currentDate = new Date(initialData.scheduledDate);
+        const futureReminders = relatedReminders.filter(r => 
+          new Date(r.date) >= currentDate
+        );
+        
+        for (const reminder of futureReminders) {
+          await updateScheduledTransaction(reminder.id, updateData);
+        }
+      } else if (scope === 'all') {
+        // Update all related reminders
+        for (const reminder of relatedReminders) {
+          await updateScheduledTransaction(reminder.id, updateData);
+        }
+      }
+
+      setEditScopeDialogOpen(false);
+      setPendingFormValues(null);
+      onOpenChange(false);
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error('❌ Error applying edit scope:', error);
+    }
+  };
+
   // Form submission handler
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log('🚀 Form submitted with values:', values);
@@ -210,7 +302,27 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
         console.log('✅ Create request sent');
       } else if (initialData) {
         console.log('✏️ Updating scheduled transaction...', initialData.id);
+        console.log('📝 Full initialData:', initialData);
         
+        // Check if this reminder is part of a series (has codigo_trans)
+        const codigoTrans = (initialData as any).codigo_trans || (initialData as any).reference_code;
+        console.log('🔍 codigo_trans from initialData:', codigoTrans);
+        
+        if (codigoTrans) {
+          // Check for related reminders
+          const related = await checkRelatedReminders(codigoTrans);
+          console.log('📊 Related reminders found:', related.length);
+          
+          if (related.length > 1) {
+            // Multiple related reminders found - ask user for edit scope
+            setRelatedReminders(related);
+            setPendingFormValues(submitData);
+            setEditScopeDialogOpen(true);
+            return; // Don't close the dialog yet
+          }
+        }
+        
+        // Single reminder or no related reminders - update normally
         const updateData = {
           type: submitData.type,
           description: submitData.description,
@@ -218,12 +330,12 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
           category: 'Outros',
           category_id: outrosCategoryId,
           scheduledDate: new Date(submitData.scheduledDate).toISOString(),
-          recurrence: submitData.recurrence, // Keep in English for type compatibility
+          recurrence: submitData.recurrence,
           goalId: submitData.goalId,
           reference_code: referenceCode,
-          status: 'pending' as const, // Default status with proper typing
-          phone: userPhone, // User's phone from registration
-          situacao: 'ativo' // Default situacao
+          status: 'pending' as const,
+          phone: userPhone,
+          situacao: 'ativo'
         };
         
         console.log('📋 Updating transaction with ID:', initialData.id);
@@ -369,6 +481,50 @@ const LembretesTransactionForm: React.FC<LembretesTransactionFormProps> = ({
             <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
               {t('common.delete')}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Scope Selection Dialog */}
+      <AlertDialog open={editScopeDialogOpen} onOpenChange={setEditScopeDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Editar Lembretes Relacionados</AlertDialogTitle>
+            <AlertDialogDescription>
+              Este lembrete faz parte de uma série de {relatedReminders.length} parcelas. 
+              Como você deseja aplicar as alterações?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col gap-2 my-4">
+            <Button 
+              variant="outline" 
+              onClick={() => handleEditScopeSelection('current')}
+              className="justify-start"
+            >
+              Apenas esta parcela
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => handleEditScopeSelection('future')}
+              className="justify-start"
+            >
+              Esta e todas as futuras
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => handleEditScopeSelection('all')}
+              className="justify-start"
+            >
+              Todas as parcelas
+            </Button>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setEditScopeDialogOpen(false);
+              setPendingFormValues(null);
+            }}>
+              {t('common.cancel')}
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

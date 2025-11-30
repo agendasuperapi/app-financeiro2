@@ -182,7 +182,7 @@ export const createTransactionForUser = async (transactionData: {
         goal_id: transactionData.goalId,
         user_id: transactionData.user_id,
         reference_code: referenceCode,
-        codigo_trans: referenceCode, // Mesmo valor do reference_code, sem letras
+        "codigo-trans": referenceCode, // Mesmo valor do reference_code, sem letras
         conta_id: transactionData.conta_id,
         sub_conta: transactionData.sub_conta,
         name: transactionData.name,
@@ -290,7 +290,7 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
         name: (transaction as any).creatorName,
         phone: (transaction as any).phone,
         reference_code: newReferenceCode,
-        codigo_trans: newReferenceCode, // Mesmo valor do reference_code, sem letras
+        "codigo-trans": newReferenceCode, // Mesmo valor do reference_code, sem letras
         formato: 'transacao', // Mantém como transacao em atualizações
         status: 'paid', // Sempre marcar como paid
       })

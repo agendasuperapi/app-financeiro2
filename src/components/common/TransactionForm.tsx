@@ -523,85 +523,45 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                     Transações Relacionadas Encontradas
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Encontramos {pastTransactions.length + futureTransactions.length} transação(ões) relacionadas 
+                    Encontramos <strong>{pastTransactions.length + futureTransactions.length}</strong> transação(ões) relacionadas 
                     ({pastTransactions.length} passadas e {futureTransactions.length} futuras). 
-                    Como você gostaria de proceder?
+                    Como você gostaria de proceder com a edição?
                   </p>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-2">
-                        <input 
-                          type="radio" 
-                          id="apenas-essa" 
-                          name="editOption" 
-                          value="single" 
-                          checked={editOption === 'single'}
-                          onChange={() => setEditOption('single')}
-                          className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-                        />
-                        <label htmlFor="apenas-essa" className="text-sm cursor-pointer font-medium">
-                          Aplicar edição apenas a esta transação
-                        </label>
-                      </div>
+                  <RadioGroup value={editOption} onValueChange={(value) => setEditOption(value as any)}>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="single" id="edit-single" />
+                      <Label htmlFor="edit-single" className="font-normal cursor-pointer">
+                        Apenas esta transação
+                      </Label>
                     </div>
                     
                     {futureTransactions.length > 0 && (
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center space-x-2">
-                          <input 
-                            type="radio" 
-                            id="todas-futuras" 
-                            name="editOption" 
-                            value="future" 
-                            checked={editOption === 'future'}
-                            onChange={() => setEditOption('future')}
-                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-                          />
-                          <label htmlFor="todas-futuras" className="text-sm cursor-pointer font-medium">
-                            Aplicar a todas as transações futuras ({futureTransactions.length} futuras)
-                          </label>
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="future" id="edit-future" />
+                        <Label htmlFor="edit-future" className="font-normal cursor-pointer">
+                          Todas as futuras ({futureTransactions.length})
+                        </Label>
                       </div>
                     )}
                     
                     {pastTransactions.length > 0 && (
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center space-x-2">
-                          <input 
-                            type="radio" 
-                            id="todas-passadas" 
-                            name="editOption" 
-                            value="past" 
-                            checked={editOption === 'past'}
-                            onChange={() => setEditOption('past')}
-                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-                          />
-                          <label htmlFor="todas-passadas" className="text-sm cursor-pointer font-medium">
-                            Aplicar a todas as transações passadas ({pastTransactions.length} passadas)
-                          </label>
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="past" id="edit-past" />
+                        <Label htmlFor="edit-past" className="font-normal cursor-pointer">
+                          Todas as passadas ({pastTransactions.length})
+                        </Label>
                       </div>
                     )}
                     
                     {(pastTransactions.length > 0 && futureTransactions.length > 0) && (
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center space-x-2">
-                          <input 
-                            type="radio" 
-                            id="todas" 
-                            name="editOption" 
-                            value="all" 
-                            checked={editOption === 'all'}
-                            onChange={() => setEditOption('all')}
-                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-                          />
-                          <label htmlFor="todas" className="text-sm cursor-pointer font-medium">
-                            Aplicar a TODAS as transações ({pastTransactions.length + futureTransactions.length + 1} total)
-                          </label>
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="all" id="edit-all" />
+                        <Label htmlFor="edit-all" className="font-normal cursor-pointer">
+                          Todas as transações ({pastTransactions.length + futureTransactions.length + 1} total)
+                        </Label>
                       </div>
                     )}
-                  </div>
+                  </RadioGroup>
                 </div>
               )}
 

@@ -11,11 +11,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { getScheduledTransactions, markAsPaid, markAsReceived, deleteScheduledTransaction, markAsUnpaid } from '@/services/scheduledTransactionService';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { getScheduledTransactions, markAsPaid, markAsReceived, deleteScheduledTransaction, markAsUnpaid, deleteMultipleTransactions } from '@/services/scheduledTransactionService';
 import { Loader2, Edit, Trash2, CheckCircle, Plus, Filter, User, ChevronLeft, ChevronRight, CalendarIcon, Search } from 'lucide-react';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
+import { supabase } from '@/integrations/supabase/client';
 import { ScheduledTransaction } from '@/types';
 import { isAfter, isToday, isYesterday, isTomorrow, isWithinInterval, startOfDay, endOfDay, addDays, startOfMonth, endOfMonth, startOfYear, endOfYear, addMonths, addYears, subMonths, subYears } from 'date-fns';
 import { toast } from 'sonner';
@@ -37,6 +40,9 @@ const ContasPage = () => {
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [contaToDelete, setContaToDelete] = useState<ScheduledTransaction | null>(null);
+  const [pastTransactions, setPastTransactions] = useState<any[]>([]);
+  const [futureTransactions, setFutureTransactions] = useState<any[]>([]);
+  const [deleteOption, setDeleteOption] = useState<'single' | 'future' | 'past' | 'all'>('single');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const {
@@ -263,31 +269,124 @@ const ContasPage = () => {
       toast.error('Erro ao reverter status');
     }
   };
+  const checkForRelatedTransactions = async (codigoTrans: string | number, currentId: string, currentDate?: string) => {
+    try {
+      const codeStr = String(codigoTrans).replace(/\D/g, '');
+      console.log(`🔍 ContasPage - Buscando codigo-trans: "${codeStr}"`);
+
+      const targetUserIdValue = selectedUser?.id || (await supabase.auth.getUser())?.data?.user?.id;
+      if (!targetUserIdValue || !codeStr) return { past: [], future: [] };
+
+      const { data: allData, error } = await (supabase as any)
+        .from('poupeja_transactions')
+        .select('id, date, description, "codigo-trans"')
+        .eq('user_id', targetUserIdValue)
+        .neq('id', currentId)
+        .order('date', { ascending: true });
+
+      if (error) return { past: [], future: [] };
+
+      const rows = (allData || []).filter((item: any) => {
+        const itemCodigo = String(item['codigo-trans'] || '').replace(/\D/g, '');
+        return itemCodigo === codeStr;
+      });
+
+      const baseDate = currentDate ? new Date(currentDate) : new Date();
+      const past = rows.filter((r: any) => new Date(r.date) < baseDate);
+      const future = rows.filter((r: any) => new Date(r.date) >= baseDate);
+
+      console.log(`✅ Resultado: ${past.length} passadas, ${future.length} futuras`);
+      return { past, future };
+    } catch (error) {
+      return { past: [], future: [] };
+    }
+  };
+
   const handleEdit = async (conta: ScheduledTransaction) => {
     setEditingConta(conta);
     setIsEditDialogOpen(true);
   };
-  const handleDeleteClick = (conta: ScheduledTransaction) => {
+
+  const handleDeleteClick = async (conta: ScheduledTransaction) => {
     setContaToDelete(conta);
+    setDeleteOption('single');
+    
+    const codigoTrans = (conta as any)['codigo-trans'];
+    
+    if (codigoTrans) {
+      const currentDate = conta.scheduledDate;
+      const related = await checkForRelatedTransactions(codigoTrans, conta.id, currentDate);
+      setPastTransactions(related.past);
+      setFutureTransactions(related.future);
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+    } else {
+      setPastTransactions([]);
+      setFutureTransactions([]);
+    }
+    
     setDeleteDialogOpen(true);
   };
+
   const handleConfirmDelete = async () => {
-    if (contaToDelete) {
-      try {
+    if (!contaToDelete) return;
+    
+    try {
+      const codigoTrans = (contaToDelete as any)['codigo-trans'];
+      
+      if (codigoTrans) {
+        const currentDate = contaToDelete.scheduledDate;
+        const related = await checkForRelatedTransactions(codigoTrans, contaToDelete.id, currentDate);
+        
+        setPastTransactions(related.past);
+        setFutureTransactions(related.future);
+        
+        let idsToDelete: string[] = [contaToDelete.id];
+        
+        if (deleteOption === 'future') {
+          idsToDelete = [contaToDelete.id, ...related.future.map(t => t.id)];
+        } else if (deleteOption === 'past') {
+          idsToDelete = [contaToDelete.id, ...related.past.map(t => t.id)];
+        } else if (deleteOption === 'all') {
+          idsToDelete = [contaToDelete.id, ...related.past.map(t => t.id), ...related.future.map(t => t.id)];
+        }
+        
+        console.log('🗑️ Deletando IDs:', idsToDelete);
+        
+        let success: boolean;
+        if (idsToDelete.length === 1) {
+          success = await deleteScheduledTransaction(contaToDelete.id);
+        } else {
+          success = await deleteMultipleTransactions(idsToDelete);
+        }
+        
+        if (success) {
+          toast.success(idsToDelete.length === 1 
+            ? 'Conta excluída com sucesso' 
+            : `${idsToDelete.length} conta(s) excluída(s) com sucesso`
+          );
+        } else {
+          toast.error('Erro ao excluir conta(s)');
+        }
+      } else {
         const success = await deleteScheduledTransaction(contaToDelete.id);
+        
         if (success) {
           toast.success('Conta excluída com sucesso');
-          await loadContas();
         } else {
           toast.error('Erro ao excluir conta');
         }
-      } catch (error) {
-        console.error('Error deleting account:', error);
-        toast.error('Erro ao excluir conta');
       }
+      
+      await loadContas();
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast.error('Erro ao excluir conta(s)');
     }
+    
     setDeleteDialogOpen(false);
     setContaToDelete(null);
+    setDeleteOption('single');
   };
 
   // Formatar valor monetário
@@ -617,16 +716,71 @@ const ContasPage = () => {
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-              <AlertDialogDescription className="space-y-2">
-                {contaToDelete && <div className="bg-muted p-3 rounded-md">
-                    <p className="font-medium">
-                      {contaToDelete.description || 'Conta sem descrição'}
-                    </p>
-                    <p className="text-sm font-semibold text-metacash-error">
-                      {formatCurrency(Math.abs(contaToDelete.amount))}
-                    </p>
-                  </div>}
+              <AlertDialogTitle>
+                {pastTransactions.length > 0 || futureTransactions.length > 0 
+                  ? 'Transações Relacionadas Encontradas' 
+                  : 'Confirmar Exclusão'}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3">
+                {contaToDelete && (
+                  <>
+                    <div className="bg-muted p-3 rounded-md">
+                      <p className="font-medium">
+                        {contaToDelete.description || 'Conta sem descrição'}
+                      </p>
+                      <p className="text-sm font-semibold text-metacash-error">
+                        {formatCurrency(Math.abs(contaToDelete.amount))}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDate(new Date(contaToDelete.scheduledDate))}
+                      </p>
+                    </div>
+
+                    {(pastTransactions.length > 0 || futureTransactions.length > 0) && (
+                      <div className="space-y-3">
+                        <p className="text-sm">
+                          Encontramos outras transações com o mesmo código. O que deseja excluir?
+                        </p>
+                        
+                        <RadioGroup value={deleteOption} onValueChange={(value: any) => setDeleteOption(value)}>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="single" id="single" />
+                            <Label htmlFor="single" className="font-normal cursor-pointer">
+                              Apenas esta transação
+                            </Label>
+                          </div>
+                          
+                          {futureTransactions.length > 0 && (
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="future" id="future" />
+                              <Label htmlFor="future" className="font-normal cursor-pointer">
+                                Esta e todas as futuras ({futureTransactions.length} transações)
+                              </Label>
+                            </div>
+                          )}
+                          
+                          {pastTransactions.length > 0 && (
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="past" id="past" />
+                              <Label htmlFor="past" className="font-normal cursor-pointer">
+                                Esta e todas as passadas ({pastTransactions.length} transações)
+                              </Label>
+                            </div>
+                          )}
+                          
+                          {pastTransactions.length > 0 && futureTransactions.length > 0 && (
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="all" id="all" />
+                              <Label htmlFor="all" className="font-normal cursor-pointer">
+                                Todas as transações relacionadas ({pastTransactions.length + futureTransactions.length + 1} no total)
+                              </Label>
+                            </div>
+                          )}
+                        </RadioGroup>
+                      </div>
+                    )}
+                  </>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

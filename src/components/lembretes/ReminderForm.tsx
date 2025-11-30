@@ -42,7 +42,6 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
   const [editOption, setEditOption] = useState<'single' | 'future' | 'past' | 'all'>('single');
   const [deleteOption, setDeleteOption] = useState<'single' | 'future' | 'past' | 'all'>('single');
 
-  // Schema for reminder form
   const formSchema = z.object({
     description: z.string().min(1, { message: t('validation.required') }),
     scheduledDate: z.string().min(1, { message: t('validation.required') }),
@@ -52,7 +51,6 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
     phone: z.string().optional()
   });
 
-  // Default form values
   const defaultValues = {
     description: '',
     scheduledDate: formatInTimeZone(new Date(), timezone, "yyyy-MM-dd'T'HH:mm"),
@@ -67,10 +65,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
     defaultValues
   });
 
-  // Check for related reminders
   const checkForRelatedReminders = async (codigoTrans: string, currentId: string, currentDate?: string) => {
-    console.log('🔍 Checking for related reminders with codigo_trans:', codigoTrans);
-    
     try {
       const { data, error } = await (supabase as any)
         .from('tbl_lembrete')
@@ -80,13 +75,11 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         .order('date', { ascending: true });
 
       if (error || !data || data.length === 0) {
-        console.log('ℹ️ No related reminders found');
         setFutureReminders([]);
         setPastReminders([]);
         return;
       }
 
-      // Separate past and future
       const current = new Date(currentDate || new Date());
       const future: any[] = [];
       const past: any[] = [];
@@ -100,28 +93,25 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         }
       });
 
-      console.log('✅ Found:', { past: past.length, future: future.length });
       setFutureReminders(future);
       setPastReminders(past);
     } catch (err) {
-      console.error('❌ Exception:', err);
+      console.error('❌ Exception in checkForRelatedReminders:', err);
       setFutureReminders([]);
       setPastReminders([]);
     }
   };
 
-  // Reset form when opening/closing
   useEffect(() => {
     if (open && !initialData) {
       form.reset(defaultValues);
       setFutureReminders([]);
       setPastReminders([]);
       setEditOption('single');
+      setDeleteOption('single');
     } else if (open && initialData) {
-      console.log('📝 Editing reminder - Full initialData:', initialData);
       const dateValue = (initialData as any).scheduledDate || (initialData as any).date;
       let formattedDate = '';
-      
       if (dateValue) {
         try {
           const date = new Date(dateValue);
@@ -142,7 +132,6 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         phone: (initialData as any).phone || ''
       });
 
-      // Check for related reminders
       const codigoTrans = (initialData as any).codigo_trans || (initialData as any).reference_code;
       if (codigoTrans) {
         checkForRelatedReminders(codigoTrans, initialData.id, dateValue);
@@ -153,10 +142,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
     }
   }, [open, initialData]);
 
-  // Form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log('🚀 Reminder form submitted');
-    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       const userId = targetUserId || user?.id;
@@ -172,14 +158,12 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         const installments = values.installments || 1;
 
         if (values.recurrence === 'parcela' && installments > 1) {
-          console.log(`📦 Creating ${installments} installments`);
           const baseDate = new Date(values.scheduledDate);
           const sharedCode = String(Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000));
 
           for (let i = 0; i < installments; i++) {
             const installmentDate = new Date(baseDate);
             installmentDate.setMonth(installmentDate.getMonth() + i);
-            
             await createLembrete({
               user_id: userId,
               description: `${values.description} (${i + 1}/${installments})`,
@@ -195,7 +179,6 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           }
         } else {
           const referenceCode = String(Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000));
-          
           await createLembrete({
             user_id: userId,
             description: values.description,
@@ -210,8 +193,6 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           });
         }
       } else if (initialData) {
-        console.log('✏️ Updating reminder');
-
         const updateData = {
           description: values.description,
           date: new Date(values.scheduledDate).toISOString(),
@@ -222,24 +203,19 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           status: 'pending'
         };
 
-        // Apply edit based on selected option
         if (editOption === 'single') {
-          console.log('📋 Updating only current reminder');
           await updateLembrete(initialData.id, updateData);
         } else if (editOption === 'future') {
-          console.log('📋 Updating current and future');
           await updateLembrete(initialData.id, updateData);
           for (const reminder of futureReminders) {
             await updateLembrete(reminder.id, updateData);
           }
         } else if (editOption === 'past') {
-          console.log('📋 Updating current and past');
           await updateLembrete(initialData.id, updateData);
           for (const reminder of pastReminders) {
             await updateLembrete(reminder.id, updateData);
           }
         } else if (editOption === 'all') {
-          console.log('📋 Updating all');
           await updateLembrete(initialData.id, updateData);
           for (const reminder of [...pastReminders, ...futureReminders]) {
             await updateLembrete(reminder.id, updateData);
@@ -258,36 +234,28 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
     if (!initialData) return;
 
     try {
-      console.log('🗑️ Deleting with option:', deleteOption);
-
-      // Delete based on selected option
       if (deleteOption === 'single') {
-        console.log('📋 Deleting only current reminder');
         await deleteLembrete(initialData.id);
       } else if (deleteOption === 'future') {
-        console.log('📋 Deleting current and future reminders');
         await deleteLembrete(initialData.id);
         for (const reminder of futureReminders) {
           await deleteLembrete(reminder.id);
         }
       } else if (deleteOption === 'past') {
-        console.log('📋 Deleting current and past reminders');
         await deleteLembrete(initialData.id);
         for (const reminder of pastReminders) {
           await deleteLembrete(reminder.id);
         }
       } else if (deleteOption === 'all') {
-        console.log('📋 Deleting all related reminders');
         await deleteLembrete(initialData.id);
         for (const reminder of [...pastReminders, ...futureReminders]) {
           await deleteLembrete(reminder.id);
         }
       }
 
-      console.log('✅ Delete completed successfully');
       onOpenChange(false);
       setDeleteDialogOpen(false);
-      setDeleteOption('single'); // Reset option
+      setDeleteOption('single');
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error('❌ Error deleting:', error);
@@ -390,87 +358,6 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
                 />
               )}
 
-              {/* Edit Options - Show only in edit mode when there are related reminders */}
-              {mode === 'edit' && (futureReminders.length > 0 || pastReminders.length > 0) && (
-                <div className="border rounded-lg p-4 space-y-3 bg-muted/50">
-                  <div className="text-sm font-medium">
-                    Parcelas Relacionadas Encontradas
-                  </div>
-                  <div className="text-xs text-muted-foreground mb-3">
-                    Encontramos {pastReminders.length + futureReminders.length} lembrete(s) relacionado(s). 
-                    Como você deseja aplicar as alterações?
-                  </div>
-                  
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center space-x-2">
-                      <input 
-                        type="radio" 
-                        id="edit-single" 
-                        name="editOption" 
-                        value="single" 
-                        checked={editOption === 'single'}
-                        onChange={() => setEditOption('single')}
-                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-                      />
-                      <label htmlFor="edit-single" className="text-sm cursor-pointer font-medium">
-                        Aplicar edição apenas a este lembrete
-                      </label>
-                    </div>
-                    
-                    {futureReminders.length > 0 && (
-                      <div className="flex items-center space-x-2">
-                        <input 
-                          type="radio" 
-                          id="edit-future" 
-                          name="editOption" 
-                          value="future" 
-                          checked={editOption === 'future'}
-                          onChange={() => setEditOption('future')}
-                          className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-                        />
-                        <label htmlFor="edit-future" className="text-sm cursor-pointer font-medium">
-                          Aplicar a todas as parcelas futuras ({futureReminders.length} futuras)
-                        </label>
-                      </div>
-                    )}
-                    
-                    {pastReminders.length > 0 && (
-                      <div className="flex items-center space-x-2">
-                        <input 
-                          type="radio" 
-                          id="edit-past" 
-                          name="editOption" 
-                          value="past" 
-                          checked={editOption === 'past'}
-                          onChange={() => setEditOption('past')}
-                          className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-                        />
-                        <label htmlFor="edit-past" className="text-sm cursor-pointer font-medium">
-                          Aplicar a todas as parcelas passadas ({pastReminders.length} passadas)
-                        </label>
-                      </div>
-                    )}
-                    
-                    {(pastReminders.length > 0 || futureReminders.length > 0) && (
-                      <div className="flex items-center space-x-2">
-                        <input 
-                          type="radio" 
-                          id="edit-all" 
-                          name="editOption" 
-                          value="all" 
-                          checked={editOption === 'all'}
-                          onChange={() => setEditOption('all')}
-                          className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-                        />
-                        <label htmlFor="edit-all" className="text-sm cursor-pointer font-medium">
-                          Aplicar a TODAS as parcelas ({pastReminders.length + futureReminders.length + 1} total)
-                        </label>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
               <DialogFooter className="flex flex-col sm:flex-row gap-3 justify-between items-center">
                 {mode === 'edit' && (
                   <Button
@@ -478,10 +365,8 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      // Check for related reminders before opening delete dialog
                       const codigoTrans = (initialData as any)?.codigo_trans || (initialData as any)?.reference_code;
                       if (codigoTrans && futureReminders.length === 0 && pastReminders.length === 0) {
-                        // If we haven't checked yet, do it now
                         const dateValue = (initialData as any)?.scheduledDate || (initialData as any)?.date;
                         checkForRelatedReminders(codigoTrans, initialData?.id || '', dateValue);
                       }
@@ -524,7 +409,6 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

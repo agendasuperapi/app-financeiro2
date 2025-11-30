@@ -39,6 +39,9 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
   } = useDateFormat();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isOnline] = useState(navigator.onLine);
+  const [editScopeDialogOpen, setEditScopeDialogOpen] = useState(false);
+  const [pendingFormValues, setPendingFormValues] = useState<any>(null);
+  const [relatedReminders, setRelatedReminders] = useState<any[]>([]);
 
   // Schema for reminder form (specific for reminders)
   const formSchema = z.object({
@@ -104,6 +107,78 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
       });
     }
   }, [open, initialData, form]);
+
+  // Check for related reminders with same codigo_trans
+  const checkRelatedReminders = async (codigoTrans: string, currentId: string): Promise<any[]> => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from('tbl_lembrete')
+        .select('*')
+        .eq('codigo_trans', codigoTrans)
+        .neq('id', currentId)
+        .order('date', { ascending: true });
+
+      if (error) {
+        console.error('Error checking related reminders:', error);
+        return [];
+      }
+      return data || [];
+    } catch (err) {
+      console.error('Error checking related reminders:', err);
+      return [];
+    }
+  };
+
+  // Handle edit scope selection
+  const handleEditScopeSelection = async (scope: 'current' | 'future' | 'all') => {
+    if (!pendingFormValues || !initialData) return;
+
+    try {
+      const updateData = {
+        description: pendingFormValues.description,
+        date: new Date(pendingFormValues.scheduledDate).toISOString(),
+        recurrence: pendingFormValues.recurrence,
+        phone: pendingFormValues.phone,
+        name: pendingFormValues.name,
+        situacao: 'ativo',
+        status: 'pending'
+      };
+
+      const currentDate = new Date((initialData as any).scheduledDate || (initialData as any).date);
+
+      if (scope === 'current') {
+        // Edit only current reminder
+        await updateLembrete(initialData.id, updateData);
+      } else if (scope === 'future') {
+        // Edit current and future reminders
+        const remindersToUpdate = [
+          initialData,
+          ...relatedReminders.filter(r => new Date(r.date) >= currentDate)
+        ];
+        
+        for (const reminder of remindersToUpdate) {
+          await updateLembrete(reminder.id, updateData);
+        }
+      } else if (scope === 'all') {
+        // Edit all reminders with same codigo_trans
+        await updateLembrete(initialData.id, updateData);
+        
+        for (const reminder of relatedReminders) {
+          await updateLembrete(reminder.id, updateData);
+        }
+      }
+
+      setEditScopeDialogOpen(false);
+      setPendingFormValues(null);
+      onOpenChange(false);
+
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error('❌ Error updating reminders:', error);
+    }
+  };
 
   // Form submission handler
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -197,12 +272,35 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           const rawPhone = userData.phone;
           userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
         }
+
+        // Prepare update data with phone
+        const valuesWithPhone = {
+          ...values,
+          phone: values.phone || userPhone
+        };
+
+        // Check if there are related reminders with same codigo_trans
+        const codigoTrans = (initialData as any).codigo_trans || (initialData as any).reference_code;
+        
+        if (codigoTrans) {
+          const related = await checkRelatedReminders(codigoTrans, initialData.id);
+          
+          if (related.length > 0) {
+            // There are related reminders, ask user what to edit
+            setRelatedReminders(related);
+            setPendingFormValues(valuesWithPhone);
+            setEditScopeDialogOpen(true);
+            return; // Don't close dialog yet
+          }
+        }
+
+        // No related reminders, just update this one
         const updateData = {
-          description: values.description,
-          date: new Date(values.scheduledDate).toISOString(),
-          recurrence: values.recurrence,
-          phone: values.phone || userPhone,
-          name: values.name,
+          description: valuesWithPhone.description,
+          date: new Date(valuesWithPhone.scheduledDate).toISOString(),
+          recurrence: valuesWithPhone.recurrence,
+          phone: valuesWithPhone.phone,
+          name: valuesWithPhone.name,
           situacao: 'ativo',
           status: 'pending'
         };
@@ -340,6 +438,50 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
             <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
               {t('common.delete')}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Scope Selection Dialog */}
+      <AlertDialog open={editScopeDialogOpen} onOpenChange={setEditScopeDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Editar Parcelas</AlertDialogTitle>
+            <AlertDialogDescription>
+              Este lembrete faz parte de um grupo de {relatedReminders.length + 1} parcelas. 
+              O que você deseja editar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col gap-2 my-4">
+            <Button 
+              variant="outline" 
+              onClick={() => handleEditScopeSelection('current')}
+              className="justify-start"
+            >
+              <span className="font-semibold">Apenas esta parcela</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => handleEditScopeSelection('future')}
+              className="justify-start"
+            >
+              <span className="font-semibold">Esta e todas as futuras</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => handleEditScopeSelection('all')}
+              className="justify-start"
+            >
+              <span className="font-semibold">Todas as parcelas</span>
+            </Button>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setEditScopeDialogOpen(false);
+              setPendingFormValues(null);
+            }}>
+              {t('common.cancel')}
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

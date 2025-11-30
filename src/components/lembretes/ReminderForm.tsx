@@ -149,7 +149,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
               date: installmentDate.toISOString(),
               recurrence: 'once', // Sempre "once" para parcelas
               reference_code: sharedReferenceCode,
-              "codigo-trans": sharedReferenceCode,
+              codigo_trans: sharedReferenceCode,
               situacao: 'ativo',
               status: 'pending',
               phone: values.phone || userPhone,
@@ -172,7 +172,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
             date: new Date(values.scheduledDate).toISOString(),
             recurrence: values.recurrence === 'parcela' ? 'once' : values.recurrence,
             reference_code: referenceCode,
-            "codigo-trans": referenceCode,
+            codigo_trans: referenceCode,
             situacao: 'ativo',
             status: 'pending',
             phone: values.phone || userPhone,

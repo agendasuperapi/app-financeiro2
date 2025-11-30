@@ -134,7 +134,8 @@ const LembrarPage = () => {
         situacao: item.situacao || 'pendente',
         creatorName: item.name || undefined,
         phone: item.phone || undefined,
-        reference_code: item.reference_code || undefined
+        reference_code: item.reference_code || undefined,
+        codigo_trans: item.codigo_trans || undefined
       }));
       setContas(filteredData);
     } catch (error) {

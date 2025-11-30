@@ -137,13 +137,18 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           for (let i = 0; i < installments; i++) {
             const installmentDate = new Date(baseDate);
             installmentDate.setMonth(installmentDate.getMonth() + i);
+
+            const referenceCode = String(
+              Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000) + i
+            );
             
             const reminderData = {
               user_id: userId,
               description: `${values.description} (${i + 1}/${installments})`,
               date: installmentDate.toISOString(),
               recurrence: 'once', // Sempre "once" para parcelas
-              reference_code: String(Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000) + i),
+              reference_code: referenceCode,
+              "codigo-trans": referenceCode,
               situacao: 'ativo',
               status: 'pending',
               phone: values.phone || userPhone,
@@ -156,12 +161,17 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           console.log('✅ All installments created');
         } else {
           // Criar apenas um lembrete
+          const referenceCode = String(
+            Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000)
+          );
+
           const reminderData = {
             user_id: userId,
             description: values.description,
             date: new Date(values.scheduledDate).toISOString(),
             recurrence: values.recurrence === 'parcela' ? 'once' : values.recurrence,
-            reference_code: String(Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000)),
+            reference_code: referenceCode,
+            "codigo-trans": referenceCode,
             situacao: 'ativo',
             status: 'pending',
             phone: values.phone || userPhone,

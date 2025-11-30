@@ -85,6 +85,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
       form.reset(defaultValues);
     } else if (open && initialData) {
       // Populate form with initial data when editing
+      console.log('📝 Editing reminder - Full initialData:', initialData);
       const dateValue = (initialData as any).scheduledDate || (initialData as any).date;
       let formattedDate = '';
       if (dateValue) {
@@ -281,9 +282,11 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
 
         // Check if there are related reminders with same codigo_trans
         const codigoTrans = (initialData as any).codigo_trans || (initialData as any).reference_code;
+        console.log('🔍 Checking for related reminders. codigo_trans:', codigoTrans, 'initialData:', initialData);
         
         if (codigoTrans) {
           const related = await checkRelatedReminders(codigoTrans, initialData.id);
+          console.log('📋 Found related reminders:', related.length, related);
           
           if (related.length > 0) {
             // There are related reminders, ask user what to edit
@@ -292,6 +295,8 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
             setEditScopeDialogOpen(true);
             return; // Don't close dialog yet
           }
+        } else {
+          console.warn('⚠️ No codigo_trans found for this reminder');
         }
 
         // No related reminders, just update this one

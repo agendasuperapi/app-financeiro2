@@ -29,6 +29,17 @@ export const useClientAwareData = () => {
     if (!targetUserId) return [];
     
     try {
+      // Primeiro, fazer uma query para ver TODOS os campos disponíveis
+      const { data: rawData, error: rawError } = await (supabase as any)
+        .from('poupeja_transactions')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .limit(1);
+        
+      if (!rawError && rawData?.[0]) {
+        console.log('🔍 TODOS OS CAMPOS DISPONÍVEIS NA TABELA:', Object.keys(rawData[0]));
+      }
+      
       const { data, error } = await supabase
         .from('poupeja_transactions')
         .select(`

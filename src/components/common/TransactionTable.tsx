@@ -40,7 +40,7 @@ interface TransactionTableProps {
 }
 
 type SortDirection = 'asc' | 'desc' | null;
-type SortField = 'created_at' | 'date' | 'type' | 'category' | 'description' | 'amount';
+type SortField = 'created_at' | 'date' | 'type' | 'category' | 'status' | 'description' | 'amount';
 
 const TransactionTable: React.FC<TransactionTableProps> = ({
   transactions,
@@ -173,6 +173,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         case 'category':
           comparison = (a.category || '').localeCompare(b.category || '');
           break;
+        case 'status':
+          const statusA = (a as any).status || '';
+          const statusB = (a as any).status || '';
+          comparison = statusA.localeCompare(statusB);
+          break;
         case 'description':
           comparison = (a.description || '').localeCompare(b.description || '');
           break;
@@ -257,7 +262,22 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   </div>
                 </Button>
               </TableHead>
-              <TableHead className="w-[20%] hidden lg:table-cell">
+              <TableHead className="w-[10%] min-w-[70px] hidden lg:table-cell">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 font-medium text-xs hover:bg-transparent"
+                  onClick={() => handleSort('status')}
+                >
+                  <div className="flex items-center gap-1">
+                    Status
+                    {sortField === 'status' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
+                    {sortField === 'status' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
+                    {sortField !== 'status' && <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
+                  </div>
+                </Button>
+              </TableHead>
+              <TableHead className="w-[18%] hidden lg:table-cell">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -381,6 +401,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         </div>
                       </div>
                     </div>
+                  </TableCell>
+                  <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
+                    <Badge 
+                      variant="outline" 
+                      className="text-[10px] whitespace-nowrap"
+                    >
+                      {(transaction as any).status || '-'}
+                    </Badge>
                   </TableCell>
                    <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
                      <div className="truncate pr-2">

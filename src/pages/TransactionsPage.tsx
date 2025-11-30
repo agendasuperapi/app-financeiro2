@@ -4,12 +4,14 @@ import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
 import TransactionList from '@/components/common/TransactionList';
 import TransactionTable from '@/components/common/TransactionTable';
 import TransactionForm from '@/components/common/TransactionForm';
+import ContaForm from '@/components/contas/ContaForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, User, Search, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { useAppContext } from '@/contexts/AppContext';
 import { Transaction } from '@/types';
@@ -27,7 +29,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePreferences } from '@/contexts/PreferencesContext';
 const TransactionsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
+  const [contaFormOpen, setContaFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [editingConta, setEditingConta] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [dateFilter, setDateFilter] = useState('mes');
@@ -231,6 +235,16 @@ const TransactionsPage = () => {
   };
   
   const handleEditTransaction = async (transaction: Transaction) => {
+    const formato = (transaction as any).formato;
+    
+    // Se formato é agenda, usar ContaForm
+    if (formato === 'agenda') {
+      setEditingConta(transaction);
+      setContaFormOpen(true);
+      return;
+    }
+    
+    // Se formato não é agenda, continuar com lógica normal de TransactionForm
     setTransactionToEdit(transaction);
     setEditOption('single');
     
@@ -417,6 +431,28 @@ const TransactionsPage = () => {
             []
           }
         />
+        
+        {/* Dialog para editar contas (formato agenda) */}
+        <Dialog open={contaFormOpen} onOpenChange={setContaFormOpen}>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Editar Agendamento</DialogTitle>
+            </DialogHeader>
+            <ContaForm 
+              mode="edit" 
+              initialData={editingConta} 
+              onSuccess={() => {
+                setContaFormOpen(false);
+                setEditingConta(null);
+                refetchClientData();
+              }} 
+              onCancel={() => {
+                setContaFormOpen(false);
+                setEditingConta(null);
+              }} 
+            />
+          </DialogContent>
+        </Dialog>
         
         {/* Dialog de Pré-Edição */}
         <AlertDialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>

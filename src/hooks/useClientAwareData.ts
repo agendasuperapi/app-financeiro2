@@ -74,12 +74,14 @@ export const useClientAwareData = () => {
           categoryIcon: transaction.category?.icon || 'circle',
           categoryColor: transaction.category?.color || '#607D8B',
           creatorName: transaction.name ? transaction.name : undefined,
+          status: transaction.status || 'pending', // Garantir que status está presente
         };
         
         // Log para verificar se codigo-trans está sendo mantido
         if (transaction.id === data[0]?.id) {
           console.log('🔍 DEBUG MAPEAMENTO: Transação original tem codigo-trans?', transaction['codigo-trans']);
           console.log('🔍 DEBUG MAPEAMENTO: Transação mapeada tem codigo-trans?', mapped['codigo-trans']);
+          console.log('🔍 DEBUG MAPEAMENTO: Status da transação:', mapped.status);
         }
         
         return mapped;

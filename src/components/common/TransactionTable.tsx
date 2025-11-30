@@ -60,12 +60,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const [relatedCount, setRelatedCount] = useState(0);
   const [codigoTransToDelete, setCodigoTransToDelete] = useState<string | null>(null);
   
-  // Edit scope state
-  const [showEditScopeDialog, setShowEditScopeDialog] = useState(false);
-  const [editScope, setEditScope] = useState<'single' | 'future' | 'past' | 'all'>('single');
-  const [pastTransactionsCount, setPastTransactionsCount] = useState(0);
-  const [futureTransactionsCount, setFutureTransactionsCount] = useState(0);
-  const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -114,60 +108,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     setDeleteDialogOpen(true);
   };
 
-  const handleEditClick = async (transaction: Transaction) => {
-    // Check if transaction has codigo-trans
-    const { data: txRow } = await (supabase as any)
-      .from('poupeja_transactions')
-      .select('id, "codigo-trans", date')
-      .eq('id', transaction.id)
-      .maybeSingle();
-    
-    const codigoTrans = txRow?.['codigo-trans'];
-    const currentDate = txRow?.date;
-    
-    if (codigoTrans && currentDate) {
-      // Get all related transactions
-      const { data: allRelated } = await (supabase as any)
-        .from('poupeja_transactions')
-        .select('id, date')
-        .eq('codigo-trans', codigoTrans)
-        .neq('id', transaction.id);
-      
-      if (allRelated && allRelated.length > 0) {
-        // Separate into past and future based on current transaction date
-        const baseDate = new Date(currentDate);
-        const past = allRelated.filter((tx: any) => new Date(tx.date) < baseDate);
-        const future = allRelated.filter((tx: any) => new Date(tx.date) >= baseDate);
-        
-        if (past.length > 0 || future.length > 0) {
-          setPastTransactionsCount(past.length);
-          setFutureTransactionsCount(future.length);
-          setTransactionToEdit(transaction);
-          setShowEditScopeDialog(true);
-          return;
-        }
-      }
-    }
-    
-    // No related transactions, proceed with normal edit
-    if (onEdit) {
-      onEdit(transaction);
-    }
-  };
-
-  const handleConfirmEditScope = () => {
-    setShowEditScopeDialog(false);
-    if (transactionToEdit && onEdit) {
-      // Pass the transaction with edit scope information
-      // Note: The onEdit handler needs to handle this scope
-      onEdit(transactionToEdit);
-    }
-    // Reset state
-    setTransactionToEdit(null);
-    setEditScope('single');
-    setPastTransactionsCount(0);
-    setFutureTransactionsCount(0);
-  };
 
   const handleConfirmDelete = async () => {
     if (!transactionToDelete || !onDelete) return;
@@ -472,7 +412,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                           variant="ghost"
                           size="sm"
                           className="h-7 w-7 p-0"
-                          onClick={() => handleEditClick(transaction)}
+                          onClick={() => onEdit(transaction)}
                         >
                           <Edit className="h-3 w-3" />
                           <span className="sr-only">{t('common.edit')}</span>
@@ -536,67 +476,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           </div>
         </div>
       )}
-
-      {/* Edit scope dialog - shown when transaction has related transactions */}
-      <AlertDialog open={showEditScopeDialog} onOpenChange={setShowEditScopeDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Transações Relacionadas Encontradas</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3">
-              <p>
-                Encontramos <strong>{pastTransactionsCount + futureTransactionsCount}</strong> transação(ões) relacionadas 
-                ({pastTransactionsCount} passadas e {futureTransactionsCount} futuras). 
-                Como você gostaria de proceder com a edição?
-              </p>
-              <RadioGroup value={editScope} onValueChange={(v) => setEditScope(v as any)}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="single" id="edit-single-scope" />
-                  <Label htmlFor="edit-single-scope" className="cursor-pointer">
-                    Apenas esta transação
-                  </Label>
-                </div>
-                {futureTransactionsCount > 0 && (
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="future" id="edit-future-scope" />
-                    <Label htmlFor="edit-future-scope" className="cursor-pointer">
-                      Todas as futuras ({futureTransactionsCount})
-                    </Label>
-                  </div>
-                )}
-                {pastTransactionsCount > 0 && (
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="past" id="edit-past-scope" />
-                    <Label htmlFor="edit-past-scope" className="cursor-pointer">
-                      Todas as passadas ({pastTransactionsCount})
-                    </Label>
-                  </div>
-                )}
-                {(pastTransactionsCount > 0 && futureTransactionsCount > 0) && (
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="all" id="edit-all-scope" />
-                    <Label htmlFor="edit-all-scope" className="cursor-pointer">
-                      Todas as transações ({pastTransactionsCount + futureTransactionsCount + 1} total)
-                    </Label>
-                  </div>
-                )}
-              </RadioGroup>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setEditScope('single');
-              setPastTransactionsCount(0);
-              setFutureTransactionsCount(0);
-              setTransactionToEdit(null);
-            }}>
-              {t('common.cancel') || 'Cancelar'}
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmEditScope}>
-              Continuar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Delete scope dialog - shown when transaction has related transactions */}
       <AlertDialog open={showDeleteScopeDialog} onOpenChange={setShowDeleteScopeDialog}>

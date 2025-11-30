@@ -29,6 +29,8 @@ interface TransactionFormProps {
   mode: 'create' | 'edit';
   defaultType?: 'income' | 'expense';
   targetUserId?: string; // Para suportar criação para outros usuários
+  editScope?: 'single' | 'future' | 'past' | 'all';
+  relatedTransactionIds?: string[];
 }
 
 const TransactionForm: React.FC<TransactionFormProps> = ({
@@ -37,7 +39,9 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   initialData,
   mode,
   defaultType = 'expense',
-  targetUserId
+  targetUserId,
+  editScope = 'single',
+  relatedTransactionIds = []
 }) => {
   const { t } = usePreferences();
   const { setCustomDateRange, getTransactions, getGoals } = useAppContext();
@@ -261,7 +265,12 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       return onSubmit(values);
     }
     
-    // Se é edição, verificar transações relacionadas
+    // Se veio da página com editScope já definido, usar handleFinalSubmit
+    if (editScope !== 'single' && relatedTransactionIds.length > 0) {
+      return handleFinalSubmit(values);
+    }
+    
+    // Se é edição, verificar transações relacionadas (apenas se não veio da página)
     if (initialData?.id) {
       const codigoTrans = (initialData as any)['codigo-trans'];
       
@@ -347,6 +356,50 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       console.error('Erro na edição em massa:', error);
     } finally {
       setPendingSubmit(null);
+    }
+  };
+
+  // Handler final para aplicar edição em massa quando vem da página
+  const handleFinalSubmit = async (values: any) => {
+    // Aplicar edição normal
+    await onSubmit(values);
+    
+    // Se tem editScope e IDs relacionados (veio da página com seleção prévia)
+    if (mode === 'edit' && editScope !== 'single' && relatedTransactionIds.length > 0) {
+      try {
+        const updatePayload = {
+          description: values.description,
+          amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
+          category_id: values.category,
+          type: values.type,
+          conta_id: values.conta_id,
+          name: values.name || null,
+        };
+        
+        const { error } = await (supabase as any)
+          .from('poupeja_transactions')
+          .update(updatePayload)
+          .in('id', relatedTransactionIds);
+        
+        if (error) {
+          console.error('Erro ao atualizar transações relacionadas:', error);
+          toast({
+            title: 'Aviso',
+            description: `Transação principal atualizada, mas erro ao atualizar ${relatedTransactionIds.length} transações relacionadas`,
+            variant: 'destructive'
+          });
+        } else {
+          toast({
+            title: 'Sucesso',
+            description: `${relatedTransactionIds.length + 1} transações atualizadas com sucesso`,
+          });
+        }
+        
+        // Refresh transactions
+        await getTransactions();
+      } catch (error) {
+        console.error('Erro na edição em massa:', error);
+      }
     }
   };
 

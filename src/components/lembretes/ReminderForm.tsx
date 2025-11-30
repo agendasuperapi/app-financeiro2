@@ -401,7 +401,24 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
                 </div>}
 
               <DialogFooter className="flex flex-col sm:flex-row gap-3 justify-between items-center">
-                {mode === 'edit'}
+                {mode === 'edit' && (
+                  <Button 
+                    type="button" 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={async () => {
+                      const codigoTrans = (initialData as any)?.codigo_trans || (initialData as any)?.reference_code;
+                      const dateValue = (initialData as any)?.scheduledDate || (initialData as any)?.date;
+                      if (codigoTrans && initialData) {
+                        await checkForRelatedReminders(codigoTrans, initialData.id, dateValue);
+                      }
+                      setDeleteDialogOpen(true);
+                    }}
+                    className="sm:mr-auto"
+                  >
+                    Excluir
+                  </Button>
+                )}
                 <div className="flex gap-2 w-full sm:w-auto">
                   <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)} className="flex-1 sm:flex-initial min-w-20">
                     {t('common.cancel')}

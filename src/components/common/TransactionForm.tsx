@@ -333,6 +333,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       
       // Atualizar transações relacionadas com os mesmos dados (exceto date)
       if (idsToUpdate.length > 0) {
+        const newRefCode = Math.floor(10000000 + Math.random() * 90000000);
         const updatePayload = {
           description: values.description,
           amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
@@ -341,6 +342,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           conta_id: values.conta_id,
           name: values.name || null,
           status: 'paid', // Sempre marcar como paid
+          reference_code: newRefCode,
+          'codigo-trans': newRefCode, // Mesmo valor do reference_code
         };
         
         const { error } = await (supabase as any)
@@ -378,6 +381,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     // Se tem editScope e IDs relacionados (veio da página com seleção prévia)
     if (mode === 'edit' && editScope !== 'single' && relatedTransactionIds.length > 0) {
       try {
+        const newRefCode = Math.floor(10000000 + Math.random() * 90000000);
         const updatePayload = {
           description: values.description,
           amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
@@ -386,6 +390,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           conta_id: values.conta_id,
           name: values.name || null,
           status: 'paid', // Sempre marcar como paid
+          reference_code: newRefCode,
+          'codigo-trans': newRefCode, // Mesmo valor do reference_code
         };
         
         const { error } = await (supabase as any)

@@ -83,24 +83,37 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     // Check if transaction has codigo-trans
     const { data: txRow } = await (supabase as any)
       .from('poupeja_transactions')
-      .select('id, "codigo-trans"')
+      .select('id, "codigo-trans", date, user_id')
       .eq('id', transaction.id)
       .maybeSingle();
     
     const codigoTrans = txRow?.['codigo-trans'];
+    const currentDate = txRow?.date;
+    const userId = txRow?.user_id;
     
     if (codigoTrans) {
-      // Count related future transactions
-      const { count } = await (supabase as any)
-        .from('poupeja_transactions')
-        .select('id', { count: 'exact' })
-        .eq('codigo-trans', codigoTrans)
-        .gt('date', transaction.date);
+      // Buscar transações relacionadas futuras (mesma lógica da aba /contas)
+      const codeStr = String(codigoTrans).replace(/\D/g, '');
       
-      if (count && count > 0) {
-        setFutureTransactionsCount(count);
-        setShowEditScopeDialog(true);
-        return;
+      const { data: futureData, error } = await (supabase as any)
+        .from('poupeja_transactions')
+        .select('id, date, description, "codigo-trans"')
+        .eq('user_id', userId)
+        .neq('id', transaction.id)
+        .gte('date', currentDate)
+        .order('date', { ascending: true });
+      
+      if (!error && futureData) {
+        const futureRows = futureData.filter((item: any) => {
+          const itemCodigo = String(item['codigo-trans'] || '').replace(/\D/g, '');
+          return itemCodigo === codeStr;
+        });
+        
+        if (futureRows.length > 0) {
+          setFutureTransactionsCount(futureRows.length);
+          setShowEditScopeDialog(true);
+          return;
+        }
       }
     }
     

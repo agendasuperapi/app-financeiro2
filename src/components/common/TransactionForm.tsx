@@ -343,7 +343,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           name: values.name || null,
           status: 'paid', // Sempre marcar como paid
           reference_code: newRefCode,
-          codigo_trans: newRefCode, // Mesmo valor do reference_code
+          "codigo-trans": newRefCode, // Mesmo valor do reference_code
         };
         
         const { error } = await (supabase as any)
@@ -391,7 +391,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           name: values.name || null,
           status: 'paid', // Sempre marcar como paid
           reference_code: newRefCode,
-          codigo_trans: newRefCode, // Mesmo valor do reference_code
+          "codigo-trans": newRefCode, // Mesmo valor do reference_code
         };
         
         const { error } = await (supabase as any)

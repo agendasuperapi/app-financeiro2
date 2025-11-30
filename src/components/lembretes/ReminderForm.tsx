@@ -287,21 +287,30 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
 
         // Check if there are related reminders with same codigo_trans
         const codigoTrans = (initialData as any).codigo_trans || (initialData as any).reference_code;
-        console.log('🔍 Checking for related reminders. codigo_trans:', codigoTrans, 'initialData:', initialData);
+        console.log('🔍 Extracted codigo_trans:', codigoTrans);
+        console.log('🔍 Type of codigo_trans:', typeof codigoTrans);
+        console.log('🔍 Is truthy?', !!codigoTrans);
+        console.log('🔍 Full initialData:', JSON.stringify(initialData, null, 2));
         
         if (codigoTrans) {
+          console.log('✅ codigo_trans exists, calling checkRelatedReminders with:', codigoTrans, initialData.id);
           const related = await checkRelatedReminders(codigoTrans, initialData.id);
-          console.log('📋 Found related reminders:', related.length, related);
+          console.log('📋 checkRelatedReminders returned:', related.length, 'reminders');
+          console.log('📋 Related data:', JSON.stringify(related, null, 2));
           
           if (related.length > 0) {
+            console.log('🎯 Multiple related reminders found, showing scope dialog');
             // There are related reminders, ask user what to edit
             setRelatedReminders(related);
             setPendingFormValues(valuesWithPhone);
             setEditScopeDialogOpen(true);
             return; // Don't close dialog yet
+          } else {
+            console.log('ℹ️ No related reminders found, will update only this one');
           }
         } else {
           console.warn('⚠️ No codigo_trans found for this reminder');
+          console.warn('⚠️ initialData keys:', Object.keys(initialData));
         }
 
         // No related reminders, just update this one

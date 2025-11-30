@@ -1052,18 +1052,13 @@ const ContaForm: React.FC<ContaFormProps> = ({
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-between items-center pt-4">
-            {mode === 'edit' && <Button type="button" variant="destructive" size="sm" onClick={handleDeleteClick} disabled={!isOnline} className="w-full sm:w-auto">
-                {t('common.delete')}
-              </Button>}
-            <div className="flex gap-2 w-full sm:w-auto">
-              <Button type="button" variant="outline" size="sm" onClick={onCancel} className="flex-1 sm:flex-initial min-w-20">
-                {t('common.cancel')}
-              </Button>
-              <Button type="submit" variant="default" size="sm" disabled={!isOnline} className="flex-1 sm:flex-initial min-w-20">
-                {mode === 'create' ? t('common.create') : t('common.update')}
-              </Button>
-            </div>
+          <div className="flex gap-2 justify-end pt-4">
+            <Button type="button" variant="outline" size="sm" onClick={onCancel} className="min-w-20">
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" variant="default" size="sm" disabled={!isOnline} className="min-w-20">
+              {mode === 'create' ? t('common.create') : t('common.update')}
+            </Button>
           </div>
           {!isOnline && <p className="text-xs text-muted-foreground text-right mt-2">
               {t('schedule.editingRequiresConnection')}

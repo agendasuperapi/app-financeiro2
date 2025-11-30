@@ -233,8 +233,8 @@ const ContaForm: React.FC<ContaFormProps> = ({
       
       // Verificar duplicatas quando carregar dados para edição
       const checkDuplicatesOnLoad = async () => {
-        console.log('🔍 DEBUG: initialData completo:', initialData);
-        console.log('🔍 DEBUG: initialData["codigo-trans"]:', (initialData as any)?.['codigo-trans']);
+        console.log('🔍 DEBUG: initialData TODAS as propriedades:', JSON.stringify(initialData, null, 2));
+        console.log('🔍 DEBUG: Object.keys(initialData):', Object.keys(initialData || {}));
         
         const codigoTrans = (initialData as any)?.['codigo-trans'] || (initialData as any)?.codigo_trans || (initialData as any)?.reference_code;
         const currentDate = (initialData as any)?.date as string | undefined;

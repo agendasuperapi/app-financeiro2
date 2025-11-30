@@ -40,6 +40,9 @@ export const useClientAwareData = () => {
 
       if (error) throw error;
       
+      console.log('🔍 DEBUG BANCO: Primeira transação RAW do banco:', data?.[0]);
+      console.log('🔍 DEBUG BANCO: Campos da primeira transação:', Object.keys(data?.[0] || {}));
+      
       // Fetch dependent flag and timezone for this user
       const { data: userRow } = await (supabase as any)
         .from('poupeja_users')
@@ -53,13 +56,23 @@ export const useClientAwareData = () => {
         setUserTimezone(userRow.fuso);
       }
       
-      return data.map((transaction: any) => ({
-        ...transaction,
-        category: transaction.category?.name || 'Sem categoria',
-        categoryIcon: transaction.category?.icon || 'circle',
-        categoryColor: transaction.category?.color || '#607D8B',
-        creatorName: transaction.name ? transaction.name : undefined,
-      }));
+      return data.map((transaction: any) => {
+        const mapped = {
+          ...transaction,
+          category: transaction.category?.name || 'Sem categoria',
+          categoryIcon: transaction.category?.icon || 'circle',
+          categoryColor: transaction.category?.color || '#607D8B',
+          creatorName: transaction.name ? transaction.name : undefined,
+        };
+        
+        // Log para verificar se codigo-trans está sendo mantido
+        if (transaction.id === data[0]?.id) {
+          console.log('🔍 DEBUG MAPEAMENTO: Transação original tem codigo-trans?', transaction['codigo-trans']);
+          console.log('🔍 DEBUG MAPEAMENTO: Transação mapeada tem codigo-trans?', mapped['codigo-trans']);
+        }
+        
+        return mapped;
+      });
     } catch (error) {
       console.error('Erro ao buscar transações do cliente:', error);
       return [];

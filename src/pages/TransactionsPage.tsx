@@ -223,7 +223,7 @@ const TransactionsPage = () => {
     setFormOpen(true);
   };
   
-  const handleEditTransaction = async (transaction: Transaction) => {
+  const handleEditTransaction = (transaction: Transaction) => {
     const formato = (transaction as any).formato;
     
     // Se formato é agenda, usar ContaForm
@@ -233,36 +233,8 @@ const TransactionsPage = () => {
       return;
     }
     
-    // Se formato não é agenda, continuar com lógica normal de TransactionForm
-    setTransactionToEdit(transaction);
-    setEditOption('single');
-    
-    const codigoTrans = (transaction as any)['codigo-trans'];
-    
-    if (codigoTrans) {
-      const currentDate = transaction.date as string;
-      const related = await checkForRelatedTransactions(codigoTrans, transaction.id, currentDate);
-      setPastTransactions(related.past);
-      setFutureTransactions(related.future);
-      
-      // Se há transações relacionadas, mostrar dialog de opções
-      if (related.past.length > 0 || related.future.length > 0) {
-        setEditDialogOpen(true);
-        return;
-      }
-    } else {
-      setPastTransactions([]);
-      setFutureTransactions([]);
-    }
-    
-    // Se não há relacionadas, abrir formulário diretamente
+    // Se formato não é agenda, abrir formulário diretamente
     setEditingTransaction(transaction);
-    setFormOpen(true);
-  };
-  
-  const handleConfirmEdit = () => {
-    setEditDialogOpen(false);
-    setEditingTransaction(transactionToEdit);
     setFormOpen(true);
   };
   
@@ -412,13 +384,6 @@ const TransactionsPage = () => {
           initialData={editingTransaction} 
           mode={editingTransaction ? 'edit' : 'create'} 
           targetUserId={targetUserId}
-          editScope={editOption}
-          relatedTransactionIds={
-            editOption === 'future' ? futureTransactions.map(t => t.id) :
-            editOption === 'past' ? pastTransactions.map(t => t.id) :
-            editOption === 'all' ? [...pastTransactions.map(t => t.id), ...futureTransactions.map(t => t.id)] :
-            []
-          }
         />
         
         {/* Dialog para editar contas (formato agenda) */}
@@ -446,63 +411,7 @@ const TransactionsPage = () => {
           </DialogContent>
         </Dialog>
         
-        {/* Dialog de Pré-Edição */}
-        <AlertDialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Transações Relacionadas Encontradas</AlertDialogTitle>
-              <AlertDialogDescription className="space-y-3">
-                {transactionToEdit && (
-                  <>
-                    <div className="bg-muted p-3 rounded-md">
-                      <p className="font-medium">{transactionToEdit.description}</p>
-                      <p className={cn("text-sm font-semibold", 
-                        transactionToEdit.type === 'income' ? 'text-green-600' : 'text-red-600')}>
-                        {formatCurrency(Math.abs(transactionToEdit.amount), currency)}
-                      </p>
-                    </div>
-                    
-                    <p className="text-sm">
-                      Encontramos outras transações com o mesmo código. O que deseja editar?
-                    </p>
-                    
-                    <RadioGroup value={editOption} onValueChange={(value: any) => setEditOption(value)}>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="single" id="edit-single" />
-                        <Label htmlFor="edit-single">Apenas esta transação</Label>
-                      </div>
-                      
-                      {futureTransactions.length > 0 && (
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="future" id="edit-future" />
-                          <Label htmlFor="edit-future">Esta e todas as futuras ({futureTransactions.length})</Label>
-                        </div>
-                      )}
-                      
-                      {pastTransactions.length > 0 && (
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="past" id="edit-past" />
-                          <Label htmlFor="edit-past">Esta e todas as passadas ({pastTransactions.length})</Label>
-                        </div>
-                      )}
-                      
-                      {pastTransactions.length > 0 && futureTransactions.length > 0 && (
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="all" id="edit-all" />
-                          <Label htmlFor="edit-all">Todas ({pastTransactions.length + futureTransactions.length + 1})</Label>
-                        </div>
-                      )}
-                    </RadioGroup>
-                  </>
-                )}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmEdit}>Continuar Edição</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {/* Fim do conteúdo principal */}
       </SubscriptionGuard>
     </MainLayout>;
 };

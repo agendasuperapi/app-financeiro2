@@ -111,6 +111,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
 
   // Check for related reminders with same codigo_trans
   const checkRelatedReminders = async (codigoTrans: string, currentId: string): Promise<any[]> => {
+    console.log('🔍 checkRelatedReminders called with:', { codigoTrans, currentId });
     try {
       const { data, error } = await (supabase as any)
         .from('tbl_lembrete')
@@ -119,13 +120,17 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         .neq('id', currentId)
         .order('date', { ascending: true });
 
+      console.log('📊 Query result:', { data, error, count: data?.length });
+      
       if (error) {
-        console.error('Error checking related reminders:', error);
+        console.error('❌ Error checking related reminders:', error);
         return [];
       }
+      
+      console.log('✅ Returning', data?.length || 0, 'related reminders');
       return data || [];
     } catch (err) {
-      console.error('Error checking related reminders:', err);
+      console.error('❌ Exception in checkRelatedReminders:', err);
       return [];
     }
   };

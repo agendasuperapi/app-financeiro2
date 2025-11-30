@@ -31,6 +31,7 @@ import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { useAppContext } from '@/contexts/AppContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowUp, ArrowDown, Edit, Trash2, ChevronUp, ChevronDown, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import BulkEditDialog from '../contas/BulkEditDialog';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -54,11 +55,16 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // Default to newest first
   
-  // Related transactions state
+  // Related transactions state for delete
   const [showDeleteScopeDialog, setShowDeleteScopeDialog] = useState(false);
   const [deleteScope, setDeleteScope] = useState<'single' | 'all'>('single');
   const [relatedCount, setRelatedCount] = useState(0);
   const [codigoTransToDelete, setCodigoTransToDelete] = useState<string | null>(null);
+  
+  // Related transactions state for edit
+  const [showEditScopeDialog, setShowEditScopeDialog] = useState(false);
+  const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
+  const [futureTransactionsCount, setFutureTransactionsCount] = useState(0);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -70,6 +76,49 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const effectiveTimezone = userTimezone || appCtx.userTimezone;
 
   const renderHiddenValue = () => '******';
+
+  const handleEditClick = async (transaction: Transaction) => {
+    setTransactionToEdit(transaction);
+    
+    // Check if transaction has codigo-trans
+    const { data: txRow } = await (supabase as any)
+      .from('poupeja_transactions')
+      .select('id, "codigo-trans"')
+      .eq('id', transaction.id)
+      .maybeSingle();
+    
+    const codigoTrans = txRow?.['codigo-trans'];
+    
+    if (codigoTrans) {
+      // Count related future transactions
+      const { count } = await (supabase as any)
+        .from('poupeja_transactions')
+        .select('id', { count: 'exact' })
+        .eq('codigo-trans', codigoTrans)
+        .gt('date', transaction.date);
+      
+      if (count && count > 0) {
+        setFutureTransactionsCount(count);
+        setShowEditScopeDialog(true);
+        return;
+      }
+    }
+    
+    // No related future transactions, proceed with normal edit
+    if (onEdit) {
+      onEdit(transaction);
+    }
+  };
+
+  const handleConfirmEditScope = (editAll: boolean) => {
+    setShowEditScopeDialog(false);
+    if (transactionToEdit && onEdit) {
+      // Pass the transaction with a flag indicating if all should be edited
+      onEdit({ ...transactionToEdit, __editAll: editAll } as any);
+    }
+    setTransactionToEdit(null);
+    setFutureTransactionsCount(0);
+  };
 
   const handleDeleteClick = async (transaction: Transaction) => {
     setTransactionToDelete(transaction);
@@ -410,7 +459,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                           variant="ghost"
                           size="sm"
                           className="h-7 w-7 p-0"
-                          onClick={() => onEdit(transaction)}
+                          onClick={() => handleEditClick(transaction)}
                         >
                           <Edit className="h-3 w-3" />
                           <span className="sr-only">{t('common.edit')}</span>
@@ -474,6 +523,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           </div>
         </div>
       )}
+
+      {/* Edit scope dialog - shown when transaction has related future transactions */}
+      <BulkEditDialog
+        open={showEditScopeDialog}
+        onOpenChange={setShowEditScopeDialog}
+        futureTransactionsCount={futureTransactionsCount}
+        onConfirm={handleConfirmEditScope}
+      />
 
       {/* Delete scope dialog - shown when transaction has related transactions */}
       <AlertDialog open={showDeleteScopeDialog} onOpenChange={setShowDeleteScopeDialog}>

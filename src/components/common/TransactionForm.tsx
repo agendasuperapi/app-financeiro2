@@ -56,12 +56,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const [uploadingComprovante, setUploadingComprovante] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
-  // States for edit scope dialog
+  // States for edit scope
   const [pastTransactions, setPastTransactions] = useState<any[]>([]);
   const [futureTransactions, setFutureTransactions] = useState<any[]>([]);
   const [editOption, setEditOption] = useState<'single' | 'future' | 'past' | 'all'>('single');
-  const [editScopeDialogOpen, setEditScopeDialogOpen] = useState(false);
-  const [pendingSubmit, setPendingSubmit] = useState<any>(null);
+  const [loadingRelated, setLoadingRelated] = useState(false);
   
   // Initialize form
   const { form, selectedType, handleTypeChange, onSubmit } = useTransactionForm({
@@ -147,18 +146,30 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     defaultType,
   });
 
-  // Debug form state
+  // Load related transactions when opening in edit mode
   useEffect(() => {
-    if (open) {
-      console.log("Form state debug:", {
-        errors: form.formState.errors,
-        isValid: form.formState.isValid,
-        values: form.getValues(),
-        mode,
-        initialData
-      });
-    }
-  }, [open, form.formState.errors, form.formState.isValid]);
+    const loadRelatedTransactions = async () => {
+      if (open && mode === 'edit' && initialData?.id) {
+        const codigoTrans = (initialData as any)['codigo-trans'];
+        
+        if (codigoTrans) {
+          setLoadingRelated(true);
+          const currentDate = initialData.date as string;
+          const related = await checkForRelatedTransactions(codigoTrans, initialData.id, currentDate);
+          
+          setPastTransactions(related.past);
+          setFutureTransactions(related.future);
+          setEditOption('single');
+          setLoadingRelated(false);
+        } else {
+          setPastTransactions([]);
+          setFutureTransactions([]);
+        }
+      }
+    };
+    
+    loadRelatedTransactions();
+  }, [open, mode, initialData]);
 
   // Function to upload comprovante
   const handleUploadComprovante = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -270,40 +281,22 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       return handleFinalSubmit(values);
     }
     
-    // Se é edição, verificar transações relacionadas (apenas se não veio da página)
-    if (initialData?.id) {
-      const codigoTrans = (initialData as any)['codigo-trans'];
-      
-      if (codigoTrans) {
-        const currentDate = initialData.date as string;
-        const related = await checkForRelatedTransactions(codigoTrans, initialData.id, currentDate);
-        
-        setPastTransactions(related.past);
-        setFutureTransactions(related.future);
-        
-        // Se há transações relacionadas, mostrar dialog
-        if (related.past.length > 0 || related.future.length > 0) {
-          setPendingSubmit(values);
-          setEditOption('single');
-          setEditScopeDialogOpen(true);
-          return;
-        }
-      }
-      
-      // Se não há relacionadas, submeter diretamente
-      return onSubmit(values);
+    // Se é edição e tem transações relacionadas, aplicar conforme opção selecionada
+    if (initialData?.id && (pastTransactions.length > 0 || futureTransactions.length > 0)) {
+      return handleEditWithScope(values);
     }
+    
+    // Se não há relacionadas, submeter diretamente
+    return onSubmit(values);
   };
 
-  // Function to confirm and apply edit with scope
-  const handleConfirmEdit = async () => {
-    if (!pendingSubmit || !initialData) return;
-    
-    setEditScopeDialogOpen(false);
+  // Function to handle edit with scope (inline)
+  const handleEditWithScope = async (values: any) => {
+    if (!initialData) return;
     
     try {
       // Primeiro, atualizar a transação principal
-      await onSubmit(pendingSubmit);
+      await onSubmit(values);
       
       // Se escolheu apenas esta, já terminou
       if (editOption === 'single') return;
@@ -322,12 +315,12 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       // Atualizar transações relacionadas com os mesmos dados (exceto date)
       if (idsToUpdate.length > 0) {
         const updatePayload = {
-          description: pendingSubmit.description,
-          amount: pendingSubmit.type === 'expense' ? -Math.abs(pendingSubmit.amount) : Math.abs(pendingSubmit.amount),
-          category_id: pendingSubmit.category,
-          type: pendingSubmit.type,
-          conta_id: pendingSubmit.conta_id,
-          name: pendingSubmit.name || null,
+          description: values.description,
+          amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
+          category_id: values.category,
+          type: values.type,
+          conta_id: values.conta_id,
+          name: values.name || null,
         };
         
         const { error } = await (supabase as any)
@@ -354,8 +347,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       }
     } catch (error) {
       console.error('Erro na edição em massa:', error);
-    } finally {
-      setPendingSubmit(null);
     }
   };
 
@@ -526,6 +517,94 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                 <GoalSelector form={form} />
               )}
 
+              {mode === 'edit' && (futureTransactions.length > 0 || pastTransactions.length > 0) && (
+                <div className="bg-muted/30 p-4 rounded-lg border space-y-3">
+                  <Label className="text-sm font-medium">
+                    Transações Relacionadas Encontradas
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Encontramos {pastTransactions.length + futureTransactions.length} transação(ões) relacionadas 
+                    ({pastTransactions.length} passadas e {futureTransactions.length} futuras). 
+                    Como você gostaria de proceder?
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2">
+                        <input 
+                          type="radio" 
+                          id="apenas-essa" 
+                          name="editOption" 
+                          value="single" 
+                          checked={editOption === 'single'}
+                          onChange={() => setEditOption('single')}
+                          className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                        />
+                        <label htmlFor="apenas-essa" className="text-sm cursor-pointer font-medium">
+                          Aplicar edição apenas a esta transação
+                        </label>
+                      </div>
+                    </div>
+                    
+                    {futureTransactions.length > 0 && (
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="radio" 
+                            id="todas-futuras" 
+                            name="editOption" 
+                            value="future" 
+                            checked={editOption === 'future'}
+                            onChange={() => setEditOption('future')}
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                          />
+                          <label htmlFor="todas-futuras" className="text-sm cursor-pointer font-medium">
+                            Aplicar a todas as transações futuras ({futureTransactions.length} futuras)
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {pastTransactions.length > 0 && (
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="radio" 
+                            id="todas-passadas" 
+                            name="editOption" 
+                            value="past" 
+                            checked={editOption === 'past'}
+                            onChange={() => setEditOption('past')}
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                          />
+                          <label htmlFor="todas-passadas" className="text-sm cursor-pointer font-medium">
+                            Aplicar a todas as transações passadas ({pastTransactions.length} passadas)
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {(pastTransactions.length > 0 && futureTransactions.length > 0) && (
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="radio" 
+                            id="todas" 
+                            name="editOption" 
+                            value="all" 
+                            checked={editOption === 'all'}
+                            onChange={() => setEditOption('all')}
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+                          />
+                          <label htmlFor="todas" className="text-sm cursor-pointer font-medium">
+                            Aplicar a TODAS as transações ({pastTransactions.length + futureTransactions.length + 1} total)
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {mode === 'edit' && initialData?.formato === 'transacao' && (
                 <Button
                   type="button"
@@ -615,60 +694,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             </form>
           </Form>
         </div>
-        
-        <AlertDialog open={editScopeDialogOpen} onOpenChange={setEditScopeDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Transações Relacionadas Encontradas</AlertDialogTitle>
-              <AlertDialogDescription className="space-y-3">
-                <p className="text-sm">
-                  Encontramos {pastTransactions.length + futureTransactions.length} transação(ões) relacionadas 
-                  ({pastTransactions.length} passadas e {futureTransactions.length} futuras). 
-                  Como você gostaria de proceder?
-                </p>
-                
-                <RadioGroup value={editOption} onValueChange={(value: any) => setEditOption(value)} className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="single" id="edit-single" />
-                    <Label htmlFor="edit-single">Aplicar edição apenas a esta transação</Label>
-                  </div>
-                  
-                  {futureTransactions.length > 0 && (
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="future" id="edit-future" />
-                      <Label htmlFor="edit-future">Aplicar a todas as transações futuras ({futureTransactions.length} futuras)</Label>
-                    </div>
-                  )}
-                  
-                  {pastTransactions.length > 0 && (
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="past" id="edit-past" />
-                      <Label htmlFor="edit-past">Aplicar a todas as transações passadas ({pastTransactions.length} passadas)</Label>
-                    </div>
-                  )}
-                  
-                  {pastTransactions.length > 0 && futureTransactions.length > 0 && (
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="all" id="edit-all" />
-                      <Label htmlFor="edit-all">Aplicar a TODAS as transações ({pastTransactions.length + futureTransactions.length + 1} total)</Label>
-                    </div>
-                  )}
-                </RadioGroup>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => {
-                setEditScopeDialogOpen(false);
-                setPendingSubmit(null);
-              }}>
-                Cancelar
-              </AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmEdit}>
-                Confirmar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
 
         <Dialog open={comprovanteDialogOpen} onOpenChange={setComprovanteDialogOpen}>
           <DialogContent className="sm:max-w-[600px]">

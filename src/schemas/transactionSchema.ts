@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const createTransactionSchema = (translationFn: (key: string) => string) => {
   return z.object({
     type: z.enum(['income', 'expense', 'reminder', 'lembrete', 'outros']),
-    amount: z.coerce.number(),
+    amount: z.coerce.number().nonnegative({ message: translationFn('validation.positiveAmount') }),
     conta_id: z.string().min(1, translationFn('validation.required')),
     category: z.string().min(1, translationFn('validation.required')),
     description: z.string().optional(),

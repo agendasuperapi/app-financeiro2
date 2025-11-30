@@ -292,8 +292,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           </TableHeader>
           <TableBody>
             {currentTransactions.map((transaction, index) => {
-              const iconColor = transaction.type === 'income' ? '#26DE81' : '#EF4444';
-
               return (
                 <motion.tr
                   key={transaction.id}
@@ -346,26 +344,18 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         <CategoryIcon
-                          icon={
-                            transaction.type === 'income'
-                              ? 'trending-up'
-                              : transaction.type === 'expense'
-                              ? transaction.category.toLowerCase().includes('food')
-                                ? 'utensils'
-                                : 'shopping-bag'
-                              : 'circle'
-                          }
-                          color={iconColor}
+                          icon={transaction.categoryIcon || 'circle'}
+                          color={transaction.categoryColor || (transaction.type === 'income' ? '#4CAF50' : '#E57373')}
                           size={14}
                         />
                         <Badge
                           variant="outline"
-                          className={cn(
-                            'text-[10px] whitespace-nowrap max-w-[100px] md:max-w-[160px] truncate',
-                            transaction.type === 'income'
-                              ? 'bg-green-50 text-green-600 hover:bg-green-100 border-green-200'
-                              : 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'
-                          )}
+                          className="text-[10px] whitespace-nowrap max-w-[100px] md:max-w-[160px] truncate"
+                          style={{
+                            backgroundColor: `${transaction.categoryColor || (transaction.type === 'income' ? '#4CAF50' : '#E57373')}15`,
+                            color: transaction.categoryColor || (transaction.type === 'income' ? '#4CAF50' : '#E57373'),
+                            borderColor: `${transaction.categoryColor || (transaction.type === 'income' ? '#4CAF50' : '#E57373')}30`
+                          }}
                         >
                           {transaction.category}
                         </Badge>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +27,7 @@ import ContaForm from '@/components/contas/ContaForm';
 import { useIsMobile } from '@/hooks/use-mobile';
 const ContasPage = () => {
   const isMobile = useIsMobile();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [contas, setContas] = useState<ScheduledTransaction[]>([]);
   const [filteredContas, setFilteredContas] = useState<ScheduledTransaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +63,21 @@ const ContasPage = () => {
       loadContas();
     }
   }, [targetUserId]);
+  
+  // Verificar se há um ID de edição na URL
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (editId && contas.length > 0) {
+      const contaToEdit = contas.find(c => c.id === editId);
+      if (contaToEdit) {
+        handleEdit(contaToEdit);
+        // Remover o parâmetro da URL
+        searchParams.delete('edit');
+        setSearchParams(searchParams);
+      }
+    }
+  }, [searchParams, contas]);
+  
   useEffect(() => {
     applyFilters();
     setCurrentPage(1); // Reset para primeira página quando filtros mudam

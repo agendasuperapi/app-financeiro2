@@ -11,7 +11,7 @@ import { Plus, User, Search, ChevronLeft, ChevronRight, CalendarIcon } from 'luc
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { useAppContext } from '@/contexts/AppContext';
 import { Transaction } from '@/types';
@@ -437,6 +437,9 @@ const TransactionsPage = () => {
           <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Editar Agendamento</DialogTitle>
+              <DialogDescription className="sr-only">
+                Formulário para editar uma transação agendada.
+              </DialogDescription>
             </DialogHeader>
             <ContaForm 
               mode="edit" 

@@ -43,6 +43,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
     description: z.string().min(1, { message: t('validation.required') }),
     scheduledDate: z.string().min(1, { message: t('validation.required') }),
     recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly']),
+    installments: z.number().min(1).max(360).optional(),
     // Campos obrigatórios apenas do AddedByField
     name: z.string().min(1, 'Usuario é obrigatório'),
     phone: z.string().optional(),
@@ -58,6 +59,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           return formatInTimeZone(now, timezone, "yyyy-MM-dd'T'HH:mm");
         })(),
     recurrence: (initialData?.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
+    installments: 1,
     // Campos obrigatórios apenas do AddedByField
     name: initialData?.creatorName || '',
     phone: initialData?.phone || '',
@@ -94,6 +96,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         description: initialData.description || '',
         scheduledDate: formattedDate,
         recurrence: (initialData.recurrence || 'once') as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly',
+        installments: 1,
         name: (initialData as any).creatorName || (initialData as any).name || '',
         phone: (initialData as any).phone || '',
       });
@@ -124,21 +127,51 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           userPhone = rawPhone.startsWith('55') ? rawPhone : `55${rawPhone}`;
         }
         
-        const reminderData = {
-          user_id: userId,
-          description: values.description,
-          date: new Date(values.scheduledDate).toISOString(),
-          recurrence: values.recurrence,
-          reference_code: String(Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000)),
-          situacao: 'ativo',
-          status: 'pending',
-          phone: values.phone || userPhone,
-          name: values.name,
-        };
+        const installments = values.installments || 1;
         
-        console.log('📋 Creating reminder with data:', reminderData);
-        const result = await createLembrete(reminderData);
-        console.log('✅ Create request sent', result);
+        // Se tiver parcelas, criar múltiplas entradas
+        if (installments > 1) {
+          console.log(`📦 Creating ${installments} installments...`);
+          const baseDate = new Date(values.scheduledDate);
+          
+          for (let i = 0; i < installments; i++) {
+            const installmentDate = new Date(baseDate);
+            installmentDate.setMonth(installmentDate.getMonth() + i);
+            
+            const reminderData = {
+              user_id: userId,
+              description: `${values.description} (${i + 1}/${installments})`,
+              date: installmentDate.toISOString(),
+              recurrence: 'once', // Sempre "once" para parcelas
+              reference_code: String(Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000) + i),
+              situacao: 'ativo',
+              status: 'pending',
+              phone: values.phone || userPhone,
+              name: values.name,
+            };
+            
+            console.log(`📋 Creating installment ${i + 1}/${installments}:`, reminderData);
+            await createLembrete(reminderData);
+          }
+          console.log('✅ All installments created');
+        } else {
+          // Criar apenas um lembrete
+          const reminderData = {
+            user_id: userId,
+            description: values.description,
+            date: new Date(values.scheduledDate).toISOString(),
+            recurrence: values.recurrence,
+            reference_code: String(Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000)),
+            situacao: 'ativo',
+            status: 'pending',
+            phone: values.phone || userPhone,
+            name: values.name,
+          };
+          
+          console.log('📋 Creating reminder with data:', reminderData);
+          const result = await createLembrete(reminderData);
+          console.log('✅ Create request sent', result);
+        }
       } else if (initialData) {
         console.log('✏️ Updating reminder...', initialData.id);
         
@@ -269,6 +302,30 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="installments"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Parcelas (opcional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min={1} 
+                        max={360}
+                        placeholder="1" 
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 1)}
+                      />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      Se informar mais de 1, serão criadas múltiplas entradas mensais com recorrência "Uma vez"
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <DialogFooter className="flex flex-col sm:flex-row gap-3 justify-between items-center">
                 {mode === 'edit' && (

@@ -42,7 +42,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
   const formSchema = z.object({
     description: z.string().min(1, { message: t('validation.required') }),
     scheduledDate: z.string().min(1, { message: t('validation.required') }),
-    recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly']),
+    recurrence: z.enum(['once', 'daily', 'weekly', 'monthly', 'yearly', 'parcela']),
     installments: z.number().min(1).max(360).optional(),
     // Campos obrigatórios apenas do AddedByField
     name: z.string().min(1, 'Usuario é obrigatório'),
@@ -58,7 +58,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           const now = new Date();
           return formatInTimeZone(now, timezone, "yyyy-MM-dd'T'HH:mm");
         })(),
-    recurrence: (initialData?.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly') || 'once',
+    recurrence: (initialData?.recurrence as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'parcela') || 'once',
     installments: 1,
     // Campos obrigatórios apenas do AddedByField
     name: initialData?.creatorName || '',
@@ -95,7 +95,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
       form.reset({
         description: initialData.description || '',
         scheduledDate: formattedDate,
-        recurrence: (initialData.recurrence || 'once') as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly',
+        recurrence: (initialData.recurrence || 'once') as 'once' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'parcela',
         installments: 1,
         name: (initialData as any).creatorName || (initialData as any).name || '',
         phone: (initialData as any).phone || '',
@@ -129,8 +129,8 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         
         const installments = values.installments || 1;
         
-        // Se tiver parcelas, criar múltiplas entradas
-        if (installments > 1) {
+        // Se for parcela, criar múltiplas entradas
+        if (values.recurrence === 'parcela' && installments > 1) {
           console.log(`📦 Creating ${installments} installments...`);
           const baseDate = new Date(values.scheduledDate);
           
@@ -160,7 +160,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
             user_id: userId,
             description: values.description,
             date: new Date(values.scheduledDate).toISOString(),
-            recurrence: values.recurrence,
+            recurrence: values.recurrence === 'parcela' ? 'once' : values.recurrence,
             reference_code: String(Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000)),
             situacao: 'ativo',
             status: 'pending',
@@ -295,6 +295,7 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
                           <SelectItem value="weekly">{t('schedule.weekly')}</SelectItem>
                           <SelectItem value="monthly">{t('schedule.monthly')}</SelectItem>
                           <SelectItem value="yearly">{t('schedule.yearly')}</SelectItem>
+                          <SelectItem value="parcela">Parcela</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -303,29 +304,31 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="installments"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Parcelas (opcional)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min={1} 
-                        max={360}
-                        placeholder="1" 
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 1)}
-                      />
-                    </FormControl>
-                    <p className="text-xs text-muted-foreground">
-                      Se informar mais de 1, serão criadas múltiplas entradas mensais com recorrência "Uma vez"
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {form.watch('recurrence') === 'parcela' && (
+                <FormField
+                  control={form.control}
+                  name="installments"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantidade de Parcelas</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min={1} 
+                          max={360}
+                          placeholder="1" 
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 1)}
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground">
+                        Serão criadas múltiplas entradas mensais com recorrência "Uma vez"
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <DialogFooter className="flex flex-col sm:flex-row gap-3 justify-between items-center">
                 {mode === 'edit' && (

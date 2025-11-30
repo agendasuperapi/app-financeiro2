@@ -403,12 +403,25 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     </div>
                   </TableCell>
                   <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
-                    <Badge 
-                      variant="outline" 
-                      className="text-[10px] whitespace-nowrap"
-                    >
-                      {(transaction as any).status || '-'}
-                    </Badge>
+                    {(() => {
+                      const status = (transaction as any).status;
+                      const isPago = status === 'completed' || status === 'paid' || status === 'concluido';
+                      const isPendente = !status || status === 'pending' || status === 'pendente' || status === 'ativo';
+                      
+                      return (
+                        <Badge 
+                          variant="outline" 
+                          className="text-[10px] whitespace-nowrap"
+                          style={{
+                            backgroundColor: isPago ? '#4CAF5015' : isPendente ? '#FF980015' : '#9E9E9E15',
+                            color: isPago ? '#4CAF50' : isPendente ? '#FF9800' : '#9E9E9E',
+                            borderColor: isPago ? '#4CAF5030' : isPendente ? '#FF980030' : '#9E9E9E30'
+                          }}
+                        >
+                          {isPago ? 'Pago' : isPendente ? 'Pendente' : status || '-'}
+                        </Badge>
+                      );
+                    })()}
                   </TableCell>
                    <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
                      <div className="truncate pr-2">

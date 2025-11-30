@@ -7,6 +7,9 @@ import TransactionForm from '@/components/common/TransactionForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, User, Search, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { useAppContext } from '@/contexts/AppContext';
 import { Transaction } from '@/types';
@@ -19,7 +22,9 @@ import { addMonths, subMonths, addYears, subYears } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { useDateFormat } from '@/hooks/useDateFormat';
-import { createLocalDate } from '@/utils/transactionUtils';
+import { createLocalDate, formatCurrency } from '@/utils/transactionUtils';
+import { supabase } from '@/integrations/supabase/client';
+import { usePreferences } from '@/contexts/PreferencesContext';
 const TransactionsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -30,6 +35,13 @@ const TransactionsPage = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+  
+  // Estados para dialog de transações relacionadas
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
+  const [pastTransactions, setPastTransactions] = useState<any[]>([]);
+  const [futureTransactions, setFutureTransactions] = useState<any[]>([]);
+  const [editOption, setEditOption] = useState<'single' | 'future' | 'past' | 'all'>('single');
   const {
     transactions,
     deleteTransaction,
@@ -44,12 +56,9 @@ const TransactionsPage = () => {
   // Get timezone: prefer client view timezone, fallback to app context timezone
   const effectiveTimezone = userTimezone || appContext.userTimezone;
   const isMobile = useIsMobile();
-  const {
-    toast
-  } = useToast();
-  const {
-    formatDate
-  } = useDateFormat();
+  const { toast } = useToast();
+  const { formatDate } = useDateFormat();
+  const { currency } = usePreferences();
 
   // Função para navegação de data
   const handleDateNavigation = (direction: 'prev' | 'next') => {
@@ -181,14 +190,79 @@ const TransactionsPage = () => {
     const sortedFiltered = sortedMonths.flatMap(monthKey => grouped[monthKey]);
     setFilteredTransactions(sortedFiltered);
   };
+  // Função para verificar transações relacionadas
+  const checkForRelatedTransactions = async (codigoTrans: string | number, currentId: string, currentDate?: string) => {
+    try {
+      const codeStr = String(codigoTrans).replace(/\D/g, '');
+      console.log(`🔍 TransactionsPage - Buscando codigo-trans: "${codeStr}"`);
+
+      const targetUserIdValue = selectedUser?.id || (await supabase.auth.getUser())?.data?.user?.id;
+      if (!targetUserIdValue || !codeStr) return { past: [], future: [] };
+
+      const { data: allData, error } = await (supabase as any)
+        .from('poupeja_transactions')
+        .select('id, date, description, amount, "codigo-trans"')
+        .eq('user_id', targetUserIdValue)
+        .neq('id', currentId)
+        .order('date', { ascending: true });
+
+      if (error) return { past: [], future: [] };
+
+      const rows = (allData || []).filter((item: any) => {
+        const itemCodigo = String(item['codigo-trans'] || '').replace(/\D/g, '');
+        return itemCodigo === codeStr;
+      });
+
+      const baseDate = currentDate ? new Date(currentDate) : new Date();
+      const past = rows.filter((r: any) => new Date(r.date) < baseDate);
+      const future = rows.filter((r: any) => new Date(r.date) >= baseDate);
+
+      console.log(`✅ TransactionsPage - Resultado: ${past.length} passadas, ${future.length} futuras`);
+      return { past, future };
+    } catch (error) {
+      console.error('Erro ao buscar transações relacionadas:', error);
+      return { past: [], future: [] };
+    }
+  };
+
   const handleAddTransaction = () => {
     setEditingTransaction(null);
     setFormOpen(true);
   };
-  const handleEditTransaction = (transaction: Transaction) => {
+  
+  const handleEditTransaction = async (transaction: Transaction) => {
+    setTransactionToEdit(transaction);
+    setEditOption('single');
+    
+    const codigoTrans = (transaction as any)['codigo-trans'];
+    
+    if (codigoTrans) {
+      const currentDate = transaction.date as string;
+      const related = await checkForRelatedTransactions(codigoTrans, transaction.id, currentDate);
+      setPastTransactions(related.past);
+      setFutureTransactions(related.future);
+      
+      // Se há transações relacionadas, mostrar dialog de opções
+      if (related.past.length > 0 || related.future.length > 0) {
+        setEditDialogOpen(true);
+        return;
+      }
+    } else {
+      setPastTransactions([]);
+      setFutureTransactions([]);
+    }
+    
+    // Se não há relacionadas, abrir formulário diretamente
     setEditingTransaction(transaction);
     setFormOpen(true);
   };
+  
+  const handleConfirmEdit = () => {
+    setEditDialogOpen(false);
+    setEditingTransaction(transactionToEdit);
+    setFormOpen(true);
+  };
+  
   const handleDeleteTransaction = (id: string) => {
     deleteTransaction(id);
   };
@@ -329,7 +403,78 @@ const TransactionsPage = () => {
           </div>
         </div>
 
-        <TransactionForm open={formOpen} onOpenChange={setFormOpen} initialData={editingTransaction} mode={editingTransaction ? 'edit' : 'create'} targetUserId={targetUserId} />
+        <TransactionForm 
+          open={formOpen} 
+          onOpenChange={setFormOpen} 
+          initialData={editingTransaction} 
+          mode={editingTransaction ? 'edit' : 'create'} 
+          targetUserId={targetUserId}
+          editScope={editOption}
+          relatedTransactionIds={
+            editOption === 'future' ? futureTransactions.map(t => t.id) :
+            editOption === 'past' ? pastTransactions.map(t => t.id) :
+            editOption === 'all' ? [...pastTransactions.map(t => t.id), ...futureTransactions.map(t => t.id)] :
+            []
+          }
+        />
+        
+        {/* Dialog de Pré-Edição */}
+        <AlertDialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Transações Relacionadas Encontradas</AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3">
+                {transactionToEdit && (
+                  <>
+                    <div className="bg-muted p-3 rounded-md">
+                      <p className="font-medium">{transactionToEdit.description}</p>
+                      <p className={cn("text-sm font-semibold", 
+                        transactionToEdit.type === 'income' ? 'text-green-600' : 'text-red-600')}>
+                        {formatCurrency(Math.abs(transactionToEdit.amount), currency)}
+                      </p>
+                    </div>
+                    
+                    <p className="text-sm">
+                      Encontramos outras transações com o mesmo código. O que deseja editar?
+                    </p>
+                    
+                    <RadioGroup value={editOption} onValueChange={(value: any) => setEditOption(value)}>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="single" id="edit-single" />
+                        <Label htmlFor="edit-single">Apenas esta transação</Label>
+                      </div>
+                      
+                      {futureTransactions.length > 0 && (
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="future" id="edit-future" />
+                          <Label htmlFor="edit-future">Esta e todas as futuras ({futureTransactions.length})</Label>
+                        </div>
+                      )}
+                      
+                      {pastTransactions.length > 0 && (
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="past" id="edit-past" />
+                          <Label htmlFor="edit-past">Esta e todas as passadas ({pastTransactions.length})</Label>
+                        </div>
+                      )}
+                      
+                      {pastTransactions.length > 0 && futureTransactions.length > 0 && (
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="all" id="edit-all" />
+                          <Label htmlFor="edit-all">Todas ({pastTransactions.length + futureTransactions.length + 1})</Label>
+                        </div>
+                      )}
+                    </RadioGroup>
+                  </>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmEdit}>Continuar Edição</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </SubscriptionGuard>
     </MainLayout>;
 };

@@ -239,7 +239,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           // Buscar o codigo-trans diretamente na tabela poupeja_transactions
           const { data: txRow, error } = await (supabase as any)
             .from('poupeja_transactions')
-            .select('id, date, "codigo-trans", codigo_trans, reference_code')
+            .select('id, date, "codigo-trans"')
             .eq('id', initialData.id)
             .maybeSingle();
 
@@ -248,7 +248,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
             return;
           }
 
-          const codigoTrans = txRow?.['codigo-trans'] || txRow?.codigo_trans || txRow?.reference_code;
+          const codigoTrans = txRow?.['codigo-trans'];
           const currentDate = txRow?.date as string | undefined;
 
           console.log('🔍 DEBUG checkDuplicatesOnLoad - txRow:', txRow);

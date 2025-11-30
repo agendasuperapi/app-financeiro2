@@ -19,6 +19,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { Transaction } from '@/types';
 import { formatCurrency, formatDateTime, createLocalDate } from '@/utils/transactionUtils';
 import { cn } from '@/lib/utils';
@@ -27,6 +29,7 @@ import CategoryIcon from '../categories/CategoryIcon';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { useAppContext } from '@/contexts/AppContext';
+import { supabase } from '@/integrations/supabase/client';
 import { ArrowUp, ArrowDown, Edit, Trash2, ChevronUp, ChevronDown, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface TransactionTableProps {
@@ -51,6 +54,12 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // Default to newest first
   
+  // Related transactions state
+  const [showDeleteScopeDialog, setShowDeleteScopeDialog] = useState(false);
+  const [deleteScope, setDeleteScope] = useState<'single' | 'all'>('single');
+  const [relatedCount, setRelatedCount] = useState(0);
+  const [codigoTransToDelete, setCodigoTransToDelete] = useState<string | null>(null);
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -62,17 +71,67 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
   const renderHiddenValue = () => '******';
 
-  const handleDeleteClick = (transaction: Transaction) => {
+  const handleDeleteClick = async (transaction: Transaction) => {
     setTransactionToDelete(transaction);
+    
+    // Check if transaction has codigo-trans
+    const { data: txRow } = await (supabase as any)
+      .from('poupeja_transactions')
+      .select('id, "codigo-trans"')
+      .eq('id', transaction.id)
+      .maybeSingle();
+    
+    const codigoTrans = txRow?.['codigo-trans'];
+    
+    if (codigoTrans) {
+      // Count related transactions
+      const { data: relatedTxs, count } = await (supabase as any)
+        .from('poupeja_transactions')
+        .select('id', { count: 'exact' })
+        .eq('codigo-trans', codigoTrans);
+      
+      if (count && count > 1) {
+        setRelatedCount(count);
+        setCodigoTransToDelete(codigoTrans);
+        setShowDeleteScopeDialog(true);
+        return;
+      }
+    }
+    
+    // No related transactions, proceed with normal delete
     setDeleteDialogOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (transactionToDelete && onDelete) {
+  const handleConfirmDeleteScope = () => {
+    setShowDeleteScopeDialog(false);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!transactionToDelete || !onDelete) return;
+    
+    if (deleteScope === 'all' && codigoTransToDelete) {
+      // Delete all related transactions
+      const { data: relatedTxs } = await (supabase as any)
+        .from('poupeja_transactions')
+        .select('id')
+        .eq('codigo-trans', codigoTransToDelete);
+      
+      if (relatedTxs && relatedTxs.length > 0) {
+        for (const tx of relatedTxs) {
+          await onDelete(tx.id);
+        }
+      }
+    } else {
+      // Delete only this transaction
       onDelete(transactionToDelete.id);
     }
+    
     setDeleteDialogOpen(false);
     setTransactionToDelete(null);
+    setDeleteScope('single');
+    setRelatedCount(0);
+    setCodigoTransToDelete(null);
   };
 
   const handleSort = (field: SortField) => {
@@ -416,11 +475,59 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         </div>
       )}
 
+      {/* Delete scope dialog - shown when transaction has related transactions */}
+      <AlertDialog open={showDeleteScopeDialog} onOpenChange={setShowDeleteScopeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Transações Relacionadas</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                Esta transação faz parte de um grupo de <strong>{relatedCount} transações relacionadas</strong>.
+              </p>
+              <RadioGroup value={deleteScope} onValueChange={(v) => setDeleteScope(v as 'single' | 'all')}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="single" id="single-delete" />
+                  <Label htmlFor="single-delete" className="cursor-pointer">
+                    Excluir apenas esta transação
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="all" id="all-delete" />
+                  <Label htmlFor="all-delete" className="cursor-pointer">
+                    Excluir todas as {relatedCount} transações relacionadas
+                  </Label>
+                </div>
+              </RadioGroup>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setDeleteScope('single');
+              setRelatedCount(0);
+              setCodigoTransToDelete(null);
+            }}>
+              {t('common.cancel') || 'Cancelar'}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDeleteScope}>
+              Continuar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Final delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('common.confirmDelete') || 'Confirmar Exclusão'}</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
+              {deleteScope === 'all' && relatedCount > 0 && (
+                <div className="bg-destructive/10 p-3 rounded-md border border-destructive/20">
+                  <p className="text-sm font-medium text-destructive">
+                    ⚠️ Você está prestes a excluir {relatedCount} transações relacionadas
+                  </p>
+                </div>
+              )}
               {transactionToDelete && (
                 <div className="bg-muted p-3 rounded-md">
                   <p className="font-medium">
@@ -438,7 +545,13 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel') || 'Cancelar'}</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => {
+              setDeleteScope('single');
+              setRelatedCount(0);
+              setCodigoTransToDelete(null);
+            }}>
+              {t('common.cancel') || 'Cancelar'}
+            </AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete}>
               {t('common.delete') || 'Excluir'}
             </AlertDialogAction>

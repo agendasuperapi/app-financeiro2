@@ -471,7 +471,7 @@ const ContasPage = () => {
                   <span className={isMobile ? "text-xs" : ""}>Adicionar</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Agendar Transação</DialogTitle>
                 </DialogHeader>
@@ -714,7 +714,7 @@ const ContasPage = () => {
         
         {/* Dialog de Edição */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Editar Conta</DialogTitle>
             </DialogHeader>

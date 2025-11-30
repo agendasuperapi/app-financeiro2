@@ -405,8 +405,8 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
                     {(() => {
                       const status = (transaction as any).status;
-                      const isPago = status === 'completed' || status === 'paid' || status === 'concluido';
-                      const isPendente = !status || status === 'pending' || status === 'pendente' || status === 'ativo';
+                      const isPago = status === 'paid';
+                      const isPendente = status === 'pending';
                       
                       return (
                         <Badge 

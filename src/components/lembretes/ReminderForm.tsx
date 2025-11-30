@@ -134,21 +134,22 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           console.log(`📦 Creating ${installments} installments...`);
           const baseDate = new Date(values.scheduledDate);
           
+          // Gerar um único código para todas as parcelas
+          const sharedReferenceCode = String(
+            Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000)
+          );
+          
           for (let i = 0; i < installments; i++) {
             const installmentDate = new Date(baseDate);
             installmentDate.setMonth(installmentDate.getMonth() + i);
-
-            const referenceCode = String(
-              Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000) + i
-            );
             
             const reminderData = {
               user_id: userId,
               description: `${values.description} (${i + 1}/${installments})`,
               date: installmentDate.toISOString(),
               recurrence: 'once', // Sempre "once" para parcelas
-              reference_code: referenceCode,
-              "codigo-trans": referenceCode,
+              reference_code: sharedReferenceCode,
+              "codigo-trans": sharedReferenceCode,
               situacao: 'ativo',
               status: 'pending',
               phone: values.phone || userPhone,

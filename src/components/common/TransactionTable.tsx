@@ -28,7 +28,6 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { useAppContext } from '@/contexts/AppContext';
 import { ArrowUp, ArrowDown, Edit, Trash2, ChevronUp, ChevronDown, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -47,7 +46,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   hideValues = false
 }) => {
   const { t, currency } = usePreferences();
-  const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [sortField, setSortField] = useState<SortField>('created_at');
@@ -75,19 +73,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     }
     setDeleteDialogOpen(false);
     setTransactionToDelete(null);
-  };
-
-  const handleEditClick = (transaction: Transaction) => {
-    // Verificar se o formato é "agenda"
-    const formato = (transaction as any).formato;
-    
-    if (formato === 'agenda') {
-      // Redirecionar para /contas com o ID da transação
-      navigate(`/contas?edit=${transaction.id}`);
-    } else if (onEdit) {
-      // Abrir formulário normal de edição
-      onEdit(transaction);
-    }
   };
 
   const handleSort = (field: SortField) => {
@@ -366,7 +351,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                           variant="ghost"
                           size="sm"
                           className="h-7 w-7 p-0"
-                          onClick={() => handleEditClick(transaction)}
+                          onClick={() => onEdit(transaction)}
                         >
                           <Edit className="h-3 w-3" />
                           <span className="sr-only">{t('common.edit')}</span>

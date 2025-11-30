@@ -149,22 +149,41 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   // Load related transactions when opening in edit mode
   useEffect(() => {
     const loadRelatedTransactions = async () => {
-      if (open && mode === 'edit' && initialData?.id) {
-        const codigoTrans = (initialData as any)['codigo-trans'];
+      if (!open || mode !== 'edit' || !initialData?.id) return;
+      
+      try {
+        // Buscar sempre do banco para garantir que temos codigo-trans e data
+        const { data: txRow, error } = await (supabase as any)
+          .from('poupeja_transactions')
+          .select('id, "codigo-trans", date')
+          .eq('id', initialData.id)
+          .maybeSingle();
+        
+        if (error || !txRow) {
+          setPastTransactions([]);
+          setFutureTransactions([]);
+          return;
+        }
+        
+        const codigoTrans = txRow['codigo-trans'];
+        const currentDate = txRow.date as string;
         
         if (codigoTrans) {
           setLoadingRelated(true);
-          const currentDate = initialData.date as string;
           const related = await checkForRelatedTransactions(codigoTrans, initialData.id, currentDate);
-          
           setPastTransactions(related.past);
           setFutureTransactions(related.future);
           setEditOption('single');
-          setLoadingRelated(false);
         } else {
           setPastTransactions([]);
           setFutureTransactions([]);
         }
+      } catch (err) {
+        console.error('Erro ao carregar transações relacionadas para edição:', err);
+        setPastTransactions([]);
+        setFutureTransactions([]);
+      } finally {
+        setLoadingRelated(false);
       }
     };
     

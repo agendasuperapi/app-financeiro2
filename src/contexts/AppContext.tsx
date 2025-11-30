@@ -242,6 +242,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       goal_id: dbTransaction.goal_id,
       user_id: dbTransaction.user_id,
       created_at: dbTransaction.created_at,
+      status: dbTransaction.status || 'pending', // Adicionar campo status
       creatorName: dbTransaction.name || undefined,
       conta_id: dbTransaction.conta_id || undefined,
       formato: dbTransaction.formato || undefined,

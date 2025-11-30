@@ -57,6 +57,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
         // Campos adicionais necessários para edição correta
         category_id: item.category_id || undefined,
         created_at: item.created_at || undefined,
+        status: item.status || 'pending', // Adicionar campo status
         // Mostrar nome de quem adicionou quando houver nome na transação
         creatorName: creatorName,
         conta_id: item.conta_id || '', // Manter string vazia em vez de undefined

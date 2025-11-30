@@ -233,28 +233,42 @@ const ContaForm: React.FC<ContaFormProps> = ({
       
       // Verificar duplicatas quando carregar dados para edição
       const checkDuplicatesOnLoad = async () => {
-        console.log('🔍 DEBUG: initialData TODAS as propriedades:', JSON.stringify(initialData, null, 2));
-        console.log('🔍 DEBUG: Object.keys(initialData):', Object.keys(initialData || {}));
-        
-        const codigoTrans = (initialData as any)?.['codigo-trans'] || (initialData as any)?.codigo_trans || (initialData as any)?.reference_code;
-        const currentDate = (initialData as any)?.date as string | undefined;
-        
-        console.log('🔍 DEBUG: codigoTrans final:', codigoTrans);
-        
-        if (codigoTrans) {
-          console.log(`🔍 Verificando duplicatas ao carregar para codigo-trans: ${codigoTrans}`);
-          const { past, future } = await checkForRelatedTransactions(codigoTrans, initialData.id, currentDate);
-          
-          console.log(`📋 Encontradas ${past.length} transações passadas e ${future.length} transações futuras ao carregar`);
-          setPastTransactions(past);
-          setFutureTransactions(future);
-        } else {
-          console.log('ℹ️ Transação não possui codigo-trans');
-          setPastTransactions([]);
-          setFutureTransactions([]);
+        if (!initialData?.id) return;
+
+        try {
+          // Buscar o codigo-trans diretamente na tabela poupeja_transactions
+          const { data: txRow, error } = await (supabase as any)
+            .from('poupeja_transactions')
+            .select('id, date, "codigo-trans", codigo_trans, reference_code')
+            .eq('id', initialData.id)
+            .maybeSingle();
+
+          if (error) {
+            console.error('❌ Erro ao buscar codigo-trans para edição:', error);
+            return;
+          }
+
+          const codigoTrans = txRow?.['codigo-trans'] || txRow?.codigo_trans || txRow?.reference_code;
+          const currentDate = txRow?.date as string | undefined;
+
+          console.log('🔍 DEBUG checkDuplicatesOnLoad - txRow:', txRow);
+          console.log('🔍 DEBUG checkDuplicatesOnLoad - codigoTrans:', codigoTrans);
+
+          if (codigoTrans) {
+            const { past, future } = await checkForRelatedTransactions(codigoTrans, initialData.id, currentDate);
+            console.log(`📋 Encontradas ${past.length} transações passadas e ${future.length} transações futuras ao carregar`);
+            setPastTransactions(past);
+            setFutureTransactions(future);
+          } else {
+            console.log('ℹ️ Transação não possui codigo-trans');
+            setPastTransactions([]);
+            setFutureTransactions([]);
+          }
+        } catch (err) {
+          console.error('❌ Erro inesperado em checkDuplicatesOnLoad:', err);
         }
       };
-      
+
       checkDuplicatesOnLoad();
     }
   }, [initialData?.id, mode]);

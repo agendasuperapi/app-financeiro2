@@ -477,7 +477,16 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => setDeleteDialogOpen(true)}
+                    onClick={() => {
+                      // Check for related reminders before opening delete dialog
+                      const codigoTrans = (initialData as any)?.codigo_trans || (initialData as any)?.reference_code;
+                      if (codigoTrans && futureReminders.length === 0 && pastReminders.length === 0) {
+                        // If we haven't checked yet, do it now
+                        const dateValue = (initialData as any)?.scheduledDate || (initialData as any)?.date;
+                        checkForRelatedReminders(codigoTrans, initialData?.id || '', dateValue);
+                      }
+                      setDeleteDialogOpen(true);
+                    }}
                     className="text-red-600 border-red-600 hover:bg-red-50"
                   >
                     {t('common.delete')}

@@ -289,6 +289,7 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
         phone: (transaction as any).phone,
         reference_code: await getNextReferenceCode(), // Generate new reference code for updates
         formato: 'transacao', // Mantém como transacao em atualizações
+        status: 'paid', // Sempre marcar como paid
       })
       .eq("id", transaction.id)
       .select(`

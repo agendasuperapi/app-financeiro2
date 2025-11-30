@@ -340,6 +340,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           type: values.type,
           conta_id: values.conta_id,
           name: values.name || null,
+          status: 'paid', // Sempre marcar como paid
         };
         
         const { error } = await (supabase as any)
@@ -384,6 +385,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           type: values.type,
           conta_id: values.conta_id,
           name: values.name || null,
+          status: 'paid', // Sempre marcar como paid
         };
         
         const { error } = await (supabase as any)

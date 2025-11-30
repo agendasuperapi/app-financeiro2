@@ -125,7 +125,7 @@ export const useTransactionForm = ({
             user_id: targetUserId,
             conta_id: processedValues.conta_id,
             name: processedValues.name || undefined,
-            status: processedValues.type === 'expense' ? 'paid' : 'recebido', // Set status based on type
+            status: 'paid', // Sempre marcar como paid
           });
           // Disparar evento para atualizar dados do cliente imediatamente
           try {
@@ -146,7 +146,7 @@ export const useTransactionForm = ({
             category: '',
             conta_id: processedValues.conta_id,
             creatorName: processedValues.name || undefined,
-            status: processedValues.type === 'expense' ? 'paid' : 'recebido', // Set status based on type
+            status: 'paid', // Sempre marcar como paid
             // name will be saved in DB via AppContext addTransaction
           });
         }
@@ -175,6 +175,7 @@ export const useTransactionForm = ({
           goalId: processedValues.goalId,
           conta_id: processedValues.conta_id,
           creatorName: processedValues.name || undefined,
+          status: 'paid', // Sempre marcar como paid
         });
         
         console.log("Transaction updated successfully, refreshing data...");

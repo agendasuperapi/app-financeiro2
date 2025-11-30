@@ -31,7 +31,6 @@ import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { useAppContext } from '@/contexts/AppContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowUp, ArrowDown, Edit, Trash2, ChevronUp, ChevronDown, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import BulkEditDialog from '../contas/BulkEditDialog';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -55,16 +54,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // Default to newest first
   
-  // Related transactions state for delete
+  // Related transactions state
   const [showDeleteScopeDialog, setShowDeleteScopeDialog] = useState(false);
   const [deleteScope, setDeleteScope] = useState<'single' | 'all'>('single');
   const [relatedCount, setRelatedCount] = useState(0);
   const [codigoTransToDelete, setCodigoTransToDelete] = useState<string | null>(null);
-  
-  // Related transactions state for edit
-  const [showEditScopeDialog, setShowEditScopeDialog] = useState(false);
-  const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
-  const [futureTransactionsCount, setFutureTransactionsCount] = useState(0);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -76,62 +70,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   const effectiveTimezone = userTimezone || appCtx.userTimezone;
 
   const renderHiddenValue = () => '******';
-
-  const handleEditClick = async (transaction: Transaction) => {
-    setTransactionToEdit(transaction);
-    
-    // Check if transaction has codigo-trans
-    const { data: txRow } = await (supabase as any)
-      .from('poupeja_transactions')
-      .select('id, "codigo-trans", date, user_id')
-      .eq('id', transaction.id)
-      .maybeSingle();
-    
-    const codigoTrans = txRow?.['codigo-trans'];
-    const currentDate = txRow?.date;
-    const userId = txRow?.user_id;
-    
-    if (codigoTrans) {
-      // Buscar transações relacionadas futuras (mesma lógica da aba /contas)
-      const codeStr = String(codigoTrans).replace(/\D/g, '');
-      
-      const { data: futureData, error } = await (supabase as any)
-        .from('poupeja_transactions')
-        .select('id, date, description, "codigo-trans"')
-        .eq('user_id', userId)
-        .neq('id', transaction.id)
-        .gte('date', currentDate)
-        .order('date', { ascending: true });
-      
-      if (!error && futureData) {
-        const futureRows = futureData.filter((item: any) => {
-          const itemCodigo = String(item['codigo-trans'] || '').replace(/\D/g, '');
-          return itemCodigo === codeStr;
-        });
-        
-        if (futureRows.length > 0) {
-          setFutureTransactionsCount(futureRows.length);
-          setShowEditScopeDialog(true);
-          return;
-        }
-      }
-    }
-    
-    // No related future transactions, proceed with normal edit
-    if (onEdit) {
-      onEdit(transaction);
-    }
-  };
-
-  const handleConfirmEditScope = (editAll: boolean) => {
-    setShowEditScopeDialog(false);
-    if (transactionToEdit && onEdit) {
-      // Pass the transaction with a flag indicating if all should be edited
-      onEdit({ ...transactionToEdit, __editAll: editAll } as any);
-    }
-    setTransactionToEdit(null);
-    setFutureTransactionsCount(0);
-  };
 
   const handleDeleteClick = async (transaction: Transaction) => {
     setTransactionToDelete(transaction);
@@ -472,7 +410,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                           variant="ghost"
                           size="sm"
                           className="h-7 w-7 p-0"
-                          onClick={() => handleEditClick(transaction)}
+                          onClick={() => onEdit(transaction)}
                         >
                           <Edit className="h-3 w-3" />
                           <span className="sr-only">{t('common.edit')}</span>
@@ -536,14 +474,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           </div>
         </div>
       )}
-
-      {/* Edit scope dialog - shown when transaction has related future transactions */}
-      <BulkEditDialog
-        open={showEditScopeDialog}
-        onOpenChange={setShowEditScopeDialog}
-        futureTransactionsCount={futureTransactionsCount}
-        onConfirm={handleConfirmEditScope}
-      />
 
       {/* Delete scope dialog - shown when transaction has related transactions */}
       <AlertDialog open={showDeleteScopeDialog} onOpenChange={setShowDeleteScopeDialog}>

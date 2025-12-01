@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
 import { formatCurrency, createLocalDate } from '@/utils/transactionUtils';
@@ -110,6 +110,25 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
     }
     return null;
   };
+  // Listener para capturar gráficos quando transação for atualizada
+  useEffect(() => {
+    const handleTransactionUpdate = async () => {
+      // Aguarda um pequeno delay para garantir que os gráficos foram re-renderizados
+      setTimeout(async () => {
+        // Dynamic import para evitar circular dependency
+        const { captureAndSaveChart } = await import('@/services/chartImageService');
+        await captureAndSaveChart('chart-bar-income-expenses', 'grafico_barras', currentMonth);
+        await captureAndSaveChart('chart-pie-categories', 'grafico_pizza', currentMonth);
+      }, 1000);
+    };
+
+    window.addEventListener('transaction-updated', handleTransactionUpdate);
+    
+    return () => {
+      window.removeEventListener('transaction-updated', handleTransactionUpdate);
+    };
+  }, [currentMonth]);
+
   return <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Monthly Income/Expense Bar Chart */}
@@ -118,7 +137,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
             <CardTitle className="text-lg text-center">{t('charts.incomeVsExpenses')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div id="chart-bar-income-expenses" className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyData} margin={{
                 top: 5,
@@ -145,7 +164,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
             <CardTitle className="text-lg text-center">{t('charts.expenseBreakdown')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 flex items-center justify-center">
+            <div id="chart-pie-categories" className="h-64 flex items-center justify-center">
               {expenseSummaries.length > 0 ? <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={expenseSummaries} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={2} dataKey="amount" nameKey="category" label={({

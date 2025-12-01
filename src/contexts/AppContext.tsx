@@ -695,21 +695,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             .in('id', userIds);
           
           if (usersError) {
-            console.error("DEBUG getTransactions: ERRO ao buscar poupeja_users:", usersError);
-            console.error("DEBUG getTransactions: Problema de RLS? Código:", usersError.code, "Mensagem:", usersError.message);
-          } else {
-            console.log("DEBUG getTransactions: poupeja_users dados obtidos:", usersRows);
+            console.error("Error fetching users:", usersError);
           }
           
           (usersRows || []).forEach((u: any) => depMap.set(String(u.id), u.dependente === true));
         } catch (error) {
-          console.error("DEBUG getTransactions: EXCEPTION ao acessar poupeja_users:", error);
+          console.error("Exception accessing users:", error);
         }
       }
       const transactions = txRows.map((row: any) => {
         const base = transformTransaction(row);
         const creatorName = row.name ? row.name : undefined;
-        console.log(`DEBUG getTransactions: TX ${row.id} - name: ${row.name}, final: ${creatorName}`);
         return { ...base, creatorName } as Transaction;
       });
       console.log('AppContext: Transactions fetched successfully:', transactions.length);

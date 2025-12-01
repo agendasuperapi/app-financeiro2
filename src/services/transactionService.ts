@@ -220,8 +220,10 @@ export const createTransactionForUser = async (transactionData: {
     }));
     
     // Trigger chart capture
+    console.log('🎨 Dispatching transaction-updated event after createTransactionForUser');
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('transaction-updated'));
+      console.log('✅ transaction-updated event dispatched');
     }, 100);
 
     return {
@@ -328,8 +330,10 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
     }
 
     // Trigger chart capture
+    console.log('🎨 Dispatching transaction-updated event after updateTransaction');
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('transaction-updated'));
+      console.log('✅ transaction-updated event dispatched');
     }, 100);
 
     return {

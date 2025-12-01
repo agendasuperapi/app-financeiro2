@@ -7,6 +7,7 @@ import { usePreferences } from '@/contexts/PreferencesContext';
 import { calculateCategorySummaries } from '@/utils/transactionUtils';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
+import EnhancedChartCard from './EnhancedChartCard';
 interface DashboardChartsProps {
   currentMonth?: Date;
   hideValues?: boolean;
@@ -114,6 +115,13 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
   };
 
   return <div className="space-y-6">
+      {/* Enhanced Chart with Filters */}
+      <EnhancedChartCard 
+        transactions={monthTransactions || transactions}
+        currentMonth={currentMonth}
+        hideValues={hideValues}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Monthly Income/Expense Bar Chart */}
         <Card className="transition-all hover:shadow-lg">

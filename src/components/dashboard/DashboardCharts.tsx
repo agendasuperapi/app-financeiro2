@@ -173,13 +173,13 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
             <CardTitle className="text-lg text-center">{t('charts.expenseBreakdown')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div id="chart-pie-categories" className="h-64 flex items-center justify-center">
+            <div id="chart-pie-categories" className="h-80 flex items-center justify-center">
               {expenseSummaries.length > 0 ? <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 5, right: 30, bottom: 5, left: 30 }}>
+                  <PieChart margin={{ top: 10, right: 30, bottom: 60, left: 30 }}>
                     <Pie 
                       data={expenseSummaries} 
                       cx="50%" 
-                      cy="50%" 
+                      cy="45%" 
                       innerRadius={50} 
                       outerRadius={70} 
                       paddingAngle={2} 
@@ -191,7 +191,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
                     </Pie>
                     <Legend 
                       verticalAlign="bottom" 
-                      height={36}
+                      height={60}
+                      wrapperStyle={{ paddingTop: '20px' }}
                       formatter={(value, entry: any) => {
                         const data = entry.payload;
                         const total = expenseSummaries.reduce((sum, item) => sum + item.amount, 0);

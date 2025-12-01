@@ -527,14 +527,24 @@ const ContaForm: React.FC<ContaFormProps> = ({
         return;
       }
 
-      // Calcular a diferença entre a data original e a nova data
+      // Calcular diferenças entre data original e nova data
       const originalDate = new Date((initialData as any)?.date);
       const newDate = new Date(values.scheduledDate);
-      const timeDifference = newDate.getTime() - originalDate.getTime();
+      
+      // Detectar o que mudou
+      const dayChanged = originalDate.getDate() !== newDate.getDate();
+      const monthChanged = originalDate.getMonth() !== newDate.getMonth();
+      const yearChanged = originalDate.getFullYear() !== newDate.getFullYear();
+      const hourChanged = originalDate.getHours() !== newDate.getHours();
+      const minuteChanged = originalDate.getMinutes() !== newDate.getMinutes();
+      
+      // Determinar tipo de mudança
+      const onlyDayChanged = dayChanged && !monthChanged && !yearChanged && !hourChanged && !minuteChanged;
+      const onlyTimeChanged = (hourChanged || minuteChanged) && !dayChanged && !monthChanged && !yearChanged;
       
       console.log(`📅 Data original: ${originalDate.toISOString()}`);
       console.log(`📅 Nova data: ${newDate.toISOString()}`);
-      console.log(`⏱️ Diferença de tempo: ${timeDifference}ms (${timeDifference / (1000 * 60 * 60 * 24)} dias)`);
+      console.log(`🔍 Apenas dia mudou: ${onlyDayChanged}, Apenas hora mudou: ${onlyTimeChanged}`);
 
       // Buscar todas as transações futuras com mesmo codigo-trans
       const { data: fetchedFutureTransactions, error: fetchError } = await (supabase as any)
@@ -566,10 +576,25 @@ const ContaForm: React.FC<ContaFormProps> = ({
       // Encontrar a categoria selecionada
       const selectedCategory = categories.find(cat => cat.id === values.category);
 
-      // Atualizar cada transação individualmente com a nova data deslocada
+      // Atualizar cada transação individualmente
       for (const transaction of listToUpdate) {
         const originalTxDate = new Date(transaction.date);
-        const newTxDate = new Date(originalTxDate.getTime() + timeDifference);
+        let newTxDate: Date;
+        
+        if (onlyDayChanged) {
+          // Manter mês/ano/hora/minuto originais, apenas mudar o dia
+          newTxDate = new Date(originalTxDate);
+          newTxDate.setDate(newDate.getDate());
+        } else if (onlyTimeChanged) {
+          // Manter dia/mês/ano originais, apenas mudar hora/minuto
+          newTxDate = new Date(originalTxDate);
+          newTxDate.setHours(newDate.getHours());
+          newTxDate.setMinutes(newDate.getMinutes());
+        } else {
+          // Mudança completa - aplicar diferença de tempo
+          const timeDifference = newDate.getTime() - originalDate.getTime();
+          newTxDate = new Date(originalTxDate.getTime() + timeDifference);
+        }
         
         console.log(`📆 Transação ${transaction.id}: ${originalTxDate.toISOString()} → ${newTxDate.toISOString()}`);
 
@@ -605,14 +630,34 @@ const ContaForm: React.FC<ContaFormProps> = ({
   // Atualiza futuras a partir de uma lista já carregada (fallback quando não há codigo-trans)
   const updateFutureTransactionsByList = async (values: ContaFormValues, list: Array<{ id: string; date: string }>) => {
     try {
-      // Calcular a diferença entre a data original e a nova data
       const originalDate = new Date((initialData as any)?.date);
       const newDate = new Date(values.scheduledDate);
-      const timeDifference = newDate.getTime() - originalDate.getTime();
+      
+      // Detectar o que mudou
+      const dayChanged = originalDate.getDate() !== newDate.getDate();
+      const monthChanged = originalDate.getMonth() !== newDate.getMonth();
+      const yearChanged = originalDate.getFullYear() !== newDate.getFullYear();
+      const hourChanged = originalDate.getHours() !== newDate.getHours();
+      const minuteChanged = originalDate.getMinutes() !== newDate.getMinutes();
+      
+      const onlyDayChanged = dayChanged && !monthChanged && !yearChanged && !hourChanged && !minuteChanged;
+      const onlyTimeChanged = (hourChanged || minuteChanged) && !dayChanged && !monthChanged && !yearChanged;
 
       for (const tx of list) {
         const originalTxDate = new Date(tx.date);
-        const newTxDate = new Date(originalTxDate.getTime() + timeDifference);
+        let newTxDate: Date;
+        
+        if (onlyDayChanged) {
+          newTxDate = new Date(originalTxDate);
+          newTxDate.setDate(newDate.getDate());
+        } else if (onlyTimeChanged) {
+          newTxDate = new Date(originalTxDate);
+          newTxDate.setHours(newDate.getHours());
+          newTxDate.setMinutes(newDate.getMinutes());
+        } else {
+          const timeDifference = newDate.getTime() - originalDate.getTime();
+          newTxDate = new Date(originalTxDate.getTime() + timeDifference);
+        }
 
         const updateData = {
           type: values.type,
@@ -643,14 +688,34 @@ const ContaForm: React.FC<ContaFormProps> = ({
   // Atualiza transações passadas
   const updatePastTransactions = async (values: ContaFormValues, list: Array<{ id: string; date: string }>) => {
     try {
-      // Calcular a diferença entre a data original e a nova data
       const originalDate = new Date((initialData as any)?.date);
       const newDate = new Date(values.scheduledDate);
-      const timeDifference = newDate.getTime() - originalDate.getTime();
+      
+      // Detectar o que mudou
+      const dayChanged = originalDate.getDate() !== newDate.getDate();
+      const monthChanged = originalDate.getMonth() !== newDate.getMonth();
+      const yearChanged = originalDate.getFullYear() !== newDate.getFullYear();
+      const hourChanged = originalDate.getHours() !== newDate.getHours();
+      const minuteChanged = originalDate.getMinutes() !== newDate.getMinutes();
+      
+      const onlyDayChanged = dayChanged && !monthChanged && !yearChanged && !hourChanged && !minuteChanged;
+      const onlyTimeChanged = (hourChanged || minuteChanged) && !dayChanged && !monthChanged && !yearChanged;
 
       for (const tx of list) {
         const originalTxDate = new Date(tx.date);
-        const newTxDate = new Date(originalTxDate.getTime() + timeDifference);
+        let newTxDate: Date;
+        
+        if (onlyDayChanged) {
+          newTxDate = new Date(originalTxDate);
+          newTxDate.setDate(newDate.getDate());
+        } else if (onlyTimeChanged) {
+          newTxDate = new Date(originalTxDate);
+          newTxDate.setHours(newDate.getHours());
+          newTxDate.setMinutes(newDate.getMinutes());
+        } else {
+          const timeDifference = newDate.getTime() - originalDate.getTime();
+          newTxDate = new Date(originalTxDate.getTime() + timeDifference);
+        }
 
         const updateData = {
           type: values.type,
@@ -681,14 +746,34 @@ const ContaForm: React.FC<ContaFormProps> = ({
   // Atualiza todas as transações (passadas + futuras)
   const updateAllTransactions = async (values: ContaFormValues, list: Array<{ id: string; date: string }>) => {
     try {
-      // Calcular a diferença entre a data original e a nova data
       const originalDate = new Date((initialData as any)?.date);
       const newDate = new Date(values.scheduledDate);
-      const timeDifference = newDate.getTime() - originalDate.getTime();
+      
+      // Detectar o que mudou
+      const dayChanged = originalDate.getDate() !== newDate.getDate();
+      const monthChanged = originalDate.getMonth() !== newDate.getMonth();
+      const yearChanged = originalDate.getFullYear() !== newDate.getFullYear();
+      const hourChanged = originalDate.getHours() !== newDate.getHours();
+      const minuteChanged = originalDate.getMinutes() !== newDate.getMinutes();
+      
+      const onlyDayChanged = dayChanged && !monthChanged && !yearChanged && !hourChanged && !minuteChanged;
+      const onlyTimeChanged = (hourChanged || minuteChanged) && !dayChanged && !monthChanged && !yearChanged;
 
       for (const tx of list) {
         const originalTxDate = new Date(tx.date);
-        const newTxDate = new Date(originalTxDate.getTime() + timeDifference);
+        let newTxDate: Date;
+        
+        if (onlyDayChanged) {
+          newTxDate = new Date(originalTxDate);
+          newTxDate.setDate(newDate.getDate());
+        } else if (onlyTimeChanged) {
+          newTxDate = new Date(originalTxDate);
+          newTxDate.setHours(newDate.getHours());
+          newTxDate.setMinutes(newDate.getMinutes());
+        } else {
+          const timeDifference = newDate.getTime() - originalDate.getTime();
+          newTxDate = new Date(originalTxDate.getTime() + timeDifference);
+        }
 
         const updateData = {
           type: values.type,

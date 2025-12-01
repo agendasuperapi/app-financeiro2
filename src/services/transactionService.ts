@@ -218,6 +218,11 @@ export const createTransactionForUser = async (transactionData: {
     window.dispatchEvent(new CustomEvent('transaction-created', { 
       detail: { transaction: data } 
     }));
+    
+    // Trigger chart capture
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('transaction-updated'));
+    }, 100);
 
     return {
       id: data.id,
@@ -321,6 +326,11 @@ export const updateTransaction = async (transaction: Transaction): Promise<Trans
         });
       }
     }
+
+    // Trigger chart capture
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('transaction-updated'));
+    }, 100);
 
     return {
       id: data.id,

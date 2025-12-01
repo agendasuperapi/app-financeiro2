@@ -14,6 +14,7 @@ interface EnhancedChartCardProps {
   transactions: Transaction[];
   currentMonth: Date;
   hideValues?: boolean;
+  filterPerson?: string;
 }
 
 type FilterType = 'all' | 'income' | 'expense' | 'expense_unpaid' | 'expense_paid' | 
@@ -22,26 +23,15 @@ type FilterType = 'all' | 'income' | 'expense' | 'expense_unpaid' | 'expense_pai
 const EnhancedChartCard: React.FC<EnhancedChartCardProps> = ({
   transactions,
   currentMonth,
-  hideValues = false
+  hideValues = false,
+  filterPerson = 'all'
 }) => {
   const { currency, t, language } = usePreferences();
   const [filterType, setFilterType] = React.useState<FilterType>('all');
-  const [filterPerson, setFilterPerson] = React.useState<string>('all');
 
   const locale = language === 'pt' ? pt : enUS;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
-  // Get unique creator names
-  const creatorNames = useMemo(() => {
-    const names = new Set<string>();
-    transactions.forEach(tx => {
-      if (tx.creatorName) {
-        names.add(tx.creatorName);
-      }
-    });
-    return Array.from(names).sort();
-  }, [transactions]);
 
   // Filter transactions based on selected filters
   const filteredTransactions = useMemo(() => {
@@ -96,7 +86,7 @@ const EnhancedChartCard: React.FC<EnhancedChartCardProps> = ({
     const categoryMap = new Map<string, { amount: number; color: string }>();
     
     filteredTransactions.forEach(tx => {
-      const category = tx.category || t('common.other');
+      const category = tx.category || t('categories.other');
       const color = tx.categoryColor || '#94A3B8';
       const amount = Math.abs(tx.amount);
       
@@ -182,32 +172,12 @@ const EnhancedChartCard: React.FC<EnhancedChartCardProps> = ({
           </TabsList>
         </Tabs>
 
-        {/* Person Filter */}
-        {creatorNames.length > 0 && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium">{t('charts.filterByPerson')}:</label>
-            <Select value={filterPerson} onValueChange={setFilterPerson}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('charts.allPeople')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('charts.allPeople')}</SelectItem>
-                {creatorNames.map(name => (
-                  <SelectItem key={name} value={name}>
-                    {name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
         {/* Chart Section */}
         <div className="space-y-2">
           <div className="text-center">
             <h3 className="font-semibold text-lg">{getTitle()}</h3>
             <p className="text-sm text-muted-foreground capitalize">
-              {format(startDate, 'd', { locale })} {t('common.de')} {format(startDate, 'MMMM', { locale })} - {format(endDate, 'd', { locale })} {t('common.de')} {format(endDate, 'MMMM', { locale })}
+              {format(startDate, 'd', { locale })} {t('common.to')} {format(endDate, 'd', { locale })} {t('common.of')} {format(endDate, 'MMMM', { locale })}
             </p>
           </div>
 

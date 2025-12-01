@@ -217,7 +217,7 @@ const ContasPage = () => {
     const isDueToday = isToday(scheduledDate);
     const isPaid = conta.status === 'paid' || conta.status === 'recebido';
     if (isPaid) {
-      return conta.status === 'recebido' ? 'Recebido' : 'Pago';
+      return conta.amount > 0 ? 'Recebido' : 'Pago';
     }
     if (isDueToday) return 'Vence Hoje';
     if (isOverdue) return 'Vencido';

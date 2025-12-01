@@ -185,14 +185,30 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
           <CardContent>
             <div id="chart-pie-categories" className="h-64 flex items-center justify-center">
               {expenseSummaries.length > 0 ? <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={expenseSummaries} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={2} dataKey="amount" nameKey="category" label={({
-                  category,
-                  percent
-                }) => `${category}: ${(percent * 100).toFixed(0)}%`}>
+                  <PieChart margin={{ top: 5, right: 30, bottom: 5, left: 30 }}>
+                    <Pie 
+                      data={expenseSummaries} 
+                      cx="50%" 
+                      cy="50%" 
+                      innerRadius={50} 
+                      outerRadius={70} 
+                      paddingAngle={2} 
+                      dataKey="amount" 
+                      nameKey="category" 
+                      label={false}
+                    >
                       {expenseSummaries.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                     </Pie>
-                    <Legend />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36}
+                      formatter={(value, entry: any) => {
+                        const data = entry.payload;
+                        const total = expenseSummaries.reduce((sum, item) => sum + item.amount, 0);
+                        const percent = ((data.amount / total) * 100).toFixed(0);
+                        return `${value}: ${percent}%`;
+                      }}
+                    />
                     <Tooltip formatter={value => hideValues ? '******' : formatCurrency(Number(value), currency)} />
                   </PieChart>
                 </ResponsiveContainer> : <p className="text-metacash-gray">{t('common.noData')}</p>}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
@@ -13,6 +13,8 @@ import { calculateTotalIncome, calculateTotalExpenses, calculateMonthlyFinancial
 import { useToast } from '@/components/ui/use-toast';
 import { markAsPaid } from '@/services/scheduledTransactionService';
 import { ScheduledTransaction } from '@/types';
+import { DependentsService, Dependent } from '@/services/dependentsService';
+import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { User } from 'lucide-react';
 
@@ -52,13 +54,34 @@ const Index = () => {
   // Saldos calculados no DashboardContent (incluindo simulações)
   const [previousMonthsBalance, setPreviousMonthsBalance] = useState(0);
   const [monthlyBalanceCombined, setMonthlyBalanceCombined] = useState(0);
+  const [dependents, setDependents] = useState<Dependent[]>([]);
+  const [selectedPerson, setSelectedPerson] = useState<string>('all');
   
   // Logs removidos para melhorar performance
   
+  // Get unique creator names for person filter
+  const creatorNames = useMemo(() => {
+    const names = new Set<string>();
+    transactions.forEach(tx => {
+      if (tx.creatorName) {
+        names.add(tx.creatorName);
+      }
+    });
+    return Array.from(names).sort();
+  }, [transactions]);
+
+  // Filter transactions by selected person
+  const personFilteredTransactions = useMemo(() => {
+    if (selectedPerson === 'all') {
+      return transactions;
+    }
+    return transactions.filter(tx => tx.creatorName === selectedPerson);
+  }, [transactions, selectedPerson]);
+
   // NEW: Calculate month-specific financial data using the new utility with error handling
   const monthlyData = React.useMemo(() => {
     try {
-      if (!transactions || !Array.isArray(transactions)) {
+      if (!personFilteredTransactions || !Array.isArray(personFilteredTransactions)) {
         console.warn('Dashboard: Invalid transactions data, using fallback');
         return {
           monthTransactions: [],
@@ -78,7 +101,7 @@ const Index = () => {
 
       // Include simulations in transactions for calculation
       const simulations = generateMonthlySimulations(scheduledTransactions);
-      const transactionsWithSimulations = [...transactions, ...simulations];
+      const transactionsWithSimulations = [...personFilteredTransactions, ...simulations];
       
       const baseData = calculateMonthlyFinancialData(transactionsWithSimulations, currentMonth);
       
@@ -96,7 +119,7 @@ const Index = () => {
         accumulatedBalance: 0
       };
     }
-  }, [transactions, scheduledTransactions, currentMonth]);
+  }, [personFilteredTransactions, scheduledTransactions, currentMonth]);
 
   // Função para simular transações mensais para visualização (apenas do mês selecionado)
   const generateMonthlySimulationsForDisplay = React.useCallback((scheduledTransactions: any[]) => {
@@ -138,7 +161,7 @@ const Index = () => {
   const totalExpenses = monthlyData.monthlyExpenses;
   // Saldo exibido: saldo base até o início do mês + resultado do mês (inclui simulações do mês)
   const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-  const baseBalanceBeforeMonth = transactions.reduce((sum: number, t: any) => {
+  const baseBalanceBeforeMonth = personFilteredTransactions.reduce((sum: number, t: any) => {
     const d = new Date(t.date);
     return d < monthStart ? sum + (t.amount || 0) : sum;
   }, 0);
@@ -150,6 +173,22 @@ const Index = () => {
   // monthlyBalanceCombined é fornecido pelo DashboardContent via onBalancesUpdate (inclui simulações)
   // Removido cálculo duplicado para evitar inconsistências
   
+  // Load dependents
+  useEffect(() => {
+    const loadDependents = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const deps = await DependentsService.getDependents(user.id);
+          setDependents(deps);
+        }
+      } catch (error) {
+        console.error('Error loading dependents:', error);
+      }
+    };
+    loadDependents();
+  }, []);
+
   // Load initial data only once when component mounts
   useEffect(() => {
     Promise.all([getTransactions(), getGoals()]).catch(console.error);
@@ -269,6 +308,9 @@ const Index = () => {
             hideValues={hideValues}
             toggleHideValues={toggleHideValues}
             onAddTransaction={handleAddTransaction}
+            creatorNames={dependents.length > 0 ? creatorNames : []}
+            selectedPerson={selectedPerson}
+            onPersonChange={setSelectedPerson}
           />
           
           {/* 3 Cards principais na mesma linha */}
@@ -301,6 +343,7 @@ const Index = () => {
               setPreviousMonthsBalance(previousMonthsBalance);
               setMonthlyBalanceCombined(monthlyBalanceCombined);
             }}
+            filterPerson={selectedPerson}
           />
         </div>
       </SubscriptionGuard>

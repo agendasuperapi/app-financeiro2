@@ -43,6 +43,8 @@ export default {
     close: 'Fechar',
     showing: 'Exibindo',
     of: 'de',
+    to: 'a',
+    other: 'Outros',
     previous: 'Anterior',
     next: 'Próximo',
   },
@@ -69,6 +71,7 @@ export default {
     categories: "Categorias",
     expenses: "Despesas",
     plans: "Planos",
+    charts: "Gráficos",
   },
   auth: {
     login: "Entrar",

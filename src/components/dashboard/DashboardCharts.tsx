@@ -12,6 +12,7 @@ interface DashboardChartsProps {
   currentMonth?: Date;
   hideValues?: boolean;
   monthTransactions?: any[]; // NEW: Accept month-specific transactions
+  filterPerson?: string;
 }
 
 // Generate chart data from the actual transaction data for multiple months
@@ -74,7 +75,8 @@ const generateMonthlyChartData = (transactions: any[], selectedMonth: Date) => {
 const DashboardCharts: React.FC<DashboardChartsProps> = ({
   currentMonth = new Date(),
   hideValues = false,
-  monthTransactions
+  monthTransactions,
+  filterPerson = 'all'
 }) => {
   const {
     transactions
@@ -120,6 +122,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
         transactions={monthTransactions || transactions}
         currentMonth={currentMonth}
         hideValues={hideValues}
+        filterPerson={filterPerson}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

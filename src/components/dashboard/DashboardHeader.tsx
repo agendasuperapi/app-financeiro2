@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import MonthNavigation from '@/components/common/MonthNavigation';
 import { Eye, EyeOff, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -12,6 +13,9 @@ interface DashboardHeaderProps {
   hideValues: boolean;
   toggleHideValues: () => void;
   onAddTransaction: (type?: 'income' | 'expense') => void;
+  creatorNames?: string[];
+  selectedPerson?: string;
+  onPersonChange?: (person: string) => void;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -19,7 +23,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onMonthChange,
   hideValues,
   toggleHideValues,
-  onAddTransaction
+  onAddTransaction,
+  creatorNames = [],
+  selectedPerson = 'all',
+  onPersonChange
 }) => {
   const { t } = usePreferences();
 
@@ -31,7 +38,24 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <MonthNavigation currentMonth={currentMonth} onMonthChange={onMonthChange} />
+      <div className="flex flex-col sm:flex-row items-center gap-4">
+        <MonthNavigation currentMonth={currentMonth} onMonthChange={onMonthChange} />
+        {creatorNames.length > 0 && onPersonChange && (
+          <Select value={selectedPerson} onValueChange={onPersonChange}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder={t('charts.allPeople')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('charts.allPeople')}</SelectItem>
+              {creatorNames.map(name => (
+                <SelectItem key={name} value={name}>
+                  {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
       <div className="flex items-center gap-4">
         <Button
           variant="outline"

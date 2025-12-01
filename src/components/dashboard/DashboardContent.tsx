@@ -29,6 +29,7 @@ interface DashboardContentProps {
     previousMonthsBalance: number;
     monthlyBalanceCombined: number;
   }) => void;
+  filterPerson?: string;
 }
 const DashboardContent: React.FC<DashboardContentProps> = ({
   filteredTransactions,
@@ -42,7 +43,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   onMarkScheduledAsPaid,
   scheduledTransactions = [],
   onTransactionsWithSimulationsUpdate,
-  onBalancesUpdate
+  onBalancesUpdate,
+  filterPerson = 'all'
 }) => {
   const {
     t,
@@ -435,7 +437,12 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
 
       {/* Seção de gráficos */}
       <motion.div variants={itemVariants}>
-        <DashboardCharts currentMonth={currentMonth} hideValues={hideValues} monthTransactions={transactionsWithSimulations} />
+        <DashboardCharts 
+          currentMonth={currentMonth} 
+          hideValues={hideValues} 
+          monthTransactions={transactionsWithSimulations}
+          filterPerson={filterPerson}
+        />
       </motion.div>
 
       {/* Transações recentes */}

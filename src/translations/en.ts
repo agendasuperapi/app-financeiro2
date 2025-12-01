@@ -29,6 +29,8 @@ const en = {
     expense: "Expense",
     showing: "Showing",
     of: "of",
+    to: "to",
+    other: "Other",
     previous: "Previous",
     next: "Next"
   },
@@ -55,6 +57,7 @@ const en = {
     categories: "Categories",
     expenses: "Expenses",
     plans: "Plans",
+    charts: "Charts",
   },
   plans: {
     title: "Subscription Plans",

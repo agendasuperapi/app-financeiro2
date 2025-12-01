@@ -7,8 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { markLembreteAsPaid, deleteLembrete } from '@/services/lembreteService';
+import { markLembreteAsPaid, deleteLembrete, deleteMultipleLembretes } from '@/services/lembreteService';
 import { ScheduledTransaction } from '@/types';
 import { Loader2, Edit, Trash2, CheckCircle, Calendar, Plus, Filter, User, Search, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -60,6 +62,9 @@ const LembrarPage = () => {
   const [editingConta, setEditingConta] = useState<ScheduledTransaction | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [contaToDelete, setContaToDelete] = useState<ScheduledTransaction | null>(null);
+  const [pastTransactions, setPastTransactions] = useState<any[]>([]);
+  const [futureTransactions, setFutureTransactions] = useState<any[]>([]);
+  const [deleteOption, setDeleteOption] = useState<'single' | 'future' | 'past' | 'all'>('single');
   const {
     formatDate,
     formatDateTime
@@ -246,31 +251,124 @@ const LembrarPage = () => {
       toast.error('Erro ao marcar lembrete como concluído');
     }
   };
+  const checkForRelatedReminders = async (codigoTrans: string | number, currentId: string, currentDate?: string) => {
+    try {
+      const codeStr = String(codigoTrans).replace(/\D/g, '');
+      console.log(`🔍 LembrarPage - Buscando codigo_trans: "${codeStr}"`);
+
+      const targetUserIdValue = selectedUser?.id || (await supabase.auth.getUser())?.data?.user?.id;
+      if (!targetUserIdValue || !codeStr) return { past: [], future: [] };
+
+      const { data: allData, error } = await (supabase as any)
+        .from('tbl_lembrete')
+        .select('id, date, description, codigo_trans')
+        .eq('user_id', targetUserIdValue)
+        .neq('id', currentId)
+        .order('date', { ascending: true });
+
+      if (error) return { past: [], future: [] };
+
+      const rows = (allData || []).filter((item: any) => {
+        const itemCodigo = String(item.codigo_trans || '').replace(/\D/g, '');
+        return itemCodigo === codeStr;
+      });
+
+      const baseDate = currentDate ? new Date(currentDate) : new Date();
+      const past = rows.filter((r: any) => new Date(r.date) < baseDate);
+      const future = rows.filter((r: any) => new Date(r.date) >= baseDate);
+
+      console.log(`✅ Resultado: ${past.length} passadas, ${future.length} futuras`);
+      return { past, future };
+    } catch (error) {
+      return { past: [], future: [] };
+    }
+  };
+
   const handleEdit = async (conta: ScheduledTransaction) => {
     setEditingConta(conta);
     setIsEditDialogOpen(true);
   };
-  const handleDeleteClick = (conta: ScheduledTransaction) => {
+
+  const handleDeleteClick = async (conta: ScheduledTransaction) => {
     setContaToDelete(conta);
+    setDeleteOption('single');
+    
+    const codigoTrans = (conta as any).codigo_trans;
+    
+    if (codigoTrans) {
+      const currentDate = conta.scheduledDate;
+      const related = await checkForRelatedReminders(codigoTrans, conta.id, currentDate);
+      setPastTransactions(related.past);
+      setFutureTransactions(related.future);
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+    } else {
+      setPastTransactions([]);
+      setFutureTransactions([]);
+    }
+    
     setDeleteDialogOpen(true);
   };
+
   const handleConfirmDelete = async () => {
-    if (contaToDelete) {
-      try {
+    if (!contaToDelete) return;
+    
+    try {
+      const codigoTrans = (contaToDelete as any).codigo_trans;
+      
+      if (codigoTrans) {
+        const currentDate = contaToDelete.scheduledDate;
+        const related = await checkForRelatedReminders(codigoTrans, contaToDelete.id, currentDate);
+        
+        setPastTransactions(related.past);
+        setFutureTransactions(related.future);
+        
+        let idsToDelete: string[] = [contaToDelete.id];
+        
+        if (deleteOption === 'future') {
+          idsToDelete = [contaToDelete.id, ...related.future.map(t => t.id)];
+        } else if (deleteOption === 'past') {
+          idsToDelete = [contaToDelete.id, ...related.past.map(t => t.id)];
+        } else if (deleteOption === 'all') {
+          idsToDelete = [contaToDelete.id, ...related.past.map(t => t.id), ...related.future.map(t => t.id)];
+        }
+        
+        console.log('🗑️ Deletando IDs:', idsToDelete);
+        
+        let success: boolean;
+        if (idsToDelete.length === 1) {
+          success = await deleteLembrete(contaToDelete.id);
+        } else {
+          success = await deleteMultipleLembretes(idsToDelete);
+        }
+        
+        if (success) {
+          toast.success(idsToDelete.length === 1 
+            ? 'Lembrete excluído com sucesso' 
+            : `${idsToDelete.length} lembrete(s) excluído(s) com sucesso`
+          );
+        } else {
+          toast.error('Erro ao excluir lembrete(s)');
+        }
+      } else {
         const success = await deleteLembrete(contaToDelete.id);
+        
         if (success) {
           toast.success('Lembrete excluído com sucesso');
-          await loadContas();
         } else {
           toast.error('Erro ao excluir lembrete');
         }
-      } catch (error) {
-        console.error('Error deleting lembrete:', error);
-        toast.error('Erro ao excluir lembrete');
       }
+      
+      await loadContas();
+    } catch (error) {
+      console.error('Error deleting reminder:', error);
+      toast.error('Erro ao excluir lembrete(s)');
     }
+    
     setDeleteDialogOpen(false);
     setContaToDelete(null);
+    setDeleteOption('single');
   };
 
   // Formatar valor monetário
@@ -624,13 +722,73 @@ const LembrarPage = () => {
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-              <AlertDialogDescription className="space-y-2">
-                {contaToDelete && <div className="bg-muted p-3 rounded-md">
-                    <p className="font-medium">
-                      {contaToDelete.description || 'Lembrete sem descrição'}
-                    </p>
-                  </div>}
+              <AlertDialogTitle>
+                {pastTransactions.length > 0 || futureTransactions.length > 0 
+                  ? 'Lembretes Relacionados Encontrados' 
+                  : 'Confirmar Exclusão'}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3">
+                {contaToDelete && (
+                  <>
+                    <div className="bg-muted p-3 rounded-md">
+                      <p className="font-medium">
+                        {contaToDelete.description || 'Lembrete sem descrição'}
+                      </p>
+                      {contaToDelete.amount > 0 && (
+                        <p className="text-sm font-semibold text-metacash-error">
+                          {formatCurrency(Math.abs(contaToDelete.amount))}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDate(new Date(contaToDelete.scheduledDate))}
+                      </p>
+                    </div>
+
+                    {(pastTransactions.length > 0 || futureTransactions.length > 0) && (
+                      <div className="space-y-3">
+                        <p className="text-sm">
+                          Encontramos outros lembretes com o mesmo código. O que deseja excluir?
+                        </p>
+                        
+                        <RadioGroup value={deleteOption} onValueChange={(value: any) => setDeleteOption(value)}>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="single" id="single" />
+                            <Label htmlFor="single" className="font-normal cursor-pointer">
+                              Apenas este lembrete
+                            </Label>
+                          </div>
+                          
+                          {futureTransactions.length > 0 && (
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="future" id="future" />
+                              <Label htmlFor="future" className="font-normal cursor-pointer">
+                                Este e todos os futuros ({futureTransactions.length} lembretes)
+                              </Label>
+                            </div>
+                          )}
+                          
+                          {pastTransactions.length > 0 && (
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="past" id="past" />
+                              <Label htmlFor="past" className="font-normal cursor-pointer">
+                                Este e todos os passados ({pastTransactions.length} lembretes)
+                              </Label>
+                            </div>
+                          )}
+                          
+                          {pastTransactions.length > 0 && futureTransactions.length > 0 && (
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="all" id="all" />
+                              <Label htmlFor="all" className="font-normal cursor-pointer">
+                                Todos os lembretes relacionados ({pastTransactions.length + futureTransactions.length + 1} no total)
+                              </Label>
+                            </div>
+                          )}
+                        </RadioGroup>
+                      </div>
+                    )}
+                  </>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

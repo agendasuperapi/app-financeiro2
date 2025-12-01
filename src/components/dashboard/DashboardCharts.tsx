@@ -115,24 +115,32 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
     console.log('📊 DashboardCharts mounted - listener registered');
     
     const handleTransactionUpdate = async () => {
-      console.log('🎯 transaction-updated event received!');
+      console.log('🎯 transaction-updated event received (or initial capture)!');
       
       // Aguarda um pequeno delay para garantir que os gráficos foram re-renderizados
       setTimeout(async () => {
         console.log('📸 Starting chart capture...');
         
-        // Dynamic import para evitar circular dependency
-        const { captureAndSaveChart } = await import('@/services/chartImageService');
-        
-        const barResult = await captureAndSaveChart('chart-bar-income-expenses', 'grafico_barras', currentMonth);
-        console.log('📊 Bar chart capture result:', barResult);
-        
-        const pieResult = await captureAndSaveChart('chart-pie-categories', 'grafico_pizza', currentMonth);
-        console.log('🥧 Pie chart capture result:', pieResult);
+        try {
+          // Dynamic import para evitar circular dependency
+          const { captureAndSaveChart } = await import('@/services/chartImageService');
+          
+          const barResult = await captureAndSaveChart('chart-bar-income-expenses', 'grafico_barras', currentMonth);
+          console.log('📊 Bar chart capture result:', barResult);
+          
+          const pieResult = await captureAndSaveChart('chart-pie-categories', 'grafico_pizza', currentMonth);
+          console.log('🥧 Pie chart capture result:', pieResult);
+        } catch (err) {
+          console.error('❌ Error during chart capture flow:', err);
+        }
       }, 1000);
     };
 
+    // Registrar listener para atualizações de transação
     window.addEventListener('transaction-updated', handleTransactionUpdate);
+
+    // Também disparar uma captura inicial ao montar o dashboard
+    handleTransactionUpdate();
     
     return () => {
       console.log('📊 DashboardCharts unmounted - listener removed');

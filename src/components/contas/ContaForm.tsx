@@ -180,11 +180,13 @@ const ContaForm: React.FC<ContaFormProps> = ({
         console.log(`Loaded ${categoryData.length} categories for ${transactionType}:`, categoryData);
         setCategories(categoryData);
 
-        // Para "Receita", sempre usar categoria "Outros"
+        // Para "Receita", sempre usar a primeira categoria de income disponível
         if (transactionType === 'income') {
-          const outrosCategory = categoryData.find(c => c.name.toLowerCase() === 'outros');
-          if (outrosCategory) {
-            form.setValue('category', outrosCategory.id);
+          if (categoryData.length > 0) {
+            console.log('🔍 Setting income category to:', categoryData[0].id, categoryData[0].name);
+            form.setValue('category', categoryData[0].id);
+          } else {
+            console.error('❌ No income category found!');
           }
         } else {
           // Set default category if none selected and categories are available

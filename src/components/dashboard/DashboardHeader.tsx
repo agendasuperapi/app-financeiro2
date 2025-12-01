@@ -64,7 +64,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           className="flex items-center gap-2"
         >
           {hideValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          {hideValues ? t('common.show') : t('common.hide')} {t('common.values')}
+          {hideValues ? `${t('common.show')} ${t('common.values')}` : `${t('common.hide')} ${t('common.values')}`}
         </Button>
         <Button
           variant="default"

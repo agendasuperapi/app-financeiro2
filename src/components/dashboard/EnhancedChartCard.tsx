@@ -177,7 +177,7 @@ const EnhancedChartCard: React.FC<EnhancedChartCardProps> = ({
           <div className="text-center">
             <h3 className="font-semibold text-lg">{getTitle()}</h3>
             <p className="text-sm text-muted-foreground capitalize">
-              {format(startDate, 'd', { locale })} {t('common.to')} {format(endDate, 'd', { locale })} {t('common.of')} {format(endDate, 'MMMM', { locale })}
+              {format(startDate, 'd')} a {format(endDate, 'd')} de {format(currentMonth, 'MMMM yyyy', { locale })}
             </p>
           </div>
 

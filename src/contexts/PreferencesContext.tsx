@@ -38,6 +38,18 @@ const PreferencesProvider: React.FC<PreferencesProviderProps> = ({ children }) =
     (localStorage.getItem('currency') as Currency) || 'BRL'
   );
 
+  // Debug: log translations on mount
+  useEffect(() => {
+    console.log('🌍 PreferencesProvider mounted', { 
+      language, 
+      currency,
+      translationsAvailable: !!translations,
+      translationsKeys: Object.keys(translations || {}),
+      ptAvailable: !!translations?.pt,
+      enAvailable: !!translations?.en
+    });
+  }, [language, currency]);
+
   // Save preferences to localStorage when they change
   useEffect(() => {
     localStorage.setItem('language', language);
@@ -49,18 +61,39 @@ const PreferencesProvider: React.FC<PreferencesProviderProps> = ({ children }) =
 
   // Create translation function that supports multiple languages and fallback
   const t = (key: string, fallback?: string) => {
-    const keyParts = key.split('.');
-    let value: any = translations[language] || translations.pt; // Fallback to PT if language not available
-    
-    for (const k of keyParts) {
-      if (value && typeof value === 'object' && k in value) {
-        value = value[k as keyof typeof value];
-      } else {
-        return fallback || key; // Key not found, return fallback or key itself
+    try {
+      // Verify translations object exists
+      if (!translations) {
+        console.error('❌ Translations object is undefined');
+        return fallback || key;
       }
+
+      // Get language translations
+      const langTranslations = translations[language];
+      if (!langTranslations) {
+        console.error(`❌ Translations for language '${language}' not found`);
+        return fallback || key;
+      }
+
+      // Navigate through nested keys
+      const keyParts = key.split('.');
+      let value: any = langTranslations;
+      
+      for (const k of keyParts) {
+        if (value && typeof value === 'object' && k in value) {
+          value = value[k];
+        } else {
+          // Key not found
+          return fallback || key;
+        }
+      }
+      
+      // Return string value or fallback
+      return typeof value === 'string' ? value : (fallback || key);
+    } catch (error) {
+      console.error('❌ Translation error:', error, { key, language });
+      return fallback || key;
     }
-    
-    return typeof value === 'string' ? value : (fallback || key);
   };
 
   return (

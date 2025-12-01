@@ -1,4 +1,4 @@
-export default {
+const pt = {
   appName: "PoupeJá!",
   common: {
     loading: 'Carregando...',
@@ -555,3 +555,5 @@ export default {
     emailRequired: "E-mail é obrigatório",
   }
 };
+
+export default pt;

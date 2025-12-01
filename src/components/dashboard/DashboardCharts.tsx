@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
 import { formatCurrency, createLocalDate } from '@/utils/transactionUtils';
@@ -112,23 +112,6 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
     }
     return null;
   };
-  // Chart capture otimizado - apenas quando explicitamente solicitado
-  useEffect(() => {
-    const handleChartCaptureRequest = async () => {
-      try {
-        const { captureAndSaveChart } = await import('@/services/chartImageService');
-        await Promise.all([
-          captureAndSaveChart('chart-bar-income-expenses', 'grafico_barras', currentMonth),
-          captureAndSaveChart('chart-pie-categories', 'grafico_pizza', currentMonth)
-        ]);
-      } catch (err) {
-        console.error('Error during chart capture:', err);
-      }
-    };
-
-    window.addEventListener('request-chart-capture', handleChartCaptureRequest);
-    return () => window.removeEventListener('request-chart-capture', handleChartCaptureRequest);
-  }, [currentMonth]);
 
   return <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

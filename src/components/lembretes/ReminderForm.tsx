@@ -211,9 +211,18 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         }
       } else if (initialData) {
         console.log('✏️ Updating reminder');
+        
+        const newDate = new Date(values.scheduledDate);
+        const originalDate = new Date(initialData.scheduledDate);
+        
+        // Check if only day changed (same month and year)
+        const onlyDayChanged = newDate.getMonth() === originalDate.getMonth() && 
+                               newDate.getFullYear() === originalDate.getFullYear() &&
+                               newDate.getDate() !== originalDate.getDate();
+        
         const updateData = {
           description: values.description,
-          date: new Date(values.scheduledDate).toISOString(),
+          date: newDate.toISOString(),
           recurrence: values.recurrence,
           phone: values.phone || userPhone,
           name: values.name,
@@ -228,20 +237,56 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
         } else if (editOption === 'future') {
           console.log('📋 Updating current and future');
           await updateLembrete(initialData.id, updateData);
+          
           for (const reminder of futureReminders) {
-            await updateLembrete(reminder.id, updateData);
+            let reminderUpdateData = { ...updateData };
+            
+            if (onlyDayChanged) {
+              // Keep original month/year, only change day
+              const reminderOriginalDate = new Date(reminder.date);
+              reminderOriginalDate.setDate(newDate.getDate());
+              reminderOriginalDate.setHours(newDate.getHours());
+              reminderOriginalDate.setMinutes(newDate.getMinutes());
+              reminderUpdateData.date = reminderOriginalDate.toISOString();
+            }
+            
+            await updateLembrete(reminder.id, reminderUpdateData);
           }
         } else if (editOption === 'past') {
           console.log('📋 Updating current and past');
           await updateLembrete(initialData.id, updateData);
+          
           for (const reminder of pastReminders) {
-            await updateLembrete(reminder.id, updateData);
+            let reminderUpdateData = { ...updateData };
+            
+            if (onlyDayChanged) {
+              // Keep original month/year, only change day
+              const reminderOriginalDate = new Date(reminder.date);
+              reminderOriginalDate.setDate(newDate.getDate());
+              reminderOriginalDate.setHours(newDate.getHours());
+              reminderOriginalDate.setMinutes(newDate.getMinutes());
+              reminderUpdateData.date = reminderOriginalDate.toISOString();
+            }
+            
+            await updateLembrete(reminder.id, reminderUpdateData);
           }
         } else if (editOption === 'all') {
           console.log('📋 Updating all');
           await updateLembrete(initialData.id, updateData);
+          
           for (const reminder of [...pastReminders, ...futureReminders]) {
-            await updateLembrete(reminder.id, updateData);
+            let reminderUpdateData = { ...updateData };
+            
+            if (onlyDayChanged) {
+              // Keep original month/year, only change day
+              const reminderOriginalDate = new Date(reminder.date);
+              reminderOriginalDate.setDate(newDate.getDate());
+              reminderOriginalDate.setHours(newDate.getHours());
+              reminderOriginalDate.setMinutes(newDate.getMinutes());
+              reminderUpdateData.date = reminderOriginalDate.toISOString();
+            }
+            
+            await updateLembrete(reminder.id, reminderUpdateData);
           }
         }
       }

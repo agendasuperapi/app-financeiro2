@@ -573,6 +573,9 @@ const ContaForm: React.FC<ContaFormProps> = ({
 
       console.log(`🔍 Encontradas ${listToUpdate.length} transações futuras para deslocar`);
 
+      // Verificar se descrição foi modificada
+      const descriptionChanged = initialData?.description !== values.description;
+
       // Encontrar a categoria selecionada
       const selectedCategory = categories.find(cat => cat.id === values.category);
 
@@ -598,7 +601,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
         
         console.log(`📆 Transação ${transaction.id}: ${originalTxDate.toISOString()} → ${newTxDate.toISOString()}`);
 
-        const updateData = {
+        const updateData: any = {
           type: values.type,
           amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
           category_id: values.category,
@@ -607,6 +610,11 @@ const ContaForm: React.FC<ContaFormProps> = ({
           phone: values.phone,
           date: newTxDate.toISOString(),
         };
+
+        // Só incluir descrição se foi modificada
+        if (descriptionChanged) {
+          updateData.description = values.description;
+        }
 
         const { error: updateError } = await (supabase as any)
           .from('poupeja_transactions')
@@ -633,6 +641,9 @@ const ContaForm: React.FC<ContaFormProps> = ({
       const originalDate = new Date((initialData as any)?.date);
       const newDate = new Date(values.scheduledDate);
       
+      // Verificar se descrição foi modificada
+      const descriptionChanged = initialData?.description !== values.description;
+      
       // Detectar o que mudou
       const dayChanged = originalDate.getDate() !== newDate.getDate();
       const monthChanged = originalDate.getMonth() !== newDate.getMonth();
@@ -659,7 +670,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           newTxDate = new Date(originalTxDate.getTime() + timeDifference);
         }
 
-        const updateData = {
+        const updateData: any = {
           type: values.type,
           amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
           category_id: values.category,
@@ -668,6 +679,11 @@ const ContaForm: React.FC<ContaFormProps> = ({
           phone: values.phone,
           date: newTxDate.toISOString(),
         };
+
+        // Só incluir descrição se foi modificada
+        if (descriptionChanged) {
+          updateData.description = values.description;
+        }
 
         const { error: updateError } = await (supabase as any)
           .from('poupeja_transactions')
@@ -691,6 +707,9 @@ const ContaForm: React.FC<ContaFormProps> = ({
       const originalDate = new Date((initialData as any)?.date);
       const newDate = new Date(values.scheduledDate);
       
+      // Verificar se descrição foi modificada
+      const descriptionChanged = initialData?.description !== values.description;
+      
       // Detectar o que mudou
       const dayChanged = originalDate.getDate() !== newDate.getDate();
       const monthChanged = originalDate.getMonth() !== newDate.getMonth();
@@ -717,7 +736,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           newTxDate = new Date(originalTxDate.getTime() + timeDifference);
         }
 
-        const updateData = {
+        const updateData: any = {
           type: values.type,
           amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
           category_id: values.category,
@@ -726,6 +745,11 @@ const ContaForm: React.FC<ContaFormProps> = ({
           phone: values.phone,
           date: newTxDate.toISOString(),
         };
+
+        // Só incluir descrição se foi modificada
+        if (descriptionChanged) {
+          updateData.description = values.description;
+        }
 
         const { error: updateError } = await (supabase as any)
           .from('poupeja_transactions')
@@ -749,6 +773,9 @@ const ContaForm: React.FC<ContaFormProps> = ({
       const originalDate = new Date((initialData as any)?.date);
       const newDate = new Date(values.scheduledDate);
       
+      // Verificar se descrição foi modificada
+      const descriptionChanged = initialData?.description !== values.description;
+      
       // Detectar o que mudou
       const dayChanged = originalDate.getDate() !== newDate.getDate();
       const monthChanged = originalDate.getMonth() !== newDate.getMonth();
@@ -775,7 +802,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
           newTxDate = new Date(originalTxDate.getTime() + timeDifference);
         }
 
-        const updateData = {
+        const updateData: any = {
           type: values.type,
           amount: values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount),
           category_id: values.category,
@@ -784,6 +811,11 @@ const ContaForm: React.FC<ContaFormProps> = ({
           phone: values.phone,
           date: newTxDate.toISOString(),
         };
+
+        // Só incluir descrição se foi modificada
+        if (descriptionChanged) {
+          updateData.description = values.description;
+        }
 
         const { error: updateError } = await (supabase as any)
           .from('poupeja_transactions')

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { formatCurrency, createLocalDate } from '@/utils/transactionUtils';
 import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
@@ -16,7 +16,11 @@ interface DashboardChartsProps {
 }
 
 // Generate chart data from the actual transaction data for multiple months
-const generateMonthlyChartData = (transactions: any[], selectedMonth: Date) => {
+const generateMonthlyChartData = (transactions: any[], selectedMonth: Date, filterPerson?: string) => {
+  // Filter transactions by person if specified
+  const filteredTransactions = filterPerson && filterPerson !== 'all'
+    ? transactions.filter(t => t.creatorName === filterPerson)
+    : transactions;
 
   // Create array for 3 months before, selected month, and 3 months after (7 months total)
   const months = [];
@@ -36,7 +40,7 @@ const generateMonthlyChartData = (transactions: any[], selectedMonth: Date) => {
     months.push(monthDate);
   }
 
-  // Create monthly data structure
+  // Create monthly data structure with cumulative balance
   const monthlyData = months.map(month => {
     const monthKey = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`;
     const monthName = format(month, 'MMM yyyy', {
@@ -47,12 +51,13 @@ const generateMonthlyChartData = (transactions: any[], selectedMonth: Date) => {
       monthName,
       income: 0,
       expenses: 0,
-      balance: 0
+      balance: 0,
+      cumulativeBalance: 0
     };
   });
 
   // Fill with actual transaction data
-  transactions.forEach(transaction => {
+  filteredTransactions.forEach(transaction => {
     const transactionDate = createLocalDate(transaction.date);
     const transactionMonthKey = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
     const monthData = monthlyData.find(data => data.month === transactionMonthKey);
@@ -66,10 +71,14 @@ const generateMonthlyChartData = (transactions: any[], selectedMonth: Date) => {
     }
   });
 
-  // Calculate balance for each month
+  // Calculate balance and cumulative balance for each month
+  let runningBalance = 0;
   monthlyData.forEach(monthData => {
     monthData.balance = monthData.income - monthData.expenses;
+    runningBalance += monthData.balance;
+    monthData.cumulativeBalance = runningBalance;
   });
+  
   return monthlyData;
 };
 const DashboardCharts: React.FC<DashboardChartsProps> = ({
@@ -88,8 +97,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
 
   // Memoize expensive calculations
   const monthlyData = React.useMemo(
-    () => generateMonthlyChartData(transactions, currentMonth),
-    [transactions, currentMonth]
+    () => generateMonthlyChartData(transactions, currentMonth, filterPerson),
+    [transactions, currentMonth, filterPerson]
   );
   
   const expenseSummaries = React.useMemo(
@@ -126,20 +135,20 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Monthly Income/Expense Bar Chart */}
+        {/* Balance Evolution Line Chart */}
         <Card className="transition-all hover:shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg text-center">{t('charts.incomeVsExpenses')}</CardTitle>
+            <CardTitle className="text-lg text-center">{t('charts.balanceEvolution')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div id="chart-bar-income-expenses" className="h-64">
+            <div id="chart-line-balance" className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData} margin={{
-                top: 5,
-                right: 20,
-                left: 0,
-                bottom: 5
-              }}>
+                <LineChart data={monthlyData} margin={{
+                  top: 5,
+                  right: 20,
+                  left: 0,
+                  bottom: 5
+                }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                   <XAxis dataKey="monthName" angle={-45} textAnchor="end" height={60} fontSize={12} />
                   <YAxis 
@@ -153,9 +162,16 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Bar dataKey="income" name={t('common.income')} fill="#26DE81" />
-                  <Bar dataKey="expenses" name={t('common.expense')} fill="#EF4444" />
-                </BarChart>
+                  <Line 
+                    type="monotone" 
+                    dataKey="cumulativeBalance" 
+                    name={t('common.balance')} 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2}
+                    dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
               </ResponsiveContainer>
             </div>
           </CardContent>

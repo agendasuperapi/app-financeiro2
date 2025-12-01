@@ -352,6 +352,7 @@ const en = {
   charts: {
     incomeVsExpenses: 'Income vs Expenses',
     expenseBreakdown: 'Expense Breakdown',
+    balanceEvolution: 'Balance Evolution',
     monthlyTrend: 'Monthly Trend',
     categoryBreakdown: 'By Category',
     dailyFlow: 'Daily Flow',

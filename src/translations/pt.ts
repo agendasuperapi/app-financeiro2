@@ -472,6 +472,7 @@ const pt = {
   charts: {
     incomeVsExpenses: 'Receitas vs Despesas',
     expenseBreakdown: 'Distribuição de Despesas',
+    balanceEvolution: 'Evolução do Saldo',
     monthlyTrend: 'Tendência Mensal',
     categoryBreakdown: 'Por Categoria',
     dailyFlow: 'Fluxo Diário',

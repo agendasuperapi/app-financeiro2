@@ -102,8 +102,15 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
   );
   
   const expenseSummaries = React.useMemo(
-    () => calculateCategorySummaries(transactions, 'expense'),
-    [transactions]
+    () => {
+      // Filter transactions by person if specified
+      const filteredTransactions = filterPerson && filterPerson !== 'all'
+        ? transactions.filter(t => t.creatorName === filterPerson)
+        : transactions;
+      
+      return calculateCategorySummaries(filteredTransactions, 'expense');
+    },
+    [transactions, filterPerson]
   );
 
   // Custom tooltip for charts

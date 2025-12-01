@@ -521,11 +521,11 @@ export const markAsReceived = async (
 
     console.log('📋 Original transaction found:', originalTransaction);
 
-    // Update the original transaction status to "recebido"
+    // Update the original transaction status to "paid"
     const { error: updateError } = await supabase
       .from("poupeja_transactions")
       .update({
-        status: "recebido"
+        status: "paid"
       } as any)
       .eq("id", transactionId);
 

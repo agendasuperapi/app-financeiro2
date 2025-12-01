@@ -76,6 +76,20 @@ export const deleteLembrete = async (id: string): Promise<boolean> => {
   return true;
 };
 
+export const deleteMultipleLembretes = async (ids: string[]): Promise<boolean> => {
+  const { error } = await supabase
+    .from('tbl_lembrete' as any)
+    .delete()
+    .in('id', ids);
+
+  if (error) {
+    console.error('Error deleting multiple lembretes:', error);
+    throw error;
+  }
+
+  return true;
+};
+
 export const markLembreteAsPaid = async (id: string): Promise<boolean> => {
   const { error } = await supabase
     .from('tbl_lembrete' as any)

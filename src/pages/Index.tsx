@@ -53,21 +53,7 @@ const Index = () => {
   const [previousMonthsBalance, setPreviousMonthsBalance] = useState(0);
   const [monthlyBalanceCombined, setMonthlyBalanceCombined] = useState(0);
   
-  console.log("Dashboard rendered with:", {
-    transactionsCount: transactions.length, 
-    filteredTransactionsCount: filteredTransactions.length,
-    goalsCount: goals.length,
-    scheduledTransactionsCount: scheduledTransactions.length
-  });
-
-  console.log('🔍 [DEZEMBRO] scheduledTransactions:', scheduledTransactions.map(st => ({
-    id: st.id,
-    amount: st.amount,
-    description: st.description,
-    recurrence: st.recurrence,
-    status: st.status,
-    situacao: st.situacao
-  })));
+  // Logs removidos para melhorar performance
   
   // NEW: Calculate month-specific financial data using the new utility with error handling
   const monthlyData = React.useMemo(() => {
@@ -166,35 +152,21 @@ const Index = () => {
   
   // Load initial data only once when component mounts
   useEffect(() => {
-    const loadInitialData = async () => {
-      console.log("Dashboard: Loading initial data...");
-      try {
-        await Promise.all([getTransactions(), getGoals()]);
-        console.log("Dashboard: Initial data loaded successfully");
-      } catch (error) {
-        console.error("Dashboard: Error loading initial data:", error);
-      }
-    };
-    
-    loadInitialData();
-  }, []); // ✅ Empty dependency array - runs only once
+    Promise.all([getTransactions(), getGoals()]).catch(console.error);
+  }, []);
 
   // Update date range when month changes
   useEffect(() => {
     const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0, 23, 59, 59);
     setCustomDateRange(firstDay, lastDay);
-    console.log("Dashboard: Date range updated for month:", currentMonth.toDateString());
   }, [currentMonth, setCustomDateRange]);
 
   // Removed auto-refresh to prevent performance issues
   // Data will be refreshed when user performs actions (add/edit/delete transactions)
   
   const handleMonthChange = (date: Date) => {
-    console.log("Dashboard: Month changed to:", date.toDateString());
     setCurrentMonth(date);
-    
-    // Update filtered transactions range to match the selected month
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
     const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
     setCustomDateRange(firstDay, lastDay);
@@ -221,12 +193,7 @@ const Index = () => {
         description: t('transactions.deleteSuccess'),
       });
       
-      // Refresh transactions and goals
-      console.log("Dashboard: Refreshing data after delete...");
-      await Promise.all([
-        getTransactions(),
-        getGoals()
-      ]);
+      await Promise.all([getTransactions(), getGoals()]);
     } catch (error) {
       console.error('Error deleting transaction:', error);
       toast({
@@ -244,12 +211,7 @@ const Index = () => {
         title: t('schedule.marked_as_paid'),
         description: t('schedule.transaction_marked_as_paid')
       });
-      // Refresh data to update the alert
-      console.log("Dashboard: Refreshing data after marking as paid...");
-      await Promise.all([
-        getTransactions(),
-        getGoals()
-      ]);
+      await Promise.all([getTransactions(), getGoals()]);
     } else {
       toast({
         title: t('common.error'),

@@ -15,7 +15,6 @@ interface DashboardChartsProps {
 
 // Generate chart data from the actual transaction data for multiple months
 const generateMonthlyChartData = (transactions: any[], selectedMonth: Date) => {
-  console.log("Generating monthly chart data with transactions:", transactions.length);
 
   // Create array for 3 months before, selected month, and 3 months after (7 months total)
   const months = [];
@@ -84,13 +83,16 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
     t
   } = usePreferences();
 
-  // Always use all transactions to show complete data across all months
-  const transactionsToUse = transactions;
-  const expenseSummaries = calculateCategorySummaries(transactionsToUse, 'expense');
-  console.log("Rendering charts with all transactions:", transactionsToUse.length);
-
-  // Generate monthly data using all transactions and selected month
-  const monthlyData = generateMonthlyChartData(transactionsToUse, currentMonth);
+  // Memoize expensive calculations
+  const monthlyData = React.useMemo(
+    () => generateMonthlyChartData(transactions, currentMonth),
+    [transactions, currentMonth]
+  );
+  
+  const expenseSummaries = React.useMemo(
+    () => calculateCategorySummaries(transactions, 'expense'),
+    [transactions]
+  );
 
   // Custom tooltip for charts
   const CustomTooltip = ({
@@ -110,42 +112,22 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
     }
     return null;
   };
-  // Listener para capturar gráficos quando transação for atualizada
+  // Chart capture otimizado - apenas quando explicitamente solicitado
   useEffect(() => {
-    console.log('📊 DashboardCharts mounted - listener registered');
-    
-    const handleTransactionUpdate = async () => {
-      console.log('🎯 transaction-updated event received (or initial capture)!');
-      
-      // Aguarda um pequeno delay para garantir que os gráficos foram re-renderizados
-      setTimeout(async () => {
-        console.log('📸 Starting chart capture...');
-        
-        try {
-          // Dynamic import para evitar circular dependency
-          const { captureAndSaveChart } = await import('@/services/chartImageService');
-          
-          const barResult = await captureAndSaveChart('chart-bar-income-expenses', 'grafico_barras', currentMonth);
-          console.log('📊 Bar chart capture result:', barResult);
-          
-          const pieResult = await captureAndSaveChart('chart-pie-categories', 'grafico_pizza', currentMonth);
-          console.log('🥧 Pie chart capture result:', pieResult);
-        } catch (err) {
-          console.error('❌ Error during chart capture flow:', err);
-        }
-      }, 1000);
+    const handleChartCaptureRequest = async () => {
+      try {
+        const { captureAndSaveChart } = await import('@/services/chartImageService');
+        await Promise.all([
+          captureAndSaveChart('chart-bar-income-expenses', 'grafico_barras', currentMonth),
+          captureAndSaveChart('chart-pie-categories', 'grafico_pizza', currentMonth)
+        ]);
+      } catch (err) {
+        console.error('Error during chart capture:', err);
+      }
     };
 
-    // Registrar listener para atualizações de transação
-    window.addEventListener('transaction-updated', handleTransactionUpdate);
-
-    // Também disparar uma captura inicial ao montar o dashboard
-    handleTransactionUpdate();
-    
-    return () => {
-      console.log('📊 DashboardCharts unmounted - listener removed');
-      window.removeEventListener('transaction-updated', handleTransactionUpdate);
-    };
+    window.addEventListener('request-chart-capture', handleChartCaptureRequest);
+    return () => window.removeEventListener('request-chart-capture', handleChartCaptureRequest);
   }, [currentMonth]);
 
   return <div className="space-y-6">

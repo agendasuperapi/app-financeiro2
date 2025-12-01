@@ -303,6 +303,8 @@ const ContaForm: React.FC<ContaFormProps> = ({
   // Form submission handler
   const onSubmit = async (values: ContaFormValues) => {
     console.log('🚀 Conta form submitted with values:', values);
+    console.log('🔍 Mode:', mode);
+    console.log('🔍 Initial data:', initialData);
     try {
       if (mode === 'edit' && initialData?.id) {
         // Verificar se existe codigo-trans na transação atual
@@ -329,6 +331,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
       }
 
       // Se chegou aqui, não há duplicatas ou é criação - prosseguir normalmente
+      console.log('✅ Calling performUpdate with single mode');
       await performUpdate(values, 'single');
     } catch (error) {
       console.error('❌ Error in onSubmit:', error);
@@ -339,6 +342,7 @@ const ContaForm: React.FC<ContaFormProps> = ({
 
   // Perform the actual update
   const performUpdate = async (values: ContaFormValues, editOption: 'single' | 'future' | 'past' | 'all') => {
+    console.log('🔍 performUpdate called with mode:', mode, 'editOption:', editOption);
     try {
       if (mode === 'create') {
         console.log('➕ Creating scheduled transaction...');
@@ -401,12 +405,15 @@ const ContaForm: React.FC<ContaFormProps> = ({
           creatorName: values.name
         };
         console.log('📋 Creating transaction with data:', transactionData);
+        console.log('🔍 About to call addScheduledTransaction');
         const result = await addScheduledTransaction(transactionData);
         console.log('✅ Create result:', result);
         
         if (!result) {
+          console.error('❌ addScheduledTransaction returned null/undefined');
           throw new Error('Falha ao criar transação - nenhum resultado retornado');
         }
+        console.log('✅ Transaction created successfully');
       } else if (initialData) {
         console.log('✏️ Updating scheduled transaction...', initialData.id);
         // Find the selected category to get both name and id

@@ -130,6 +130,9 @@ export const addScheduledTransaction = async (
 ): Promise<ScheduledTransaction | null> => {
   try {
     console.log('🚀 Starting addScheduledTransaction with:', transaction);
+    console.log('🔍 Transaction type:', transaction.type);
+    console.log('🔍 Installments:', transaction.installments);
+    console.log('🔍 Recurrence:', transaction.recurrence);
     
     // Get the current user
     const { data: { session } } = await supabase.auth.getSession();
@@ -325,6 +328,7 @@ export const addScheduledTransaction = async (
       insertData.recurrence = convertRecurrenceToPortuguese(transaction.recurrence);
 
       console.log('Insert data with all fields:', insertData);
+      console.log('🔍 About to insert single transaction into database');
       
       let data;
       
@@ -333,6 +337,7 @@ export const addScheduledTransaction = async (
         data = await createViaAdminFunction(insertData);
       } else {
         // Regular insert
+        console.log('📝 Using regular insert for single transaction');
         const result = await supabase
           .from("poupeja_transactions")
           .insert(insertData)
@@ -342,8 +347,13 @@ export const addScheduledTransaction = async (
           `)
           .single();
 
-        if (result.error) throw result.error;
+        console.log('📊 Insert result:', result);
+        if (result.error) {
+          console.error('❌ Insert error:', result.error);
+          throw result.error;
+        }
         data = result.data;
+        console.log('✅ Transaction inserted successfully:', data);
       }
 
       return {
@@ -368,7 +378,8 @@ export const addScheduledTransaction = async (
   } catch (error) {
     console.error("❌ Error in addScheduledTransaction:", error);
     console.error("❌ Transaction data that failed:", transaction);
-    return null;
+    console.error("❌ Error details:", JSON.stringify(error, null, 2));
+    throw error; // Propagar o erro ao invés de retornar null
   }
 };
 

@@ -4,7 +4,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { formatCurrency, createLocalDate } from '@/utils/transactionUtils';
 import { useAppContext } from '@/contexts/AppContext';
 import { usePreferences } from '@/contexts/PreferencesContext';
-import { calculateCategorySummaries } from '@/utils/transactionUtils';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import EnhancedChartCard from './EnhancedChartCard';
@@ -101,17 +100,6 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
     [transactions, currentMonth, filterPerson]
   );
   
-  const expenseSummaries = React.useMemo(
-    () => {
-      // Filter transactions by person if specified
-      const filteredTransactions = filterPerson && filterPerson !== 'all'
-        ? transactions.filter(t => t.creatorName === filterPerson)
-        : transactions;
-      
-      return calculateCategorySummaries(filteredTransactions, 'expense');
-    },
-    [transactions, filterPerson]
-  );
 
   // Custom tooltip for charts
   const CustomTooltip = ({
@@ -184,42 +172,47 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
           </CardContent>
         </Card>
 
-        {/* Expense Categories Pie Chart */}
+        {/* Income vs Expenses Bar Chart */}
         <Card className="transition-all hover:shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg text-center">{t('charts.expenseBreakdown')}</CardTitle>
+            <CardTitle className="text-lg text-center">{t('charts.incomeVsExpenses')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div id="chart-pie-categories" className="h-80 flex items-center justify-center">
-              {expenseSummaries.length > 0 ? <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 10, right: 30, bottom: 60, left: 30 }}>
-                    <Pie 
-                      data={expenseSummaries} 
-                      cx="50%" 
-                      cy="45%" 
-                      innerRadius={50} 
-                      outerRadius={70} 
-                      paddingAngle={2} 
-                      dataKey="amount" 
-                      nameKey="category" 
-                      label={false}
-                    >
-                      {expenseSummaries.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                    </Pie>
-                    <Legend 
-                      verticalAlign="bottom" 
-                      height={60}
-                      wrapperStyle={{ paddingTop: '20px' }}
-                      formatter={(value, entry: any) => {
-                        const data = entry.payload;
-                        const total = expenseSummaries.reduce((sum, item) => sum + item.amount, 0);
-                        const percent = ((data.amount / total) * 100).toFixed(0);
-                        return `${value}: ${percent}%`;
-                      }}
-                    />
-                    <Tooltip formatter={value => hideValues ? '******' : formatCurrency(Number(value), currency)} />
-                  </PieChart>
-                </ResponsiveContainer> : <p className="text-metacash-gray">{t('common.noData')}</p>}
+            <div id="chart-bar-income-expenses" className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyData} margin={{
+                  top: 5,
+                  right: 20,
+                  left: 0,
+                  bottom: 5
+                }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                  <XAxis dataKey="monthName" angle={-45} textAnchor="end" height={60} fontSize={12} />
+                  <YAxis 
+                    tickFormatter={value => {
+                      if (hideValues) return '***';
+                      if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+                      if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+                      return value.toFixed(0);
+                    }} 
+                    width={60}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Bar 
+                    dataKey="income" 
+                    name={t('common.income')} 
+                    fill="hsl(var(--chart-2))" 
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar 
+                    dataKey="expenses" 
+                    name={t('common.expense')} 
+                    fill="hsl(var(--chart-1))" 
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>

@@ -166,7 +166,15 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
               }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                   <XAxis dataKey="monthName" angle={-45} textAnchor="end" height={60} fontSize={12} />
-                  <YAxis tickFormatter={value => hideValues ? '***' : formatCurrency(value, currency).split('.')[0]} />
+                  <YAxis 
+                    tickFormatter={value => {
+                      if (hideValues) return '***';
+                      if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+                      if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+                      return value.toFixed(0);
+                    }} 
+                    width={60}
+                  />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
                   <Bar dataKey="income" name={t('common.income')} fill="#26DE81" />

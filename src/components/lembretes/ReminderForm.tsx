@@ -220,8 +220,10 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
                                newDate.getFullYear() === originalDate.getFullYear() &&
                                newDate.getDate() !== originalDate.getDate();
         
-        const updateData = {
-          description: values.description,
+        // Check if description was modified
+        const descriptionChanged = initialData?.description !== values.description;
+        
+        const updateData: any = {
           date: newDate.toISOString(),
           recurrence: values.recurrence,
           phone: values.phone || userPhone,
@@ -229,6 +231,11 @@ const ReminderForm: React.FC<ReminderFormProps> = ({
           situacao: 'ativo',
           status: 'pending'
         };
+
+        // Only include description if it was modified
+        if (descriptionChanged) {
+          updateData.description = values.description;
+        }
 
         // Apply edit based on selected option
         if (editOption === 'single') {

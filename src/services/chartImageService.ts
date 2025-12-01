@@ -23,23 +23,32 @@ export interface ChartImage {
 // Captura elemento HTML como imagem
 export const captureChartAsImage = async (elementId: string): Promise<Blob | null> => {
   try {
+    console.log(`🔍 Looking for element: ${elementId}`);
     const element = document.getElementById(elementId);
     if (!element) {
-      console.error(`Element with id "${elementId}" not found`);
+      console.error(`❌ Element with id "${elementId}" not found`);
+      console.log('📋 Available elements with IDs:', 
+        Array.from(document.querySelectorAll('[id]')).map(el => el.id)
+      );
       return null;
     }
     
+    console.log(`✅ Element found: ${elementId}, capturing...`);
     const canvas = await html2canvas(element, {
       backgroundColor: '#ffffff',
       scale: 2, // Maior qualidade
       logging: false,
     });
     
+    console.log(`✅ Canvas created for ${elementId}`);
     return new Promise((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), 'image/png', 0.9);
+      canvas.toBlob((blob) => {
+        console.log(`✅ Blob created for ${elementId}, size: ${blob?.size} bytes`);
+        resolve(blob);
+      }, 'image/png', 0.9);
     });
   } catch (error) {
-    console.error('Error capturing chart as image:', error);
+    console.error('❌ Error capturing chart as image:', error);
     return null;
   }
 };

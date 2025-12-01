@@ -112,19 +112,30 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
   };
   // Listener para capturar gráficos quando transação for atualizada
   useEffect(() => {
+    console.log('📊 DashboardCharts mounted - listener registered');
+    
     const handleTransactionUpdate = async () => {
+      console.log('🎯 transaction-updated event received!');
+      
       // Aguarda um pequeno delay para garantir que os gráficos foram re-renderizados
       setTimeout(async () => {
+        console.log('📸 Starting chart capture...');
+        
         // Dynamic import para evitar circular dependency
         const { captureAndSaveChart } = await import('@/services/chartImageService');
-        await captureAndSaveChart('chart-bar-income-expenses', 'grafico_barras', currentMonth);
-        await captureAndSaveChart('chart-pie-categories', 'grafico_pizza', currentMonth);
+        
+        const barResult = await captureAndSaveChart('chart-bar-income-expenses', 'grafico_barras', currentMonth);
+        console.log('📊 Bar chart capture result:', barResult);
+        
+        const pieResult = await captureAndSaveChart('chart-pie-categories', 'grafico_pizza', currentMonth);
+        console.log('🥧 Pie chart capture result:', pieResult);
       }, 1000);
     };
 
     window.addEventListener('transaction-updated', handleTransactionUpdate);
     
     return () => {
+      console.log('📊 DashboardCharts unmounted - listener removed');
       window.removeEventListener('transaction-updated', handleTransactionUpdate);
     };
   }, [currentMonth]);

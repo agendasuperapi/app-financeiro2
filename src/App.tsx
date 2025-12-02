@@ -12,7 +12,6 @@ import { AppProvider } from "@/contexts/AppContext";
 import { SupabaseInitializer } from "@/components/common/SupabaseInitializer";
 import Index from "./pages/Index";
 import LandingPage from "./pages/LandingPage";
-import LembretesPage from "./pages/LembretesPage";
 import LembrarPage from "./pages/LembrarPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -145,11 +144,6 @@ function App() {
                           <Route path="/lembrar" element={
                             <ProtectedRoute>
                               <LembrarPage />
-                            </ProtectedRoute>
-                          } />
-                          <Route path="/lembretes" element={
-                            <ProtectedRoute>
-                              <LembretesPage />
                             </ProtectedRoute>
                           } />
                           <Route path="/categories" element={

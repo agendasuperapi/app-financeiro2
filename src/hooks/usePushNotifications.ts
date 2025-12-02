@@ -123,7 +123,7 @@ export const usePushNotifications = () => {
         (notification: any) => {
           try {
             console.log('🔔 Notification clicked:', notification);
-            window.location.href = '/lembretes';
+            window.location.href = '/lembrar';
           } catch (error) {
             console.error('❌ Error handling notification click:', error);
           }

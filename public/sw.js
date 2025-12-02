@@ -123,7 +123,7 @@ self.addEventListener('notificationclick', function(event) {
   
   const urlToOpen = event.notification.data?.click_action || 
                     event.notification.data?.url || 
-                    '/lembretes';
+                    '/lembrar';
   
   if (event.action === 'view' || !event.action) {
     event.waitUntil(

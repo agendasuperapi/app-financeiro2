@@ -31,11 +31,14 @@ serve(async (req) => {
     });
     
     // Buscar lembretes dentro da janela de 10 minutos (antes e depois)
+    // Ignorar lembretes com status 'lembrado' ou que já foram notificados
     const { data: reminders, error } = await supabase
       .from('tbl_lembrete')
       .select('*')
       .gte('date', tenMinutesAgo.toISOString())
-      .lte('date', tenMinutesAhead.toISOString());
+      .lte('date', tenMinutesAhead.toISOString())
+      .neq('status', 'lembrado')
+      .or('notification_sent.is.null,notification_sent.eq.false');
 
     if (error) throw error;
 
@@ -110,12 +113,13 @@ serve(async (req) => {
           );
         }
 
-        // Marcar como notificado
+        // Marcar como notificado e atualizar status para 'lembrado'
         await supabase
           .from('tbl_lembrete')
           .update({ 
             notification_sent: true,
-            last_notification_at: new Date().toISOString()
+            last_notification_at: new Date().toISOString(),
+            status: 'lembrado'
           })
           .eq('id', reminder.id);
 
@@ -309,7 +313,7 @@ async function sendFCMV1(
         }
       },
       webpush: {
-        fcm_options: { link: '/lembretes' },
+        fcm_options: { link: '/lembrar' },
         notification: {
           title,
           body,

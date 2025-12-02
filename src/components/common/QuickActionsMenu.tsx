@@ -63,7 +63,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
       icon: Clock,
       label: 'Lembretes',
       action: () => {
-        navigate('/lembretes');
+        navigate('/lembrar');
         setIsOpen(false);
       },
       color: 'text-amber-600',

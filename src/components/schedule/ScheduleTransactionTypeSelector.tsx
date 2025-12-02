@@ -19,7 +19,7 @@ const ScheduleTransactionTypeSelector: React.FC<ScheduleTransactionTypeSelectorP
   } = usePreferences();
   
   const location = useLocation();
-  const isLembretesPage = location.pathname === '/lembretes';
+  const isLembretesPage = location.pathname === '/lembrar';
 
   // Auto-set type to 'outros' when on lembretes page
   useEffect(() => {

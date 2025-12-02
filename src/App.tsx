@@ -26,7 +26,7 @@ import ReportsPage from "./pages/ReportsPage";
 import NotesPage from "./pages/NotesPage";
 import LogPage from "./pages/LogPage";
 import RulesPage from "./pages/RulesPage";
-import SchedulePage from "./pages/SchedulePage";
+
 import ContasPage from "./pages/ContasPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import PlansPage from "./pages/PlansPage";
@@ -129,11 +129,6 @@ function App() {
                           <Route path="/rules" element={
                             <ProtectedRoute>
                               <RulesPage />
-                            </ProtectedRoute>
-                          } />
-                          <Route path="/schedule" element={
-                            <ProtectedRoute>
-                              <SchedulePage />
                             </ProtectedRoute>
                           } />
                           <Route path="/contas" element={

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Trash2, Edit, MoreVertical, User } from 'lucide-react';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { Category } from '@/types/categories';
@@ -35,7 +34,7 @@ const CategoriesTab: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [categoryType, setCategoryType] = useState<'expense' | 'income'>('expense');
+  const categoryType = 'expense' as const;
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [loading, setLoading] = useState(false);
@@ -181,119 +180,58 @@ const CategoriesTab: React.FC = () => {
           </Button>
         </div>
         
-        <Tabs 
-          defaultValue="expense" 
-          value={categoryType}
-          onValueChange={(value) => setCategoryType(value as 'expense' | 'income')}
-          className="w-full"
-        >
-          <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="expense" className="data-[state=active]:bg-red-500 data-[state=active]:text-white">
-              {t('common.expense')}
-            </TabsTrigger>
-            <TabsTrigger value="income" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">
-              {t('common.income')}
-            </TabsTrigger>
-          </TabsList>
+        <div className="w-full">
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">{t('common.expense')}</h4>
+          </div>
           
-          <TabsContent value="expense" className="mt-0">
-            <ul className="space-y-2">
-              {categories.map((category) => (
-                <li 
-                  key={category.id} 
-                  className="bg-card p-3 rounded-lg flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <CategoryIcon 
-                      icon={category.icon} 
-                      color={category.color} 
-                    />
-                    <span>{category.name}</span>
-                  </div>
-                  <div>
-                    {category.isDefault ? (
-                      isAdmin ? (
-                        <Button variant="ghost" size="sm" onClick={() => handleEditCategory(category)}>
-                          <Edit className="h-4 w-4" />
+          <ul className="space-y-2">
+            {categories.map((category) => (
+              <li 
+                key={category.id} 
+                className="bg-card p-3 rounded-lg flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <CategoryIcon 
+                    icon={category.icon} 
+                    color={category.color} 
+                  />
+                  <span>{category.name}</span>
+                </div>
+                <div>
+                  {category.isDefault ? (
+                    isAdmin ? (
+                      <Button variant="ghost" size="sm" onClick={() => handleEditCategory(category)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    ) : null
+                  ) : (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreVertical className="h-4 w-4" />
                         </Button>
-                      ) : null
-                    ) : (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditCategory(category)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            {t('common.edit')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            className="text-destructive"
-                            onClick={() => handleDeleteCategory(category)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            {t('common.delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </TabsContent>
-          
-          <TabsContent value="income" className="mt-0">
-            <ul className="space-y-2">
-              {categories.map((category) => (
-                <li 
-                  key={category.id} 
-                  className="bg-card p-3 rounded-lg flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <CategoryIcon 
-                      icon={category.icon} 
-                      color={category.color} 
-                    />
-                    <span>{category.name}</span>
-                  </div>
-                  <div>
-                    {category.isDefault ? (
-                      isAdmin ? (
-                        <Button variant="ghost" size="sm" onClick={() => handleEditCategory(category)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      ) : null
-                    ) : (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditCategory(category)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            {t('common.edit')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            className="text-destructive"
-                            onClick={() => handleDeleteCategory(category)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            {t('common.delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </TabsContent>
-        </Tabs>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditCategory(category)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          {t('common.edit')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onClick={() => handleDeleteCategory(category)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          {t('common.delete')}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       <CategoryForm

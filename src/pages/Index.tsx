@@ -304,7 +304,7 @@ const Index = () => {
         </Select>}
     </div>;
   return <MainLayout title={t('dashboard.title')} onAddTransaction={handleAddTransaction} headerContent={isMobile ? mobileHeaderContent : undefined}>
-      <SubscriptionGuard feature="o dashboard completo" className="py-[30px]">
+      <SubscriptionGuard feature="o dashboard completo" className="py-[40px]">
         <div className="space-y-8 min-h-0">
           {/* Indicador de visualização de cliente */}
           {isClientView && selectedUser && <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">

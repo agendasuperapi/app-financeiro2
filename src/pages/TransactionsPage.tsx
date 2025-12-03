@@ -7,7 +7,7 @@ import TransactionForm from '@/components/common/TransactionForm';
 import ContaForm from '@/components/contas/ContaForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, User, Search, ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
+import { Plus, User, Search, ChevronLeft, ChevronRight, CalendarIcon, Tag } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -28,6 +28,8 @@ import { createLocalDate, formatCurrency } from '@/utils/transactionUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { usePreferences } from '@/contexts/PreferencesContext';
 import { DependentsService } from '@/services/dependentsService';
+import { Checkbox } from '@/components/ui/checkbox';
+
 const TransactionsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [contaFormOpen, setContaFormOpen] = useState(false);
@@ -42,6 +44,8 @@ const TransactionsPage = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   
   // Estados para dialog de transações relacionadas
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -119,10 +123,22 @@ const TransactionsPage = () => {
     fetchNames();
   }, [transactions]);
 
+  // Extract unique categories from transactions
+  useEffect(() => {
+    if (transactions.length > 0) {
+      const uniqueCategories = [...new Set(
+        transactions
+          .map(t => t.category)
+          .filter(Boolean)
+      )].sort() as string[];
+      setAvailableCategories(uniqueCategories);
+    }
+  }, [transactions]);
+
   // Apply filters
   React.useEffect(() => {
     applyFilters();
-  }, [transactions, searchQuery, statusFilter, dateFilter, nameFilter, selectedDate, startDate, endDate]);
+  }, [transactions, searchQuery, statusFilter, dateFilter, nameFilter, selectedDate, startDate, endDate, selectedCategories]);
   const applyFilters = () => {
     let filtered = [...transactions];
 
@@ -150,6 +166,13 @@ const TransactionsPage = () => {
     if (nameFilter !== 'todos') {
       filtered = filtered.filter(transaction => 
         transaction.creatorName?.toLowerCase() === nameFilter.toLowerCase()
+      );
+    }
+
+    // Aplicar filtro de categorias
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(transaction => 
+        transaction.category && selectedCategories.includes(transaction.category)
       );
     }
 
@@ -343,6 +366,63 @@ const TransactionsPage = () => {
                   </SelectContent>
                 </Select>
 
+                {/* Filtro de Categorias */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="flex-1 lg:w-[180px] justify-start">
+                      <Tag className="mr-2 h-4 w-4" />
+                      {selectedCategories.length === 0 
+                        ? 'Categorias' 
+                        : `${selectedCategories.length} selecionada${selectedCategories.length > 1 ? 's' : ''}`}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3" align="start">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between pb-2 border-b">
+                        <span className="text-sm font-medium">Categorias</span>
+                        {selectedCategories.length > 0 && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+                            onClick={() => setSelectedCategories([])}
+                          >
+                            Limpar
+                          </Button>
+                        )}
+                      </div>
+                      <div className="max-h-48 overflow-y-auto space-y-2">
+                        {availableCategories.map((category) => (
+                          <div key={category} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`cat-${category}`}
+                              checked={selectedCategories.includes(category)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedCategories([...selectedCategories, category]);
+                                } else {
+                                  setSelectedCategories(selectedCategories.filter(c => c !== category));
+                                }
+                              }}
+                            />
+                            <label
+                              htmlFor={`cat-${category}`}
+                              className="text-sm cursor-pointer flex-1 truncate"
+                            >
+                              {category}
+                            </label>
+                          </div>
+                        ))}
+                        {availableCategories.length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-2">
+                            Nenhuma categoria disponível
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
                 {/* Filtro de Nome - só aparece se houver dependentes */}
                 {availableNames.length > 0 && (
                   <Select value={nameFilter} onValueChange={setNameFilter}>
@@ -415,13 +495,13 @@ const TransactionsPage = () => {
             {isMobile ? <TransactionList transactions={filteredTransactions} onEdit={handleEditTransaction} onDelete={handleDeleteTransaction} /> : <Card className="animate-fade-in p-1">
                 <CardHeader className="pb-6">
                   <CardTitle className="text-xl">Lista de Transações</CardTitle>
-                  {(searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos') && <p className="text-sm text-muted-foreground">
+                  {(searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos' || selectedCategories.length > 0) && <p className="text-sm text-muted-foreground">
                       {filteredTransactions.length} transação{filteredTransactions.length !== 1 ? 'ões' : ''} encontrada{filteredTransactions.length !== 1 ? 's' : ''}
                     </p>}
                 </CardHeader>
                 <CardContent className="pt-0 px-8">
                   {filteredTransactions.length === 0 ? <div className="text-center py-8 text-muted-foreground">
-                      {searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos' ? 'Nenhuma transação encontrada com os filtros aplicados' : 'Nenhuma transação encontrada'}
+                      {searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos' || selectedCategories.length > 0 ? 'Nenhuma transação encontrada com os filtros aplicados' : 'Nenhuma transação encontrada'}
                     </div> : <TransactionTable transactions={filteredTransactions} onEdit={handleEditTransaction} onDelete={handleDeleteTransaction} />}
                 </CardContent>
               </Card>}

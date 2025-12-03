@@ -527,7 +527,7 @@ const TransactionsPage = () => {
                     : "mb-4 -mx-4 md:-mx-6 px-4 md:px-6 border-b"
                 )}
                 style={(isMobile || isDateNavFixed) ? {
-                  top: isMobile ? 'calc(5rem + 30px + env(safe-area-inset-top))' : '0'
+                  top: isMobile ? 'calc(4.5rem + env(safe-area-inset-top))' : '0'
                 } : undefined}
               >
                 <div className="flex items-center gap-1 bg-muted rounded-md p-1">

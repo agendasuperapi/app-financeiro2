@@ -59,7 +59,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           <MobileHeader hideValues={hideValues} toggleHideValues={toggleHideValues}>
             {headerContent}
           </MobileHeader>
-          <main className="flex-1 overflow-y-auto p-2 pb-20 w-full" style={{ paddingTop: headerContent ? 'calc(7.5rem + env(safe-area-inset-top))' : 'calc(5rem + env(safe-area-inset-top))' }}>
+          <main className="flex-1 overflow-y-auto p-2 pb-20 w-full" style={{ paddingTop: headerContent ? 'calc(9rem + env(safe-area-inset-top))' : 'calc(5rem + env(safe-area-inset-top))' }}>
             {title && <div className="mb-6">
                 
               </div>}

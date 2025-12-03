@@ -328,18 +328,21 @@ const TransactionsPage = () => {
           
           {/* Filtros */}
           <div className="mb-2 md:mb-4">
-            <div className="flex flex-col lg:flex-row gap-2">
+            <div className="flex flex-col gap-2">
               {/* Campo de Pesquisa */}
-              <div className="relative w-full lg:flex-1">
+              <div className="relative w-full">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Pesquisar transações..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-8" />
               </div>
               
-              {/* Status e Período na mesma linha */}
-              <div className="flex gap-2 lg:gap-2">
+              {/* Filtros em grid */}
+              <div className={cn(
+                "grid gap-2",
+                availableNames.length > 0 ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-3 lg:grid-cols-3"
+              )}>
                 {/* Filtro de Status */}
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="flex-1 lg:w-[180px]">
+                  <SelectTrigger>
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -351,7 +354,7 @@ const TransactionsPage = () => {
 
                 {/* Filtro de Data */}
                 <Select value={dateFilter} onValueChange={setDateFilter}>
-                  <SelectTrigger className="flex-1 lg:w-[180px]">
+                  <SelectTrigger>
                     <SelectValue placeholder="Data" />
                   </SelectTrigger>
                   <SelectContent>
@@ -369,11 +372,13 @@ const TransactionsPage = () => {
                 {/* Filtro de Categorias */}
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="flex-1 lg:w-[180px] justify-start">
+                    <Button variant="outline" className="w-full justify-start">
                       <Tag className="mr-2 h-4 w-4" />
-                      {selectedCategories.length === 0 
-                        ? 'Categorias' 
-                        : `${selectedCategories.length} selecionada${selectedCategories.length > 1 ? 's' : ''}`}
+                      <span className="truncate">
+                        {selectedCategories.length === 0 
+                          ? 'Categorias' 
+                          : `${selectedCategories.length} sel.`}
+                      </span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-56 p-3" align="start">
@@ -426,7 +431,7 @@ const TransactionsPage = () => {
                 {/* Filtro de Nome - só aparece se houver dependentes */}
                 {availableNames.length > 0 && (
                   <Select value={nameFilter} onValueChange={setNameFilter}>
-                    <SelectTrigger className="flex-1 lg:w-[180px]">
+                    <SelectTrigger>
                       <SelectValue placeholder="Nome" />
                     </SelectTrigger>
                     <SelectContent>

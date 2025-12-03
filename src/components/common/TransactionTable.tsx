@@ -199,29 +199,30 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
-        <Table className="w-full table-fixed">
+        <Table className="w-full">
           <TableHeader className="bg-muted/30">
             <TableRow>
-              <TableHead className="w-[13%] min-w-[100px]">
+              <TableHead className="w-[90px] lg:w-[110px] px-2 lg:px-4">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto p-0 font-medium text-xs hover:bg-transparent"
+                  className="h-auto p-0 font-medium text-[10px] lg:text-xs hover:bg-transparent whitespace-nowrap"
                   onClick={() => handleSort('created_at')}
                 >
                   <div className="flex items-center gap-1">
-                    Data de Criação
+                    <span className="hidden lg:inline">Data de Criação</span>
+                    <span className="lg:hidden">Criação</span>
                     {sortField === 'created_at' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
                     {sortField === 'created_at' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
                     {sortField !== 'created_at' && <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
                   </div>
                 </Button>
               </TableHead>
-              <TableHead className="w-[11%] min-w-[70px]">
+              <TableHead className="w-[70px] lg:w-[90px] px-2 lg:px-4">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto p-0 font-medium text-xs hover:bg-transparent"
+                  className="h-auto p-0 font-medium text-[10px] lg:text-xs hover:bg-transparent"
                   onClick={() => handleSort('type')}
                 >
                   <div className="flex items-center gap-1">
@@ -232,11 +233,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   </div>
                 </Button>
               </TableHead>
-              <TableHead className="w-[12%] min-w-[90px]">
+              <TableHead className="w-[85px] lg:w-[100px] px-2 lg:px-4">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto p-0 font-medium text-xs hover:bg-transparent"
+                  className="h-auto p-0 font-medium text-[10px] lg:text-xs hover:bg-transparent"
                   onClick={() => handleSort('date')}
                 >
                   <div className="flex items-center gap-1">
@@ -247,11 +248,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   </div>
                 </Button>
               </TableHead>
-              <TableHead className="w-[13%] min-w-[80px]">
+              <TableHead className="px-2 lg:px-4">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto p-0 font-medium text-xs hover:bg-transparent"
+                  className="h-auto p-0 font-medium text-[10px] lg:text-xs hover:bg-transparent"
                   onClick={() => handleSort('category')}
                 >
                   <div className="flex items-center gap-1">
@@ -262,7 +263,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   </div>
                 </Button>
               </TableHead>
-              <TableHead className="w-[10%] min-w-[70px] hidden lg:table-cell">
+              <TableHead className="w-[70px] px-2 lg:px-4 hidden xl:table-cell">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -277,7 +278,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   </div>
                 </Button>
               </TableHead>
-              <TableHead className="w-[18%] hidden lg:table-cell">
+              <TableHead className="hidden xl:table-cell px-4">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -292,7 +293,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   </div>
                 </Button>
               </TableHead>
-              <TableHead className="text-right w-[10%] min-w-[75px] hidden lg:table-cell">
+              <TableHead className="text-right w-[85px] lg:w-[100px] px-2 lg:px-4 hidden lg:table-cell">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -307,7 +308,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   </div>
                 </Button>
               </TableHead>
-              <TableHead className="w-[12%] min-w-[90px]">{t('common.actions') || 'Ações'}</TableHead>
+              <TableHead className="w-[80px] lg:w-[90px] px-2 lg:px-4">{t('common.actions') || 'Ações'}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -323,54 +324,50 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     (transaction as any).__isSimulation && "border-dashed border-orange-400"
                   )}
                 >
-                  <TableCell className="font-medium text-[10px] md:text-xs">
-                    <div className="text-muted-foreground">
+                  <TableCell className="font-medium text-[10px] md:text-xs px-2 lg:px-4">
+                    <div className="text-muted-foreground truncate">
                       {transaction.created_at 
                         ? formatDateTime(transaction.created_at as string, effectiveTimezone)
                         : '-'
                       }
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-2 lg:px-4">
                     {transaction.type === 'income' ? (
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center">
-                          <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-metacash-success flex items-center justify-center mr-2">
-                            <ArrowUp className="w-3 h-3 md:w-4 md:h-4 text-white" />
-                          </div>
-                          <span className="text-[10px] md:text-xs">{t('income.title')}</span>
+                      <div className="flex items-center">
+                        <div className="w-5 h-5 lg:w-6 lg:h-6 rounded-full bg-metacash-success flex items-center justify-center mr-1 lg:mr-2 flex-shrink-0">
+                          <ArrowUp className="w-3 h-3 text-white" />
                         </div>
+                        <span className="text-[10px] lg:text-xs truncate">{t('income.title')}</span>
                       </div>
                     ) : (
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center">
-                          <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-metacash-error flex items-center justify-center mr-2">
-                            <ArrowDown className="w-3 h-3 md:w-4 md:h-4 text-white" />
-                          </div>
-                          <span className="text-[10px] md:text-xs">{t('expense.title')}</span>
+                      <div className="flex items-center">
+                        <div className="w-5 h-5 lg:w-6 lg:h-6 rounded-full bg-metacash-error flex items-center justify-center mr-1 lg:mr-2 flex-shrink-0">
+                          <ArrowDown className="w-3 h-3 text-white" />
                         </div>
+                        <span className="text-[10px] lg:text-xs truncate">{t('expense.title')}</span>
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="font-medium text-[10px] md:text-xs">
-                     <div className="space-y-1">
-                       <div className="font-medium">{formatDateTime(transaction.date as string, effectiveTimezone)}</div>
-                       <div className="lg:hidden text-[10px] text-muted-foreground break-words">
-                         {transaction.description}
-                       </div>
-                     </div>
+                  <TableCell className="font-medium text-[10px] md:text-xs px-2 lg:px-4">
+                    <div>
+                      <div className="font-medium truncate">{formatDateTime(transaction.date as string, effectiveTimezone)}</div>
+                      <div className="xl:hidden text-[10px] text-muted-foreground truncate">
+                        {transaction.description}
+                      </div>
+                    </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 flex-wrap">
+                  <TableCell className="px-2 lg:px-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1 flex-wrap">
                         <CategoryIcon
                           icon={transaction.categoryIcon || 'circle'}
                           color={transaction.categoryColor || (transaction.type === 'income' ? '#4CAF50' : '#E57373')}
-                          size={14}
+                          size={12}
                         />
                         <Badge
                           variant="outline"
-                          className="text-[10px] whitespace-nowrap max-w-[100px] md:max-w-[160px] truncate"
+                          className="text-[9px] lg:text-[10px] whitespace-nowrap max-w-[80px] lg:max-w-[120px] truncate px-1"
                           style={{
                             backgroundColor: `${transaction.categoryColor || (transaction.type === 'income' ? '#4CAF50' : '#E57373')}15`,
                             color: transaction.categoryColor || (transaction.type === 'income' ? '#4CAF50' : '#E57373'),
@@ -379,21 +376,21 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         >
                           {transaction.category}
                         </Badge>
-                        {transaction.creatorName && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-primary/10 text-primary text-[10px] font-medium">
-                            {transaction.creatorName}
-                          </span>
-                        )}
-                        {(transaction as any).__isSimulation && (
-                          <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200 text-[10px]">
-                            Simulação
-                          </Badge>
-                        )}
                       </div>
-                      <div className="md:flex md:flex-col md:items-start md:gap-1 lg:hidden mt-1">
+                      {transaction.creatorName && (
+                        <span className="inline-flex items-center px-1 py-0.5 rounded bg-primary/10 text-primary text-[9px] font-medium">
+                          {transaction.creatorName}
+                        </span>
+                      )}
+                      {(transaction as any).__isSimulation && (
+                        <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200 text-[9px]">
+                          Simulação
+                        </Badge>
+                      )}
+                      <div className="lg:hidden">
                         <div
                           className={cn(
-                            'font-semibold text-xs',
+                            'font-semibold text-[10px]',
                             transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
                           )}
                         >
@@ -402,7 +399,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
+                  <TableCell className="text-[10px] md:text-xs hidden xl:table-cell px-2 lg:px-4">
                     {(() => {
                       const status = (transaction as any).status;
                       const isPago = status === 'paid';
@@ -423,20 +420,20 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                       );
                     })()}
                   </TableCell>
-                   <TableCell className="text-[10px] md:text-xs hidden lg:table-cell">
-                     <div className="truncate pr-2">
-                       {transaction.description}
-                     </div>
-                   </TableCell>
+                  <TableCell className="text-[10px] md:text-xs hidden xl:table-cell px-4">
+                    <div className="truncate max-w-[200px]">
+                      {transaction.description}
+                    </div>
+                  </TableCell>
                   <TableCell
                     className={cn(
-                      'text-right font-semibold text-[10px] md:text-xs hidden lg:table-cell',
+                      'text-right font-semibold text-[10px] md:text-xs hidden lg:table-cell px-2 lg:px-4',
                       transaction.type === 'income' ? 'text-metacash-success' : 'text-metacash-error'
                     )}
                   >
                     {hideValues ? renderHiddenValue() : formatCurrency(Math.abs(transaction.amount), currency)}
                   </TableCell>
-                  <TableCell className="pl-2 pr-2 w-[12%] min-w-[90px]">
+                  <TableCell className="px-2 lg:px-4">
                     <div className="flex justify-end gap-1">
                       {!(transaction as any).__isSimulation && onEdit && (
                         <Button

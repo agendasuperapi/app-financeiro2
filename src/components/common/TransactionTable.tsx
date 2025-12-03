@@ -325,9 +325,18 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   )}
                 >
                   <TableCell className="font-medium text-[10px] md:text-xs px-2 lg:px-4">
-                    <div className="text-muted-foreground truncate">
+                    <div className="text-muted-foreground">
                       {transaction.created_at 
-                        ? formatDateTime(transaction.created_at as string, effectiveTimezone)
+                        ? (() => {
+                            const formatted = formatDateTime(transaction.created_at as string, effectiveTimezone);
+                            const parts = formatted.split(' ');
+                            return (
+                              <>
+                                <div>{parts[0]}</div>
+                                <div>{parts[1]}</div>
+                              </>
+                            );
+                          })()
                         : '-'
                       }
                     </div>

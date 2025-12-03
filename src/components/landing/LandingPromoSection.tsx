@@ -1,6 +1,6 @@
 
-import React, { useCallback } from 'react';
-import { motion } from 'framer-motion';
+import React, { useCallback, useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useBrandingConfig } from '@/hooks/useBrandingConfig';
 import { 
@@ -18,6 +18,28 @@ import {
 
 const LandingPromoSection = () => {
   const { companyName } = useBrandingConfig();
+  const sectionRef = useRef<HTMLElement>(null);
+  const notebookRef = useRef<HTMLDivElement>(null);
+  const phonesRef = useRef<HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"]
+  });
+
+  // Parallax transforms for notebook
+  const notebookY = useTransform(scrollYProgress, [0, 1], [100, -100]);
+  const notebookRotate = useTransform(scrollYProgress, [0, 0.5, 1], [-5, 0, 5]);
+  const notebookScale = useTransform(scrollYProgress, [0, 0.5, 1], [0.9, 1, 0.95]);
+
+  // Parallax transforms for phones
+  const phone1Y = useTransform(scrollYProgress, [0, 1], [80, -80]);
+  const phone2Y = useTransform(scrollYProgress, [0, 1], [120, -60]);
+  const phone1Rotate = useTransform(scrollYProgress, [0, 1], [-8, 8]);
+  const phone2Rotate = useTransform(scrollYProgress, [0, 1], [12, -4]);
+
+  // Background parallax
+  const bgY = useTransform(scrollYProgress, [0, 1], [0, -50]);
 
   const scrollToPlans = useCallback(() => {
     const section = document.getElementById('planos');
@@ -47,39 +69,70 @@ const LandingPromoSection = () => {
   ];
 
   return (
-    <section className="relative py-16 md:py-24 overflow-hidden bg-gradient-to-b from-muted/30 via-background to-muted/20">
-      {/* Background decoration */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent" />
+    <section 
+      ref={sectionRef}
+      className="relative py-16 md:py-24 overflow-hidden bg-gradient-to-b from-muted/30 via-background to-muted/20"
+    >
+      {/* Animated Background decoration */}
+      <motion.div 
+        style={{ y: bgY }}
+        className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent" 
+      />
+      <motion.div 
+        style={{ y: useTransform(scrollYProgress, [0, 1], [0, -80]) }}
+        className="absolute top-1/4 -left-20 w-80 h-80 bg-primary/5 rounded-full blur-3xl" 
+      />
+      <motion.div 
+        style={{ y: useTransform(scrollYProgress, [0, 1], [0, -40]) }}
+        className="absolute bottom-1/4 -right-20 w-60 h-60 bg-primary/10 rounded-full blur-3xl" 
+      />
       
       <div className="container mx-auto px-4 relative z-10">
         
         {/* Section 1 - Desktop/Notebook */}
         <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
-          {/* Left - Notebook Image */}
+          {/* Left - Notebook Image with Parallax */}
           <motion.div
+            ref={notebookRef}
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
             className="relative"
           >
-            <div className="relative">
+            <motion.div 
+              style={{ 
+                y: notebookY, 
+                rotateX: notebookRotate,
+                scale: notebookScale
+              }}
+              className="relative perspective-1000"
+            >
               {/* Notebook frame */}
-              <div className="relative bg-foreground/90 rounded-t-xl p-2 pb-0">
+              <motion.div 
+                className="relative bg-foreground/90 rounded-t-xl p-2 pb-0 shadow-2xl"
+                whileHover={{ scale: 1.02, rotateY: 5 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
                 <div className="absolute top-3 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-muted/50" />
-                <img 
+                <motion.img 
                   src="/lovable-uploads/4427b613-3f73-4178-acf3-5a90c35d1f4d.png" 
                   alt="Dashboard Web Preview" 
                   className="w-full h-auto rounded-t-lg"
+                  whileHover={{ scale: 1.01 }}
+                  transition={{ duration: 0.3 }}
                 />
-              </div>
+              </motion.div>
               {/* Notebook base */}
               <div className="h-4 bg-gradient-to-b from-foreground/80 to-foreground/60 rounded-b-lg" />
               <div className="h-2 bg-foreground/40 mx-8 rounded-b-xl" />
               
-              {/* Shadow effect */}
-              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-8 bg-foreground/20 blur-xl rounded-full" />
-            </div>
+              {/* Animated Shadow effect */}
+              <motion.div 
+                style={{ scale: useTransform(scrollYProgress, [0, 0.5, 1], [0.8, 1, 0.9]) }}
+                className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-8 bg-foreground/20 blur-xl rounded-full" 
+              />
+            </motion.div>
           </motion.div>
 
           {/* Right - Content */}
@@ -108,6 +161,7 @@ const LandingPromoSection = () => {
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
                   className="flex items-center gap-3"
+                  whileHover={{ x: 10 }}
                 >
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <feature.icon className="w-5 h-5 text-primary" />
@@ -121,8 +175,9 @@ const LandingPromoSection = () => {
 
         {/* Section 2 - Mobile */}
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left - Phone Images */}
+          {/* Left - Phone Images with Parallax */}
           <motion.div
+            ref={phonesRef}
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -130,31 +185,67 @@ const LandingPromoSection = () => {
             className="relative flex justify-center lg:justify-start"
           >
             <div className="relative">
-              {/* Phone 1 - Main */}
-              <div className="relative z-10 bg-foreground/90 rounded-[2.5rem] p-2 shadow-2xl">
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-20 h-6 bg-foreground rounded-full" />
-                <img 
-                  src="/lovable-uploads/4427b613-3f73-4178-acf3-5a90c35d1f4d.png" 
-                  alt="App Mobile Preview" 
-                  className="w-56 h-auto rounded-[2rem]"
-                />
-              </div>
+              {/* Phone 1 - Main with parallax */}
+              <motion.div 
+                style={{ y: phone1Y, rotate: phone1Rotate }}
+                className="relative z-10"
+                whileHover={{ scale: 1.05, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                <div className="bg-foreground/90 rounded-[2.5rem] p-2 shadow-2xl">
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 w-20 h-6 bg-foreground rounded-full z-10" />
+                  <img 
+                    src="/lovable-uploads/4427b613-3f73-4178-acf3-5a90c35d1f4d.png" 
+                    alt="App Mobile Preview" 
+                    className="w-56 h-auto rounded-[2rem]"
+                  />
+                </div>
+              </motion.div>
               
-              {/* Phone 2 - Behind */}
-              <div className="absolute -right-12 top-8 z-0 bg-foreground/70 rounded-[2.5rem] p-2 shadow-xl opacity-80 rotate-6">
-                <img 
-                  src="/lovable-uploads/4427b613-3f73-4178-acf3-5a90c35d1f4d.png" 
-                  alt="App Mobile Preview 2" 
-                  className="w-48 h-auto rounded-[2rem]"
-                />
-              </div>
+              {/* Phone 2 - Behind with different parallax speed */}
+              <motion.div 
+                style={{ y: phone2Y, rotate: phone2Rotate }}
+                className="absolute -right-12 top-8 z-0"
+                whileHover={{ scale: 1.05, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                <div className="bg-foreground/70 rounded-[2.5rem] p-2 shadow-xl opacity-80">
+                  <img 
+                    src="/lovable-uploads/4427b613-3f73-4178-acf3-5a90c35d1f4d.png" 
+                    alt="App Mobile Preview 2" 
+                    className="w-48 h-auto rounded-[2rem]"
+                  />
+                </div>
+              </motion.div>
               
-              {/* Decorative elements */}
-              <div className="absolute -left-8 top-1/4 w-16 h-16 text-primary/30">
-                <svg viewBox="0 0 100 100" fill="currentColor">
+              {/* Animated Decorative elements */}
+              <motion.div 
+                style={{ y: useTransform(scrollYProgress, [0, 1], [40, -40]) }}
+                className="absolute -left-8 top-1/4 w-16 h-16 text-primary/30"
+              >
+                <motion.svg 
+                  viewBox="0 0 100 100" 
+                  fill="currentColor"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                >
                   <polygon points="50,0 100,100 0,100" />
-                </svg>
-              </div>
+                </motion.svg>
+              </motion.div>
+              
+              {/* Floating circles */}
+              <motion.div
+                style={{ y: useTransform(scrollYProgress, [0, 1], [20, -60]) }}
+                className="absolute -right-20 bottom-20 w-8 h-8 bg-primary/20 rounded-full"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              />
+              <motion.div
+                style={{ y: useTransform(scrollYProgress, [0, 1], [30, -30]) }}
+                className="absolute -left-16 bottom-40 w-4 h-4 bg-primary/30 rounded-full"
+                animate={{ scale: [1, 1.3, 1] }}
+                transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
+              />
             </div>
           </motion.div>
 
@@ -196,6 +287,7 @@ const LandingPromoSection = () => {
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
                   className="flex items-center gap-3"
+                  whileHover={{ x: 10 }}
                 >
                   <feature.icon className="w-5 h-5 text-primary" />
                   <span className="text-foreground/90">{feature.text}</span>
@@ -228,13 +320,14 @@ const LandingPromoSection = () => {
               className="flex flex-wrap gap-6 mt-8"
             >
               {badges.map((badge, index) => (
-                <div 
+                <motion.div 
                   key={index}
                   className="flex items-center gap-2 text-sm text-muted-foreground"
+                  whileHover={{ scale: 1.05 }}
                 >
                   <badge.icon className="w-5 h-5 text-primary" />
                   <span>{badge.text}</span>
-                </div>
+                </motion.div>
               ))}
             </motion.div>
           </motion.div>

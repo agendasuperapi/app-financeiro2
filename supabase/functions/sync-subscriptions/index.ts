@@ -185,6 +185,47 @@ serve(async (req) => {
             }
           }
 
+          // Buscar id_plano_preco da tabela tbl_planos usando periodo (MENSAL/ANUAL)
+          let idPlanoPreco = null;
+          const periodoValue = planType === 'annual' ? 'ANUAL' : 'MENSAL';
+          
+          logStep("Searching tbl_planos for periodo", { periodoValue, planType });
+          
+          const { data: plano, error: planoError } = await supabase
+            .from('tbl_planos')
+            .select('id, nome, id_plano_preco, periodo')
+            .eq('periodo', periodoValue)
+            .limit(1)
+            .maybeSingle();
+          
+          logStep("tbl_planos query result", { plano, error: planoError });
+          
+          if (plano && plano.id_plano_preco) {
+            idPlanoPreco = plano.id_plano_preco;
+            logStep("Using id_plano_preco from tbl_planos", { idPlanoPreco, planName: plano.nome });
+          } else if (plano) {
+            // Fallback to id if id_plano_preco is not set
+            idPlanoPreco = plano.id;
+            logStep("Using fallback plano.id", { idPlanoPreco, planName: plano.nome });
+          } else {
+            // Fallback: get first available plan
+            const { data: anyPlan } = await supabase
+              .from('tbl_planos')
+              .select('id, nome, id_plano_preco')
+              .limit(1)
+              .maybeSingle();
+            
+            if (anyPlan) {
+              idPlanoPreco = anyPlan.id_plano_preco || anyPlan.id;
+              logStep("Using fallback any plan", { idPlanoPreco, planName: anyPlan.nome });
+            }
+          }
+          
+          if (!idPlanoPreco) {
+            logStep("ERROR: Cannot sync subscription - no valid id_plano_preco found", { userId, planType });
+            continue;
+          }
+
           // Inserir/atualizar assinatura
           const subscriptionData = {
             user_id: userId,
@@ -195,12 +236,14 @@ serve(async (req) => {
             current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
             cancel_at_period_end: subscription.cancel_at_period_end,
+            id_plano_preco: idPlanoPreco,
             updated_at: new Date().toISOString()
           };
           
           // Log dos dados antes de inserir
           logStep("Subscription data to upsert", { 
             subscriptionId: subscription.id,
+            idPlanoPreco,
             periods: {
               raw_start: subscription.current_period_start,
               raw_end: subscription.current_period_end,
@@ -227,7 +270,8 @@ serve(async (req) => {
               errorMessage: subscriptionError.message,
               errorDetails: subscriptionError.details,
               userId,
-              subscriptionId: subscription.id
+              subscriptionId: subscription.id,
+              idPlanoPreco
             });
             continue;
           }

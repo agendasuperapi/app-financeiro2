@@ -346,7 +346,27 @@ const TransactionsPage = () => {
   const handleDeleteTransaction = (id: string) => {
     deleteTransaction(id);
   };
-  return <MainLayout>
+  
+  // Componente de navegação de data para o header mobile
+  const dateNavContent = (dateFilter === 'mes' || dateFilter === 'ano') ? (
+    <div className="py-2 flex justify-center border-t">
+      <div className="flex items-center gap-1 bg-muted rounded-md p-1">
+        <Button variant="ghost" size="sm" onClick={() => handleDateNavigation('prev')} className="h-8 w-8 p-0">
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        
+        <span className="text-sm font-medium px-2 min-w-[120px] text-center">
+          {getDateFilterLabel()}
+        </span>
+        
+        <Button variant="ghost" size="sm" onClick={() => handleDateNavigation('next')} className="h-8 w-8 p-0">
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  ) : null;
+  
+  return <MainLayout headerContent={isMobile ? dateNavContent : undefined}>
       <SubscriptionGuard feature="movimentações ilimitadas">
         <div className="w-full px-4 md:px-6 pt-2 md:py-6 lg:py-8 pb-20 md:pb-8 min-h-0">
           {/* Indicador de visualização de cliente */}
@@ -506,29 +526,25 @@ const TransactionsPage = () => {
             </div>
           </div>
             
-          {/* Placeholder e Controles de Navegação de Data */}
-          {(dateFilter === 'mes' || dateFilter === 'ano') && (
+          {/* Placeholder e Controles de Navegação de Data - apenas desktop */}
+          {!isMobile && (dateFilter === 'mes' || dateFilter === 'ano') && (
             <>
               {/* Placeholder para manter o espaço quando fixo */}
               <div 
                 ref={dateNavPlaceholderRef}
-                className={cn(
-                  isMobile ? "h-12 mb-4" : (isDateNavFixed ? "h-12 mb-4" : "")
-                )}
+                className={isDateNavFixed ? "h-12 mb-4" : ""}
               />
               
-              {/* Barra de navegação - sempre fixa em mobile */}
+              {/* Barra de navegação */}
               <div 
                 ref={dateNavRef}
                 className={cn(
                   "z-40 bg-background py-2 flex justify-center transition-all duration-200",
-                  (isMobile || isDateNavFixed)
+                  isDateNavFixed
                     ? "fixed left-0 right-0 border-b shadow-sm" 
                     : "mb-4 -mx-4 md:-mx-6 px-4 md:px-6 border-b"
                 )}
-                style={(isMobile || isDateNavFixed) ? {
-                  top: isMobile ? 'calc(4.5rem + env(safe-area-inset-top))' : '0'
-                } : undefined}
+                style={isDateNavFixed ? { top: '0' } : undefined}
               >
                 <div className="flex items-center gap-1 bg-muted rounded-md p-1">
                   <Button variant="ghost" size="sm" onClick={() => handleDateNavigation('prev')} className="h-8 w-8 p-0">
@@ -545,6 +561,11 @@ const TransactionsPage = () => {
                 </div>
               </div>
             </>
+          )}
+          
+          {/* Spacer para mobile quando tem barra de data no header */}
+          {isMobile && (dateFilter === 'mes' || dateFilter === 'ano') && (
+            <div className="h-4" />
           )}
 
           {/* Seletor de Período */}

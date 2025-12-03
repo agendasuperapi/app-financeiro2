@@ -15,6 +15,7 @@ interface MainLayoutProps {
   onAddTransaction?: (type: 'income' | 'expense') => void;
   onProfileClick?: () => void;
   onConfigClick?: () => void;
+  headerContent?: React.ReactNode;
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({
@@ -22,7 +23,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   title,
   onAddTransaction,
   onProfileClick,
-  onConfigClick
+  onConfigClick,
+  headerContent
 }) => {
   const isMobile = useIsMobile();
   const { hideValues, toggleHideValues } = useAppContext();
@@ -54,8 +56,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   
   return <div className="bg-background w-full">
       {isMobile ? <div className="flex flex-col min-h-screen w-full">
-          <MobileHeader hideValues={hideValues} toggleHideValues={toggleHideValues} />
-          <main className="flex-1 overflow-y-auto p-2 pb-20 w-full" style={{ paddingTop: 'calc(5rem + env(safe-area-inset-top))' }}>
+          <MobileHeader hideValues={hideValues} toggleHideValues={toggleHideValues}>
+            {headerContent}
+          </MobileHeader>
+          <main className="flex-1 overflow-y-auto p-2 pb-20 w-full" style={{ paddingTop: headerContent ? 'calc(7.5rem + env(safe-area-inset-top))' : 'calc(5rem + env(safe-area-inset-top))' }}>
             {title && <div className="mb-6">
                 
               </div>}

@@ -481,23 +481,28 @@ const TransactionsPage = () => {
           </div>
             
           {/* Controles de Navegação de Data - STICKY */}
-          {(dateFilter === 'mes' || dateFilter === 'ano') && <div className="sticky z-30 bg-background/95 backdrop-blur-sm border-y py-2 flex justify-center mb-2 md:mb-4 md:top-0" style={{
-          top: isMobile ? 'calc(3.5rem + env(safe-area-inset-top))' : '0'
-        }}>
-                <div className="flex items-center gap-1 bg-muted rounded-md p-1">
-                  <Button variant="ghost" size="sm" onClick={() => handleDateNavigation('prev')} className="h-8 w-8 p-0">
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  
-                  <span className="text-sm font-medium px-2 min-w-[120px] text-center">
-                    {getDateFilterLabel()}
-                  </span>
-                  
-                  <Button variant="ghost" size="sm" onClick={() => handleDateNavigation('next')} className="h-8 w-8 p-0">
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+          {(dateFilter === 'mes' || dateFilter === 'ano') && (
+            <div 
+              className="sticky z-40 bg-background/95 backdrop-blur-sm border-b shadow-sm py-3 flex justify-center mb-4 -mx-4 md:-mx-6 px-4 md:px-6" 
+              style={{
+                top: isMobile ? 'calc(3.5rem + env(safe-area-inset-top))' : '0'
+              }}
+            >
+              <div className="flex items-center gap-1 bg-muted rounded-md p-1">
+                <Button variant="ghost" size="sm" onClick={() => handleDateNavigation('prev')} className="h-8 w-8 p-0">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <span className="text-sm font-medium px-2 min-w-[120px] text-center">
+                  {getDateFilterLabel()}
+                </span>
+                
+                <Button variant="ghost" size="sm" onClick={() => handleDateNavigation('next')} className="h-8 w-8 p-0">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
-            </div>}
+            </div>
+          )}
 
           {/* Seletor de Período */}
           {dateFilter === 'periodo' && <div className="flex justify-center mb-2 md:mb-4">

@@ -20,12 +20,13 @@ import { DependentsService, Dependent } from '@/services/dependentsService';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { User } from 'lucide-react';
-
 const Index = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const isMobile = useIsMobile();
-  
+
   // Use client-aware data para suportar visualização de clientes
   const {
     transactions,
@@ -36,7 +37,7 @@ const Index = () => {
     selectedUser,
     targetUserId
   } = useClientAwareData();
-  
+
   // Use app context apenas para funcionalidades gerais
   const {
     filteredTransactions,
@@ -46,8 +47,9 @@ const Index = () => {
     getTransactions,
     scheduledTransactions
   } = useAppContext();
-  const { t } = usePreferences();
-  
+  const {
+    t
+  } = usePreferences();
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
@@ -60,9 +62,9 @@ const Index = () => {
   const [monthlyBalanceCombined, setMonthlyBalanceCombined] = useState(0);
   const [dependents, setDependents] = useState<Dependent[]>([]);
   const [selectedPerson, setSelectedPerson] = useState<string>('all');
-  
+
   // Logs removidos para melhorar performance
-  
+
   // Get unique creator names for person filter
   const creatorNames = useMemo(() => {
     const names = new Set<string>();
@@ -106,9 +108,8 @@ const Index = () => {
       // Include simulations in transactions for calculation
       const simulations = generateMonthlySimulations(scheduledTransactions);
       const transactionsWithSimulations = [...personFilteredTransactions, ...simulations];
-      
       const baseData = calculateMonthlyFinancialData(transactionsWithSimulations, currentMonth);
-      
+
       // Return enhanced data with simulations included - balance is calculated progressively month by month
       return {
         ...baseData,
@@ -134,20 +135,18 @@ const Index = () => {
   // Combinar transações reais com simulações para visualização
   const transactionsWithDisplaySimulations = React.useMemo(() => {
     const simulations = generateMonthlySimulationsForDisplay(scheduledTransactions);
-    
+
     // Filtrar simulações para o mês atual
     const currentMonthSimulations = simulations.filter(sim => {
       const simDate = new Date(sim.date);
-      return simDate.getMonth() === currentMonth.getMonth() && 
-             simDate.getFullYear() === currentMonth.getFullYear();
+      return simDate.getMonth() === currentMonth.getMonth() && simDate.getFullYear() === currentMonth.getFullYear();
     });
-    
+
     // Combinar transações do mês com simulações e ordenar por data
     const monthTransactions = monthlyData?.monthTransactions || [];
     const combined = [...monthTransactions.filter((t: any) => !t.__isSimulation), ...currentMonthSimulations];
     return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [monthlyData, scheduledTransactions, generateMonthlySimulationsForDisplay, currentMonth]);
-
   const monthlyGoals = React.useMemo(() => {
     try {
       if (!goals || !Array.isArray(goals)) {
@@ -160,7 +159,6 @@ const Index = () => {
       return [];
     }
   }, [goals, currentMonth]);
-  
   const totalIncome = monthlyData.monthlyIncome;
   const totalExpenses = monthlyData.monthlyExpenses;
   // Saldo exibido: saldo base até o início do mês + resultado do mês (inclui simulações do mês)
@@ -170,18 +168,22 @@ const Index = () => {
     return d < monthStart ? sum + (t.amount || 0) : sum;
   }, 0);
   const balance = baseBalanceBeforeMonth + (totalIncome || 0) - (totalExpenses || 0);
-  
+
   // previousMonthsBalance é fornecido pelo DashboardContent via onBalancesUpdate (inclui simulações)
   // Removido cálculo duplicado para evitar inconsistências
-  
+
   // monthlyBalanceCombined é fornecido pelo DashboardContent via onBalancesUpdate (inclui simulações)
   // Removido cálculo duplicado para evitar inconsistências
-  
+
   // Load dependents
   useEffect(() => {
     const loadDependents = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: {
+            user
+          }
+        } = await supabase.auth.getUser();
         if (user) {
           const deps = await DependentsService.getDependents(user.id);
           setDependents(deps);
@@ -207,46 +209,41 @@ const Index = () => {
 
   // Removed auto-refresh to prevent performance issues
   // Data will be refreshed when user performs actions (add/edit/delete transactions)
-  
+
   const handleMonthChange = (date: Date) => {
     setCurrentMonth(date);
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
     const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
     setCustomDateRange(firstDay, lastDay);
   };
-  
   const handleAddTransaction = (type: 'income' | 'expense' = 'expense') => {
     setSelectedTransaction(null);
     setFormMode('create');
     setTransactionType(type);
     setTransactionDialogOpen(true);
   };
-  
   const handleEditTransaction = (transaction: any) => {
     setSelectedTransaction(transaction);
     setFormMode('edit');
     setTransactionDialogOpen(true);
   };
-  
   const handleDeleteTransaction = async (id: string) => {
     try {
       await deleteTransaction(id);
       toast({
         title: t('transactions.deleted'),
-        description: t('transactions.deleteSuccess'),
+        description: t('transactions.deleteSuccess')
       });
-      
       await Promise.all([getTransactions(), getGoals()]);
     } catch (error) {
       console.error('Error deleting transaction:', error);
       toast({
         title: t('common.error'),
         description: t('transactions.deleteError'),
-        variant: 'destructive',
+        variant: 'destructive'
       });
     }
   };
-
   const handleMarkScheduledAsPaid = async (transaction: ScheduledTransaction) => {
     const success = await markAsPaid(transaction.id);
     if (success) {
@@ -263,13 +260,13 @@ const Index = () => {
       });
     }
   };
-  
   const navigateToTransactionType = (type: 'income' | 'expense') => {
     navigate(`/transactions?type=${type}`);
   };
-
   const containerVariants = {
-    hidden: { opacity: 0 },
+    hidden: {
+      opacity: 0
+    },
     visible: {
       opacity: 1,
       transition: {
@@ -277,9 +274,11 @@ const Index = () => {
       }
     }
   };
-
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: {
+      y: 20,
+      opacity: 0
+    },
     visible: {
       y: 0,
       opacity: 1,
@@ -288,105 +287,54 @@ const Index = () => {
       }
     }
   };
-  
+
   // Conteúdo do header para mobile
-  const mobileHeaderContent = (
-    <div className="py-2 flex flex-col items-center gap-2 border-t">
+  const mobileHeaderContent = <div className="py-2 flex flex-col items-center gap-2 border-t">
       <MonthNavigation currentMonth={currentMonth} onMonthChange={handleMonthChange} />
-      {dependents.length > 0 && creatorNames.length > 0 && (
-        <Select value={selectedPerson} onValueChange={setSelectedPerson}>
+      {dependents.length > 0 && creatorNames.length > 0 && <Select value={selectedPerson} onValueChange={setSelectedPerson}>
           <SelectTrigger className="w-[160px] h-8">
             <SelectValue placeholder={t('charts.allPeople')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('charts.allPeople')}</SelectItem>
-            {creatorNames.map(name => (
-              <SelectItem key={name} value={name}>
+            {creatorNames.map(name => <SelectItem key={name} value={name}>
                 {name}
-              </SelectItem>
-            ))}
+              </SelectItem>)}
           </SelectContent>
-        </Select>
-      )}
-    </div>
-  );
-  
-  return (
-    <MainLayout title={t('dashboard.title')} onAddTransaction={handleAddTransaction} headerContent={isMobile ? mobileHeaderContent : undefined}>
-      <SubscriptionGuard feature="o dashboard completo">
+        </Select>}
+    </div>;
+  return <MainLayout title={t('dashboard.title')} onAddTransaction={handleAddTransaction} headerContent={isMobile ? mobileHeaderContent : undefined}>
+      <SubscriptionGuard feature="o dashboard completo" className="py-[30px]">
         <div className="space-y-8 min-h-0">
           {/* Indicador de visualização de cliente */}
-          {isClientView && selectedUser && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          {isClientView && selectedUser && <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center gap-2 text-blue-800">
                 <User className="h-4 w-4" />
                 <span className="font-medium">
                   Visualizando dashboard de: {selectedUser.name} ({selectedUser.email})
                 </span>
               </div>
-            </div>
-          )}
+            </div>}
           
           {/* Header com navegação de mês e toggle de visibilidade - apenas desktop */}
-          {!isMobile && (
-            <DashboardHeader
-              currentMonth={currentMonth}
-              onMonthChange={handleMonthChange}
-              hideValues={hideValues}
-              toggleHideValues={toggleHideValues}
-              onAddTransaction={handleAddTransaction}
-              creatorNames={dependents.length > 0 ? creatorNames : []}
-              selectedPerson={selectedPerson}
-              onPersonChange={setSelectedPerson}
-            />
-          )}
+          {!isMobile && <DashboardHeader currentMonth={currentMonth} onMonthChange={handleMonthChange} hideValues={hideValues} toggleHideValues={toggleHideValues} onAddTransaction={handleAddTransaction} creatorNames={dependents.length > 0 ? creatorNames : []} selectedPerson={selectedPerson} onPersonChange={setSelectedPerson} />}
           
           {/* 3 Cards principais na mesma linha */}
-          <DashboardStatCards
-            totalIncome={totalIncome}
-            totalExpenses={totalExpenses}
-            balance={balance}
-            hideValues={hideValues}
-            transactionsWithSimulations={transactionsWithSimulations}
-            onNavigateToTransactionType={navigateToTransactionType}
-            currentMonth={currentMonth}
-            previousMonthsBalance={previousMonthsBalance}
-            monthlyBalanceCombined={monthlyBalanceCombined}
-          />
+          <DashboardStatCards totalIncome={totalIncome} totalExpenses={totalExpenses} balance={balance} hideValues={hideValues} transactionsWithSimulations={transactionsWithSimulations} onNavigateToTransactionType={navigateToTransactionType} currentMonth={currentMonth} previousMonthsBalance={previousMonthsBalance} monthlyBalanceCombined={monthlyBalanceCombined} />
 
           {/* Conteúdo do dashboard - com fallback para evitar erro */}
-          <DashboardContent
-            filteredTransactions={transactionsWithDisplaySimulations}
-            goals={monthlyGoals || []}
-            currentGoalIndex={currentGoalIndex}
-            currentMonth={currentMonth}
-            hideValues={hideValues}
-            onGoalChange={setCurrentGoalIndex}
-            onEditTransaction={handleEditTransaction}
-            onDeleteTransaction={handleDeleteTransaction}
-            onMarkScheduledAsPaid={handleMarkScheduledAsPaid}
-            scheduledTransactions={scheduledTransactions}
-            onTransactionsWithSimulationsUpdate={setTransactionsWithSimulations}
-            onBalancesUpdate={({ previousMonthsBalance, monthlyBalanceCombined }) => {
-              setPreviousMonthsBalance(previousMonthsBalance);
-              setMonthlyBalanceCombined(monthlyBalanceCombined);
-            }}
-            filterPerson={selectedPerson}
-          />
+          <DashboardContent filteredTransactions={transactionsWithDisplaySimulations} goals={monthlyGoals || []} currentGoalIndex={currentGoalIndex} currentMonth={currentMonth} hideValues={hideValues} onGoalChange={setCurrentGoalIndex} onEditTransaction={handleEditTransaction} onDeleteTransaction={handleDeleteTransaction} onMarkScheduledAsPaid={handleMarkScheduledAsPaid} scheduledTransactions={scheduledTransactions} onTransactionsWithSimulationsUpdate={setTransactionsWithSimulations} onBalancesUpdate={({
+          previousMonthsBalance,
+          monthlyBalanceCombined
+        }) => {
+          setPreviousMonthsBalance(previousMonthsBalance);
+          setMonthlyBalanceCombined(monthlyBalanceCombined);
+        }} filterPerson={selectedPerson} />
         </div>
       </SubscriptionGuard>
 
       {/* Dialog do formulário de transação */}
-      <TransactionForm 
-        open={transactionDialogOpen} 
-        onOpenChange={setTransactionDialogOpen} 
-        initialData={selectedTransaction} 
-        mode={formMode} 
-        defaultType={transactionType}
-        targetUserId={isClientView ? targetUserId : undefined}
-      />
-    </MainLayout>
-  );
+      <TransactionForm open={transactionDialogOpen} onOpenChange={setTransactionDialogOpen} initialData={selectedTransaction} mode={formMode} defaultType={transactionType} targetUserId={isClientView ? targetUserId : undefined} />
+    </MainLayout>;
 };
-
 export default Index;

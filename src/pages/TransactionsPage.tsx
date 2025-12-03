@@ -512,19 +512,21 @@ const TransactionsPage = () => {
               {/* Placeholder para manter o espaço quando fixo */}
               <div 
                 ref={dateNavPlaceholderRef}
-                className={isDateNavFixed ? "h-12 mb-4" : ""}
+                className={cn(
+                  isMobile ? "h-12 mb-4" : (isDateNavFixed ? "h-12 mb-4" : "")
+                )}
               />
               
-              {/* Barra de navegação - em mobile fica junto do header */}
+              {/* Barra de navegação - sempre fixa em mobile */}
               <div 
                 ref={dateNavRef}
                 className={cn(
                   "z-40 bg-background py-2 flex justify-center transition-all duration-200",
-                  isDateNavFixed 
+                  (isMobile || isDateNavFixed)
                     ? "fixed left-0 right-0 border-b shadow-sm" 
                     : "mb-4 -mx-4 md:-mx-6 px-4 md:px-6 border-b"
                 )}
-                style={isDateNavFixed ? {
+                style={(isMobile || isDateNavFixed) ? {
                   top: isMobile ? 'calc(5rem + env(safe-area-inset-top))' : '0'
                 } : undefined}
               >

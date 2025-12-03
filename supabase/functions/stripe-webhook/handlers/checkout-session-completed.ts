@@ -80,18 +80,46 @@ export async function handleCheckoutSessionCompleted(
   console.log(`Subscription status from Stripe: ${subscription.status}`);
 
   // Use actual subscription status from Stripe instead of assuming "active"
-  const subscriptionStatus = subscription.status; // This could be: incomplete, incomplete_expired, trialing, active, past_due, canceled, or unpaid
+  const subscriptionStatus = subscription.status;
+
+  // Get id_plano_preco from poupeja_plan_pricing table
+  let idPlanoPreco = null;
+  const { data: planPricing } = await supabase
+    .from('poupeja_plan_pricing')
+    .select('id')
+    .eq('plan_type', planType)
+    .eq('is_active', true)
+    .single();
+  
+  if (planPricing) {
+    idPlanoPreco = planPricing.id;
+    console.log(`Setting id_plano_preco to ${planPricing.id}`);
+  } else {
+    // Fallback: get any active plan pricing
+    const { data: anyPlan } = await supabase
+      .from('poupeja_plan_pricing')
+      .select('id')
+      .eq('is_active', true)
+      .limit(1)
+      .single();
+    
+    if (anyPlan) {
+      idPlanoPreco = anyPlan.id;
+      console.log(`Using fallback id_plano_preco: ${anyPlan.id}`);
+    }
+  }
 
   await supabase.from("poupeja_subscriptions").upsert({
     user_id: userId,
     stripe_customer_id: session.customer,
     stripe_subscription_id: session.subscription,
-    status: subscriptionStatus, // Use actual status from Stripe
+    status: subscriptionStatus,
     plan_type: planType,
     current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
     current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-    cancel_at_period_end: subscription.cancel_at_period_end
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    id_plano_preco: idPlanoPreco
   });
 
-  console.log(`Subscription created/updated with plan ${planType} and status ${subscriptionStatus}`);
+  console.log(`Subscription created/updated with plan ${planType}, status ${subscriptionStatus}, id_plano_preco ${idPlanoPreco}`);
 }

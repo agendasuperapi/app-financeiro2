@@ -3,10 +3,20 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from "@/hooks/use-toast";
 import { getPlanTypeFromPriceId } from '@/utils/subscriptionUtils';
 import { useBrandingConfig } from '@/hooks/useBrandingConfig';
+import { Eye, EyeOff, ChevronLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const COUNTRY_CODES = [
+  { code: '+55', country: 'Brasil', flag: '🇧🇷' },
+  { code: '+1', country: 'EUA', flag: '🇺🇸' },
+  { code: '+351', country: 'Portugal', flag: '🇵🇹' },
+  { code: '+34', country: 'Espanha', flag: '🇪🇸' },
+  { code: '+44', country: 'Reino Unido', flag: '🇬🇧' },
+];
 
 const RegisterPage = () => {
   const [searchParams] = useSearchParams();
@@ -14,90 +24,114 @@ const RegisterPage = () => {
   const { toast } = useToast();
   const { companyName, logoUrl, logoAltText } = useBrandingConfig();
 
+  // Form state
+  const [currentStep, setCurrentStep] = useState(1);
   const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [countryCode, setCountryCode] = useState('+55');
   const [whatsapp, setWhatsapp] = useState('');
+  const [email, setEmail] = useState('');
+  const [emailConfirm, setEmailConfirm] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const priceId = searchParams.get('priceId');
+  const totalSteps = 4;
 
-  // Função para aguardar uma sessão válida ser estabelecida
-  const waitForValidSession = async (maxRetries = 20, retryDelay = 1500): Promise<any> => {
-    console.log(`[waitForValidSession] Iniciando com ${maxRetries} tentativas a cada ${retryDelay}ms`);
+  // Validation functions
+  const validateStep = (step: number): boolean => {
+    setError(null);
     
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      console.log(`[waitForValidSession] Tentativa ${attempt}/${maxRetries} - Verificando sessão...`);
+    switch (step) {
+      case 1:
+        if (!fullName.trim()) {
+          setError('Por favor, digite seu nome');
+          return false;
+        }
+        if (fullName.trim().length < 3) {
+          setError('Nome deve ter pelo menos 3 caracteres');
+          return false;
+        }
+        return true;
       
-      try {
-        // Verificação dupla: getSession E getUser
-        const [sessionResult, userResult] = await Promise.all([
-          supabase.auth.getSession(),
-          supabase.auth.getUser()
-        ]);
-        
-        const { data: { session }, error: sessionError } = sessionResult;
-        const { data: { user }, error: userError } = userResult;
-        
-        if (sessionError) {
-          console.error(`[waitForValidSession] Erro de sessão na tentativa ${attempt}:`, sessionError);
-          if (attempt === maxRetries) throw sessionError;
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
-          continue;
+      case 2:
+        const phoneClean = whatsapp.replace(/\D/g, '');
+        if (!phoneClean) {
+          setError('Por favor, digite seu número de WhatsApp');
+          return false;
         }
-        
-        if (userError) {
-          console.error(`[waitForValidSession] Erro de usuário na tentativa ${attempt}:`, userError);
-          if (attempt === maxRetries) throw userError;
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
-          continue;
+        if (phoneClean.length < 10 || phoneClean.length > 11) {
+          setError('Número de WhatsApp inválido');
+          return false;
         }
-        
-        // Verificar se temos sessão E usuário válidos
-        if (session?.access_token && session?.user?.id && user?.id) {
-          console.log(`[waitForValidSession] ✅ Sessão e usuário válidos encontrados na tentativa ${attempt}:`, {
-            sessionUserId: session.user.id,
-            userDataId: user.id,
-            email: session.user.email,
-            tokenLength: session.access_token.length,
-            userConfirmed: user.email_confirmed_at ? 'Sim' : 'Não'
-          });
-          return session;
+        return true;
+      
+      case 3:
+        if (!email.trim()) {
+          setError('Por favor, digite seu e-mail');
+          return false;
         }
-        
-        console.log(`[waitForValidSession] ⏳ Tentativa ${attempt}: Aguardando sessão e usuário serem estabelecidos`, {
-          hasSession: !!session,
-          hasToken: !!session?.access_token,
-          hasSessionUser: !!session?.user?.id,
-          hasUser: !!user?.id
-        });
-        
-        // Tentar refresh da sessão nas últimas tentativas
-        if (attempt > maxRetries - 3) {
-          console.log(`[waitForValidSession] 🔄 Tentativa ${attempt}: Fazendo refresh da sessão`);
-          await supabase.auth.refreshSession();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          setError('E-mail inválido');
+          return false;
         }
-        
-        if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        if (email !== emailConfirm) {
+          setError('Os e-mails não conferem');
+          return false;
         }
-      } catch (error) {
-        console.error(`[waitForValidSession] Erro inesperado na tentativa ${attempt}:`, error);
-        if (attempt === maxRetries) throw error;
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
-      }
+        return true;
+      
+      case 4:
+        if (!password) {
+          setError('Por favor, digite uma senha');
+          return false;
+        }
+        if (password.length < 6) {
+          setError('A senha deve ter pelo menos 6 caracteres');
+          return false;
+        }
+        if (password !== passwordConfirm) {
+          setError('As senhas não conferem');
+          return false;
+        }
+        if (!acceptTerms) {
+          setError('Você precisa aceitar os termos de uso');
+          return false;
+        }
+        return true;
+      
+      default:
+        return true;
     }
-    
-    throw new Error('Timeout: Não foi possível estabelecer uma sessão válida após 30 segundos');
   };
 
-  // Função para formatar o número de telefone como (XX) XXXXX-XXXX
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      if (currentStep < totalSteps) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        handleSubmit();
+      }
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setError(null);
+      setCurrentStep(currentStep - 1);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  // Format phone number
   const formatPhoneNumber = (value: string) => {
-    // Remove todos os caracteres não numéricos
     const numbers = value.replace(/\D/g, '');
-    
-    // Aplica a formatação
     if (numbers.length <= 2) {
       return numbers.length ? `(${numbers}` : '';
     } else if (numbers.length <= 7) {
@@ -107,36 +141,71 @@ const RegisterPage = () => {
     }
   };
 
-  // Função para lidar com a mudança no campo de WhatsApp
   const handleWhatsappChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedValue = formatPhoneNumber(e.target.value);
     setWhatsapp(formattedValue);
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  // Wait for valid session
+  const waitForValidSession = async (maxRetries = 20, retryDelay = 1500): Promise<any> => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const [sessionResult, userResult] = await Promise.all([
+          supabase.auth.getSession(),
+          supabase.auth.getUser()
+        ]);
+        
+        const { data: { session }, error: sessionError } = sessionResult;
+        const { data: { user }, error: userError } = userResult;
+        
+        if (sessionError) {
+          if (attempt === maxRetries) throw sessionError;
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
+        }
+        
+        if (userError) {
+          if (attempt === maxRetries) throw userError;
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
+        }
+        
+        if (session?.access_token && session?.user?.id && user?.id) {
+          return session;
+        }
+        
+        if (attempt > maxRetries - 3) {
+          await supabase.auth.refreshSession();
+        }
+        
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
+      } catch (error) {
+        if (attempt === maxRetries) throw error;
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
+    }
+    
+    throw new Error('Timeout: Não foi possível estabelecer uma sessão válida');
+  };
+
+  const handleSubmit = async () => {
+    if (!validateStep(4)) return;
+    
     setIsLoading(true);
     setError(null);
-    
-    // Adicionar classe de loading ao formulário
-    const formElement = document.getElementById('register-form');
-    if (formElement) {
-      formElement.classList.add('form-loading');
-    }
   
     if (!priceId) {
-      setError("Price ID não encontrado na URL. Por favor, selecione um plano.");
+      setError("Plano não encontrado. Por favor, selecione um plano.");
       setIsLoading(false);
-      formElement?.classList.remove('form-loading');
       navigate('/plans');
       return;
     }
   
     try {
-      // Normaliza o número de telefone antes de enviar (remove caracteres não numéricos)
       const formattedPhone = whatsapp.replace(/\D/g, '');
-  
-      console.log('Iniciando processo de registro...');
+      const fullPhone = `${countryCode}${formattedPhone}`;
       
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -144,38 +213,26 @@ const RegisterPage = () => {
         options: {
           data: {
             full_name: fullName,
-            phone: formattedPhone,
+            phone: fullPhone,
           },
         },
       });
   
-      if (signUpError) {
-        throw signUpError;
-      }
+      if (signUpError) throw signUpError;
 
       if (!signUpData.user) {
         throw new Error('Usuário não retornado após o cadastro.');
       }
-
-      console.log('Usuário criado com sucesso');
       
-      // Mostrar feedback de progresso
       toast({
         title: "Conta criada com sucesso!",
-        description: "Aguardando estabelecer sessão...",
+        description: "Preparando checkout...",
       });
 
-      // Aguardar que a sessão seja estabelecida
-      console.log('🚀 Aguardando estabelecer sessão após registro...');
       let validSession;
       try {
         validSession = await waitForValidSession(20, 1500);
-        console.log('✅ Sessão estabelecida com sucesso!');
       } catch (sessionError) {
-        console.error('❌ Erro ao aguardar sessão:', sessionError);
-        
-        // FALLBACK: Tentar login automático
-        console.log('🔄 Tentando fallback com login automático...');
         try {
           const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
             email,
@@ -185,20 +242,11 @@ const RegisterPage = () => {
           if (loginError) throw loginError;
           
           if (loginData.session) {
-            console.log('✅ Login automático bem-sucedido!');
             validSession = loginData.session;
-            
-            toast({
-              title: "Conta criada e login realizado!",
-              description: "Prosseguindo para checkout...",
-            });
           } else {
             throw new Error('Login automático falhou');
           }
         } catch (loginError) {
-          console.error('❌ Fallback de login também falhou:', loginError);
-          
-          // Último recurso: redirecionar para login manual
           toast({
             title: "Conta criada com sucesso!",
             description: "Redirecionando para fazer login...",
@@ -208,7 +256,7 @@ const RegisterPage = () => {
             navigate('/login', { 
               state: { 
                 email, 
-                message: "Sua conta foi criada! Faça login para continuar com o pagamento." 
+                message: "Sua conta foi criada! Faça login para continuar." 
               } 
             });
           }, 2000);
@@ -216,28 +264,16 @@ const RegisterPage = () => {
         }
       }
 
-      // Verificar se temos uma sessão válida
       if (!validSession?.access_token || !validSession?.user?.id) {
-        throw new Error('Sessão inválida após registro. Tente fazer login manualmente.');
+        throw new Error('Sessão inválida após registro.');
       }
-
-      console.log('Sessão estabelecida com sucesso, preparando checkout...');
       
-      // Converter priceId para planType
       const planType = await getPlanTypeFromPriceId(priceId);
       
       if (!planType) {
-        throw new Error("Tipo de plano inválido. Verifique as configurações.");
+        throw new Error("Tipo de plano inválido.");
       }
       
-      // Atualizar feedback de progresso
-      toast({
-        title: "Sessão estabelecida!",
-        description: "Preparando checkout...",
-      });
-      
-      // Chamar a Supabase Function para criar a sessão de checkout do Stripe
-      console.log('Chamando create-checkout-session com sessão válida...');
       const { data: functionData, error: functionError } = await supabase.functions.invoke('create-checkout-session', {
         body: { 
           planType,
@@ -250,50 +286,201 @@ const RegisterPage = () => {
       });
       
       if (functionError) {
-        console.error('Erro na função de checkout:', functionError);
         throw new Error(`Erro no checkout: ${functionError.message}`);
       }
 
-      console.log('Dados retornados pela função create-checkout-session:', functionData);
-
       if (functionData && functionData.url) {
-        console.log('Redirecionando para:', functionData.url);
-        
-        // Garantir que o overlay de carregamento permaneça visível
-        document.body.classList.add('overflow-hidden');
-        
-        // Adicionar um pequeno atraso antes do redirecionamento para garantir que o overlay seja exibido
-        setTimeout(() => {
-          window.location.href = functionData.url;
-        }, 500);
-        
+        window.location.href = functionData.url;
         return;
       } else {
         throw new Error('Não foi possível obter a URL de checkout.');
       }
     } catch (err: any) {
-      console.error('Erro no processo de registro ou checkout:', err);
       setError(err.message || 'Ocorreu um erro desconhecido.');
       setIsLoading(false);
-      
-      // Remover classe de loading em caso de erro
-      const formElement = document.getElementById('register-form');
-      if (formElement) {
-        formElement.classList.remove('form-loading');
-      }
     }
   };
 
-  // Adicione este componente dentro do RegisterPage, antes do return
+  // Progress bar component
+  const ProgressBar = () => (
+    <div className="flex gap-2 w-full max-w-md mx-auto mb-8">
+      {Array.from({ length: totalSteps }).map((_, index) => (
+        <div
+          key={index}
+          className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+            index < currentStep 
+              ? 'bg-primary' 
+              : index === currentStep - 1 
+                ? 'bg-primary' 
+                : 'bg-muted'
+          }`}
+        />
+      ))}
+    </div>
+  );
+
+  // Step content components
+  const renderStepContent = () => {
+    const variants = {
+      enter: { opacity: 0, x: 20 },
+      center: { opacity: 1, x: 0 },
+      exit: { opacity: 0, x: -20 }
+    };
+
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentStep}
+          variants={variants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ duration: 0.3 }}
+          className="w-full"
+        >
+          {currentStep === 1 && (
+            <div className="space-y-6">
+              <h2 className="text-xl md:text-2xl font-semibold text-foreground text-center">
+                Como podemos te chamar?
+              </h2>
+              <Input
+                type="text"
+                placeholder="Digite seu nome"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="h-14 text-base bg-muted/50 border-muted-foreground/20 placeholder:text-muted-foreground/50"
+                autoFocus
+              />
+            </div>
+          )}
+
+          {currentStep === 2 && (
+            <div className="space-y-6">
+              <h2 className="text-xl md:text-2xl font-semibold text-foreground text-center">
+                Qual é o seu WhatsApp?
+              </h2>
+              <div className="flex gap-2">
+                <select
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  className="h-14 px-3 rounded-lg bg-muted/50 border border-muted-foreground/20 text-foreground text-sm min-w-[120px]"
+                >
+                  {COUNTRY_CODES.map((country) => (
+                    <option key={country.code} value={country.code}>
+                      {country.flag} {country.code} {country.country}
+                    </option>
+                  ))}
+                </select>
+                <Input
+                  type="tel"
+                  placeholder="Digite seu telefone Ex: (11) 90000-0000"
+                  value={whatsapp}
+                  onChange={handleWhatsappChange}
+                  maxLength={16}
+                  className="h-14 text-base bg-muted/50 border-muted-foreground/20 placeholder:text-muted-foreground/50 flex-1"
+                  autoFocus
+                />
+              </div>
+            </div>
+          )}
+
+          {currentStep === 3 && (
+            <div className="space-y-6">
+              <h2 className="text-xl md:text-2xl font-semibold text-foreground text-center">
+                Qual é o seu melhor E-mail?
+              </h2>
+              <div className="space-y-4">
+                <Input
+                  type="email"
+                  placeholder="Digite seu e-mail"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-14 text-base bg-muted/50 border-muted-foreground/20 placeholder:text-muted-foreground/50"
+                  autoFocus
+                />
+                <Input
+                  type="email"
+                  placeholder="Digite novamente seu e-mail"
+                  value={emailConfirm}
+                  onChange={(e) => setEmailConfirm(e.target.value)}
+                  className="h-14 text-base bg-muted/50 border-muted-foreground/20 placeholder:text-muted-foreground/50"
+                />
+              </div>
+              <p className="text-xs text-primary">
+                Digite o e-mail corretamente, pois ele será utilizado para enviar informações importantes
+              </p>
+            </div>
+          )}
+
+          {currentStep === 4 && (
+            <div className="space-y-6">
+              <h2 className="text-xl md:text-2xl font-semibold text-foreground text-center">
+                Digite uma senha para acessar o aplicativo
+              </h2>
+              <div className="space-y-4">
+                <div className="relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Digite sua senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-14 text-base bg-muted/50 border-muted-foreground/20 placeholder:text-muted-foreground/50 pr-12"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                <div className="relative">
+                  <Input
+                    type={showPasswordConfirm ? 'text' : 'password'}
+                    placeholder="Digite novamente sua senha"
+                    value={passwordConfirm}
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
+                    className="h-14 text-base bg-muted/50 border-muted-foreground/20 placeholder:text-muted-foreground/50 pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPasswordConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={acceptTerms}
+                  onCheckedChange={setAcceptTerms}
+                />
+                <span className="text-sm text-foreground">
+                  Aceito os{' '}
+                  <a href="/terms" className="text-primary hover:underline" target="_blank">
+                    termos de uso e política de privacidade
+                  </a>
+                </span>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    );
+  };
+
+  // Loading overlay
   const LoadingOverlay = () => {
     if (!isLoading) return null;
     
     return (
       <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-          <p className="text-sm font-medium">
-            {isLoading && error ? 'Processando...' : 'Criando conta e preparando checkout...'}
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="text-sm font-medium text-foreground">
+            Criando conta e preparando checkout...
           </p>
         </div>
       </div>
@@ -301,117 +488,67 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex flex-col items-center justify-center p-4">
-      {/* Renderizar o LoadingOverlay fora do container do formulário */}
+    <div className="min-h-screen bg-gradient-to-b from-background via-muted/30 to-background flex flex-col items-center justify-center p-4">
       {isLoading && <LoadingOverlay />}
       
-      {/* Container do formulário com largura máxima e sombra */}
-      <div className="w-full max-w-md bg-card p-8 rounded-xl shadow-2xl relative">
-        {/* Logo e Título Centralizados */}
-        <div className="flex flex-col items-center mb-8">
-          {/* Logo */}
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+      <div className="w-full max-w-lg">
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <div className="flex items-center gap-2">
+            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
               <img 
                 src={logoUrl} 
                 alt={logoAltText}
-                className="w-8 h-8 object-contain"
+                className="w-9 h-9 object-contain"
                 onError={(e) => {
                   const target = e.currentTarget as HTMLImageElement;
                   target.style.display = 'none';
-                  const nextSibling = target.nextElementSibling as HTMLElement;
-                  if (nextSibling) {
-                    nextSibling.style.display = 'block';
-                  }
                 }}
               />
-              <span className="text-white font-bold text-lg" style={{ display: 'none' }}>
-                {companyName.charAt(0)}
-              </span>
             </div>
-            <span className="text-2xl font-bold text-primary">{companyName}</span>
+            <span className="text-2xl font-bold text-foreground">{companyName}</span>
           </div>
-          <h1 className="text-3xl font-bold text-center text-foreground">Criar Conta</h1>
-          <p className="text-muted-foreground text-center mt-2">
-            Preencha os campos abaixo para criar sua conta.
-          </p>
         </div>
 
-        {error && (
-          <p className="text-sm text-center text-red-600 mb-4">{error}</p>
-        )}
+        {/* Progress bar */}
+        <ProgressBar />
 
-        <form id="register-form" onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label htmlFor="fullName">Nome Completo</Label>
-            <Input
-              id="fullName"
-              name="fullName"
-              type="text"
-              autoComplete="name"
-              required
-              placeholder="Digite seu nome completo"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="mt-1"
-            />
-          </div>
+        {/* Card container */}
+        <div className="bg-card rounded-2xl shadow-xl p-6 md:p-8">
+          {/* Error message */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-3 bg-destructive/10 border border-destructive/20 rounded-lg"
+            >
+              <p className="text-sm text-destructive text-center">{error}</p>
+            </motion.div>
+          )}
 
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              placeholder="seuemail@exemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1"
-            />
-          </div>
+          {/* Step content */}
+          {renderStepContent()}
 
-          <div>
-            <Label htmlFor="whatsapp">WhatsApp</Label>
-            <Input
-              id="whatsapp"
-              name="whatsapp"
-              type="tel"
-              autoComplete="tel"
-              required
-              placeholder="(XX) XXXXX-XXXX"
-              value={whatsapp}
-              onChange={handleWhatsappChange}
-              className="mt-1"
-              maxLength={16}
-            />
-            <p className="mt-2 text-xs text-gray-500">
-              Este número será utilizado para enviar mensagens e notificações importantes via WhatsApp.
-            </p>
-          </div>
-
-          <div>
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              placeholder="Cadastre sua senha de acesso"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Criando conta...' : 'Criar Conta e Ir para Pagamento'}
+          {/* Buttons */}
+          <div className="flex gap-3 mt-8">
+            <Button
+              onClick={handleNext}
+              disabled={isLoading}
+              className="flex-1 h-14 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl"
+            >
+              {currentStep === totalSteps ? 'Concluir' : 'Continuar'}
+            </Button>
+            <Button
+              onClick={handleBack}
+              variant="secondary"
+              disabled={isLoading}
+              className="flex-1 h-14 text-base font-semibold bg-muted hover:bg-muted/80 text-foreground rounded-xl"
+            >
+              <ChevronLeft className="w-5 h-5 mr-1" />
+              Voltar
             </Button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

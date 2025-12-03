@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import SubscriptionGuard from '@/components/subscription/SubscriptionGuard';
 import TransactionList from '@/components/common/TransactionList';
@@ -27,6 +27,7 @@ import { useDateFormat } from '@/hooks/useDateFormat';
 import { createLocalDate, formatCurrency } from '@/utils/transactionUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { DependentsService } from '@/services/dependentsService';
 const TransactionsPage = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [contaFormOpen, setContaFormOpen] = useState(false);
@@ -35,6 +36,8 @@ const TransactionsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [dateFilter, setDateFilter] = useState('mes');
+  const [nameFilter, setNameFilter] = useState('todos');
+  const [availableNames, setAvailableNames] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -91,10 +94,29 @@ const TransactionsPage = () => {
     }
   };
 
+  // Fetch dependents for name filter
+  useEffect(() => {
+    const fetchNames = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        
+        const dependents = await DependentsService.getDependents(user.id);
+        if (dependents.length > 0) {
+          const names = dependents.map(d => d.dep_name);
+          setAvailableNames(names);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dependentes:', error);
+      }
+    };
+    fetchNames();
+  }, []);
+
   // Apply filters
   React.useEffect(() => {
     applyFilters();
-  }, [transactions, searchQuery, statusFilter, dateFilter, selectedDate, startDate, endDate]);
+  }, [transactions, searchQuery, statusFilter, dateFilter, nameFilter, selectedDate, startDate, endDate]);
   const applyFilters = () => {
     let filtered = [...transactions];
 
@@ -116,6 +138,13 @@ const TransactionsPage = () => {
             return true;
         }
       });
+    }
+
+    // Aplicar filtro de nome
+    if (nameFilter !== 'todos') {
+      filtered = filtered.filter(transaction => 
+        transaction.creatorName?.toLowerCase() === nameFilter.toLowerCase()
+      );
     }
 
     // Aplicar filtro de data
@@ -307,6 +336,21 @@ const TransactionsPage = () => {
                     <SelectItem value="periodo">Período</SelectItem>
                   </SelectContent>
                 </Select>
+
+                {/* Filtro de Nome - só aparece se houver dependentes */}
+                {availableNames.length > 0 && (
+                  <Select value={nameFilter} onValueChange={setNameFilter}>
+                    <SelectTrigger className="flex-1 lg:w-[180px]">
+                      <SelectValue placeholder="Nome" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos</SelectItem>
+                      {availableNames.map((name) => (
+                        <SelectItem key={name} value={name}>{name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
           </div>

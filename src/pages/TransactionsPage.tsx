@@ -46,7 +46,7 @@ const TransactionsPage = () => {
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
-  const [createdAtFilter, setCreatedAtFilter] = useState('todos');
+  const [sortOrder, setSortOrder] = useState<'date-desc' | 'date-asc' | 'created-desc' | 'created-asc'>('date-desc');
   
   // Estados para dialog de transações relacionadas
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -139,7 +139,7 @@ const TransactionsPage = () => {
   // Apply filters
   React.useEffect(() => {
     applyFilters();
-  }, [transactions, searchQuery, statusFilter, dateFilter, nameFilter, selectedDate, startDate, endDate, selectedCategories, createdAtFilter]);
+  }, [transactions, searchQuery, statusFilter, dateFilter, nameFilter, selectedDate, startDate, endDate, selectedCategories, sortOrder]);
   const applyFilters = () => {
     let filtered = [...transactions];
 
@@ -217,41 +217,31 @@ const TransactionsPage = () => {
       });
     }
 
-    // Aplicar filtro de data de criação
-    if (createdAtFilter !== 'todos') {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
-      filtered = filtered.filter(transaction => {
-        const createdAt = transaction.createdAt ? new Date(transaction.createdAt) : null;
-        if (!createdAt) return false;
-        
-        const createdAtDateOnly = new Date(createdAt.getFullYear(), createdAt.getMonth(), createdAt.getDate());
-        
-        switch (createdAtFilter) {
-          case 'hoje':
-            return createdAtDateOnly.getTime() === today.getTime();
-          case 'ultimos7dias':
-            const last7Days = new Date(today);
-            last7Days.setDate(last7Days.getDate() - 7);
-            return createdAtDateOnly >= last7Days && createdAtDateOnly <= today;
-          case 'ultimos30dias':
-            const last30Days = new Date(today);
-            last30Days.setDate(last30Days.getDate() - 30);
-            return createdAtDateOnly >= last30Days && createdAtDateOnly <= today;
-          case 'esteMes':
-            return createdAt.getMonth() === now.getMonth() && createdAt.getFullYear() === now.getFullYear();
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Ordenar por data (coluna date) respeitando fuso horário - mais recente primeiro
+    // Ordenar conforme selecionado
     filtered.sort((a, b) => {
-      const dateA = createLocalDate(a.date as string, effectiveTimezone).getTime();
-      const dateB = createLocalDate(b.date as string, effectiveTimezone).getTime();
-      return dateB - dateA;
+      switch (sortOrder) {
+        case 'created-desc': {
+          const createdA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const createdB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return createdB - createdA;
+        }
+        case 'created-asc': {
+          const createdA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const createdB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return createdA - createdB;
+        }
+        case 'date-asc': {
+          const dateA = createLocalDate(a.date as string, effectiveTimezone).getTime();
+          const dateB = createLocalDate(b.date as string, effectiveTimezone).getTime();
+          return dateA - dateB;
+        }
+        case 'date-desc':
+        default: {
+          const dateA = createLocalDate(a.date as string, effectiveTimezone).getTime();
+          const dateB = createLocalDate(b.date as string, effectiveTimezone).getTime();
+          return dateB - dateA;
+        }
+      }
     });
 
     // Agrupar por mês (mantendo ordem mais recente primeiro dentro de cada mês)
@@ -400,17 +390,16 @@ const TransactionsPage = () => {
                   </SelectContent>
                 </Select>
 
-                {/* Filtro de Data de Criação */}
-                <Select value={createdAtFilter} onValueChange={setCreatedAtFilter}>
+                {/* Ordenação */}
+                <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as any)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Criação" />
+                    <SelectValue placeholder="Ordenar" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todos">Todas Criações</SelectItem>
-                    <SelectItem value="hoje">Criado Hoje</SelectItem>
-                    <SelectItem value="ultimos7dias">Últimos 7 dias</SelectItem>
-                    <SelectItem value="ultimos30dias">Últimos 30 dias</SelectItem>
-                    <SelectItem value="esteMes">Este Mês</SelectItem>
+                    <SelectItem value="date-desc">Data ↓ (Recente)</SelectItem>
+                    <SelectItem value="date-asc">Data ↑ (Antiga)</SelectItem>
+                    <SelectItem value="created-desc">Criação ↓ (Recente)</SelectItem>
+                    <SelectItem value="created-asc">Criação ↑ (Antiga)</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -545,13 +534,13 @@ const TransactionsPage = () => {
             {isMobile ? <TransactionList transactions={filteredTransactions} onEdit={handleEditTransaction} onDelete={handleDeleteTransaction} /> : <Card className="animate-fade-in p-1">
                 <CardHeader className="pb-6">
                   <CardTitle className="text-xl">Lista de Transações</CardTitle>
-                  {(searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos' || selectedCategories.length > 0 || createdAtFilter !== 'todos') && <p className="text-sm text-muted-foreground">
+                  {(searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos' || selectedCategories.length > 0) && <p className="text-sm text-muted-foreground">
                       {filteredTransactions.length} transação{filteredTransactions.length !== 1 ? 'ões' : ''} encontrada{filteredTransactions.length !== 1 ? 's' : ''}
                     </p>}
                 </CardHeader>
                 <CardContent className="pt-0 px-8">
                   {filteredTransactions.length === 0 ? <div className="text-center py-8 text-muted-foreground">
-                      {searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos' || selectedCategories.length > 0 || createdAtFilter !== 'todos' ? 'Nenhuma transação encontrada com os filtros aplicados' : 'Nenhuma transação encontrada'}
+                      {searchQuery || statusFilter !== 'todos' || dateFilter !== 'todos' || selectedCategories.length > 0 ? 'Nenhuma transação encontrada com os filtros aplicados' : 'Nenhuma transação encontrada'}
                     </div> : <TransactionTable transactions={filteredTransactions} onEdit={handleEditTransaction} onDelete={handleDeleteTransaction} />}
                 </CardContent>
               </Card>}

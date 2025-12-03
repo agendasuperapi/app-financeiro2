@@ -1,5 +1,3 @@
-# Project ID será configurado dinamicamente no GitHub Actions
-
 [functions.get-vapid-key]
 verify_jwt = false
 
@@ -10,4 +8,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.check-fcm-config]
+verify_jwt = false
+
+[functions.mark-as-paid]
 verify_jwt = false

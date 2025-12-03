@@ -56,13 +56,63 @@ export async function handleSubscriptionUpdated(
     const verifiedUserId = poupejaUser.id;
     console.log(`Found and verified user for subscription ${subscription.id}`);
     
+    // First, get id_plano_preco - this is REQUIRED
+    let idPlanoPreco = null;
+    
+    // Try to get from poupeja_plan_pricing based on interval
+    const interval = subscription.items?.data?.[0]?.price?.recurring?.interval;
+    const planTypeFromInterval = interval === 'year' ? 'annual' : 'monthly';
+    
+    console.log(`[SUBSCRIPTION-UPDATED] Looking for plan pricing with type: ${planTypeFromInterval}`);
+    
+    const { data: planPricing, error: planError } = await supabase
+      .from('poupeja_plan_pricing')
+      .select('id, plan_type')
+      .eq('plan_type', planTypeFromInterval)
+      .eq('is_active', true)
+      .single();
+    
+    if (planPricing) {
+      idPlanoPreco = planPricing.id;
+      console.log(`[SUBSCRIPTION-UPDATED] Found plan pricing: ${planPricing.id} for type ${planPricing.plan_type}`);
+    } else {
+      console.log(`[SUBSCRIPTION-UPDATED] No plan pricing found for type ${planTypeFromInterval}, error:`, planError);
+      
+      // Fallback: get any active plan pricing
+      const { data: anyPlan, error: anyError } = await supabase
+        .from('poupeja_plan_pricing')
+        .select('id, plan_type')
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+      
+      if (anyPlan) {
+        idPlanoPreco = anyPlan.id;
+        console.log(`[SUBSCRIPTION-UPDATED] Using fallback plan pricing: ${anyPlan.id} (${anyPlan.plan_type})`);
+      } else {
+        console.error(`[SUBSCRIPTION-UPDATED] No active plan pricing found at all! Error:`, anyError);
+        
+        // List all plan pricing to debug
+        const { data: allPlans } = await supabase
+          .from('poupeja_plan_pricing')
+          .select('id, plan_type, is_active');
+        console.log(`[SUBSCRIPTION-UPDATED] All plan pricing records:`, allPlans);
+      }
+    }
+    
+    if (!idPlanoPreco) {
+      throw new Error(`Cannot update subscription: no valid id_plano_preco found for plan type ${planTypeFromInterval}`);
+    }
+    
     // Prepare update/insert data
     const subscriptionData: any = {
-      user_id: verifiedUserId, // Use verified user ID
+      user_id: verifiedUserId,
       stripe_customer_id: subscription.customer,
       stripe_subscription_id: subscription.id,
       status: subscription.status,
-      cancel_at_period_end: subscription.cancel_at_period_end
+      cancel_at_period_end: subscription.cancel_at_period_end,
+      plan_type: planTypeFromInterval,
+      id_plano_preco: idPlanoPreco
     };
     
     // Add timestamps from subscription object directly
@@ -76,83 +126,10 @@ export async function handleSubscriptionUpdated(
       console.log(`Setting current_period_end: ${subscriptionData.current_period_end}`);
     }
     
-    // Add logic to update plan_type based on price
-    if (subscription.items && subscription.items.data && subscription.items.data.length > 0) {
+    // Log price details for debugging
+    if (subscription.items?.data?.[0]) {
       const priceId = subscription.items.data[0].price.id;
-      const interval = subscription.items.data[0].price.recurring?.interval;
-      
-      console.log(`[SUBSCRIPTION-UPDATED] Price details:`, {
-        priceId,
-        interval,
-        recurring: subscription.items.data[0].price.recurring
-      });
-      
-      // Try to get plan_type from settings first
-      let planType;
-      try {
-        // Use the same logic as sync-subscriptions: call get-plan-config function
-        const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/get-plan-config`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          const planConfig = await response.json();
-          console.log(`[SUBSCRIPTION-UPDATED] Plan config from get-plan-config:`, planConfig);
-          
-          if (priceId === planConfig.prices?.monthly?.priceId) {
-            planType = "monthly";
-          } else if (priceId === planConfig.prices?.annual?.priceId) {
-            planType = "annual";
-          } else {
-            console.warn(`[SUBSCRIPTION-UPDATED] Unknown price ID: ${priceId}. Using interval fallback.`);
-            planType = interval === 'year' ? "annual" : "monthly";
-          }
-        } else {
-          console.warn('[SUBSCRIPTION-UPDATED] Failed to fetch plan config, using interval fallback');
-          // Fallback to interval detection
-          planType = interval === 'year' ? "annual" : "monthly";
-        }
-      } catch (error) {
-        console.error('[SUBSCRIPTION-UPDATED] Error fetching plan config, using interval fallback:', error);
-        planType = interval === 'year' ? "annual" : "monthly";
-      }
-      
-      console.log(`[SUBSCRIPTION-UPDATED] Final plan type determined: ${planType} for price ${priceId} with interval ${interval}`);
-      
-      if (planType) {
-        subscriptionData.plan_type = planType;
-        console.log(`[SUBSCRIPTION-UPDATED] Setting plan_type to ${planType} for subscription ${subscription.id}`);
-        
-        // Get id_plano_preco from poupeja_plan_pricing table
-        const { data: planPricing } = await supabase
-          .from('poupeja_plan_pricing')
-          .select('id')
-          .eq('plan_type', planType)
-          .eq('is_active', true)
-          .single();
-        
-        if (planPricing) {
-          subscriptionData.id_plano_preco = planPricing.id;
-          console.log(`[SUBSCRIPTION-UPDATED] Setting id_plano_preco to ${planPricing.id}`);
-        } else {
-          // Fallback: get any active plan pricing
-          const { data: anyPlan } = await supabase
-            .from('poupeja_plan_pricing')
-            .select('id')
-            .eq('is_active', true)
-            .limit(1)
-            .single();
-          
-          if (anyPlan) {
-            subscriptionData.id_plano_preco = anyPlan.id;
-            console.log(`[SUBSCRIPTION-UPDATED] Using fallback id_plano_preco: ${anyPlan.id}`);
-          }
-        }
-      }
+      console.log(`[SUBSCRIPTION-UPDATED] Price ID: ${priceId}, Plan type: ${subscriptionData.plan_type}, id_plano_preco: ${subscriptionData.id_plano_preco}`);
     }
     
     // Use UPSERT instead of UPDATE to ensure record is created/updated

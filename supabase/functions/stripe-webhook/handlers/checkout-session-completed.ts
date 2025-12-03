@@ -112,7 +112,7 @@ export async function handleCheckoutSessionCompleted(
     throw new Error(`Cannot create subscription: no valid id_plano_preco found in tbl_planos`);
   }
 
-  await supabase.from("poupeja_subscriptions").upsert({
+  const subscriptionData = {
     user_id: userId,
     stripe_customer_id: session.customer,
     stripe_subscription_id: session.subscription,
@@ -122,7 +122,23 @@ export async function handleCheckoutSessionCompleted(
     current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
     cancel_at_period_end: subscription.cancel_at_period_end,
     id_plano_preco: idPlanoPreco
-  });
+  };
+  
+  console.log(`[CHECKOUT-COMPLETED] Attempting upsert with data:`, JSON.stringify(subscriptionData));
+  
+  const { data: upsertData, error: upsertError } = await supabase
+    .from("poupeja_subscriptions")
+    .upsert(subscriptionData, { 
+      onConflict: 'user_id',
+      ignoreDuplicates: false 
+    })
+    .select();
 
-  console.log(`Subscription created/updated with plan ${planType}, status ${subscriptionStatus}, id_plano_preco ${idPlanoPreco}`);
+  if (upsertError) {
+    console.error(`[CHECKOUT-COMPLETED] Upsert error:`, JSON.stringify(upsertError));
+    throw new Error(`Failed to create subscription: ${upsertError.message}`);
+  }
+  
+  console.log(`[CHECKOUT-COMPLETED] Upsert result:`, JSON.stringify({ data: upsertData, error: upsertError }));
+  console.log(`[CHECKOUT-COMPLETED] Subscription created/updated with plan ${planType}, status ${subscriptionStatus}, id_plano_preco ${idPlanoPreco}`);
 }

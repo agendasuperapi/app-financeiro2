@@ -94,42 +94,30 @@ const TransactionsPage = () => {
     }
   };
 
-  // Fetch dependents and main user for name filter
+  // Fetch unique names from transactions
   useEffect(() => {
     const fetchNames = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
         
-        const names: string[] = [];
+        // Buscar nomes únicos da coluna name em poupeja_transactions
+        const { data: transactionsData } = await (supabase as any)
+          .from('poupeja_transactions')
+          .select('name')
+          .eq('user_id', user.id)
+          .not('name', 'is', null);
         
-        // Buscar nome do usuário principal da view
-        const { data: userData } = await (supabase as any)
-          .from('view_cadastros_unificados')
-          .select('primeiro_name')
-          .eq('id', user.id)
-          .eq('tipo', 'usuario')
-          .single();
-        
-        if (userData?.primeiro_name) {
-          names.push(userData.primeiro_name);
-        }
-        
-        // Buscar dependentes
-        const dependents = await DependentsService.getDependents(user.id);
-        if (dependents.length > 0) {
-          names.push(...dependents.map(d => d.dep_name));
-        }
-        
-        if (names.length > 0) {
-          setAvailableNames(names);
+        if (transactionsData && transactionsData.length > 0) {
+          const uniqueNames = [...new Set(transactionsData.map((t: any) => t.name).filter(Boolean))] as string[];
+          setAvailableNames(uniqueNames);
         }
       } catch (error) {
         console.error('Erro ao buscar nomes:', error);
       }
     };
     fetchNames();
-  }, []);
+  }, [transactions]);
 
   // Apply filters
   React.useEffect(() => {

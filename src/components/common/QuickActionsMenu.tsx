@@ -51,9 +51,9 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
     },
     {
       icon: Calendar,
-      label: 'Agendamentos',
+      label: 'Contas a Pagar',
       action: () => {
-        navigate('/schedule');
+        navigate('/contas');
         setIsOpen(false);
       },
       color: 'text-purple-600',

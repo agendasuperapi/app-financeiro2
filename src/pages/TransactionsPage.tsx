@@ -480,12 +480,12 @@ const TransactionsPage = () => {
             </div>
           </div>
             
-          {/* Controles de Navegação de Data - FIXED */}
+          {/* Controles de Navegação de Data - STICKY */}
           {(dateFilter === 'mes' || dateFilter === 'ano') && (
             <div 
-              className="fixed left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-b shadow-sm py-3 flex justify-center" 
+              className="sticky z-40 bg-background border-b shadow-sm py-3 flex justify-center mb-4 -mx-4 md:-mx-6 px-4 md:px-6" 
               style={{
-                top: isMobile ? 'calc(3.5rem + env(safe-area-inset-top))' : '4rem'
+                top: isMobile ? 'calc(3.5rem + env(safe-area-inset-top))' : '64px'
               }}
             >
               <div className="flex items-center gap-1 bg-muted rounded-md p-1">
@@ -502,11 +502,6 @@ const TransactionsPage = () => {
                 </Button>
               </div>
             </div>
-          )}
-          
-          {/* Spacer para compensar a barra fixa */}
-          {(dateFilter === 'mes' || dateFilter === 'ano') && (
-            <div className="h-14" />
           )}
 
           {/* Seletor de Período */}

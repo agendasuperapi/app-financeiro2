@@ -1,10 +1,11 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { formatCurrency, createLocalDate } from '@/utils/transactionUtils';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { format } from 'date-fns';
 import { pt, enUS } from 'date-fns/locale';
 import CategoryDetailsList from './CategoryDetailsList';
@@ -27,6 +28,7 @@ const EnhancedChartCard: React.FC<EnhancedChartCardProps> = ({
   filterPerson = 'all'
 }) => {
   const { currency, t, language } = usePreferences();
+  const isMobile = useIsMobile();
   const [filterType, setFilterType] = React.useState<FilterType>('all');
 
   const locale = language === 'pt' ? pt : enUS;
@@ -157,20 +159,39 @@ const EnhancedChartCard: React.FC<EnhancedChartCardProps> = ({
         <CardTitle className="text-lg">{t('nav.charts')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Filter Tabs */}
-        <Tabs value={filterType} onValueChange={(value) => setFilterType(value as FilterType)}>
-          <TabsList className="w-full overflow-x-auto flex-wrap h-auto justify-start gap-1">
-            <TabsTrigger value="all" className="text-xs">{t('charts.all')}</TabsTrigger>
-            <TabsTrigger value="income" className="text-xs">{t('charts.incomeOnly')}</TabsTrigger>
-            <TabsTrigger value="expense" className="text-xs">{t('charts.expenseOnly')}</TabsTrigger>
-            <TabsTrigger value="expense_unpaid" className="text-xs">{t('charts.expenseUnpaid')}</TabsTrigger>
-            <TabsTrigger value="expense_paid" className="text-xs">{t('charts.expensePaid')}</TabsTrigger>
-            <TabsTrigger value="expense_overdue" className="text-xs">{t('charts.expenseOverdue')}</TabsTrigger>
-            <TabsTrigger value="income_unreceived" className="text-xs">{t('charts.incomeUnreceived')}</TabsTrigger>
-            <TabsTrigger value="income_received" className="text-xs">{t('charts.incomeReceived')}</TabsTrigger>
-            <TabsTrigger value="income_overdue" className="text-xs">{t('charts.incomeOverdue')}</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        {/* Filter - Mobile: Select, Desktop: Tabs */}
+        {isMobile ? (
+          <Select value={filterType} onValueChange={(value) => setFilterType(value as FilterType)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={t('charts.all')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('charts.all')}</SelectItem>
+              <SelectItem value="income">{t('charts.incomeOnly')}</SelectItem>
+              <SelectItem value="expense">{t('charts.expenseOnly')}</SelectItem>
+              <SelectItem value="expense_unpaid">{t('charts.expenseUnpaid')}</SelectItem>
+              <SelectItem value="expense_paid">{t('charts.expensePaid')}</SelectItem>
+              <SelectItem value="expense_overdue">{t('charts.expenseOverdue')}</SelectItem>
+              <SelectItem value="income_unreceived">{t('charts.incomeUnreceived')}</SelectItem>
+              <SelectItem value="income_received">{t('charts.incomeReceived')}</SelectItem>
+              <SelectItem value="income_overdue">{t('charts.incomeOverdue')}</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          <Tabs value={filterType} onValueChange={(value) => setFilterType(value as FilterType)}>
+            <TabsList className="w-full overflow-x-auto flex-wrap h-auto justify-start gap-1">
+              <TabsTrigger value="all" className="text-xs">{t('charts.all')}</TabsTrigger>
+              <TabsTrigger value="income" className="text-xs">{t('charts.incomeOnly')}</TabsTrigger>
+              <TabsTrigger value="expense" className="text-xs">{t('charts.expenseOnly')}</TabsTrigger>
+              <TabsTrigger value="expense_unpaid" className="text-xs">{t('charts.expenseUnpaid')}</TabsTrigger>
+              <TabsTrigger value="expense_paid" className="text-xs">{t('charts.expensePaid')}</TabsTrigger>
+              <TabsTrigger value="expense_overdue" className="text-xs">{t('charts.expenseOverdue')}</TabsTrigger>
+              <TabsTrigger value="income_unreceived" className="text-xs">{t('charts.incomeUnreceived')}</TabsTrigger>
+              <TabsTrigger value="income_received" className="text-xs">{t('charts.incomeReceived')}</TabsTrigger>
+              <TabsTrigger value="income_overdue" className="text-xs">{t('charts.incomeOverdue')}</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
 
         {/* Chart Section */}
         <div className="space-y-2">

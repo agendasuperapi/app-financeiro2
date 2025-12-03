@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Stripe from 'https://esm.sh/stripe@14.21.0';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,6 +33,7 @@ serve(async (req) => {
     
     let user = null;
     let userLookupMethod = "none";
+    let subscription = null;
 
     // Se temos email, buscar usuário por email
     if (email && email !== 'user@example.com') {
@@ -45,10 +47,78 @@ serve(async (req) => {
           logStep("User found by email", { userId: user.id, email: user.email });
         }
       }
+      
+      // Se usuário não encontrado em auth.users, tentar buscar assinatura diretamente pelo email no Stripe
+      if (!user) {
+        logStep("User not found in auth.users, checking Stripe directly", { email });
+        
+        // Buscar chave do Stripe
+        const { data: settingsData } = await supabaseService
+          .from('poupeja_settings')
+          .select('value')
+          .eq('key', 'stripe_secret_key')
+          .single();
+        
+        if (settingsData?.value) {
+          const stripeSecretKey = settingsData.value.includes('sk_') ? 
+            settingsData.value : 
+            atob(settingsData.value);
+          
+          const stripe = new Stripe(stripeSecretKey, { apiVersion: '2024-06-20' });
+          
+          // Buscar customer no Stripe por email
+          const customers = await stripe.customers.list({ email: email, limit: 1 });
+          
+          if (customers.data.length > 0) {
+            const stripeCustomer = customers.data[0];
+            logStep("Found Stripe customer", { customerId: stripeCustomer.id, email: stripeCustomer.email });
+            
+            // Buscar assinatura ativa no Stripe para este customer
+            const stripeSubscriptions = await stripe.subscriptions.list({
+              customer: stripeCustomer.id,
+              status: 'active',
+              limit: 1
+            });
+            
+            if (stripeSubscriptions.data.length > 0) {
+              const stripeSub = stripeSubscriptions.data[0];
+              logStep("Found active Stripe subscription", { subscriptionId: stripeSub.id });
+              
+              // Verificar se já existe em poupeja_subscriptions pelo stripe_subscription_id
+              const { data: existingSub } = await supabaseService
+                .from("poupeja_subscriptions")
+                .select("*")
+                .eq("stripe_subscription_id", stripeSub.id)
+                .maybeSingle();
+              
+              if (existingSub) {
+                subscription = existingSub;
+                logStep("Found subscription in database by stripe_subscription_id", { subscriptionId: existingSub.id });
+              } else {
+                // Construir objeto de subscription baseado nos dados do Stripe
+                const interval = stripeSub.items?.data?.[0]?.price?.recurring?.interval;
+                subscription = {
+                  id: stripeSub.id,
+                  status: stripeSub.status,
+                  plan_type: interval === 'year' ? 'annual' : 'monthly',
+                  current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
+                  current_period_start: new Date(stripeSub.current_period_start * 1000).toISOString(),
+                  cancel_at_period_end: stripeSub.cancel_at_period_end,
+                  stripe_subscription_id: stripeSub.id,
+                  stripe_customer_id: stripeCustomer.id
+                };
+                logStep("Built subscription from Stripe data", { subscription });
+              }
+              
+              userLookupMethod = "stripe_direct";
+            }
+          }
+        }
+      }
     }
 
     // Fallback: tentar autenticação por token se fornecido
-    if (!user) {
+    if (!user && !subscription) {
       const authHeader = req.headers.get("Authorization");
       if (authHeader) {
         logStep("Attempting authentication by token");
@@ -68,24 +138,39 @@ serve(async (req) => {
       }
     }
 
-    if (!user?.email) {
-      throw new Error("User not found - email or valid token required");
+    // Se encontramos um usuário mas não temos subscription ainda, buscar
+    if (user && !subscription) {
+      const { data: subData, error: subscriptionError } = await supabaseService
+        .from("poupeja_subscriptions")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (subscriptionError && subscriptionError.code !== 'PGRST116') {
+        logStep("Error fetching subscription", { error: subscriptionError });
+      } else {
+        subscription = subData;
+      }
     }
 
-    // Buscar assinatura do usuário usando service role
-    const { data: subscription, error: subscriptionError } = await supabaseService
-      .from("poupeja_subscriptions")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .single();
-
-    if (subscriptionError && subscriptionError.code !== 'PGRST116') {
-      logStep("Error fetching subscription", { error: subscriptionError });
-      throw new Error(`Error fetching subscription: ${subscriptionError.message}`);
+    // Se não temos nem usuário nem assinatura, retornar erro
+    if (!user && !subscription) {
+      logStep("No user or subscription found", { email });
+      return new Response(JSON.stringify({
+        hasActiveSubscription: false,
+        subscription: null,
+        isExpired: false,
+        exists: false,
+        hasSubscription: false,
+        error: "User or subscription not found"
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
-    const hasActiveSubscription = !!subscription;
+    const hasActiveSubscription = !!subscription && subscription.status === 'active';
     const isExpired = subscription?.current_period_end 
       ? new Date() > new Date(subscription.current_period_end)
       : false;
@@ -107,10 +192,10 @@ serve(async (req) => {
       isExpired,
       exists: true,
       hasSubscription: isActiveAndNotExpired,
-      user: {
+      user: user ? {
         id: user.id,
         email: user.email
-      }
+      } : null
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

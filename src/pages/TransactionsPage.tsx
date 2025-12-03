@@ -94,20 +94,38 @@ const TransactionsPage = () => {
     }
   };
 
-  // Fetch dependents for name filter
+  // Fetch dependents and main user for name filter
   useEffect(() => {
     const fetchNames = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
         
+        const names: string[] = [];
+        
+        // Buscar nome do usuário principal da view
+        const { data: userData } = await (supabase as any)
+          .from('view_cadastros_unificados')
+          .select('primeiro_name')
+          .eq('id', user.id)
+          .eq('tipo', 'usuario')
+          .single();
+        
+        if (userData?.primeiro_name) {
+          names.push(userData.primeiro_name);
+        }
+        
+        // Buscar dependentes
         const dependents = await DependentsService.getDependents(user.id);
         if (dependents.length > 0) {
-          const names = dependents.map(d => d.dep_name);
+          names.push(...dependents.map(d => d.dep_name));
+        }
+        
+        if (names.length > 0) {
           setAvailableNames(names);
         }
       } catch (error) {
-        console.error('Erro ao buscar dependentes:', error);
+        console.error('Erro ao buscar nomes:', error);
       }
     };
     fetchNames();

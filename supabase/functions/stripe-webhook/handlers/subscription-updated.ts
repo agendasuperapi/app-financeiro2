@@ -56,52 +56,45 @@ export async function handleSubscriptionUpdated(
     const verifiedUserId = poupejaUser.id;
     console.log(`Found and verified user for subscription ${subscription.id}`);
     
-    // First, get id_plano_preco - this is REQUIRED
-    let idPlanoPreco = null;
-    
-    // Try to get from poupeja_plan_pricing based on interval
+    // Determine plan type based on interval
     const interval = subscription.items?.data?.[0]?.price?.recurring?.interval;
     const planTypeFromInterval = interval === 'year' ? 'annual' : 'monthly';
     
-    console.log(`[SUBSCRIPTION-UPDATED] Looking for plan pricing with type: ${planTypeFromInterval}`);
+    console.log(`[SUBSCRIPTION-UPDATED] Plan type from interval: ${planTypeFromInterval}`);
     
-    const { data: planPricing, error: planError } = await supabase
-      .from('poupeja_plan_pricing')
-      .select('id, plan_type')
-      .eq('plan_type', planTypeFromInterval)
-      .eq('is_active', true)
+    // Get id_plano_preco from tbl_planos table
+    let idPlanoPreco = null;
+    
+    const { data: plano, error: planoError } = await supabase
+      .from('tbl_planos')
+      .select('id, nome')
+      .ilike('nome', planTypeFromInterval === 'annual' ? '%anual%' : '%mensal%')
+      .limit(1)
       .single();
     
-    if (planPricing) {
-      idPlanoPreco = planPricing.id;
-      console.log(`[SUBSCRIPTION-UPDATED] Found plan pricing: ${planPricing.id} for type ${planPricing.plan_type}`);
+    if (plano) {
+      idPlanoPreco = plano.id;
+      console.log(`[SUBSCRIPTION-UPDATED] Found plan: ${plano.id} (${plano.nome})`);
     } else {
-      console.log(`[SUBSCRIPTION-UPDATED] No plan pricing found for type ${planTypeFromInterval}, error:`, planError);
+      console.log(`[SUBSCRIPTION-UPDATED] No plan found with name matching ${planTypeFromInterval}, error:`, planoError);
       
-      // Fallback: get any active plan pricing
-      const { data: anyPlan, error: anyError } = await supabase
-        .from('poupeja_plan_pricing')
-        .select('id, plan_type')
-        .eq('is_active', true)
+      // Fallback: get any plan
+      const { data: anyPlan } = await supabase
+        .from('tbl_planos')
+        .select('id, nome')
         .limit(1)
         .single();
       
       if (anyPlan) {
         idPlanoPreco = anyPlan.id;
-        console.log(`[SUBSCRIPTION-UPDATED] Using fallback plan pricing: ${anyPlan.id} (${anyPlan.plan_type})`);
+        console.log(`[SUBSCRIPTION-UPDATED] Using fallback plan: ${anyPlan.id} (${anyPlan.nome})`);
       } else {
-        console.error(`[SUBSCRIPTION-UPDATED] No active plan pricing found at all! Error:`, anyError);
-        
-        // List all plan pricing to debug
-        const { data: allPlans } = await supabase
-          .from('poupeja_plan_pricing')
-          .select('id, plan_type, is_active');
-        console.log(`[SUBSCRIPTION-UPDATED] All plan pricing records:`, allPlans);
+        console.error(`[SUBSCRIPTION-UPDATED] No plans found in tbl_planos table!`);
       }
     }
     
     if (!idPlanoPreco) {
-      throw new Error(`Cannot update subscription: no valid id_plano_preco found for plan type ${planTypeFromInterval}`);
+      throw new Error(`Cannot update subscription: no valid id_plano_preco found in tbl_planos`);
     }
     
     // Prepare update/insert data

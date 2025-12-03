@@ -82,31 +82,34 @@ export async function handleCheckoutSessionCompleted(
   // Use actual subscription status from Stripe instead of assuming "active"
   const subscriptionStatus = subscription.status;
 
-  // Get id_plano_preco from poupeja_plan_pricing table
+  // Get id_plano_preco from tbl_planos table
   let idPlanoPreco = null;
-  const { data: planPricing } = await supabase
-    .from('poupeja_plan_pricing')
-    .select('id')
-    .eq('plan_type', planType)
-    .eq('is_active', true)
+  const { data: plano } = await supabase
+    .from('tbl_planos')
+    .select('id, nome')
+    .ilike('nome', planType === 'annual' ? '%anual%' : '%mensal%')
+    .limit(1)
     .single();
   
-  if (planPricing) {
-    idPlanoPreco = planPricing.id;
-    console.log(`Setting id_plano_preco to ${planPricing.id}`);
+  if (plano) {
+    idPlanoPreco = plano.id;
+    console.log(`Setting id_plano_preco to ${plano.id} (${plano.nome})`);
   } else {
-    // Fallback: get any active plan pricing
+    // Fallback: get any plan
     const { data: anyPlan } = await supabase
-      .from('poupeja_plan_pricing')
-      .select('id')
-      .eq('is_active', true)
+      .from('tbl_planos')
+      .select('id, nome')
       .limit(1)
       .single();
     
     if (anyPlan) {
       idPlanoPreco = anyPlan.id;
-      console.log(`Using fallback id_plano_preco: ${anyPlan.id}`);
+      console.log(`Using fallback id_plano_preco: ${anyPlan.id} (${anyPlan.nome})`);
     }
+  }
+  
+  if (!idPlanoPreco) {
+    throw new Error(`Cannot create subscription: no valid id_plano_preco found in tbl_planos`);
   }
 
   await supabase.from("poupeja_subscriptions").upsert({

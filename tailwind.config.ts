@@ -71,6 +71,7 @@ export default {
 					dark: '#2D3748',
 					success: '#10B981',
 					warning: '#FBBF24',
+					yellow: '#FBBF24',
 					error: '#EF4444',
 					gray: '#94A3B8',
 				}
@@ -131,13 +132,17 @@ export default {
 						opacity: '1'
 					}
 				},
-				'pulse-soft': {
+			'pulse-soft': {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.8' },
 				},
 				'bounce-soft': {
 					'0%, 100%': { transform: 'translateY(0)' },
 					'50%': { transform: 'translateY(-5%)' },
+				},
+				'pulse-slow': {
+					'0%, 100%': { opacity: '1', transform: 'scale(1)' },
+					'50%': { opacity: '0.85', transform: 'scale(1.03)' },
 				}
 			},
 			animation: {
@@ -150,6 +155,7 @@ export default {
 				'pulse-soft': 'pulse-soft 2s infinite',
 				'bounce-soft': 'bounce-soft 2s ease-in-out infinite',
 				'enter': 'fade-in 0.3s ease-out, scale-in 0.2s ease-out',
+				'pulse-slow': 'pulse-slow 3s ease-in-out infinite',
 			},
 			boxShadow: {
 				'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',

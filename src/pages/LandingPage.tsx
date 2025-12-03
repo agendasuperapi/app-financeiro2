@@ -2,6 +2,7 @@
 import React from 'react';
 import LandingHeader from '@/components/landing/LandingHeader';
 import LandingHero from '@/components/landing/LandingHero';
+import LandingPromoSection from '@/components/landing/LandingPromoSection';
 import LandingFeatures from '@/components/landing/LandingFeatures';
 import LandingBenefits from '@/components/landing/LandingBenefits';
 import LandingPricing from '@/components/landing/LandingPricing';
@@ -13,6 +14,7 @@ const LandingPage = () => {
       <LandingHeader />
       <main>
         <LandingHero />
+        <LandingPromoSection />
         <LandingFeatures />
         <LandingBenefits />
         <LandingPricing />

@@ -87,30 +87,35 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                 </div>
               </Card>)}
           </div> :
-      // Desktop: Table layout
+      // Desktop/Tablet: Table layout
       <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse table-fixed">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 px-4">{t('common.date')}</th>
-                  <th className="text-left py-2 px-4">{t('common.type')}</th>
-                  <th className="text-left py-2 px-4">{t('common.category')}</th>
-                  <th className="text-left py-2 px-4">{t('common.description')}</th>
-                  <th className="text-right py-2 px-4">{t('common.amount')}</th>
+                  <th className="text-left py-2 px-2 lg:px-4 w-24 lg:w-32">{t('common.date')}</th>
+                  <th className="text-left py-2 px-2 lg:px-4 w-20 lg:w-24">{t('common.type')}</th>
+                  <th className="text-left py-2 px-2 lg:px-4 w-24 lg:w-32">{t('common.category')}</th>
+                  <th className="text-left py-2 px-2 lg:px-4 hidden lg:table-cell">{t('common.description')}</th>
+                  <th className="text-right py-2 px-2 lg:px-4 w-24 lg:w-32">{t('common.amount')}</th>
                 </tr>
               </thead>
               <tbody>
                 {currentTransactions.map(transaction => <tr key={transaction.id} className="border-b hover:bg-muted">
-                    <td className="py-2 px-4">{new Date(transaction.date).toLocaleDateString('pt-BR')} {new Date(transaction.date).toLocaleTimeString('pt-BR', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}</td>
-                    <td className="py-2 px-4">
-                      {transaction.type === 'income' ? t('common.income') : t('common.expense')}
+                    <td className="py-2 px-2 lg:px-4 text-sm">
+                      <div>{new Date(transaction.date).toLocaleDateString('pt-BR')}</div>
+                      <div className="text-muted-foreground text-xs">{new Date(transaction.date).toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}</div>
                     </td>
-                    <td className="py-2 px-4">{transaction.category}</td>
-                    <td className="py-2 px-4">{transaction.description}</td>
-                    <td className={`py-2 px-4 text-right ${transaction.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
+                    <td className="py-2 px-2 lg:px-4 text-sm">
+                      <Badge variant={transaction.type === 'income' ? 'default' : 'secondary'} className="text-xs">
+                        {transaction.type === 'income' ? t('common.income') : t('common.expense')}
+                      </Badge>
+                    </td>
+                    <td className="py-2 px-2 lg:px-4 text-sm truncate">{transaction.category}</td>
+                    <td className="py-2 px-2 lg:px-4 text-sm truncate hidden lg:table-cell">{transaction.description}</td>
+                    <td className={`py-2 px-2 lg:px-4 text-right text-sm font-medium ${transaction.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
                       {formatCurrency(transaction.amount)}
                     </td>
                   </tr>)}

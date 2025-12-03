@@ -48,6 +48,10 @@ const TransactionsPage = () => {
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [sortOrder, setSortOrder] = useState<'date-desc' | 'date-asc' | 'created-desc' | 'created-asc'>('date-desc');
   
+  const [isDateNavFixed, setIsDateNavFixed] = useState(false);
+  const dateNavRef = React.useRef<HTMLDivElement>(null);
+  const dateNavPlaceholderRef = React.useRef<HTMLDivElement>(null);
+  
   // Estados para dialog de transações relacionadas
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
@@ -135,6 +139,30 @@ const TransactionsPage = () => {
       setAvailableCategories(uniqueCategories);
     }
   }, [transactions]);
+
+  // Scroll listener para fixar a barra de navegação de data
+  useEffect(() => {
+    if (dateFilter !== 'mes' && dateFilter !== 'ano') {
+      setIsDateNavFixed(false);
+      return;
+    }
+    
+    const mainElement = document.querySelector('main');
+    if (!mainElement) return;
+    
+    const handleScroll = () => {
+      if (dateNavPlaceholderRef.current) {
+        const rect = dateNavPlaceholderRef.current.getBoundingClientRect();
+        const headerHeight = isMobile ? 56 : 0; // altura do header mobile
+        setIsDateNavFixed(rect.top <= headerHeight);
+      }
+    };
+    
+    mainElement.addEventListener('scroll', handleScroll);
+    handleScroll(); // check initial position
+    
+    return () => mainElement.removeEventListener('scroll', handleScroll);
+  }, [dateFilter, isMobile]);
 
   // Apply filters
   React.useEffect(() => {
@@ -480,28 +508,43 @@ const TransactionsPage = () => {
             </div>
           </div>
             
-          {/* Controles de Navegação de Data - STICKY */}
+          {/* Placeholder e Controles de Navegação de Data */}
           {(dateFilter === 'mes' || dateFilter === 'ano') && (
-            <div 
-              className="sticky z-40 bg-background border-b shadow-sm py-3 flex justify-center mb-4 -mx-4 md:-mx-6 px-4 md:px-6" 
-              style={{
-                top: isMobile ? 'calc(3.5rem + env(safe-area-inset-top))' : '64px'
-              }}
-            >
-              <div className="flex items-center gap-1 bg-muted rounded-md p-1">
-                <Button variant="ghost" size="sm" onClick={() => handleDateNavigation('prev')} className="h-8 w-8 p-0">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                
-                <span className="text-sm font-medium px-2 min-w-[120px] text-center">
-                  {getDateFilterLabel()}
-                </span>
-                
-                <Button variant="ghost" size="sm" onClick={() => handleDateNavigation('next')} className="h-8 w-8 p-0">
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+            <>
+              {/* Placeholder para manter o espaço quando fixo */}
+              <div 
+                ref={dateNavPlaceholderRef}
+                className={isDateNavFixed ? "h-12 mb-4" : ""}
+              />
+              
+              {/* Barra de navegação */}
+              <div 
+                ref={dateNavRef}
+                className={cn(
+                  "z-40 bg-background border-b shadow-sm py-3 flex justify-center transition-all duration-200",
+                  isDateNavFixed 
+                    ? "fixed left-0 right-0" 
+                    : "mb-4 -mx-4 md:-mx-6 px-4 md:px-6"
+                )}
+                style={isDateNavFixed ? {
+                  top: isMobile ? 'calc(3.5rem + env(safe-area-inset-top))' : '0'
+                } : undefined}
+              >
+                <div className="flex items-center gap-1 bg-muted rounded-md p-1">
+                  <Button variant="ghost" size="sm" onClick={() => handleDateNavigation('prev')} className="h-8 w-8 p-0">
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  <span className="text-sm font-medium px-2 min-w-[120px] text-center">
+                    {getDateFilterLabel()}
+                  </span>
+                  
+                  <Button variant="ghost" size="sm" onClick={() => handleDateNavigation('next')} className="h-8 w-8 p-0">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           {/* Seletor de Período */}

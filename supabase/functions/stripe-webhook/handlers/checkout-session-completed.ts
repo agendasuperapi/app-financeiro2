@@ -124,21 +124,44 @@ export async function handleCheckoutSessionCompleted(
     id_plano_preco: idPlanoPreco
   };
   
-  console.log(`[CHECKOUT-COMPLETED] Attempting upsert with data:`, JSON.stringify(subscriptionData));
+  console.log(`[CHECKOUT-COMPLETED] Attempting to save subscription with data:`, JSON.stringify(subscriptionData));
   
-  const { data: upsertData, error: upsertError } = await supabase
+  // Primeiro, verificar se já existe uma assinatura para este usuário
+  const { data: existingSubscription, error: fetchError } = await supabase
     .from("poupeja_subscriptions")
-    .upsert(subscriptionData, { 
-      onConflict: 'user_id',
-      ignoreDuplicates: false 
-    })
-    .select();
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
 
-  if (upsertError) {
-    console.error(`[CHECKOUT-COMPLETED] Upsert error:`, JSON.stringify(upsertError));
-    throw new Error(`Failed to create subscription: ${upsertError.message}`);
+  if (fetchError) {
+    console.error(`[CHECKOUT-COMPLETED] Error fetching existing subscription:`, JSON.stringify(fetchError));
+  }
+
+  let result;
+  if (existingSubscription) {
+    // UPDATE se já existe
+    console.log(`[CHECKOUT-COMPLETED] Updating existing subscription id: ${existingSubscription.id}`);
+    result = await supabase
+      .from("poupeja_subscriptions")
+      .update(subscriptionData)
+      .eq("user_id", userId)
+      .select();
+  } else {
+    // INSERT se não existe
+    console.log(`[CHECKOUT-COMPLETED] Inserting new subscription for user: ${userId}`);
+    result = await supabase
+      .from("poupeja_subscriptions")
+      .insert(subscriptionData)
+      .select();
+  }
+
+  const { data: resultData, error: resultError } = result;
+
+  if (resultError) {
+    console.error(`[CHECKOUT-COMPLETED] Database error:`, JSON.stringify(resultError));
+    throw new Error(`Failed to save subscription: ${resultError.message}`);
   }
   
-  console.log(`[CHECKOUT-COMPLETED] Upsert result:`, JSON.stringify({ data: upsertData, error: upsertError }));
+  console.log(`[CHECKOUT-COMPLETED] Operation successful:`, JSON.stringify(resultData));
   console.log(`[CHECKOUT-COMPLETED] Subscription created/updated with plan ${planType}, status ${subscriptionStatus}, id_plano_preco ${idPlanoPreco}`);
 }

@@ -62,32 +62,39 @@ export async function handleSubscriptionUpdated(
     
     console.log(`[SUBSCRIPTION-UPDATED] Plan type from interval: ${planTypeFromInterval}`);
     
-    // Get id_plano_preco from tbl_planos table
+    // Get id_plano_preco from tbl_planos table using periodo column (MENSAL/ANUAL)
     let idPlanoPreco = null;
+    const periodoValue = planTypeFromInterval === 'annual' ? 'ANUAL' : 'MENSAL';
+    
+    console.log(`[SUBSCRIPTION-UPDATED] Searching tbl_planos for periodo: ${periodoValue}`);
     
     const { data: plano, error: planoError } = await supabase
       .from('tbl_planos')
-      .select('id, nome')
-      .ilike('nome', planTypeFromInterval === 'annual' ? '%anual%' : '%mensal%')
+      .select('id, nome, id_plano_preco, periodo')
+      .eq('periodo', periodoValue)
       .limit(1)
-      .single();
+      .maybeSingle();
     
-    if (plano) {
+    console.log(`[SUBSCRIPTION-UPDATED] tbl_planos query result:`, JSON.stringify({ plano, error: planoError }));
+    
+    if (plano && plano.id_plano_preco) {
+      idPlanoPreco = plano.id_plano_preco;
+      console.log(`[SUBSCRIPTION-UPDATED] Using id_plano_preco: ${plano.id_plano_preco} from plan ${plano.nome}`);
+    } else if (plano) {
+      // Fallback to id if id_plano_preco is not set
       idPlanoPreco = plano.id;
-      console.log(`[SUBSCRIPTION-UPDATED] Found plan: ${plano.id} (${plano.nome})`);
+      console.log(`[SUBSCRIPTION-UPDATED] Using fallback plano.id: ${plano.id} (${plano.nome})`);
     } else {
-      console.log(`[SUBSCRIPTION-UPDATED] No plan found with name matching ${planTypeFromInterval}, error:`, planoError);
-      
-      // Fallback: get any plan
+      // Fallback: get first available plan
       const { data: anyPlan } = await supabase
         .from('tbl_planos')
-        .select('id, nome')
+        .select('id, nome, id_plano_preco')
         .limit(1)
-        .single();
+        .maybeSingle();
       
       if (anyPlan) {
-        idPlanoPreco = anyPlan.id;
-        console.log(`[SUBSCRIPTION-UPDATED] Using fallback plan: ${anyPlan.id} (${anyPlan.nome})`);
+        idPlanoPreco = anyPlan.id_plano_preco || anyPlan.id;
+        console.log(`[SUBSCRIPTION-UPDATED] Using fallback plan: ${anyPlan.nome}, id_plano_preco: ${idPlanoPreco}`);
       } else {
         console.error(`[SUBSCRIPTION-UPDATED] No plans found in tbl_planos table!`);
       }

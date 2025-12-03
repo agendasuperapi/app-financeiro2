@@ -73,7 +73,7 @@ const TransactionsPage = () => {
   const effectiveTimezone = userTimezone || appContext.userTimezone;
   const isMobile = useIsMobile();
   const { toast } = useToast();
-  const { formatDate } = useDateFormat();
+  const { formatDate, formatMonth } = useDateFormat();
   const { currency } = usePreferences();
 
   // Função para navegação de data
@@ -84,10 +84,8 @@ const TransactionsPage = () => {
       setSelectedDate(direction === 'prev' ? subYears(selectedDate, 1) : addYears(selectedDate, 1));
     }
   };
+  
   const getDateFilterLabel = () => {
-    const {
-      formatMonth
-    } = useDateFormat();
     switch (dateFilter) {
       case 'mes':
         return formatMonth(selectedDate);

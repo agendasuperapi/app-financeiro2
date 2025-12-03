@@ -17,9 +17,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('🔍 Verificando lembretes pendentes...');
+    console.log('🔍 Verificando lembretes e agendamentos pendentes...');
 
-    // Buscar lembretes que precisam de notificação
     const now = new Date();
     const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
     const tenMinutesAhead = new Date(now.getTime() + 10 * 60 * 1000);
@@ -30,9 +29,8 @@ serve(async (req) => {
       fim: tenMinutesAhead.toISOString()
     });
     
-    // Buscar lembretes dentro da janela de 10 minutos (antes e depois)
-    // Ignorar lembretes com status 'lembrado' ou que já foram notificados
-    const { data: reminders, error } = await supabase
+    // ========== LEMBRETES (tbl_lembrete) ==========
+    const { data: reminders, error: remindersError } = await supabase
       .from('tbl_lembrete')
       .select('*')
       .gte('date', tenMinutesAgo.toISOString())
@@ -40,102 +38,187 @@ serve(async (req) => {
       .neq('status', 'lembrado')
       .or('notification_sent.is.null,notification_sent.eq.false');
 
-    if (error) throw error;
+    if (remindersError) throw remindersError;
 
     console.log(`📋 Encontrados ${reminders?.length || 0} lembretes para notificar`);
 
-    if (!reminders || reminders.length === 0) {
-      return new Response(
-        JSON.stringify({ message: 'Nenhum lembrete pendente', count: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // ========== AGENDAMENTOS (poupeja_transactions) ==========
+    const { data: scheduledTransactions, error: scheduledError } = await supabase
+      .from('poupeja_transactions')
+      .select('*')
+      .eq('formato', 'agenda')
+      .eq('status', 'pending')
+      .gte('date', tenMinutesAgo.toISOString())
+      .lte('date', tenMinutesAhead.toISOString())
+      .or('notification_sent.is.null,notification_sent.eq.false');
+
+    if (scheduledError) {
+      console.error('❌ Erro ao buscar agendamentos:', scheduledError);
     }
 
-    // Enviar notificações diretamente via FCM V1 (mesma lógica de send-notification)
+    console.log(`📅 Encontrados ${scheduledTransactions?.length || 0} agendamentos para notificar`);
+
     const results = [];
 
-    for (const reminder of reminders) {
-      try {
-        console.log(`🔔 Processando lembrete ${reminder.id} para usuário ${reminder.user_id}`);
+    // ========== PROCESSAR LEMBRETES ==========
+    if (reminders && reminders.length > 0) {
+      for (const reminder of reminders) {
+        try {
+          console.log(`🔔 Processando lembrete ${reminder.id} para usuário ${reminder.user_id}`);
 
-        // Buscar tokens do usuário
-        const { data: tokens, error: tokensError } = await supabase
-          .from('notification_tokens')
-          .select('*')
-          .eq('user_id', reminder.user_id);
+          const { data: tokens, error: tokensError } = await supabase
+            .from('notification_tokens')
+            .select('*')
+            .eq('user_id', reminder.user_id);
 
-        if (tokensError) {
-          throw tokensError;
+          if (tokensError) throw tokensError;
+
+          if (!tokens || tokens.length === 0) {
+            console.log(`⚠️ Nenhum token encontrado para usuário ${reminder.user_id}`);
+            results.push({ id: reminder.id, type: 'reminder', success: false, error: 'Nenhum token' });
+            continue;
+          }
+
+          const { data: settings } = await supabase
+            .from('notification_settings')
+            .select('*')
+            .eq('user_id', reminder.user_id)
+            .single();
+
+          const soundType = settings?.sound_type || 'default';
+          const vibrationEnabled = settings?.vibration_enabled ?? true;
+
+          const reminderDate = new Date(reminder.date);
+          const formattedDate = new Intl.DateTimeFormat('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }).format(reminderDate);
+
+          for (const tokenData of tokens) {
+            const notificationBody = `📲 Sua tarefa: ${reminder.description || reminder.name || 'Sem descrição'}\n\n📆 Agendada para: ${formattedDate}`;
+            
+            await sendFCMV1(
+              tokenData,
+              '🔔 Lembrete AppFinanceiro',
+              notificationBody,
+              {
+                reminderId: reminder.id,
+                type: 'reminder'
+              },
+              soundType,
+              vibrationEnabled
+            );
+          }
+
+          await supabase
+            .from('tbl_lembrete')
+            .update({ 
+              notification_sent: true,
+              last_notification_at: new Date().toISOString(),
+              status: 'lembrado'
+            })
+            .eq('id', reminder.id);
+
+          results.push({ id: reminder.id, type: 'reminder', success: true });
+          console.log(`✅ Notificação enviada para lembrete ${reminder.id}`);
+        } catch (err) {
+          console.error(`❌ Erro ao processar lembrete ${reminder.id}:`, err);
+          results.push({ id: reminder.id, type: 'reminder', success: false, error: String(err) });
         }
-
-        if (!tokens || tokens.length === 0) {
-          console.log(`⚠️ Nenhum token encontrado para usuário ${reminder.user_id}, pulando lembrete ${reminder.id}`);
-          results.push({ id: reminder.id, success: false, error: 'Nenhum token de notificação para este usuário' });
-          continue;
-        }
-
-        // Buscar configurações de notificação do usuário
-        const { data: settings } = await supabase
-          .from('notification_settings')
-          .select('*')
-          .eq('user_id', reminder.user_id)
-          .single();
-
-        const soundType = settings?.sound_type || 'default';
-        const vibrationEnabled = settings?.vibration_enabled ?? true;
-        
-        console.log(`🎵 Configurações do usuário ${reminder.user_id}:`, { soundType, vibrationEnabled });
-
-        // Formatar data em formato brasileiro
-        const reminderDate = new Date(reminder.date);
-        const formattedDate = new Intl.DateTimeFormat('pt-BR', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        }).format(reminderDate);
-
-        // Enviar para todos os tokens do usuário
-        for (const tokenData of tokens) {
-          const notificationBody = `📲 Sua tarefa: ${reminder.description || reminder.name || 'Sem descrição'}\n\n📆 Agendada para: ${formattedDate}`;
-          
-          await sendFCMV1(
-            tokenData,
-            '🔔 Lembrete AppFinanceiro',
-            notificationBody,
-            {
-              reminderId: reminder.id,
-              type: 'reminder'
-            },
-            soundType,
-            vibrationEnabled
-          );
-        }
-
-        // Marcar como notificado e atualizar status para 'lembrado'
-        await supabase
-          .from('tbl_lembrete')
-          .update({ 
-            notification_sent: true,
-            last_notification_at: new Date().toISOString(),
-            status: 'lembrado'
-          })
-          .eq('id', reminder.id);
-
-        results.push({ id: reminder.id, success: true });
-        console.log(`✅ Notificação enviada para lembrete ${reminder.id}`);
-      } catch (err) {
-        console.error(`❌ Erro ao processar lembrete ${reminder.id}:`, err);
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        results.push({ id: reminder.id, success: false, error: errorMessage });
       }
     }
+
+    // ========== PROCESSAR AGENDAMENTOS ==========
+    if (scheduledTransactions && scheduledTransactions.length > 0) {
+      for (const transaction of scheduledTransactions) {
+        try {
+          console.log(`📅 Processando agendamento ${transaction.id} para usuário ${transaction.user_id}`);
+
+          const { data: tokens, error: tokensError } = await supabase
+            .from('notification_tokens')
+            .select('*')
+            .eq('user_id', transaction.user_id);
+
+          if (tokensError) throw tokensError;
+
+          if (!tokens || tokens.length === 0) {
+            console.log(`⚠️ Nenhum token encontrado para usuário ${transaction.user_id}`);
+            results.push({ id: transaction.id, type: 'scheduled', success: false, error: 'Nenhum token' });
+            continue;
+          }
+
+          const { data: settings } = await supabase
+            .from('notification_settings')
+            .select('*')
+            .eq('user_id', transaction.user_id)
+            .single();
+
+          const soundType = settings?.sound_type || 'default';
+          const vibrationEnabled = settings?.vibration_enabled ?? true;
+
+          const transactionDate = new Date(transaction.date);
+          const formattedDate = new Intl.DateTimeFormat('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }).format(transactionDate);
+
+          const formattedAmount = new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+          }).format(transaction.amount || 0);
+
+          const typeLabel = transaction.type === 'expense' ? '💸 Despesa' : '💰 Receita';
+
+          for (const tokenData of tokens) {
+            const notificationBody = `${typeLabel}: ${transaction.description || 'Sem descrição'}\n💵 Valor: ${formattedAmount}\n📆 Data: ${formattedDate}`;
+            
+            await sendFCMV1WithActions(
+              tokenData,
+              '📅 Agendamento Pendente',
+              notificationBody,
+              {
+                transactionId: transaction.id,
+                type: 'scheduled_transaction',
+                amount: String(transaction.amount),
+                transactionType: transaction.type
+              },
+              soundType,
+              vibrationEnabled
+            );
+          }
+
+          // Marcar como notificado (não muda status, só marca que foi notificado)
+          await supabase
+            .from('poupeja_transactions')
+            .update({ 
+              notification_sent: true,
+              last_notification_at: new Date().toISOString()
+            })
+            .eq('id', transaction.id);
+
+          results.push({ id: transaction.id, type: 'scheduled', success: true });
+          console.log(`✅ Notificação enviada para agendamento ${transaction.id}`);
+        } catch (err) {
+          console.error(`❌ Erro ao processar agendamento ${transaction.id}:`, err);
+          results.push({ id: transaction.id, type: 'scheduled', success: false, error: String(err) });
+        }
+      }
+    }
+
+    const totalProcessed = (reminders?.length || 0) + (scheduledTransactions?.length || 0);
 
     return new Response(
       JSON.stringify({ 
         message: 'Processamento concluído',
-        total: reminders.length,
+        total: totalProcessed,
+        reminders: reminders?.length || 0,
+        scheduled: scheduledTransactions?.length || 0,
         results
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -146,15 +229,12 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
       JSON.stringify({ error: errorMessage }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
 
-// ==== CÓDIGO COPIADO DE send-notification PARA USO DIRETO AQUI ====
+// ==== FUNÇÕES FCM ====
 
 async function getAccessToken(): Promise<string> {
   const serviceAccountJson = Deno.env.get('FCM_SERVICE_ACCOUNT_JSON');
@@ -221,7 +301,7 @@ async function getAccessToken(): Promise<string> {
   const signatureB64 = base64url(new Uint8Array(signature));
   const jwt = `${signatureInput}.${signatureB64}`;
 
-  console.log('🔄 [check-reminders] Trocando JWT por access token OAuth2...');
+  console.log('🔄 Trocando JWT por access token OAuth2...');
   const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -231,19 +311,13 @@ async function getAccessToken(): Promise<string> {
     })
   });
 
-  console.log('📡 [check-reminders] Token response status:', tokenResponse.status);
-
   if (!tokenResponse.ok) {
     const errorText = await tokenResponse.text();
-    console.error('❌ [check-reminders] Erro ao obter access token:', {
-      status: tokenResponse.status,
-      body: errorText
-    });
     throw new Error(`Erro ao obter access token: ${tokenResponse.status} ${errorText}`);
   }
 
   const tokenData = await tokenResponse.json();
-  console.log('✅ [check-reminders] Access token obtido com sucesso');
+  console.log('✅ Access token obtido com sucesso');
   return tokenData.access_token;
 }
 
@@ -255,27 +329,14 @@ async function sendFCMV1(
   soundType: string = 'default',
   vibrationEnabled: boolean = true
 ) {
-  console.log(`📱 [check-reminders] Enviando FCM V1 para usuário ${tokenData.user_id} com som: ${soundType}...`);
-
   const serviceAccountJson = Deno.env.get('FCM_SERVICE_ACCOUNT_JSON');
   if (!serviceAccountJson) {
-    throw new Error('FCM_SERVICE_ACCOUNT_JSON não configurada. Configure nos secrets do Supabase.');
+    throw new Error('FCM_SERVICE_ACCOUNT_JSON não configurada.');
   }
 
-  let serviceAccount: any;
-  try {
-    serviceAccount = JSON.parse(serviceAccountJson);
-  } catch (e) {
-    throw new Error('FCM_SERVICE_ACCOUNT_JSON inválido.');
-  }
-
+  const serviceAccount = JSON.parse(serviceAccountJson);
   const projectId = serviceAccount.project_id;
-  if (!projectId) {
-    throw new Error('project_id não encontrado no FCM_SERVICE_ACCOUNT_JSON');
-  }
-
   const accessToken = await getAccessToken();
-  console.log('✅ [check-reminders] Access token obtido');
 
   const fcmPayload: any = {
     message: {
@@ -308,9 +369,7 @@ async function sendFCMV1(
             badge: 1
           }
         },
-        headers: {
-          'apns-priority': '10'
-        }
+        headers: { 'apns-priority': '10' }
       },
       webpush: {
         fcm_options: { link: '/lembrar' },
@@ -321,17 +380,10 @@ async function sendFCMV1(
           badge: '/app-icon.png',
           requireInteraction: true,
           vibrate: vibrationEnabled ? [200, 100, 200] : [0],
-          silent: false,
-          renotify: true,
           tag: 'lembrete',
-          data: {
-            ...data,
-            soundType
-          }
+          data: { ...data, soundType }
         },
-        headers: {
-          'Urgency': 'high'
-        }
+        headers: { 'Urgency': 'high' }
       }
     }
   };
@@ -345,17 +397,103 @@ async function sendFCMV1(
     body: JSON.stringify(fcmPayload)
   });
 
-  console.log('📡 [check-reminders] FCM response status:', response.status);
-
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('❌ [check-reminders] Erro ao enviar notificação FCM:', {
-      status: response.status,
-      body: errorText
-    });
-    throw new Error(`Erro ao enviar notificação FCM: ${response.status} ${errorText}`);
+    throw new Error(`Erro FCM: ${response.status} ${errorText}`);
   }
 
   const responseData = await response.json();
-  console.log('✅ [check-reminders] FCM V1 enviado para web:', responseData);
+  console.log('✅ FCM enviado:', responseData);
+}
+
+// Versão com botões de ação para agendamentos
+async function sendFCMV1WithActions(
+  tokenData: any, 
+  title: string, 
+  body: string, 
+  data: any, 
+  soundType: string = 'default',
+  vibrationEnabled: boolean = true
+) {
+  const serviceAccountJson = Deno.env.get('FCM_SERVICE_ACCOUNT_JSON');
+  if (!serviceAccountJson) {
+    throw new Error('FCM_SERVICE_ACCOUNT_JSON não configurada.');
+  }
+
+  const serviceAccount = JSON.parse(serviceAccountJson);
+  const projectId = serviceAccount.project_id;
+  const accessToken = await getAccessToken();
+
+  const fcmPayload: any = {
+    message: {
+      token: tokenData.token,
+      notification: { title, body },
+      data: {
+        ...Object.fromEntries(
+          Object.entries(data || {}).map(([key, value]) => [
+            key,
+            typeof value === 'string' ? value : JSON.stringify(value)
+          ])
+        )
+      },
+      android: {
+        priority: 'high',
+        notification: {
+          title,
+          body,
+          sound: soundType === 'default' ? 'default' : soundType,
+          channel_id: 'agendamentos',
+          default_sound: soundType === 'default',
+          default_vibrate_timings: vibrationEnabled,
+          click_action: 'OPEN_SCHEDULE'
+        }
+      },
+      apns: {
+        payload: {
+          aps: {
+            alert: { title, body },
+            sound: soundType === 'default' ? 'default' : `${soundType}.caf`,
+            badge: 1,
+            category: 'SCHEDULED_TRANSACTION'
+          }
+        },
+        headers: { 'apns-priority': '10' }
+      },
+      webpush: {
+        fcm_options: { link: '/schedule' },
+        notification: {
+          title,
+          body,
+          icon: '/app-icon.png',
+          badge: '/app-icon.png',
+          requireInteraction: true,
+          vibrate: vibrationEnabled ? [200, 100, 200] : [0],
+          tag: `agendamento-${data.transactionId}`,
+          actions: [
+            { action: 'mark_paid', title: '✅ Marcar como pago' },
+            { action: 'view', title: '👁️ Ver detalhes' }
+          ],
+          data: { ...data, soundType }
+        },
+        headers: { 'Urgency': 'high' }
+      }
+    }
+  };
+
+  const response = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(fcmPayload)
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Erro FCM: ${response.status} ${errorText}`);
+  }
+
+  const responseData = await response.json();
+  console.log('✅ FCM com ações enviado:', responseData);
 }

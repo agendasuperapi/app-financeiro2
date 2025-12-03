@@ -7,15 +7,92 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from "@/hooks/use-toast";
 import { getPlanTypeFromPriceId } from '@/utils/subscriptionUtils';
 import { useBrandingConfig } from '@/hooks/useBrandingConfig';
-import { Eye, EyeOff, ChevronLeft } from 'lucide-react';
+import { Eye, EyeOff, ChevronLeft, ChevronDown, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 
 const COUNTRY_CODES = [
   { code: '+55', country: 'Brasil', flag: '🇧🇷' },
-  { code: '+1', country: 'EUA', flag: '🇺🇸' },
+  { code: '+1', country: 'EUA/Canadá', flag: '🇺🇸' },
   { code: '+351', country: 'Portugal', flag: '🇵🇹' },
   { code: '+34', country: 'Espanha', flag: '🇪🇸' },
   { code: '+44', country: 'Reino Unido', flag: '🇬🇧' },
+  { code: '+33', country: 'França', flag: '🇫🇷' },
+  { code: '+49', country: 'Alemanha', flag: '🇩🇪' },
+  { code: '+39', country: 'Itália', flag: '🇮🇹' },
+  { code: '+31', country: 'Países Baixos', flag: '🇳🇱' },
+  { code: '+32', country: 'Bélgica', flag: '🇧🇪' },
+  { code: '+41', country: 'Suíça', flag: '🇨🇭' },
+  { code: '+43', country: 'Áustria', flag: '🇦🇹' },
+  { code: '+46', country: 'Suécia', flag: '🇸🇪' },
+  { code: '+47', country: 'Noruega', flag: '🇳🇴' },
+  { code: '+45', country: 'Dinamarca', flag: '🇩🇰' },
+  { code: '+358', country: 'Finlândia', flag: '🇫🇮' },
+  { code: '+353', country: 'Irlanda', flag: '🇮🇪' },
+  { code: '+48', country: 'Polónia', flag: '🇵🇱' },
+  { code: '+420', country: 'República Checa', flag: '🇨🇿' },
+  { code: '+36', country: 'Hungria', flag: '🇭🇺' },
+  { code: '+40', country: 'Romênia', flag: '🇷🇴' },
+  { code: '+30', country: 'Grécia', flag: '🇬🇷' },
+  { code: '+380', country: 'Ucrânia', flag: '🇺🇦' },
+  { code: '+7', country: 'Rússia', flag: '🇷🇺' },
+  { code: '+81', country: 'Japão', flag: '🇯🇵' },
+  { code: '+82', country: 'Coreia do Sul', flag: '🇰🇷' },
+  { code: '+86', country: 'China', flag: '🇨🇳' },
+  { code: '+91', country: 'Índia', flag: '🇮🇳' },
+  { code: '+62', country: 'Indonésia', flag: '🇮🇩' },
+  { code: '+60', country: 'Malásia', flag: '🇲🇾' },
+  { code: '+65', country: 'Singapura', flag: '🇸🇬' },
+  { code: '+66', country: 'Tailândia', flag: '🇹🇭' },
+  { code: '+84', country: 'Vietnã', flag: '🇻🇳' },
+  { code: '+63', country: 'Filipinas', flag: '🇵🇭' },
+  { code: '+61', country: 'Austrália', flag: '🇦🇺' },
+  { code: '+64', country: 'Nova Zelândia', flag: '🇳🇿' },
+  { code: '+52', country: 'México', flag: '🇲🇽' },
+  { code: '+54', country: 'Argentina', flag: '🇦🇷' },
+  { code: '+56', country: 'Chile', flag: '🇨🇱' },
+  { code: '+57', country: 'Colômbia', flag: '🇨🇴' },
+  { code: '+58', country: 'Venezuela', flag: '🇻🇪' },
+  { code: '+51', country: 'Peru', flag: '🇵🇪' },
+  { code: '+593', country: 'Equador', flag: '🇪🇨' },
+  { code: '+591', country: 'Bolívia', flag: '🇧🇴' },
+  { code: '+595', country: 'Paraguai', flag: '🇵🇾' },
+  { code: '+598', country: 'Uruguai', flag: '🇺🇾' },
+  { code: '+506', country: 'Costa Rica', flag: '🇨🇷' },
+  { code: '+507', country: 'Panamá', flag: '🇵🇦' },
+  { code: '+503', country: 'El Salvador', flag: '🇸🇻' },
+  { code: '+502', country: 'Guatemala', flag: '🇬🇹' },
+  { code: '+505', country: 'Nicarágua', flag: '🇳🇮' },
+  { code: '+504', country: 'Honduras', flag: '🇭🇳' },
+  { code: '+509', country: 'Haiti', flag: '🇭🇹' },
+  { code: '+1809', country: 'República Dominicana', flag: '🇩🇴' },
+  { code: '+53', country: 'Cuba', flag: '🇨🇺' },
+  { code: '+1876', country: 'Jamaica', flag: '🇯🇲' },
+  { code: '+27', country: 'África do Sul', flag: '🇿🇦' },
+  { code: '+234', country: 'Nigéria', flag: '🇳🇬' },
+  { code: '+20', country: 'Egito', flag: '🇪🇬' },
+  { code: '+212', country: 'Marrocos', flag: '🇲🇦' },
+  { code: '+254', country: 'Quénia', flag: '🇰🇪' },
+  { code: '+233', country: 'Gana', flag: '🇬🇭' },
+  { code: '+213', country: 'Argélia', flag: '🇩🇿' },
+  { code: '+216', country: 'Tunísia', flag: '🇹🇳' },
+  { code: '+244', country: 'Angola', flag: '🇦🇴' },
+  { code: '+258', country: 'Moçambique', flag: '🇲🇿' },
+  { code: '+238', country: 'Cabo Verde', flag: '🇨🇻' },
+  { code: '+245', country: 'Guiné-Bissau', flag: '🇬🇼' },
+  { code: '+239', country: 'São Tomé e Príncipe', flag: '🇸🇹' },
+  { code: '+670', country: 'Timor-Leste', flag: '🇹🇱' },
+  { code: '+853', country: 'Macau', flag: '🇲🇴' },
+  { code: '+971', country: 'Emirados Árabes', flag: '🇦🇪' },
+  { code: '+966', country: 'Arábia Saudita', flag: '🇸🇦' },
+  { code: '+972', country: 'Israel', flag: '🇮🇱' },
+  { code: '+90', country: 'Turquia', flag: '🇹🇷' },
+  { code: '+98', country: 'Irã', flag: '🇮🇷' },
+  { code: '+92', country: 'Paquistão', flag: '🇵🇰' },
+  { code: '+880', country: 'Bangladesh', flag: '🇧🇩' },
+  { code: '+94', country: 'Sri Lanka', flag: '🇱🇰' },
+  { code: '+977', country: 'Nepal', flag: '🇳🇵' },
 ];
 
 const RegisterPage = () => {
@@ -28,6 +105,7 @@ const RegisterPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [fullName, setFullName] = useState('');
   const [countryCode, setCountryCode] = useState('+55');
+  const [countryOpen, setCountryOpen] = useState(false);
   const [whatsapp, setWhatsapp] = useState('');
   const [email, setEmail] = useState('');
   const [emailConfirm, setEmailConfirm] = useState('');
@@ -360,17 +438,47 @@ const RegisterPage = () => {
                 Qual é o seu WhatsApp?
               </h2>
               <div className="flex gap-2">
-                <select
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  className="h-14 px-3 rounded-lg bg-muted/50 border border-muted-foreground/20 text-foreground text-sm min-w-[120px]"
-                >
-                  {COUNTRY_CODES.map((country) => (
-                    <option key={country.code} value={country.code}>
-                      {country.flag} {country.code} {country.country}
-                    </option>
-                  ))}
-                </select>
+                <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={countryOpen}
+                      className="h-14 px-3 justify-between bg-muted/50 border-muted-foreground/20 text-foreground min-w-[140px]"
+                    >
+                      <span className="flex items-center gap-2 text-sm">
+                        {COUNTRY_CODES.find(c => c.code === countryCode)?.flag}{' '}
+                        {countryCode}
+                      </span>
+                      <ChevronDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[280px] p-0 bg-background border-border z-50" align="start">
+                    <Command>
+                      <CommandInput placeholder="Pesquisar país..." className="h-10" />
+                      <CommandList className="max-h-[300px]">
+                        <CommandEmpty>Nenhum país encontrado.</CommandEmpty>
+                        <CommandGroup>
+                          {COUNTRY_CODES.map((country) => (
+                            <CommandItem
+                              key={country.code}
+                              value={`${country.country} ${country.code}`}
+                              onSelect={() => {
+                                setCountryCode(country.code);
+                                setCountryOpen(false);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <span className="flex items-center gap-2">
+                                {country.flag} {country.code} {country.country}
+                              </span>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 <Input
                   type="tel"
                   placeholder="Digite seu telefone Ex: (11) 90000-0000"

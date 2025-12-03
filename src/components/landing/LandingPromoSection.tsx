@@ -116,7 +116,7 @@ const LandingPromoSection = () => {
               >
                 <div className="absolute top-3 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-muted/50" />
                 <motion.img 
-                  src="/lovable-uploads/4427b613-3f73-4178-acf3-5a90c35d1f4d.png" 
+                  src="/lovable-uploads/notebook-screenshot.png" 
                   alt="Dashboard Web Preview" 
                   className="w-full h-auto rounded-t-lg"
                   whileHover={{ scale: 1.01 }}

@@ -126,6 +126,32 @@ export async function handleSubscriptionUpdated(
       if (planType) {
         subscriptionData.plan_type = planType;
         console.log(`[SUBSCRIPTION-UPDATED] Setting plan_type to ${planType} for subscription ${subscription.id}`);
+        
+        // Get id_plano_preco from poupeja_plan_pricing table
+        const { data: planPricing } = await supabase
+          .from('poupeja_plan_pricing')
+          .select('id')
+          .eq('plan_type', planType)
+          .eq('is_active', true)
+          .single();
+        
+        if (planPricing) {
+          subscriptionData.id_plano_preco = planPricing.id;
+          console.log(`[SUBSCRIPTION-UPDATED] Setting id_plano_preco to ${planPricing.id}`);
+        } else {
+          // Fallback: get any active plan pricing
+          const { data: anyPlan } = await supabase
+            .from('poupeja_plan_pricing')
+            .select('id')
+            .eq('is_active', true)
+            .limit(1)
+            .single();
+          
+          if (anyPlan) {
+            subscriptionData.id_plano_preco = anyPlan.id;
+            console.log(`[SUBSCRIPTION-UPDATED] Using fallback id_plano_preco: ${anyPlan.id}`);
+          }
+        }
       }
     }
     

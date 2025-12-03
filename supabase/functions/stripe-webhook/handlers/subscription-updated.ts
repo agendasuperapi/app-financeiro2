@@ -125,22 +125,42 @@ export async function handleSubscriptionUpdated(
       console.log(`[SUBSCRIPTION-UPDATED] Price ID: ${priceId}, Plan type: ${subscriptionData.plan_type}, id_plano_preco: ${subscriptionData.id_plano_preco}`);
     }
     
-    // Use UPSERT instead of UPDATE to ensure record is created/updated
-    const upsertResult = await supabase.from("poupeja_subscriptions")
-      .upsert(subscriptionData, { 
-        onConflict: 'user_id',
-        ignoreDuplicates: false 
-      });
-    
-    console.log("Upsert result:", JSON.stringify(upsertResult));
-    
-    if (upsertResult.error) {
-      throw new Error(`Supabase upsert error: ${upsertResult.error.message}`);
+    // Verificar se já existe assinatura para este usuário
+    const { data: existingSubscription, error: fetchError } = await supabase
+      .from("poupeja_subscriptions")
+      .select("id")
+      .eq("user_id", verifiedUserId)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error(`[SUBSCRIPTION-UPDATED] Error fetching existing:`, JSON.stringify(fetchError));
+    }
+
+    let result;
+    if (existingSubscription) {
+      console.log(`[SUBSCRIPTION-UPDATED] Updating existing subscription id: ${existingSubscription.id}`);
+      result = await supabase
+        .from("poupeja_subscriptions")
+        .update(subscriptionData)
+        .eq("user_id", verifiedUserId)
+        .select();
+    } else {
+      console.log(`[SUBSCRIPTION-UPDATED] Inserting new subscription for user: ${verifiedUserId}`);
+      result = await supabase
+        .from("poupeja_subscriptions")
+        .insert(subscriptionData)
+        .select();
     }
     
-    console.log(`Subscription upserted successfully: ${subscription.id}`);
+    console.log("[SUBSCRIPTION-UPDATED] Result:", JSON.stringify(result));
+    
+    if (result.error) {
+      throw new Error(`Supabase error: ${result.error.message}`);
+    }
+    
+    console.log(`[SUBSCRIPTION-UPDATED] Subscription saved successfully: ${subscription.id}`);
   } catch (updateError) {
-    console.error("Error updating subscription:", updateError);
+    console.error("[SUBSCRIPTION-UPDATED] Error:", updateError);
     throw updateError;
   }
 }

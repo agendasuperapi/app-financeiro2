@@ -6,9 +6,12 @@ import TransactionForm from '@/components/common/TransactionForm';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardStatCards from '@/components/dashboard/DashboardStatCards';
 import DashboardContent from '@/components/dashboard/DashboardContent';
+import MonthNavigation from '@/components/common/MonthNavigation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAppContext } from '@/contexts/AppContext';
 import { useClientAwareData } from '@/hooks/useClientAwareData';
 import { usePreferences } from '@/contexts/PreferencesContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { calculateTotalIncome, calculateTotalExpenses, calculateMonthlyFinancialData, getGoalsForMonth } from '@/utils/transactionUtils';
 import { useToast } from '@/components/ui/use-toast';
 import { markAsPaid } from '@/services/scheduledTransactionService';
@@ -21,6 +24,7 @@ import { User } from 'lucide-react';
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   // Use client-aware data para suportar visualização de clientes
   const {
@@ -285,8 +289,30 @@ const Index = () => {
     }
   };
   
+  // Conteúdo do header para mobile
+  const mobileHeaderContent = (
+    <div className="py-2 flex flex-col items-center gap-2 border-t">
+      <MonthNavigation currentMonth={currentMonth} onMonthChange={handleMonthChange} />
+      {dependents.length > 0 && creatorNames.length > 0 && (
+        <Select value={selectedPerson} onValueChange={setSelectedPerson}>
+          <SelectTrigger className="w-[160px] h-8">
+            <SelectValue placeholder={t('charts.allPeople')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('charts.allPeople')}</SelectItem>
+            {creatorNames.map(name => (
+              <SelectItem key={name} value={name}>
+                {name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+    </div>
+  );
+  
   return (
-    <MainLayout title={t('dashboard.title')} onAddTransaction={handleAddTransaction}>
+    <MainLayout title={t('dashboard.title')} onAddTransaction={handleAddTransaction} headerContent={isMobile ? mobileHeaderContent : undefined}>
       <SubscriptionGuard feature="o dashboard completo">
         <div className="space-y-8 min-h-0">
           {/* Indicador de visualização de cliente */}
@@ -301,17 +327,19 @@ const Index = () => {
             </div>
           )}
           
-          {/* Header com navegação de mês e toggle de visibilidade */}
-          <DashboardHeader
-            currentMonth={currentMonth}
-            onMonthChange={handleMonthChange}
-            hideValues={hideValues}
-            toggleHideValues={toggleHideValues}
-            onAddTransaction={handleAddTransaction}
-            creatorNames={dependents.length > 0 ? creatorNames : []}
-            selectedPerson={selectedPerson}
-            onPersonChange={setSelectedPerson}
-          />
+          {/* Header com navegação de mês e toggle de visibilidade - apenas desktop */}
+          {!isMobile && (
+            <DashboardHeader
+              currentMonth={currentMonth}
+              onMonthChange={handleMonthChange}
+              hideValues={hideValues}
+              toggleHideValues={toggleHideValues}
+              onAddTransaction={handleAddTransaction}
+              creatorNames={dependents.length > 0 ? creatorNames : []}
+              selectedPerson={selectedPerson}
+              onPersonChange={setSelectedPerson}
+            />
+          )}
           
           {/* 3 Cards principais na mesma linha */}
           <DashboardStatCards

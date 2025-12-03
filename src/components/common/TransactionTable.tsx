@@ -218,21 +218,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   </div>
                 </Button>
               </TableHead>
-              <TableHead className="w-[70px] lg:w-[90px] px-2 lg:px-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-auto p-0 font-medium text-[10px] lg:text-xs hover:bg-transparent"
-                  onClick={() => handleSort('type')}
-                >
-                  <div className="flex items-center gap-1">
-                    {t('common.type')}
-                    {sortField === 'type' && sortDirection === 'asc' && <ChevronUp className="h-3 w-3" />}
-                    {sortField === 'type' && sortDirection === 'desc' && <ChevronDown className="h-3 w-3" />}
-                    {sortField !== 'type' && <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
-                  </div>
-                </Button>
-              </TableHead>
               <TableHead className="w-[85px] lg:w-[100px] px-2 lg:px-4">
                 <Button
                   variant="ghost"
@@ -341,23 +326,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                       }
                     </div>
                   </TableCell>
-                  <TableCell className="px-2 lg:px-4">
-                    {transaction.type === 'income' ? (
-                      <div className="flex items-center">
-                        <div className="w-5 h-5 lg:w-6 lg:h-6 rounded-full bg-metacash-success flex items-center justify-center mr-1 lg:mr-2 flex-shrink-0">
-                          <ArrowUp className="w-3 h-3 text-white" />
-                        </div>
-                        <span className="text-[10px] lg:text-xs truncate">{t('income.title')}</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center">
-                        <div className="w-5 h-5 lg:w-6 lg:h-6 rounded-full bg-metacash-error flex items-center justify-center mr-1 lg:mr-2 flex-shrink-0">
-                          <ArrowDown className="w-3 h-3 text-white" />
-                        </div>
-                        <span className="text-[10px] lg:text-xs truncate">{t('expense.title')}</span>
-                      </div>
-                    )}
-                  </TableCell>
                   <TableCell className="font-medium text-[10px] md:text-xs px-2 lg:px-4">
                     <div>
                       <div className="font-medium truncate">{formatDateTime(transaction.date as string, effectiveTimezone)}</div>
@@ -369,6 +337,15 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                   <TableCell className="px-2 lg:px-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-1 flex-wrap">
+                        {transaction.type === 'income' ? (
+                          <div className="w-5 h-5 rounded-full bg-metacash-success flex items-center justify-center flex-shrink-0">
+                            <ArrowUp className="w-3 h-3 text-white" />
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-full bg-metacash-error flex items-center justify-center flex-shrink-0">
+                            <ArrowDown className="w-3 h-3 text-white" />
+                          </div>
+                        )}
                         <CategoryIcon
                           icon={transaction.categoryIcon || 'circle'}
                           color={transaction.categoryColor || (transaction.type === 'income' ? '#4CAF50' : '#E57373')}

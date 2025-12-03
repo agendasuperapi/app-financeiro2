@@ -82,29 +82,39 @@ export async function handleCheckoutSessionCompleted(
   // Use actual subscription status from Stripe instead of assuming "active"
   const subscriptionStatus = subscription.status;
 
-  // Get id_plano_preco from tbl_planos table
+  // Get id_plano_preco from tbl_planos table using periodo column (MENSAL/ANUAL)
   let idPlanoPreco = null;
-  const { data: plano } = await supabase
-    .from('tbl_planos')
-    .select('id, nome')
-    .ilike('nome', planType === 'annual' ? '%anual%' : '%mensal%')
-    .limit(1)
-    .single();
+  const periodoValue = planType === 'annual' ? 'ANUAL' : 'MENSAL';
   
-  if (plano) {
+  console.log(`[CHECKOUT-COMPLETED] Searching tbl_planos for periodo: ${periodoValue}`);
+  
+  const { data: plano, error: planoError } = await supabase
+    .from('tbl_planos')
+    .select('id, nome, id_plano_preco, periodo')
+    .eq('periodo', periodoValue)
+    .limit(1)
+    .maybeSingle();
+  
+  console.log(`[CHECKOUT-COMPLETED] tbl_planos query result:`, JSON.stringify({ plano, error: planoError }));
+  
+  if (plano && plano.id_plano_preco) {
+    idPlanoPreco = plano.id_plano_preco;
+    console.log(`[CHECKOUT-COMPLETED] Using id_plano_preco: ${plano.id_plano_preco} from plan ${plano.nome}`);
+  } else if (plano) {
+    // Fallback to id if id_plano_preco is not set
     idPlanoPreco = plano.id;
-    console.log(`Setting id_plano_preco to ${plano.id} (${plano.nome})`);
+    console.log(`[CHECKOUT-COMPLETED] Using fallback plano.id: ${plano.id} (${plano.nome})`);
   } else {
-    // Fallback: get any plan
+    // Fallback: get first available plan
     const { data: anyPlan } = await supabase
       .from('tbl_planos')
-      .select('id, nome')
+      .select('id, nome, id_plano_preco')
       .limit(1)
-      .single();
+      .maybeSingle();
     
     if (anyPlan) {
-      idPlanoPreco = anyPlan.id;
-      console.log(`Using fallback id_plano_preco: ${anyPlan.id} (${anyPlan.nome})`);
+      idPlanoPreco = anyPlan.id_plano_preco || anyPlan.id;
+      console.log(`[CHECKOUT-COMPLETED] Using fallback plan: ${anyPlan.nome}, id_plano_preco: ${idPlanoPreco}`);
     }
   }
   

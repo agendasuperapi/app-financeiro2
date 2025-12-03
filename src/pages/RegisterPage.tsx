@@ -488,7 +488,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-muted/30 to-background flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-background via-muted/30 to-background flex flex-col items-center pt-8 md:pt-16 p-4">
       {isLoading && <LoadingOverlay />}
       
       <div className="w-full max-w-lg">

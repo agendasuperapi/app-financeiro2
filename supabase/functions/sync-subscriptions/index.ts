@@ -180,17 +180,19 @@ serve(async (req) => {
           logStep("Determined plan type", { planType, priceId });
           
           // Get id_plano_preco from tbl_planos based on plan type
+          // Field: periodo (MENSAL/ANUAL), id_plano_preco is the plan ID
           let idPlanoPreco = 49; // Default fallback
           
+          const periodoValue = planType === 'annual' ? 'ANUAL' : 'MENSAL';
           const { data: planData } = await supabaseService
             .from('tbl_planos')
-            .select('id')
-            .eq('tipo', planType === 'annual' ? 'anual' : 'mensal')
+            .select('id_plano_preco')
+            .eq('periodo', periodoValue)
             .maybeSingle();
           
-          if (planData?.id) {
-            idPlanoPreco = planData.id;
-            logStep("Found id_plano_preco from tbl_planos", { idPlanoPreco, planType });
+          if (planData?.id_plano_preco) {
+            idPlanoPreco = planData.id_plano_preco;
+            logStep("Found id_plano_preco from tbl_planos", { idPlanoPreco, planType, periodoValue });
           } else {
             // Fallback: use plan type specific settings
             const planIdKey = planType === 'annual' ? 'plan_id_annual' : 'plan_id_monthly';

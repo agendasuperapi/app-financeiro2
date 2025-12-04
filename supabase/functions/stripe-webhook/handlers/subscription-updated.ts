@@ -103,17 +103,19 @@ export async function handleSubscriptionUpdated(
     console.log(`[SUBSCRIPTION-UPDATED] Determined plan type: ${planType}`);
     
     // Get id_plano_preco from tbl_planos based on plan type
+    // Field: periodo (MENSAL/ANUAL), id_plano_preco is the plan ID
     let idPlanoPreco = 49; // Default fallback
     
+    const periodoValue = planType === 'annual' ? 'ANUAL' : 'MENSAL';
     const { data: planData } = await supabase
       .from('tbl_planos')
-      .select('id')
-      .eq('tipo', planType === 'annual' ? 'anual' : 'mensal')
+      .select('id_plano_preco')
+      .eq('periodo', periodoValue)
       .maybeSingle();
     
-    if (planData?.id) {
-      idPlanoPreco = planData.id;
-      console.log(`[SUBSCRIPTION-UPDATED] Found id_plano_preco from tbl_planos: ${idPlanoPreco}`);
+    if (planData?.id_plano_preco) {
+      idPlanoPreco = planData.id_plano_preco;
+      console.log(`[SUBSCRIPTION-UPDATED] Found id_plano_preco from tbl_planos: ${idPlanoPreco}, periodo: ${periodoValue}`);
     } else {
       // Fallback: try to get from poupeja_settings with plan type specific key
       const planIdKey = planType === 'annual' ? 'plan_id_annual' : 'plan_id_monthly';

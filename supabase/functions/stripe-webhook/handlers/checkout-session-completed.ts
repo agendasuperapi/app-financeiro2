@@ -82,20 +82,20 @@ export async function handleCheckoutSessionCompleted(
   // Use actual subscription status from Stripe instead of assuming "active"
   const subscriptionStatus = subscription.status;
 
-  // Get id_plano_preco from existing poupeja_subscriptions (default value is 49)
-  let idPlanoPreco = 49; // Default value based on existing subscriptions
+  // Get id_plano_preco from tbl_planos based on plan type
+  // Field: periodo (MENSAL/ANUAL), id_plano_preco is the plan ID
+  let idPlanoPreco = 49; // Default fallback
   
-  // Try to get from an existing subscription as reference
-  const { data: existingSubRef } = await supabase
-    .from('poupeja_subscriptions')
+  const periodoValue = planType === 'annual' ? 'ANUAL' : 'MENSAL';
+  const { data: planData } = await supabase
+    .from('tbl_planos')
     .select('id_plano_preco')
-    .not('id_plano_preco', 'is', null)
-    .limit(1)
+    .eq('periodo', periodoValue)
     .maybeSingle();
   
-  if (existingSubRef?.id_plano_preco) {
-    idPlanoPreco = existingSubRef.id_plano_preco;
-    console.log(`[CHECKOUT-COMPLETED] Using id_plano_preco from existing subscription: ${idPlanoPreco}`);
+  if (planData?.id_plano_preco) {
+    idPlanoPreco = planData.id_plano_preco;
+    console.log(`[CHECKOUT-COMPLETED] Found id_plano_preco from tbl_planos: ${idPlanoPreco}, periodo: ${periodoValue}`);
   } else {
     console.log(`[CHECKOUT-COMPLETED] Using default id_plano_preco: ${idPlanoPreco}`);
   }

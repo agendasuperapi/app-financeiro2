@@ -3,6 +3,7 @@ import React, { useCallback, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useBrandingConfig } from '@/hooks/useBrandingConfig';
+import WhatsAppMockup from './WhatsAppMockup';
 import { 
   ChevronDown, 
   Smartphone, 
@@ -184,36 +185,29 @@ const LandingPromoSection = () => {
             transition={{ duration: 0.6 }}
             className="relative flex justify-center lg:justify-start"
           >
-            <div className="relative">
-              {/* Phone 1 - Main with parallax */}
+          <div className="relative flex items-start gap-4">
+              {/* WhatsApp Mockup with typing animation */}
               <motion.div 
                 style={{ y: phone1Y, rotate: phone1Rotate }}
                 className="relative z-10"
-                whileHover={{ scale: 1.05, rotate: 0 }}
+                whileHover={{ scale: 1.02, rotate: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
-                <div className="bg-foreground/90 rounded-[2.5rem] p-2 shadow-2xl">
-                  <div className="absolute top-4 left-1/2 -translate-x-1/2 w-20 h-6 bg-foreground rounded-full z-10" />
-                  <img 
-                    src="/lovable-uploads/4427b613-3f73-4178-acf3-5a90c35d1f4d.png" 
-                    alt="App Mobile Preview" 
-                    className="w-56 h-auto rounded-[2rem]"
-                  />
-                </div>
+                <WhatsAppMockup />
               </motion.div>
               
               {/* Phone 2 - Behind with different parallax speed */}
               <motion.div 
                 style={{ y: phone2Y, rotate: phone2Rotate }}
-                className="absolute -right-12 top-8 z-0"
+                className="absolute -right-8 top-12 z-0 hidden lg:block"
                 whileHover={{ scale: 1.05, rotate: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
-                <div className="bg-foreground/70 rounded-[2.5rem] p-2 shadow-xl opacity-80">
+                <div className="bg-foreground/70 rounded-[2.5rem] p-2 shadow-xl opacity-60">
                   <img 
                     src="/lovable-uploads/4427b613-3f73-4178-acf3-5a90c35d1f4d.png" 
                     alt="App Mobile Preview 2" 
-                    className="w-48 h-auto rounded-[2rem]"
+                    className="w-40 h-auto rounded-[2rem]"
                   />
                 </div>
               </motion.div>

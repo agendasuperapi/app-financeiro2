@@ -147,60 +147,65 @@ serve(async (req) => {
         }
 
         if (userId) {
-          // Determinar tipo de plano usando a função utilitária
-          let planType = 'monthly';
-          if (subscription.items.data.length > 0) {
-            const priceId = subscription.items.data[0].price.id;
-            console.log("Checking price ID for plan type", { priceId });
-            
-            // Usar a função utilitária para mapear price ID para plan type
-            try {
-              const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/get-plan-config`, {
-                method: 'GET',
-                headers: {
-                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-                  'Content-Type': 'application/json'
-                }
-              });
-              
-              if (response.ok) {
-                const planConfig = await response.json();
-                if (priceId === planConfig.prices.annual.priceId) {
-                  planType = 'annual';
-                } else if (priceId === planConfig.prices.monthly.priceId) {
-                  planType = 'monthly';
-                } else {
-                  // Fallback para detecção por interval
-                  if (subscription.items.data[0].price.recurring?.interval === 'year') {
-                    planType = 'annual';
-                  }
-                }
-              }
-            } catch (error) {
-              console.log("Error fetching plan config, using fallback logic", error);
-              // Fallback para detecção por interval
-              if (subscription.items.data[0].price.recurring?.interval === 'year') {
-                planType = 'annual';
-              }
-            }
-          }
-
-          // Buscar id_plano_preco da tabela poupeja_subscriptions (valor padrão é 49)
-          let idPlanoPreco = 49; // Valor padrão baseado nas assinaturas existentes
+          // Get price ID and interval from subscription
+          const priceId = subscription.items.data.length > 0 ? subscription.items.data[0].price.id : null;
+          const interval = subscription.items.data.length > 0 ? subscription.items.data[0].price.recurring?.interval : null;
           
-          // Tentar pegar de uma assinatura existente como referência
-          const { data: existingSubRef } = await supabase
-            .from('poupeja_subscriptions')
-            .select('id_plano_preco')
-            .not('id_plano_preco', 'is', null)
-            .limit(1)
+          logStep("Checking subscription price", { priceId, interval });
+          
+          // Fetch Stripe price IDs from poupeja_settings
+          const { data: settingsData } = await supabaseService
+            .from('poupeja_settings')
+            .select('key, value')
+            .in('key', ['stripe_price_id_monthly', 'stripe_price_id_annual']);
+          
+          const settings: Record<string, string> = {};
+          settingsData?.forEach((s: any) => {
+            settings[s.key] = s.value;
+          });
+          
+          logStep("Settings loaded", settings);
+          
+          // Determine plan type based on price_id comparison
+          let planType = 'monthly'; // default
+          if (priceId && priceId === settings.stripe_price_id_annual) {
+            planType = 'annual';
+          } else if (priceId && priceId === settings.stripe_price_id_monthly) {
+            planType = 'monthly';
+          } else if (interval === 'year') {
+            // Fallback to interval detection
+            planType = 'annual';
+          }
+          
+          logStep("Determined plan type", { planType, priceId });
+          
+          // Get id_plano_preco from tbl_planos based on plan type
+          let idPlanoPreco = 49; // Default fallback
+          
+          const { data: planData } = await supabaseService
+            .from('tbl_planos')
+            .select('id')
+            .eq('tipo', planType === 'annual' ? 'anual' : 'mensal')
             .maybeSingle();
           
-          if (existingSubRef?.id_plano_preco) {
-            idPlanoPreco = existingSubRef.id_plano_preco;
-            logStep("Using id_plano_preco from existing subscription", { idPlanoPreco });
+          if (planData?.id) {
+            idPlanoPreco = planData.id;
+            logStep("Found id_plano_preco from tbl_planos", { idPlanoPreco, planType });
           } else {
-            logStep("Using default id_plano_preco", { idPlanoPreco });
+            // Fallback: use plan type specific settings
+            const planIdKey = planType === 'annual' ? 'plan_id_annual' : 'plan_id_monthly';
+            const { data: planIdSetting } = await supabaseService
+              .from('poupeja_settings')
+              .select('value')
+              .eq('key', planIdKey)
+              .maybeSingle();
+            
+            if (planIdSetting?.value) {
+              idPlanoPreco = parseInt(planIdSetting.value);
+              logStep("Using id_plano_preco from settings", { idPlanoPreco });
+            } else {
+              logStep("Using default id_plano_preco", { idPlanoPreco });
+            }
           }
 
           // Calcular dados de trial period

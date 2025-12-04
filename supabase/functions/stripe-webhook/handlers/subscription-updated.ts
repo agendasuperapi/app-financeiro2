@@ -12,8 +12,22 @@ export async function handleSubscriptionUpdated(
   stripe: any,
   supabase: any
 ): Promise<void> {
-  const subscription = event.data.object;
-  console.log("Processing subscription update:", JSON.stringify(subscription));
+  const eventSubscription = event.data.object;
+  console.log("Processing subscription update event:", eventSubscription.id);
+  
+  // IMPORTANTE: Re-fetch a assinatura diretamente do Stripe para garantir dados atualizados
+  // Durante upgrades, o evento pode vir com dados intermediários
+  const subscription = await stripe.subscriptions.retrieve(eventSubscription.id, {
+    expand: ['items.data.price']
+  });
+  
+  console.log("Fetched fresh subscription from Stripe:", JSON.stringify({
+    id: subscription.id,
+    status: subscription.status,
+    current_period_start: subscription.current_period_start,
+    current_period_end: subscription.current_period_end,
+    interval: subscription.items?.data?.[0]?.price?.recurring?.interval
+  }));
   
   try {
     // First, find the user_id using subscription or customer metadata

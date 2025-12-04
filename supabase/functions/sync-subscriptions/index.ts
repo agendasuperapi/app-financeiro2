@@ -203,6 +203,16 @@ serve(async (req) => {
             logStep("Using default id_plano_preco", { idPlanoPreco });
           }
 
+          // Calcular dados de trial period
+          const hasTrial = subscription.trial_start !== null && subscription.trial_end !== null;
+          let trialPeriodDays = null;
+          let trialPeriodDate = null;
+          
+          if (hasTrial && subscription.trial_start && subscription.trial_end) {
+            trialPeriodDays = Math.ceil((subscription.trial_end - subscription.trial_start) / (60 * 60 * 24));
+            trialPeriodDate = new Date(subscription.trial_end * 1000).toISOString();
+          }
+
           // Inserir/atualizar assinatura
           const subscriptionData = {
             user_id: userId,
@@ -214,7 +224,15 @@ serve(async (req) => {
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
             cancel_at_period_end: subscription.cancel_at_period_end,
             id_plano_preco: idPlanoPreco,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            // Campos adicionais do Stripe
+            Name: customer.name || customer.email?.split('@')[0] || null,
+            status_pagamento: subscription.status === 'active' ? 'PAGO' : (subscription.status === 'trialing' ? 'TRIAL' : 'PENDENTE'),
+            status_assinatura: subscription.status === 'active' || subscription.status === 'trialing' ? 'ATIVA' : 'INATIVA',
+            trial_period: hasTrial,
+            trial_period_days: trialPeriodDays,
+            trial_period_date: trialPeriodDate,
+            conta_teste: !subscription.livemode
           };
           
           // Log dos dados antes de inserir

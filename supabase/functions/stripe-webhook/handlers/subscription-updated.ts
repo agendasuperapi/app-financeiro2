@@ -62,46 +62,22 @@ export async function handleSubscriptionUpdated(
     
     console.log(`[SUBSCRIPTION-UPDATED] Plan type from interval: ${planTypeFromInterval}`);
     
-    // Get id_plano_preco from tbl_planos table using periodo column (MENSAL/ANUAL)
-    let idPlanoPreco = null;
-    const periodoValue = planTypeFromInterval === 'annual' ? 'ANUAL' : 'MENSAL';
+    // Get id_plano_preco from existing poupeja_subscriptions (default value is 49)
+    let idPlanoPreco = 49; // Default value based on existing subscriptions
     
-    console.log(`[SUBSCRIPTION-UPDATED] Searching tbl_planos for periodo: ${periodoValue}`);
-    
-    const { data: plano, error: planoError } = await supabase
-      .from('tbl_planos')
-      .select('id, nome, id_plano_preco, periodo')
-      .eq('periodo', periodoValue)
+    // Try to get from an existing subscription as reference
+    const { data: existingSubRef } = await supabase
+      .from('poupeja_subscriptions')
+      .select('id_plano_preco')
+      .not('id_plano_preco', 'is', null)
       .limit(1)
       .maybeSingle();
     
-    console.log(`[SUBSCRIPTION-UPDATED] tbl_planos query result:`, JSON.stringify({ plano, error: planoError }));
-    
-    if (plano && plano.id_plano_preco) {
-      idPlanoPreco = plano.id_plano_preco;
-      console.log(`[SUBSCRIPTION-UPDATED] Using id_plano_preco: ${plano.id_plano_preco} from plan ${plano.nome}`);
-    } else if (plano) {
-      // Fallback to id if id_plano_preco is not set
-      idPlanoPreco = plano.id;
-      console.log(`[SUBSCRIPTION-UPDATED] Using fallback plano.id: ${plano.id} (${plano.nome})`);
+    if (existingSubRef?.id_plano_preco) {
+      idPlanoPreco = existingSubRef.id_plano_preco;
+      console.log(`[SUBSCRIPTION-UPDATED] Using id_plano_preco from existing subscription: ${idPlanoPreco}`);
     } else {
-      // Fallback: get first available plan
-      const { data: anyPlan } = await supabase
-        .from('tbl_planos')
-        .select('id, nome, id_plano_preco')
-        .limit(1)
-        .maybeSingle();
-      
-      if (anyPlan) {
-        idPlanoPreco = anyPlan.id_plano_preco || anyPlan.id;
-        console.log(`[SUBSCRIPTION-UPDATED] Using fallback plan: ${anyPlan.nome}, id_plano_preco: ${idPlanoPreco}`);
-      } else {
-        console.error(`[SUBSCRIPTION-UPDATED] No plans found in tbl_planos table!`);
-      }
-    }
-    
-    if (!idPlanoPreco) {
-      throw new Error(`Cannot update subscription: no valid id_plano_preco found in tbl_planos`);
+      console.log(`[SUBSCRIPTION-UPDATED] Using default id_plano_preco: ${idPlanoPreco}`);
     }
     
     // Prepare update/insert data

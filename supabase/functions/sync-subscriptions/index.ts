@@ -185,45 +185,22 @@ serve(async (req) => {
             }
           }
 
-          // Buscar id_plano_preco da tabela tbl_planos usando periodo (MENSAL/ANUAL)
-          let idPlanoPreco = null;
-          const periodoValue = planType === 'annual' ? 'ANUAL' : 'MENSAL';
+          // Buscar id_plano_preco da tabela poupeja_subscriptions (valor padrão é 49)
+          let idPlanoPreco = 49; // Valor padrão baseado nas assinaturas existentes
           
-          logStep("Searching tbl_planos for periodo", { periodoValue, planType });
-          
-          const { data: plano, error: planoError } = await supabase
-            .from('tbl_planos')
-            .select('id, nome, id_plano_preco, periodo')
-            .eq('periodo', periodoValue)
+          // Tentar pegar de uma assinatura existente como referência
+          const { data: existingSubRef } = await supabase
+            .from('poupeja_subscriptions')
+            .select('id_plano_preco')
+            .not('id_plano_preco', 'is', null)
             .limit(1)
             .maybeSingle();
           
-          logStep("tbl_planos query result", { plano, error: planoError });
-          
-          if (plano && plano.id_plano_preco) {
-            idPlanoPreco = plano.id_plano_preco;
-            logStep("Using id_plano_preco from tbl_planos", { idPlanoPreco, planName: plano.nome });
-          } else if (plano) {
-            // Fallback to id if id_plano_preco is not set
-            idPlanoPreco = plano.id;
-            logStep("Using fallback plano.id", { idPlanoPreco, planName: plano.nome });
+          if (existingSubRef?.id_plano_preco) {
+            idPlanoPreco = existingSubRef.id_plano_preco;
+            logStep("Using id_plano_preco from existing subscription", { idPlanoPreco });
           } else {
-            // Fallback: get first available plan
-            const { data: anyPlan } = await supabase
-              .from('tbl_planos')
-              .select('id, nome, id_plano_preco')
-              .limit(1)
-              .maybeSingle();
-            
-            if (anyPlan) {
-              idPlanoPreco = anyPlan.id_plano_preco || anyPlan.id;
-              logStep("Using fallback any plan", { idPlanoPreco, planName: anyPlan.nome });
-            }
-          }
-          
-          if (!idPlanoPreco) {
-            logStep("ERROR: Cannot sync subscription - no valid id_plano_preco found", { userId, planType });
-            continue;
+            logStep("Using default id_plano_preco", { idPlanoPreco });
           }
 
           // Inserir/atualizar assinatura

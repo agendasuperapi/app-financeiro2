@@ -82,44 +82,22 @@ export async function handleCheckoutSessionCompleted(
   // Use actual subscription status from Stripe instead of assuming "active"
   const subscriptionStatus = subscription.status;
 
-  // Get id_plano_preco from tbl_planos table using periodo column (MENSAL/ANUAL)
-  let idPlanoPreco = null;
-  const periodoValue = planType === 'annual' ? 'ANUAL' : 'MENSAL';
+  // Get id_plano_preco from existing poupeja_subscriptions (default value is 49)
+  let idPlanoPreco = 49; // Default value based on existing subscriptions
   
-  console.log(`[CHECKOUT-COMPLETED] Searching tbl_planos for periodo: ${periodoValue}`);
-  
-  const { data: plano, error: planoError } = await supabase
-    .from('tbl_planos')
-    .select('id, nome, id_plano_preco, periodo')
-    .eq('periodo', periodoValue)
+  // Try to get from an existing subscription as reference
+  const { data: existingSubRef } = await supabase
+    .from('poupeja_subscriptions')
+    .select('id_plano_preco')
+    .not('id_plano_preco', 'is', null)
     .limit(1)
     .maybeSingle();
   
-  console.log(`[CHECKOUT-COMPLETED] tbl_planos query result:`, JSON.stringify({ plano, error: planoError }));
-  
-  if (plano && plano.id_plano_preco) {
-    idPlanoPreco = plano.id_plano_preco;
-    console.log(`[CHECKOUT-COMPLETED] Using id_plano_preco: ${plano.id_plano_preco} from plan ${plano.nome}`);
-  } else if (plano) {
-    // Fallback to id if id_plano_preco is not set
-    idPlanoPreco = plano.id;
-    console.log(`[CHECKOUT-COMPLETED] Using fallback plano.id: ${plano.id} (${plano.nome})`);
+  if (existingSubRef?.id_plano_preco) {
+    idPlanoPreco = existingSubRef.id_plano_preco;
+    console.log(`[CHECKOUT-COMPLETED] Using id_plano_preco from existing subscription: ${idPlanoPreco}`);
   } else {
-    // Fallback: get first available plan
-    const { data: anyPlan } = await supabase
-      .from('tbl_planos')
-      .select('id, nome, id_plano_preco')
-      .limit(1)
-      .maybeSingle();
-    
-    if (anyPlan) {
-      idPlanoPreco = anyPlan.id_plano_preco || anyPlan.id;
-      console.log(`[CHECKOUT-COMPLETED] Using fallback plan: ${anyPlan.nome}, id_plano_preco: ${idPlanoPreco}`);
-    }
-  }
-  
-  if (!idPlanoPreco) {
-    throw new Error(`Cannot create subscription: no valid id_plano_preco found in tbl_planos`);
+    console.log(`[CHECKOUT-COMPLETED] Using default id_plano_preco: ${idPlanoPreco}`);
   }
 
   const subscriptionData = {

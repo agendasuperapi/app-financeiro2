@@ -70,28 +70,65 @@ export async function handleSubscriptionUpdated(
     const verifiedUserId = poupejaUser.id;
     console.log(`Found and verified user for subscription ${subscription.id}`);
     
-    // Determine plan type based on interval
+    // Get the price ID from the subscription
+    const priceId = subscription.items?.data?.[0]?.price?.id;
     const interval = subscription.items?.data?.[0]?.price?.recurring?.interval;
-    const planTypeFromInterval = interval === 'year' ? 'annual' : 'monthly';
     
-    console.log(`[SUBSCRIPTION-UPDATED] Plan type from interval: ${planTypeFromInterval}`);
+    console.log(`[SUBSCRIPTION-UPDATED] Price ID: ${priceId}, Interval: ${interval}`);
     
-    // Get id_plano_preco from existing poupeja_subscriptions (default value is 49)
-    let idPlanoPreco = 49; // Default value based on existing subscriptions
+    // Fetch Stripe price IDs from poupeja_settings to determine plan type
+    const { data: settingsData } = await supabase
+      .from('poupeja_settings')
+      .select('key, value')
+      .in('key', ['stripe_price_id_monthly', 'stripe_price_id_annual']);
     
-    // Try to get from an existing subscription as reference
-    const { data: existingSubRef } = await supabase
-      .from('poupeja_subscriptions')
-      .select('id_plano_preco')
-      .not('id_plano_preco', 'is', null)
-      .limit(1)
+    const settings: Record<string, string> = {};
+    settingsData?.forEach((s: any) => {
+      settings[s.key] = s.value;
+    });
+    
+    console.log(`[SUBSCRIPTION-UPDATED] Settings found:`, JSON.stringify(settings));
+    
+    // Determine plan type based on price_id comparison with settings
+    let planType = 'monthly'; // default
+    if (priceId && priceId === settings.stripe_price_id_annual) {
+      planType = 'annual';
+    } else if (priceId && priceId === settings.stripe_price_id_monthly) {
+      planType = 'monthly';
+    } else if (interval === 'year') {
+      // Fallback to interval detection
+      planType = 'annual';
+    }
+    
+    console.log(`[SUBSCRIPTION-UPDATED] Determined plan type: ${planType}`);
+    
+    // Get id_plano_preco from tbl_planos based on plan type
+    let idPlanoPreco = 49; // Default fallback
+    
+    const { data: planData } = await supabase
+      .from('tbl_planos')
+      .select('id')
+      .eq('tipo', planType === 'annual' ? 'anual' : 'mensal')
       .maybeSingle();
     
-    if (existingSubRef?.id_plano_preco) {
-      idPlanoPreco = existingSubRef.id_plano_preco;
-      console.log(`[SUBSCRIPTION-UPDATED] Using id_plano_preco from existing subscription: ${idPlanoPreco}`);
+    if (planData?.id) {
+      idPlanoPreco = planData.id;
+      console.log(`[SUBSCRIPTION-UPDATED] Found id_plano_preco from tbl_planos: ${idPlanoPreco}`);
     } else {
-      console.log(`[SUBSCRIPTION-UPDATED] Using default id_plano_preco: ${idPlanoPreco}`);
+      // Fallback: try to get from poupeja_settings with plan type specific key
+      const planIdKey = planType === 'annual' ? 'plan_id_annual' : 'plan_id_monthly';
+      const { data: planIdSetting } = await supabase
+        .from('poupeja_settings')
+        .select('value')
+        .eq('key', planIdKey)
+        .maybeSingle();
+      
+      if (planIdSetting?.value) {
+        idPlanoPreco = parseInt(planIdSetting.value);
+        console.log(`[SUBSCRIPTION-UPDATED] Using id_plano_preco from settings: ${idPlanoPreco}`);
+      } else {
+        console.log(`[SUBSCRIPTION-UPDATED] Using default id_plano_preco: ${idPlanoPreco}`);
+      }
     }
     
     // Buscar nome do cliente do Stripe
@@ -115,7 +152,7 @@ export async function handleSubscriptionUpdated(
       stripe_subscription_id: subscription.id,
       status: subscription.status,
       cancel_at_period_end: subscription.cancel_at_period_end,
-      plan_type: planTypeFromInterval,
+      plan_type: planType,
       id_plano_preco: idPlanoPreco,
       // Campos adicionais do Stripe
       Name: customerName,

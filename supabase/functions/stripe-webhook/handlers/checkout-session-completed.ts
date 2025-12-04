@@ -100,6 +100,20 @@ export async function handleCheckoutSessionCompleted(
     console.log(`[CHECKOUT-COMPLETED] Using default id_plano_preco: ${idPlanoPreco}`);
   }
 
+  // Buscar nome do cliente do Stripe
+  const customer = await stripe.customers.retrieve(session.customer);
+  const customerName = customer.name || customer.email?.split('@')[0] || null;
+  
+  // Calcular dados de trial period
+  const hasTrial = subscription.trial_start !== null && subscription.trial_end !== null;
+  let trialPeriodDays = null;
+  let trialPeriodDate = null;
+  
+  if (hasTrial && subscription.trial_start && subscription.trial_end) {
+    trialPeriodDays = Math.ceil((subscription.trial_end - subscription.trial_start) / (60 * 60 * 24));
+    trialPeriodDate = new Date(subscription.trial_end * 1000).toISOString();
+  }
+
   const subscriptionData = {
     user_id: userId,
     stripe_customer_id: session.customer,
@@ -109,7 +123,16 @@ export async function handleCheckoutSessionCompleted(
     current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
     current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
     cancel_at_period_end: subscription.cancel_at_period_end,
-    id_plano_preco: idPlanoPreco
+    id_plano_preco: idPlanoPreco,
+    // Campos adicionais do Stripe
+    Name: customerName,
+    status_pagamento: subscriptionStatus === 'active' ? 'PAGO' : (subscriptionStatus === 'trialing' ? 'TRIAL' : 'PENDENTE'),
+    status_assinatura: subscriptionStatus === 'active' || subscriptionStatus === 'trialing' ? 'ATIVA' : 'INATIVA',
+    trial_period: hasTrial,
+    trial_period_days: trialPeriodDays,
+    trial_period_date: trialPeriodDate,
+    conta_teste: !subscription.livemode,
+    stripe_url: session.url || null
   };
   
   console.log(`[CHECKOUT-COMPLETED] Attempting to save subscription with data:`, JSON.stringify(subscriptionData));

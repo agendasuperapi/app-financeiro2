@@ -80,6 +80,20 @@ export async function handleSubscriptionUpdated(
       console.log(`[SUBSCRIPTION-UPDATED] Using default id_plano_preco: ${idPlanoPreco}`);
     }
     
+    // Buscar nome do cliente do Stripe
+    const customer = await stripe.customers.retrieve(subscription.customer);
+    const customerName = customer.name || customer.email?.split('@')[0] || null;
+    
+    // Calcular dados de trial period
+    const hasTrial = subscription.trial_start !== null && subscription.trial_end !== null;
+    let trialPeriodDays = null;
+    let trialPeriodDate = null;
+    
+    if (hasTrial && subscription.trial_start && subscription.trial_end) {
+      trialPeriodDays = Math.ceil((subscription.trial_end - subscription.trial_start) / (60 * 60 * 24));
+      trialPeriodDate = new Date(subscription.trial_end * 1000).toISOString();
+    }
+
     // Prepare update/insert data
     const subscriptionData: any = {
       user_id: verifiedUserId,
@@ -88,7 +102,15 @@ export async function handleSubscriptionUpdated(
       status: subscription.status,
       cancel_at_period_end: subscription.cancel_at_period_end,
       plan_type: planTypeFromInterval,
-      id_plano_preco: idPlanoPreco
+      id_plano_preco: idPlanoPreco,
+      // Campos adicionais do Stripe
+      Name: customerName,
+      status_pagamento: subscription.status === 'active' ? 'PAGO' : (subscription.status === 'trialing' ? 'TRIAL' : 'PENDENTE'),
+      status_assinatura: subscription.status === 'active' || subscription.status === 'trialing' ? 'ATIVA' : 'INATIVA',
+      trial_period: hasTrial,
+      trial_period_days: trialPeriodDays,
+      trial_period_date: trialPeriodDate,
+      conta_teste: !subscription.livemode
     };
     
     // Add timestamps from subscription object directly

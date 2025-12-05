@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 interface WhatsAppMockupProps {
@@ -55,7 +55,18 @@ const WhatsAppMockup = ({
   const [showMessage, setShowMessage] = useState(false);
   const [showBotResponse, setShowBotResponse] = useState(false);
   const [showSecondBotResponse, setShowSecondBotResponse] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const currentDate = new Date().toLocaleDateString('pt-BR');
+
+  // Auto-scroll to bottom when new messages appear
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [showBotResponse, showSecondBotResponse, displayedText]);
   useEffect(() => {
     const currentMessage = messages[currentMessageIndex].userMessage;
     if (isTyping) {
@@ -108,7 +119,7 @@ const WhatsAppMockup = ({
             </div>
             
             {/* Chat area */}
-            <div className="h-[380px] p-3 overflow-hidden relative">
+            <div ref={chatContainerRef} className="h-[380px] p-3 overflow-y-auto relative">
               <div className="absolute inset-0 opacity-20" style={{
               backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000000' fill-opacity='0.05'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E")`
             }} />

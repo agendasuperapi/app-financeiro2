@@ -46,7 +46,7 @@ const WhatsAppMockup = ({
       descricao: 'Mercado',
       valor: 'R$ 320,00',
       conta: 'Carteira',
-      categoria: 'Supermercado'
+      categoria: 'Alimentação'
     }
   }];
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);

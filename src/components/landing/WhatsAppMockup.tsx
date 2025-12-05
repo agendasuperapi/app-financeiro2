@@ -294,11 +294,21 @@ const WhatsAppMockup = ({
   const renderSecondResponse = () => {
     if (currentMsg.type === 'relatorio') {
       return (
-        <img 
-          src={relatorioChart} 
-          alt="Gráfico de despesas" 
-          className="w-full rounded-lg"
-        />
+        <div className="w-full h-[180px] overflow-hidden rounded-lg">
+          <motion.img 
+            src={relatorioChart} 
+            alt="Gráfico de despesas" 
+            className="w-full"
+            initial={{ y: 0 }}
+            animate={{ y: [0, -100, -100, 0, 0] }}
+            transition={{ 
+              duration: 6, 
+              repeat: Infinity,
+              ease: "easeInOut",
+              times: [0, 0.3, 0.5, 0.8, 1]
+            }}
+          />
+        </div>
       );
     }
     

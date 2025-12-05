@@ -92,7 +92,7 @@ const WhatsAppMockup = ({
             {/* WhatsApp Header */}
             <div className="bg-[#075E54] px-4 py-3 flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                <span className="text-xs">🤖</span>
+                <span className="text-xs">💹</span>
               </div>
               <div className="flex-1">
                 <h3 className="text-white text-sm font-semibold">App Financeiro </h3>

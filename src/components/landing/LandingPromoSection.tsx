@@ -120,6 +120,49 @@ const LandingPromoSection = () => {
             transition={{ duration: 0.6 }}
             className="relative"
           >
+            {/* Floating Notification Bubbles */}
+            <motion.div
+              className="absolute -left-4 top-8 z-20 max-w-[200px] bg-foreground/95 backdrop-blur-sm rounded-xl p-3 shadow-xl border border-primary/20"
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <p className="text-xs text-primary font-semibold mb-1">🔔 Lembrete AppFinanceiro</p>
+              <p className="text-[10px] text-muted-foreground">📲 Sua tarefa: teste</p>
+              <p className="text-[10px] text-muted-foreground">📌 Frequência: Diário</p>
+              <p className="text-[10px] text-muted-foreground">📆 Agendada para: 02/12/2025 18:40</p>
+            </motion.div>
+
+            <motion.div
+              className="absolute -right-4 top-32 z-20 max-w-[220px] bg-foreground/95 backdrop-blur-sm rounded-xl p-3 shadow-xl border border-primary/20"
+              animate={{ y: [0, 12, 0] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            >
+              <p className="text-xs text-primary font-semibold mb-1">🔔 Lembrete AppFinanceiro</p>
+              <p className="text-[10px] text-muted-foreground">📲 Sua tarefa: Pagar conta de Luz</p>
+              <p className="text-[10px] text-destructive font-medium">💰 Valor: -R$ 150,00</p>
+              <p className="text-[10px] text-muted-foreground">📌 Frequência: Mensal</p>
+              <p className="text-[10px] text-muted-foreground">📆 Agendada para: 05/12/2025 19:03</p>
+            </motion.div>
+
+            <motion.div
+              className="absolute left-4 bottom-16 z-20 max-w-[200px] bg-foreground/95 backdrop-blur-sm rounded-xl p-3 shadow-xl border border-cyan-500/30"
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            >
+              <p className="text-xs text-cyan-400 font-semibold mb-1">META MENSAL</p>
+              <p className="text-sm text-primary font-bold">R$ 3.247,50</p>
+              <p className="text-[10px] text-muted-foreground">85% atingida</p>
+            </motion.div>
+
+            <motion.div
+              className="absolute -right-8 bottom-8 z-20 max-w-[220px] bg-foreground/95 backdrop-blur-sm rounded-xl p-3 shadow-xl border border-primary/20"
+              animate={{ y: [0, 10, 0] }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
+            >
+              <p className="text-xs text-cyan-400 font-semibold mb-1">INSIGHTS IA</p>
+              <p className="text-[10px] text-muted-foreground">Você economizou 23% em alimentação comparado ao mês passado.</p>
+            </motion.div>
+
             <motion.div 
               style={{ 
                 y: notebookY, 

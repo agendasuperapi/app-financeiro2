@@ -249,7 +249,7 @@ const WhatsAppMockup = ({
                       {'\n'}
                       
                       {'\n'}
-                      <span>🎯 Meta/Limite: R$ 600,00 para o mês atual.</span>
+                      
                       {'\n'}
                       <span>Usado 43,50% tem um restante: R$ 339,00</span>
                       {'\n\n'}

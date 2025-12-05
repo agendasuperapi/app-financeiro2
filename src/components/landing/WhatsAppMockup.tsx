@@ -21,7 +21,7 @@ const WhatsAppMockup = ({
     botResponse: {
       descricao: 'Almoço',
       valor: 'R$ 55,00',
-      conta: 'Carteira',
+      conta: 'Geral',
       categoria: 'Alimentação'
     }
   }, {
@@ -45,7 +45,7 @@ const WhatsAppMockup = ({
     botResponse: {
       descricao: 'Mercado',
       valor: 'R$ 320,00',
-      conta: 'Carteira',
+      conta: 'Geral',
       categoria: 'Alimentação'
     }
   }];

@@ -6,47 +6,94 @@ interface WhatsAppMockupProps {
   className?: string;
 }
 
+interface MessageData {
+  userMessage: string;
+  botResponse: {
+    descricao: string;
+    valor: string;
+    conta: string;
+    categoria: string;
+  };
+}
+
 const WhatsAppMockup = ({ className = '' }: WhatsAppMockupProps) => {
-  const messages = [
-    'Gastei 55,00 no almoço hoje',
-    'Comprei 80 reais de Pão paguei pelo nubank',
-    'Recebi 2.500 do salário',
-    'Comprei mercado 320,00',
+  const messages: MessageData[] = [
+    {
+      userMessage: 'Gastei 55,00 no almoço hoje',
+      botResponse: {
+        descricao: 'Almoço',
+        valor: 'R$ 55,00',
+        conta: 'Carteira',
+        categoria: 'Alimentação',
+      },
+    },
+    {
+      userMessage: 'Comprei 80 reais de Pão paguei pelo nubank',
+      botResponse: {
+        descricao: 'Compra de pão',
+        valor: 'R$ 80,00',
+        conta: 'Nubank',
+        categoria: 'Alimentação',
+      },
+    },
+    {
+      userMessage: 'Recebi 2.500 do salário',
+      botResponse: {
+        descricao: 'Salário',
+        valor: 'R$ 2.500,00',
+        conta: 'Conta Principal',
+        categoria: 'Salário',
+      },
+    },
+    {
+      userMessage: 'Comprei mercado 320,00',
+      botResponse: {
+        descricao: 'Mercado',
+        valor: 'R$ 320,00',
+        conta: 'Carteira',
+        categoria: 'Supermercado',
+      },
+    },
   ];
 
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
   const [showMessage, setShowMessage] = useState(false);
+  const [showBotResponse, setShowBotResponse] = useState(false);
+
+  const currentDate = new Date().toLocaleDateString('pt-BR');
 
   useEffect(() => {
-    const currentMessage = messages[currentMessageIndex];
+    const currentMessage = messages[currentMessageIndex].userMessage;
     
     if (isTyping) {
       if (displayedText.length < currentMessage.length) {
         const timeout = setTimeout(() => {
           setDisplayedText(currentMessage.slice(0, displayedText.length + 1));
-        }, 80); // Typing speed
+        }, 80);
         return () => clearTimeout(timeout);
       } else {
-        // Finished typing, show complete message
         setShowMessage(true);
         const timeout = setTimeout(() => {
+          setShowBotResponse(true);
           setIsTyping(false);
-        }, 2000); // Wait before moving to next message
+        }, 1000);
         return () => clearTimeout(timeout);
       }
     } else {
-      // Reset and move to next message
       const timeout = setTimeout(() => {
         setShowMessage(false);
+        setShowBotResponse(false);
         setDisplayedText('');
         setCurrentMessageIndex((prev) => (prev + 1) % messages.length);
         setIsTyping(true);
-      }, 500);
+      }, 4000);
       return () => clearTimeout(timeout);
     }
   }, [displayedText, isTyping, currentMessageIndex, messages]);
+
+  const currentBotResponse = messages[currentMessageIndex].botResponse;
 
   return (
     <div className={`w-full max-w-[280px] mx-auto ${className}`}>
@@ -57,11 +104,9 @@ const WhatsAppMockup = ({ className = '' }: WhatsAppMockupProps) => {
           <div className="bg-[#ECE5DD] rounded-[32px] overflow-hidden shadow-inner">
             {/* WhatsApp Header */}
             <div className="bg-[#075E54] px-4 py-3 flex items-center gap-3">
-              {/* Avatar */}
               <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
                 <span className="text-xs">🤖</span>
               </div>
-              {/* Name and status */}
               <div className="flex-1">
                 <h3 className="text-white text-sm font-semibold">Minhas Finanças</h3>
                 <p className="text-white/70 text-xs">online</p>
@@ -69,8 +114,7 @@ const WhatsAppMockup = ({ className = '' }: WhatsAppMockupProps) => {
             </div>
             
             {/* Chat area */}
-            <div className="h-[380px] p-4 overflow-hidden relative">
-              {/* Background pattern */}
+            <div className="h-[380px] p-3 overflow-hidden relative">
               <div 
                 className="absolute inset-0 opacity-20" 
                 style={{
@@ -78,23 +122,18 @@ const WhatsAppMockup = ({ className = '' }: WhatsAppMockupProps) => {
                 }}
               />
               
-              {/* Message bubble */}
               <div className="relative space-y-2">
+                {/* User message */}
                 <motion.div
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ 
-                    opacity: 1, 
-                    y: 0, 
-                    scale: 1 
-                  }}
-                  key={currentMessageIndex}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  key={`user-${currentMessageIndex}`}
                   transition={{ duration: 0.3 }}
-                  className="bg-[#DCF8C6] rounded-lg px-3 py-2 max-w-[85%] shadow-sm"
+                  className="bg-[#DCF8C6] rounded-lg px-3 py-2 max-w-[85%] ml-auto shadow-sm"
                 >
-                  {/* Message text with cursor */}
                   <p className="text-gray-800 text-sm leading-relaxed">
                     {displayedText}
-                    {isTyping && displayedText.length < messages[currentMessageIndex].length && (
+                    {isTyping && displayedText.length < messages[currentMessageIndex].userMessage.length && (
                       <motion.span 
                         className="inline-block w-0.5 h-4 bg-gray-600 ml-0.5 align-middle"
                         animate={{ opacity: [1, 0] }}
@@ -103,7 +142,6 @@ const WhatsAppMockup = ({ className = '' }: WhatsAppMockupProps) => {
                     )}
                   </p>
                   
-                  {/* Time and checkmarks */}
                   {showMessage && (
                     <motion.div 
                       initial={{ opacity: 0 }}
@@ -119,12 +157,12 @@ const WhatsAppMockup = ({ className = '' }: WhatsAppMockupProps) => {
                   )}
                 </motion.div>
 
-                {/* Typing indicator (bot response) */}
-                {showMessage && (
+                {/* Bot typing indicator */}
+                {showMessage && !showBotResponse && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
+                    transition={{ delay: 0.2 }}
                     className="bg-white rounded-lg px-3 py-2 max-w-[70%] shadow-sm"
                   >
                     <div className="flex items-center gap-1">
@@ -144,6 +182,39 @@ const WhatsAppMockup = ({ className = '' }: WhatsAppMockupProps) => {
                         transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
                       />
                     </div>
+                  </motion.div>
+                )}
+
+                {/* Bot response */}
+                {showBotResponse && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-white rounded-lg px-3 py-2 max-w-[90%] shadow-sm"
+                  >
+                    <p className="text-gray-800 text-xs leading-relaxed whitespace-pre-line">
+                      <span className="font-semibold">❤️‍🔥 💸 Sua despesa foi adicionada com sucesso!</span>
+                      {'\n\n'}
+                      <span>📲 Descrição: {currentBotResponse.descricao}</span>
+                      {'\n'}
+                      <span>💰 Valor: {currentBotResponse.valor}</span>
+                      {'\n'}
+                      <span>💳 Conta: {currentBotResponse.conta}</span>
+                      {'\n'}
+                      <span>📁 Categoria: {currentBotResponse.categoria}</span>
+                      {'\n'}
+                      <span>🗓 Data: {currentDate}</span>
+                    </p>
+                    
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="flex items-center justify-end gap-1 mt-1"
+                    >
+                      <span className="text-[10px] text-gray-500">12:30</span>
+                    </motion.div>
                   </motion.div>
                 )}
               </div>

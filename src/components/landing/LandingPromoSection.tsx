@@ -188,10 +188,15 @@ const LandingPromoSection = () => {
           <div className="relative flex items-start gap-4">
               {/* WhatsApp Mockup with typing animation */}
               <motion.div 
-                style={{ y: phone1Y, rotate: phone1Rotate }}
+                style={{ y: phone1Y }}
                 className="relative z-10"
-                whileHover={{ scale: 1.02, rotate: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                animate={{ rotate: [0, 3, 0, -3, 0] }}
+                transition={{ 
+                  duration: 4, 
+                  repeat: Infinity, 
+                  ease: "easeInOut"
+                }}
+                whileHover={{ scale: 1.02 }}
               >
                 <WhatsAppMockup />
               </motion.div>

@@ -166,12 +166,19 @@ const WhatsAppMockup = ({
   // Auto-scroll to bottom when new messages appear
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTo({
-        top: chatContainerRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
+      const isRelatorio = messages[currentMessageIndex].type === 'relatorio';
+      // Delay scroll slightly for images to load
+      const timeout = setTimeout(() => {
+        if (chatContainerRef.current) {
+          chatContainerRef.current.scrollTo({
+            top: chatContainerRef.current.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
+      }, showSecondBotResponse && isRelatorio ? 300 : 50);
+      return () => clearTimeout(timeout);
     }
-  }, [showBotResponse, showSecondBotResponse, displayedText]);
+  }, [showBotResponse, showSecondBotResponse, displayedText, currentMessageIndex, messages]);
 
   useEffect(() => {
     const currentMessage = messages[currentMessageIndex].userMessage;

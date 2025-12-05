@@ -12,6 +12,15 @@ interface MessageData {
     conta: string;
     categoria: string;
   };
+  summaryResponse: {
+    categoria: string;
+    totalMes: string;
+    meta: string;
+    porcentagem: string;
+    restante: string;
+    saldo: string;
+    conta: string;
+  };
 }
 const WhatsAppMockup = ({
   className = ''
@@ -23,6 +32,15 @@ const WhatsAppMockup = ({
       valor: 'R$ 55,00',
       conta: 'Geral',
       categoria: 'Alimentação'
+    },
+    summaryResponse: {
+      categoria: 'Alimentação',
+      totalMes: 'R$ 206,00',
+      meta: 'R$ 600,00',
+      porcentagem: '34,33%',
+      restante: 'R$ 394,00',
+      saldo: 'R$ 1.845,00',
+      conta: 'Geral'
     }
   }, {
     userMessage: 'Comprei 80 reais de Pão paguei pelo nubank',
@@ -31,6 +49,15 @@ const WhatsAppMockup = ({
       valor: 'R$ 80,00',
       conta: 'Nubank',
       categoria: 'Alimentação'
+    },
+    summaryResponse: {
+      categoria: 'Alimentação',
+      totalMes: 'R$ 261,00',
+      meta: 'R$ 600,00',
+      porcentagem: '43,50%',
+      restante: 'R$ 339,00',
+      saldo: 'R$ 2.439,00',
+      conta: 'Nubank'
     }
   }, {
     userMessage: 'Recebi 2.500 do salário Nubank',
@@ -39,6 +66,15 @@ const WhatsAppMockup = ({
       valor: 'R$ 2.500,00',
       conta: 'Nubank',
       categoria: 'Receita'
+    },
+    summaryResponse: {
+      categoria: 'Receita',
+      totalMes: 'R$ 5.200,00',
+      meta: 'R$ 6.000,00',
+      porcentagem: '86,67%',
+      restante: 'R$ 800,00',
+      saldo: 'R$ 4.939,00',
+      conta: 'Nubank'
     }
   }, {
     userMessage: 'Comprei mercado 320,00',
@@ -47,6 +83,15 @@ const WhatsAppMockup = ({
       valor: 'R$ 320,00',
       conta: 'Geral',
       categoria: 'Alimentação'
+    },
+    summaryResponse: {
+      categoria: 'Alimentação',
+      totalMes: 'R$ 581,00',
+      meta: 'R$ 600,00',
+      porcentagem: '96,83%',
+      restante: 'R$ 19,00',
+      saldo: 'R$ 1.525,00',
+      conta: 'Geral'
     }
   }];
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
@@ -101,6 +146,7 @@ const WhatsAppMockup = ({
     }
   }, [displayedText, isTyping, currentMessageIndex, messages, showSecondBotResponse]);
   const currentBotResponse = messages[currentMessageIndex].botResponse;
+  const currentSummary = messages[currentMessageIndex].summaryResponse;
   return <div className={`w-full max-w-[280px] mx-auto ${className}`}>
       <div className="relative w-full max-w-[280px] mx-auto">
         {/* Phone frame */}
@@ -245,15 +291,15 @@ const WhatsAppMockup = ({
                 duration: 0.3
               }} className="bg-white rounded-lg px-3 py-2 max-w-[90%] shadow-sm">
                     <p className="text-gray-800 text-xs leading-relaxed whitespace-pre-line">
-                      <span className="font-semibold">📊 Resumo de gastos da categoria Alimentação:</span>
+                      <span className="font-semibold">📊 Resumo de gastos da categoria {currentSummary.categoria}:</span>
                       {'\n'}
-                      <span>💰 Total gasto no Mês: R$ 261,00</span>
+                      <span>💰 Total gasto no Mês: {currentSummary.totalMes}</span>
                       {'\n'}
-                      <span>🎯 Meta/Limite: R$ 600,00 para o mês atual.</span>
+                      <span>🎯 Meta/Limite: {currentSummary.meta} para o mês atual.</span>
                       {'\n'}
-                      <span>Usado 43,50% tem um restante: R$ 339,00</span>
+                      <span>Usado {currentSummary.porcentagem} tem um restante: {currentSummary.restante}</span>
                       {'\n\n'}
-                      <span>Saldo Nubank: R$ 2.439,00</span>
+                      <span>Saldo {currentSummary.conta}: {currentSummary.saldo}</span>
                     </p>
                     
                     <motion.div initial={{

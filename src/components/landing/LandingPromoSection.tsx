@@ -135,17 +135,22 @@ const LandingPromoSection = () => {
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
                 <div className="absolute top-3 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-muted/50" />
-                <div className="relative w-full aspect-[16/10] rounded-t-lg overflow-hidden bg-background">
+                <div className="relative w-full rounded-t-lg overflow-hidden bg-background">
                   <AnimatePresence mode="wait">
                     <motion.img 
                       key={currentScreenIndex}
                       src={screenImages[currentScreenIndex]} 
                       alt="Dashboard Web Preview" 
-                      className="w-full h-full object-cover object-top rounded-t-lg"
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.5 }}
+                      className="w-full h-auto rounded-t-lg"
+                      style={{ 
+                        imageRendering: 'crisp-edges',
+                        WebkitBackfaceVisibility: 'hidden',
+                        backfaceVisibility: 'hidden'
+                      }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4 }}
                     />
                   </AnimatePresence>
                 </div>

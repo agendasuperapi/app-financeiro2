@@ -38,7 +38,7 @@ const WhatsAppMockup = ({
       descricao: 'Salário',
       valor: 'R$ 2.500,00',
       conta: 'Conta Principal',
-      categoria: 'Salário'
+      categoria: 'Receita'
     }
   }, {
     userMessage: 'Comprei mercado 320,00',

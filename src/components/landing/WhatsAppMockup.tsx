@@ -342,16 +342,8 @@ const WhatsAppMockup = ({
     (currentMsg.type !== 'agendamento' && currentMsg.type !== 'lembrete' && currentSummary);
 
   return (
-    <div className={`w-full max-w-[280px] mx-auto ${className}`}>
-      <motion.div 
-        className="relative w-full max-w-[280px] mx-auto"
-        animate={{ rotate: [0, 2, 0, -2, 0] }}
-        transition={{ 
-          duration: 4, 
-          repeat: Infinity, 
-          ease: "easeInOut"
-        }}
-      >
+    <div className={`w-[280px] mx-auto ${className}`}>
+      <div className="relative w-[280px] mx-auto">
         {/* Phone frame */}
         <div className="relative bg-black rounded-[40px] p-3 shadow-2xl">
           {/* Screen bezel */}
@@ -495,7 +487,7 @@ const WhatsAppMockup = ({
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

@@ -247,7 +247,7 @@ const WhatsAppMockup = ({
                     <p className="text-gray-800 text-xs leading-relaxed whitespace-pre-line">
                       
                       {'\n'}
-                      <span>💰 Total gasto no Mês: R$ 261,00</span>
+                      
                       {'\n'}
                       <span>🎯 Meta/Limite: R$ 600,00 para o mês atual.</span>
                       {'\n'}

@@ -37,7 +37,7 @@ const WhatsAppMockup = ({
     botResponse: {
       descricao: 'Salário',
       valor: 'R$ 2.500,00',
-      conta: 'Conta Principal',
+      conta: 'Nubank',
       categoria: 'Receita'
     }
   }, {

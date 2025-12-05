@@ -9,7 +9,7 @@ interface WhatsAppMockupProps {
 const WhatsAppMockup = ({ className = '' }: WhatsAppMockupProps) => {
   const messages = [
     'Gastei 55,00 no almoço hoje',
-    'Paguei 150,00 de luz',
+    'Comprei 80 reais de Pão paguei pelo nubank',
     'Recebi 2.500 do salário',
     'Comprei mercado 320,00',
   ];

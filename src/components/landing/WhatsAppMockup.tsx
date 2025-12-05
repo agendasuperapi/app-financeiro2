@@ -190,7 +190,7 @@ const WhatsAppMockup = ({
                 duration: 0.3
               }} className="bg-white rounded-lg px-3 py-2 max-w-[90%] shadow-sm">
                     <p className="text-gray-800 text-xs leading-relaxed whitespace-pre-line">
-                      <span className="font-semibold">❤️‍🔥 💸 Sua despesa foi adicionada com sucesso!</span>
+                      <span className="font-semibold">✅ 🎉 Receita adicionada com sucesso!</span>
                       {'\n\n'}
                       <span>📲 Descrição: {currentBotResponse.descricao}</span>
                       {'\n'}

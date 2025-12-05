@@ -33,7 +33,7 @@ const WhatsAppMockup = ({
       categoria: 'Alimentação'
     }
   }, {
-    userMessage: 'Recebi 2.500 do salário',
+    userMessage: 'Recebi 2.500 do salário Nubank',
     botResponse: {
       descricao: 'Salário',
       valor: 'R$ 2.500,00',

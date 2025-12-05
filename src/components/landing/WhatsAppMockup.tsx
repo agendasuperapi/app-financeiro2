@@ -245,13 +245,13 @@ const WhatsAppMockup = ({
                 duration: 0.3
               }} className="bg-white rounded-lg px-3 py-2 max-w-[90%] shadow-sm">
                     <p className="text-gray-800 text-xs leading-relaxed whitespace-pre-line">
-                      
+                      <span className="font-semibold">📊 Resumo de gastos da categoria Alimentação:</span>
                       {'\n'}
-                      
+                      <span>💰 Total gasto no Mês: R$ 261,00</span>
                       {'\n'}
-                      
+                      <span>🎯 Meta/Limite: R$ 600,00 para o mês atual.</span>
                       {'\n'}
-                      
+                      <span>Usado 43,50% tem um restante: R$ 339,00</span>
                       {'\n\n'}
                       <span>Saldo Nubank: R$ 2.439,00</span>
                     </p>

@@ -1,6 +1,5 @@
-
-import React, { useCallback, useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useBrandingConfig } from '@/hooks/useBrandingConfig';
 import WhatsAppMockup from './WhatsAppMockup';
@@ -17,9 +16,29 @@ import {
   Globe
 } from 'lucide-react';
 
+// Import screen images
+import screen1 from '@/assets/landing/screen-1.png';
+import screen2 from '@/assets/landing/screen-2.png';
+import screen3 from '@/assets/landing/screen-3.png';
+import screen4 from '@/assets/landing/screen-4.png';
+import screen5 from '@/assets/landing/screen-5.png';
+import screen6 from '@/assets/landing/screen-6.png';
+import screen7 from '@/assets/landing/screen-7.png';
+
+const screenImages = [screen1, screen2, screen3, screen4, screen5, screen6, screen7];
+
 const LandingPromoSection = () => {
   const { companyName } = useBrandingConfig();
   const sectionRef = useRef<HTMLElement>(null);
+  const [currentScreenIndex, setCurrentScreenIndex] = useState(0);
+
+  // Auto-cycle through screen images
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentScreenIndex((prev) => (prev + 1) % screenImages.length);
+    }, 3000); // Change every 3 seconds
+    return () => clearInterval(interval);
+  }, []);
   const notebookRef = useRef<HTMLDivElement>(null);
   const phonesRef = useRef<HTMLDivElement>(null);
 
@@ -116,13 +135,20 @@ const LandingPromoSection = () => {
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
                 <div className="absolute top-3 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-muted/50" />
-                <motion.img 
-                  src="/lovable-uploads/notebook-screenshot.png" 
-                  alt="Dashboard Web Preview" 
-                  className="w-full h-auto rounded-t-lg"
-                  whileHover={{ scale: 1.01 }}
-                  transition={{ duration: 0.3 }}
-                />
+                <div className="relative w-full aspect-[16/10] rounded-t-lg overflow-hidden bg-background">
+                  <AnimatePresence mode="wait">
+                    <motion.img 
+                      key={currentScreenIndex}
+                      src={screenImages[currentScreenIndex]} 
+                      alt="Dashboard Web Preview" 
+                      className="w-full h-full object-cover object-top rounded-t-lg"
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -50 }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  </AnimatePresence>
+                </div>
               </motion.div>
               {/* Notebook base */}
               <div className="h-4 bg-gradient-to-b from-foreground/80 to-foreground/60 rounded-b-lg" />

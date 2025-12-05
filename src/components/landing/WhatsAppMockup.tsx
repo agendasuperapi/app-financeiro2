@@ -73,7 +73,7 @@ const WhatsAppMockup = ({
       meta: 'R$ 6.000,00',
       porcentagem: '86,67%',
       restante: 'R$ 800,00',
-      saldo: 'R$ 4.939,00',
+      saldo: 'R$ 5.439,00',
       conta: 'Nubank'
     }
   }, {
@@ -254,7 +254,11 @@ const WhatsAppMockup = ({
                 duration: 0.3
               }} className="bg-white rounded-lg px-3 py-2 max-w-[90%] shadow-sm">
                     <p className="text-gray-800 text-xs leading-relaxed whitespace-pre-line">
-                      <span className="font-semibold">❤️‍🔥 💸 Sua despesa foi adicionada com sucesso!</span>
+                      <span className="font-semibold">
+                        {currentBotResponse.categoria === 'Receita' 
+                          ? '✅ 🎉 Receita adicionada com sucesso!' 
+                          : '❤️‍🔥 💸 Sua despesa foi adicionada com sucesso!'}
+                      </span>
                       {'\n\n'}
                       <span>📲 Descrição: {currentBotResponse.descricao}</span>
                       {'\n'}
@@ -291,15 +295,23 @@ const WhatsAppMockup = ({
                 duration: 0.3
               }} className="bg-white rounded-lg px-3 py-2 max-w-[90%] shadow-sm">
                     <p className="text-gray-800 text-xs leading-relaxed whitespace-pre-line">
-                      <span className="font-semibold">📊 Resumo de gastos da categoria {currentSummary.categoria}:</span>
-                      {'\n'}
-                      <span>💰 Total gasto no Mês: {currentSummary.totalMes}</span>
-                      {'\n'}
-                      <span>🎯 Meta/Limite: {currentSummary.meta} para o mês atual.</span>
-                      {'\n'}
-                      <span>Usado {currentSummary.porcentagem} tem um restante: {currentSummary.restante}</span>
-                      {'\n\n'}
-                      <span>Saldo {currentSummary.conta}: {currentSummary.saldo}</span>
+                      {currentSummary.categoria === 'Receita' ? (
+                        <>
+                          <span>Saldo {currentSummary.conta}: {currentSummary.saldo}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-semibold">📊 Resumo de gastos da categoria {currentSummary.categoria}:</span>
+                          {'\n'}
+                          <span>💰 Total gasto no Mês: {currentSummary.totalMes}</span>
+                          {'\n'}
+                          <span>🎯 Meta/Limite: {currentSummary.meta} para o mês atual.</span>
+                          {'\n'}
+                          <span>Usado {currentSummary.porcentagem} tem um restante: {currentSummary.restante}</span>
+                          {'\n\n'}
+                          <span>Saldo {currentSummary.conta}: {currentSummary.saldo}</span>
+                        </>
+                      )}
                     </p>
                     
                     <motion.div initial={{

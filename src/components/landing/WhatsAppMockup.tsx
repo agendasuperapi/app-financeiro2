@@ -54,6 +54,7 @@ const WhatsAppMockup = ({
   const [isTyping, setIsTyping] = useState(true);
   const [showMessage, setShowMessage] = useState(false);
   const [showBotResponse, setShowBotResponse] = useState(false);
+  const [showSecondBotResponse, setShowSecondBotResponse] = useState(false);
   const currentDate = new Date().toLocaleDateString('pt-BR');
   useEffect(() => {
     const currentMessage = messages[currentMessageIndex].userMessage;
@@ -71,17 +72,23 @@ const WhatsAppMockup = ({
         }, 1000);
         return () => clearTimeout(timeout);
       }
+    } else if (!showSecondBotResponse) {
+      const timeout = setTimeout(() => {
+        setShowSecondBotResponse(true);
+      }, 2000);
+      return () => clearTimeout(timeout);
     } else {
       const timeout = setTimeout(() => {
         setShowMessage(false);
         setShowBotResponse(false);
+        setShowSecondBotResponse(false);
         setDisplayedText('');
         setCurrentMessageIndex(prev => (prev + 1) % messages.length);
         setIsTyping(true);
       }, 4000);
       return () => clearTimeout(timeout);
     }
-  }, [displayedText, isTyping, currentMessageIndex, messages]);
+  }, [displayedText, isTyping, currentMessageIndex, messages, showSecondBotResponse]);
   const currentBotResponse = messages[currentMessageIndex].botResponse;
   return <div className={`w-full max-w-[280px] mx-auto ${className}`}>
       <div className="relative w-full max-w-[280px] mx-auto">
@@ -211,6 +218,41 @@ const WhatsAppMockup = ({
                   delay: 0.2
                 }} className="flex items-center justify-end gap-1 mt-1">
                       <span className="text-[10px] text-gray-500">12:30</span>
+                    </motion.div>
+                  </motion.div>}
+
+                {/* Second Bot response - Summary */}
+                {showSecondBotResponse && <motion.div initial={{
+                opacity: 0,
+                y: 10,
+                scale: 0.95
+              }} animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1
+              }} transition={{
+                duration: 0.3
+              }} className="bg-white rounded-lg px-3 py-2 max-w-[90%] shadow-sm">
+                    <p className="text-gray-800 text-xs leading-relaxed whitespace-pre-line">
+                      <span className="font-semibold">📊 Resumo de gastos da categoria Alimentação:</span>
+                      {'\n'}
+                      <span>💰 Total gasto no Mês: R$ 261,00</span>
+                      {'\n'}
+                      <span>🎯 Meta/Limite: R$ 600,00 para o mês atual.</span>
+                      {'\n'}
+                      <span>Usado 43,50% tem um restante: R$ 339,00</span>
+                      {'\n\n'}
+                      <span>Saldo Nubank: R$ 2.439,00</span>
+                    </p>
+                    
+                    <motion.div initial={{
+                  opacity: 0
+                }} animate={{
+                  opacity: 1
+                }} transition={{
+                  delay: 0.2
+                }} className="flex items-center justify-end gap-1 mt-1">
+                      <span className="text-[10px] text-gray-500">12:31</span>
                     </motion.div>
                   </motion.div>}
               </div>

@@ -120,9 +120,9 @@ const LandingPromoSection = () => {
             transition={{ duration: 0.6 }}
             className="relative"
           >
-            {/* Floating Notification Bubbles - Behind notebook */}
+            {/* Floating Notification Bubbles */}
             <motion.div
-              className="absolute -left-8 top-4 z-0 max-w-[200px] bg-foreground/95 backdrop-blur-sm rounded-xl p-3 shadow-xl border border-primary/20"
+              className="absolute -left-4 top-8 z-20 max-w-[200px] bg-foreground/95 backdrop-blur-sm rounded-xl p-3 shadow-xl border border-primary/20"
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             >
@@ -133,7 +133,7 @@ const LandingPromoSection = () => {
             </motion.div>
 
             <motion.div
-              className="absolute -right-12 top-24 z-0 max-w-[220px] bg-foreground/95 backdrop-blur-sm rounded-xl p-3 shadow-xl border border-primary/20"
+              className="absolute -right-4 top-32 z-20 max-w-[220px] bg-foreground/95 backdrop-blur-sm rounded-xl p-3 shadow-xl border border-primary/20"
               animate={{ y: [0, 12, 0] }}
               transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
             >
@@ -145,7 +145,7 @@ const LandingPromoSection = () => {
             </motion.div>
 
             <motion.div
-              className="absolute -left-12 bottom-20 z-0 max-w-[200px] bg-foreground/95 backdrop-blur-sm rounded-xl p-3 shadow-xl border border-cyan-500/30"
+              className="absolute left-4 bottom-16 z-20 max-w-[200px] bg-foreground/95 backdrop-blur-sm rounded-xl p-3 shadow-xl border border-cyan-500/30"
               animate={{ y: [0, -8, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
             >
@@ -155,7 +155,7 @@ const LandingPromoSection = () => {
             </motion.div>
 
             <motion.div
-              className="absolute -right-16 bottom-12 z-0 max-w-[220px] bg-foreground/95 backdrop-blur-sm rounded-xl p-3 shadow-xl border border-primary/20"
+              className="absolute -right-8 bottom-8 z-20 max-w-[220px] bg-foreground/95 backdrop-blur-sm rounded-xl p-3 shadow-xl border border-primary/20"
               animate={{ y: [0, 10, 0] }}
               transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
             >

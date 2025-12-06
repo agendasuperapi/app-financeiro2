@@ -5,13 +5,23 @@ import { getNextReferenceCode } from "@/utils/referenceCodeUtils";
 
 export const getTransactions = async (): Promise<Transaction[]> => {
   try {
-    // Buscar transações e categoria
+    // Get current user
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData?.user) {
+      console.warn('[transactionService] No authenticated user, returning empty transactions');
+      return [];
+    }
+
+    const userId = authData.user.id;
+
+    // Buscar transações e categoria FILTRADO POR USER_ID
     const { data, error } = await supabase
       .from("poupeja_transactions")
       .select(`
         *,
         category:poupeja_categories(id, name, icon, color, type)
       `)
+      .eq('user_id', userId)
       .order("created_at", { ascending: false });
 
     if (error) throw error;

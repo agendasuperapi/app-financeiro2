@@ -347,9 +347,7 @@ const ProfilePage = () => {
         
         <div className="grid gap-6">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <div className="sticky z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-6 md:top-0 hidden md:block" style={{
-            top: 'calc(4rem + env(safe-area-inset-top))'
-          }}>
+            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b mb-6 hidden md:block">
               <TabsList className="flex flex-wrap w-full gap-2 p-2 h-auto bg-muted/50 justify-start">
                 <TabsTrigger value="info" className="text-xs md:text-sm px-4 py-2.5 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
                   Informações
